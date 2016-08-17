@@ -1,0 +1,1 @@
+nconvert -quiet -out png  -o %%_resized.png -ratio -rtype lanczos -resize 1440 1440 *.png

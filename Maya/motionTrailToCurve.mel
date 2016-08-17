@@ -1,0 +1,38 @@
+/* This file downloaded from Highend3d.com
+''  
+''  Highend3d.com File Information:
+''  
+''    Script Name: motionTrailToCurve
+''    Author: Mel 
+''    Last Updated: Jul 10, 2008
+''    Update/Change this file at:
+''    http://Highend3d.com/maya/downloads/mel_scripts/modeling/curve_tools/2249.html
+''  
+''  Please do not alter any information above this line
+''  it is generated dynamically by Highend3d.com and will
+''  be changed automatically on any updates.
+*/
+/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//Tool Name 2008
+	convert a motion into a curve
+
+//Run Command
+	motionTrailToCurve;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+
+
+global proc motionTrailToCurve()
+{
+
+	$selected=`ls -dag -et snapshotShape`;
+	for ($obj in $selected) {
+	$pts=(getAttr($obj+".pts"));
+	$size=size($pts);
+	$curve=`curve -d 1 -p $pts[0] $pts[1] $pts[2] -p $pts[4] $pts[5] $pts[6] -k 0 -k 1`;
+	for($i=8;$i<$size;$i+=4)
+	curve -os -a -p $pts[$i] $pts[$i+1] $pts[$i+2] $curve ;
+	}
+}

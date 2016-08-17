@@ -1,0 +1,1 @@
+start notepad.exe "%SYSTEMROOT%/System32/drivers/etc/hosts"
