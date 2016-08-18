@@ -1,0 +1,12 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression1
+ label SaturationToRGB
+ selected true
+ xpos 13
+ ypos 677
+}

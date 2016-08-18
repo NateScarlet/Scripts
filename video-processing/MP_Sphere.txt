@@ -1,0 +1,43 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+Read {
+ inputs 0
+ file Z:/SNJYW/MP/360Ìì¿ÕÔÂÒ¹.psd
+ format "10000 2500 0 0 10000 2500 1 "
+ origset true
+ name Read4
+ selected true
+ xpos -340
+ ypos -625
+}
+Transform {
+ translate {0 2500}
+ center {5000 1250}
+ name Transform2
+ selected true
+ xpos -340
+ ypos -537
+}
+Constant {
+ inputs 0
+ channels rgb
+ format "10000 5000 0 0 10000 5000 1 mpSphere"
+ name Constant1
+ selected true
+ xpos -476
+ ypos -638
+}
+Merge2 {
+ inputs 2
+ name Merge3
+ selected true
+ xpos -476
+ ypos -537
+}
+Sphere {
+ rotate {0 -222 0}
+ name Sphere1
+ selected true
+ xpos -476
+ ypos -463
+}

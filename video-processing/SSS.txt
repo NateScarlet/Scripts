@@ -1,0 +1,104 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name SSS1
+ selected true
+ xpos 1901
+ ypos 549
+ addUserKnob {20 User l SSS}
+ addUserKnob {6 RGB_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 size l erode T Dilate1.size}
+ addUserKnob {18 RGB_Gamma R 0 2}
+ RGB_Gamma {1.714808822 1.202397585 0.9827932119}
+ addUserKnob {6 RGB_Gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 R_gamma T SSS_R1.gamma}
+ addUserKnob {41 G_gamma T SSS_G1.gamma}
+ addUserKnob {41 B_gamma T SSS_B1.gamma}
+ addUserKnob {41 mix T Merge1.mix}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 0
+  ypos -4
+ }
+set N20541c00 [stack 0]
+ Dot {
+  name Dot1
+  xpos 154
+ }
+add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
+ Dilate {
+  channels SSS
+  name Dilate1
+  xpos 120
+  ypos 38
+ }
+ Dot {
+  name Dot13
+  xpos 154
+  ypos 113
+ }
+set N20541000 [stack 0]
+ Dot {
+  name Dot14
+  xpos 154
+  ypos 190
+ }
+set N20540c00 [stack 0]
+ Dot {
+  name Dot12
+  xpos 154
+  ypos 237
+ }
+push $N20540c00
+push $N20541000
+push $N20541c00
+ Grade {
+  inputs 1+1
+  white {0.8100000024 0.8289999962 1 1}
+  gamma {1 1 {parent.RGB_Gamma.b} 1}
+  maskChannelMask SSS.blue
+  name SSS_B1
+  xpos 0
+  ypos 109
+ }
+ Grade {
+  inputs 1+1
+  gamma {1 {parent.RGB_Gamma.g} 1 1}
+  maskChannelMask SSS.red
+  name SSS_G1
+  xpos 0
+  ypos 186
+ }
+ Grade {
+  inputs 1+1
+  gamma {{parent.RGB_Gamma.r} 1 1 1}
+  maskChannelMask SSS.red
+  name SSS_R1
+  xpos 0
+  ypos 233
+ }
+push $N20541c00
+ Dot {
+  name Dot2
+  xpos -93
+ }
+ Dot {
+  name Dot3
+  xpos -93
+  ypos 307
+ }
+ Merge2 {
+  inputs 2
+  name Merge1
+  xpos 0
+  ypos 303
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 384
+ }
+end_group

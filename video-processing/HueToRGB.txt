@@ -1,0 +1,44 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name HueToRGB1
+ selected true
+ xpos 1492
+ ypos 878
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -78
+  ypos -79
+ }
+ Colorspace {
+  colorspace_in sRGB
+  colorspace_out HSV
+  name Colorspace1
+  xpos -78
+  ypos -39
+ }
+ Shuffle {
+  in rgb
+  green white
+  blue white
+  out rgb
+  name Shuffle1
+  xpos -78
+  ypos -13
+ }
+ Colorspace {
+  colorspace_in HSV
+  colorspace_out sRGB
+  name Colorspace2
+  xpos -78
+  ypos 13
+ }
+ Output {
+  name Output1
+  xpos -78
+  ypos 113
+ }
+end_group

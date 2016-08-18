@@ -1,0 +1,200 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name Emission1
+ tile_color 0xff8200ff
+ selected true
+ xpos 2178
+ ypos 909
+ addUserKnob {20 User}
+ addUserKnob {41 Gain T Control.Gain}
+ addUserKnob {41 Gamma T Control.Gamma}
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {26 Glow}
+ addUserKnob {41 size T FilterErode1.size}
+ addUserKnob {41 filter T FilterErode1.filter}
+ addUserKnob {41 Gain_1 l Gain T Control1.Gain}
+ addUserKnob {41 Gamma_1 l Gamma T Control1.Gamma}
+ addUserKnob {41 saturation_1 l saturation T Saturation2.saturation}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 313
+  ypos -538
+ }
+ Dot {
+  name Dot5
+  xpos 347
+  ypos -498
+ }
+set N2056e400 [stack 0]
+ Dot {
+  name Dot6
+  xpos 480
+  ypos -498
+ }
+ Dot {
+  name Dot7
+  xpos 480
+  ypos -412
+ }
+set N2059dc00 [stack 0]
+ Dot {
+  name Dot8
+  xpos 480
+  ypos -386
+ }
+set N2059d800 [stack 0]
+ Dot {
+  name Dot9
+  xpos 480
+  ypos -360
+ }
+set N2059d400 [stack 0]
+ Dot {
+  name Dot1
+  xpos 480
+  ypos -331
+ }
+set N2059d000 [stack 0]
+add_layer {Emission Emission.red Emission.green Emission.blue Emission.alpha}
+ FilterErode {
+  channels Emission
+  size -20
+  filter gaussian
+  name FilterErode1
+  xpos 446
+  ypos -263
+ }
+ Dot {
+  name Dot10
+  xpos 480
+  ypos -109
+ }
+set N2059c800 [stack 0]
+ Dot {
+  name Dot11
+  xpos 480
+  ypos -71
+ }
+set N2059c400 [stack 0]
+ Dot {
+  name Dot12
+  xpos 480
+  ypos -30
+ }
+set N2059c000 [stack 0]
+ Dot {
+  name Dot2
+  xpos 480
+  ypos 17
+ }
+push $N2059c000
+push $N2059c400
+push $N2059c800
+push $N2059d000
+push $N2059d400
+push $N2059d800
+push $N2059dc00
+push $N2056e400
+ NoOp {
+  name Control
+  xpos 313
+  ypos -442
+  addUserKnob {20 User}
+  addUserKnob {18 Gain R 1 2}
+  Gain 1.5
+  addUserKnob {6 Gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+  addUserKnob {18 Gamma}
+  Gamma {1 1 1}
+  addUserKnob {6 Gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ }
+ Grade {
+  inputs 1+1
+  white {{parent.Control.Gain.r} 1 1 1}
+  gamma {{parent.Control.Gamma.r} 1 1 1}
+  maskChannelMask Emission.red
+  name R
+  xpos 313
+  ypos -416
+ }
+ Grade {
+  inputs 1+1
+  white {1 {parent.Control.Gain.g} 1 1}
+  gamma {1 {parent.Control.Gamma.g} 1 1}
+  maskChannelMask Emission.green
+  name G
+  xpos 313
+  ypos -390
+ }
+ Grade {
+  inputs 1+1
+  white {1 1 {parent.Control.Gain.b} 1}
+  gamma {1 1 {parent.Control.Gamma.b} 1}
+  maskChannelMask Emission.blue
+  name B
+  xpos 313
+  ypos -364
+ }
+ Saturation {
+  inputs 1+1
+  name Saturation1
+  xpos 313
+  ypos -335
+ }
+ NoOp {
+  name Control1
+  xpos 313
+  ypos -175
+  addUserKnob {20 User}
+  addUserKnob {18 Gain R 1 2}
+  Gain 1.5
+  addUserKnob {6 Gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+  addUserKnob {18 Gamma R 0 2}
+  Gamma 1.5
+  addUserKnob {6 Gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ }
+ Grade {
+  inputs 1+1
+  white {{parent.Control1.Gain.r} 1 1 1}
+  gamma {{parent.Control1.Gamma.r} 1 1 1}
+  maskChannelMask Emission.red
+  unpremult rgba.alpha
+  name R1
+  xpos 313
+  ypos -119
+ }
+ Grade {
+  inputs 1+1
+  white {1 {parent.Control1.Gain.g} 1 1}
+  gamma {1 {parent.Control1.Gamma.g} 1 1}
+  maskChannelMask Emission.green
+  unpremult rgba.alpha
+  name G1
+  xpos 313
+  ypos -81
+ }
+ Grade {
+  inputs 1+1
+  white {1 1 {parent.Control1.Gain.b} 1}
+  gamma {1 1 {parent.Control1.Gamma.b} 1}
+  maskChannelMask Emission.blue
+  unpremult rgba.alpha
+  name B1
+  xpos 313
+  ypos -40
+ }
+ Saturation {
+  inputs 1+1
+  name Saturation2
+  xpos 313
+  ypos 13
+ }
+ Output {
+  name Output1
+  xpos 313
+  ypos 60
+ }
+end_group

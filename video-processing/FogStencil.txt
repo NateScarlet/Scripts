@@ -1,0 +1,45 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+GodRays {
+ channels alpha
+ translate {280 -740}
+ scale 1.16
+ to_color 0
+ steps 50
+ name GodRays1
+ selected true
+ xpos 950
+ ypos -88
+}
+Blur {
+ channels alpha
+ size 23.5
+ name Blur2
+ selected true
+ xpos 950
+ ypos -40
+}
+Grade {
+ channels alpha
+ whitepoint 0.47
+ name Grade6
+ selected true
+ xpos 950
+ ypos 8
+}
+Dot {
+ name Dot6
+ selected true
+ xpos 984
+ ypos 42
+}
+push 0
+Merge2 {
+ inputs 2
+ operation stencil
+ name Merge2
+ selected true
+ xpos 840
+ ypos 38
+}

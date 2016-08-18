@@ -1,0 +1,87 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
+Group {
+ name BumpNormals1
+ selected true
+ xpos 700
+ ypos 1064
+ addUserKnob {20 User l BumpNormals}
+ addUserKnob {41 maskChannelMask l channel -STARTLINE T Grade4.maskChannelMask}
+ addUserKnob {26 Range}
+ addUserKnob {6 switch l preview +STARTLINE}
+ addUserKnob {41 blackpoint T Grade1.blackpoint}
+ addUserKnob {41 whitepoint T Grade1.whitepoint}
+ addUserKnob {41 gamma_1 l gamma T Grade1.gamma}
+ addUserKnob {26 Color}
+ addUserKnob {41 gamma T Grade4.gamma}
+ addUserKnob {41 white l gain T Grade4.white}
+ addUserKnob {41 mix T Grade4.mix}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 258
+  ypos -619
+ }
+set N7c168c00 [stack 0]
+ Dot {
+  name Dot2
+  xpos 421
+  ypos -615
+ }
+ Grade {
+  channels BumpNormals
+  blackpoint -1
+  name Grade1
+  xpos 387
+  ypos -556
+ }
+ Dot {
+  name Dot1
+  xpos 421
+  ypos -488
+ }
+set N7c168000 [stack 0]
+ Dot {
+  name Dot4
+  xpos 421
+  ypos -412
+ }
+push $N7c168000
+push $N7c168c00
+ Grade {
+  inputs 1+1
+  white {1 1 1 1}
+  gamma {1 1 1 1}
+  maskChannelMask BumpNormals.blue
+  name Grade4
+  selected true
+  xpos 258
+  ypos -492
+ }
+ Copy {
+  inputs 2
+  from0 {{{Grade4.maskChannelMask}}}
+  to0 rgba.red
+  from1 {{{Grade4.maskChannelMask}}}
+  to1 rgba.green
+  from2 {{{Grade4.maskChannelMask}}}
+  to2 rgba.blue
+  from3 {{{Grade4.maskChannelMask}}}
+  to3 rgba.alpha
+  maskChannelMask rgba.red
+  mix {{parent.switch}}
+  name Copy1
+  xpos 258
+  ypos -442
+  addUserKnob {20 User}
+  addUserKnob {6 RangePreview +STARTLINE}
+ }
+ Output {
+  name Output1
+  xpos 258
+  ypos -328
+ }
+end_group

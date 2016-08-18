@@ -1,0 +1,70 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+Read {
+ inputs 0
+ file Z:/SNJYW/FX/Final/EP01/07/EP01_07_sc212/SNJYW_EP01_07_sc212_fx_Z/SNJYW_EP01_07_sc212_fx_Z.%04d.tga
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ first 57
+ last 84
+ colorspace sRGB
+ auto_alpha true
+ name Read5
+ selected true
+ xpos -2460
+ ypos -862
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/FX/Final/EP01/07/EP01_07_sc212/SNJYW_EP01_07_sc212_fx/SNJYW_EP01_07_sc212_fx.%04d.tga
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ first 57
+ last 84
+ colorspace sRGB
+ auto_alpha true
+ name Read4
+ selected true
+ xpos -2570
+ ypos -958
+}
+Copy {
+ inputs 2
+ from0 rgba.red
+ to0 depth.Z
+ name Copy1
+ selected true
+ xpos -2570
+ ypos -832
+}
+Dilate {
+ channels depth
+ size 1
+ name Dilate2
+ selected true
+ xpos -2570
+ ypos -784
+}
+ZDefocus2 {
+ center 0.25
+ size 10
+ max_size 50
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus2
+ selected true
+ xpos -2570
+ ypos -712
+}
+Dot {
+ name Dot2
+ selected true
+ xpos -2536
+ ypos -678
+}
+push $cut_paste_input
+Merge2 {
+ inputs 2
+ name Merge2
+ selected true
+ xpos -2680
+ ypos -682
+}

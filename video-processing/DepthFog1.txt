@@ -1,0 +1,108 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name DepthFog1
+ tile_color 0x7aa9ffff
+ selected true
+ xpos -40
+ ypos -1039
+ addUserKnob {20 DepthFog}
+ addUserKnob {26 Range}
+ addUserKnob {6 switch l preview +STARTLINE}
+ switch true
+ addUserKnob {41 blackpoint T DepthRange1.blackpoint}
+ addUserKnob {41 whitepoint T DepthRange1.whitepoint}
+ addUserKnob {41 gamma T DepthRange1.gamma}
+ addUserKnob {26 FogColor}
+ addUserKnob {41 black l lift T Fog1.black}
+ addUserKnob {41 white l gain T Fog1.white}
+ addUserKnob {41 mix T Fog1.mix}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 0
+ }
+set Na93dfc00 [stack 0]
+ Dot {
+  name Dot4
+  xpos 172
+  ypos 4
+ }
+set Na93df800 [stack 0]
+ Dot {
+  name Dot2
+  xpos 279
+  ypos 4
+ }
+ Grade {
+  channels depth
+  whitepoint 0.01
+  gamma 0.5
+  name DepthRange1
+  xpos 245
+  ypos 68
+ }
+ Dot {
+  name Dot3
+  xpos 279
+  ypos 163
+ }
+set Na93dec00 [stack 0]
+ Shuffle {
+  in depth
+  name Shuffle1
+  xpos 245
+  ypos 235
+ }
+ Dot {
+  name Dot5
+  xpos 279
+  ypos 306
+ }
+push $Na93dec00
+push $Na93df800
+ Dilate {
+  channels alpha
+  name AlphaDilate1
+  xpos 138
+  ypos 69
+ }
+ ChannelMerge {
+  inputs 2
+  A depth.Z
+  operation in
+  output depth.Z
+  name ChannelMerge3
+  xpos 138
+  ypos 146
+ }
+ Dot {
+  name Dot1
+  xpos 172
+  ypos 205
+ }
+push $Na93dfc00
+ Grade {
+  inputs 1+1
+  black {0.008999999613 0.02102400549 0.04500000179 0}
+  gamma 0.79
+  maskChannelMask depth.Z
+  name Fog1
+  xpos 0
+  ypos 201
+ }
+ Switch {
+  inputs 2
+  which {{parent.switch}}
+  name Switch1
+  xpos 0
+  ypos 302
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 403
+ }
+end_group
