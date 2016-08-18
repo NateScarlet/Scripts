@@ -4,11 +4,17 @@ push $cut_paste_input
 Group {
  name SSS1
  selected true
- xpos 1901
- ypos 549
+ xpos 522
+ ypos -1946
  addUserKnob {20 User l SSS}
  addUserKnob {6 RGB_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  addUserKnob {41 size l erode T Dilate1.size}
+ addUserKnob {18 RGB_Gain R 0 2}
+ RGB_Gain {1 1 1}
+ addUserKnob {6 RGB_Gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 white l R_gain T SSS_R1.white}
+ addUserKnob {41 white_1 l G_gain T SSS_G1.white}
+ addUserKnob {41 white_2 l B_gain T SSS_B1.white}
  addUserKnob {18 RGB_Gamma R 0 2}
  RGB_Gamma {1.714808822 1.202397585 0.9827932119}
  addUserKnob {6 RGB_Gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
@@ -23,7 +29,7 @@ Group {
   xpos 0
   ypos -4
  }
-set N20541c00 [stack 0]
+set N6b9f1000 [stack 0]
  Dot {
   name Dot1
   xpos 154
@@ -40,24 +46,24 @@ add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
   xpos 154
   ypos 113
  }
-set N20541000 [stack 0]
+set N6b9f0400 [stack 0]
  Dot {
   name Dot14
   xpos 154
   ypos 190
  }
-set N20540c00 [stack 0]
+set N6b9f0000 [stack 0]
  Dot {
   name Dot12
   xpos 154
   ypos 237
  }
-push $N20540c00
-push $N20541000
-push $N20541c00
+push $N6b9f0000
+push $N6b9f0400
+push $N6b9f1000
  Grade {
   inputs 1+1
-  white {0.8100000024 0.8289999962 1 1}
+  white {1 1 {parent.RGB_Gain.b} 1}
   gamma {1 1 {parent.RGB_Gamma.b} 1}
   maskChannelMask SSS.blue
   name SSS_B1
@@ -66,6 +72,7 @@ push $N20541c00
  }
  Grade {
   inputs 1+1
+  white {1 {parent.RGB_Gain.g} 1 1}
   gamma {1 {parent.RGB_Gamma.g} 1 1}
   maskChannelMask SSS.red
   name SSS_G1
@@ -74,13 +81,14 @@ push $N20541c00
  }
  Grade {
   inputs 1+1
+  white {{parent.RGB_Gain.r} 1 1 1}
   gamma {{parent.RGB_Gamma.r} 1 1 1}
   maskChannelMask SSS.red
   name SSS_R1
   xpos 0
   ypos 233
  }
-push $N20541c00
+push $N6b9f1000
  Dot {
   name Dot2
   xpos -93
