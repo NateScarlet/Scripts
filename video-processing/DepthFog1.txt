@@ -5,8 +5,8 @@ Group {
  name DepthFog1
  tile_color 0x7aa9ffff
  selected true
- xpos 527
- ypos -1054
+ xpos 43
+ ypos 2
  addUserKnob {20 DepthFog}
  addUserKnob {26 Range}
  addUserKnob {6 switch l preview +STARTLINE}
@@ -27,13 +27,13 @@ Group {
   name Input1
   xpos 0
  }
-set N7e421400 [stack 0]
+set N8216d000 [stack 0]
  Dot {
   name Dot4
   xpos 172
   ypos 4
  }
-set N7e421000 [stack 0]
+set N8216cc00 [stack 0]
  Dot {
   name Dot2
   xpos 279
@@ -52,7 +52,7 @@ set N7e421000 [stack 0]
   xpos 279
   ypos 163
  }
-set N74930000 [stack 0]
+set N8216c000 [stack 0]
  Shuffle {
   in depth
   name Shuffle1
@@ -64,8 +64,8 @@ set N74930000 [stack 0]
   xpos 279
   ypos 306
  }
-push $N74930000
-push $N7e421000
+push $N8216c000
+push $N8216cc00
  Dilate {
   channels alpha
   name AlphaDilate1
@@ -76,8 +76,8 @@ push $N7e421000
   inputs 2
   A depth.Z
   operation in
-  output depth.Z
   name ChannelMerge3
+  selected true
   xpos 138
   ypos 146
  }
@@ -86,19 +86,18 @@ push $N7e421000
   xpos 172
   ypos 205
  }
-set N8526e000 [stack 0]
+set N624f0800 [stack 0]
  Dot {
   name Dot6
   xpos 172
   ypos 250
  }
-push $N8526e000
-push $N7e421400
+push $N624f0800
+push $N8216d000
  Grade {
   inputs 1+1
   black {0.008999999613 0.02102400549 0.04500000179 0}
   gamma 0.79
-  maskChannelMask depth.Z
   name Fog1
   xpos 0
   ypos 201
