@@ -1,0 +1,37 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push 0
+push $cut_paste_input
+Dot {
+ name Dot18
+ selected true
+ xpos -226
+ ypos -774
+}
+set N760e9000 [stack 0]
+add_layer {CH_A CH_A.alpha CH_A.SSS}
+ChannelMerge {
+ inputs 2
+ A rgba.blue
+ operation out
+ B CH_A.alpha
+ name ChannelMerge1
+ selected true
+ xpos -150
+ ypos -791
+}
+Dot {
+ name Dot19
+ selected true
+ xpos -116
+ ypos -726
+}
+push $N760e9000
+Saturation {
+ inputs 1+1
+ saturation 0.8
+ name Saturation1
+ selected true
+ xpos -260
+ ypos -730
+}

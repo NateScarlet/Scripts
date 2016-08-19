@@ -5,8 +5,8 @@ Group {
  name DepthFog1
  tile_color 0x7aa9ffff
  selected true
- xpos -40
- ypos -1039
+ xpos 527
+ ypos -1054
  addUserKnob {20 DepthFog}
  addUserKnob {26 Range}
  addUserKnob {6 switch l preview +STARTLINE}
@@ -17,6 +17,9 @@ Group {
  addUserKnob {26 FogColor}
  addUserKnob {41 black l lift T Fog1.black}
  addUserKnob {41 white l gain T Fog1.white}
+ addUserKnob {41 saturation T ColorCorrect1.saturation}
+ addUserKnob {41 contrast T ColorCorrect1.contrast}
+ addUserKnob {41 gamma_1 l gamma T ColorCorrect1.gamma}
  addUserKnob {41 mix T Fog1.mix}
 }
  Input {
@@ -24,13 +27,13 @@ Group {
   name Input1
   xpos 0
  }
-set Na93dfc00 [stack 0]
+set N7e421400 [stack 0]
  Dot {
   name Dot4
   xpos 172
   ypos 4
  }
-set Na93df800 [stack 0]
+set N7e421000 [stack 0]
  Dot {
   name Dot2
   xpos 279
@@ -49,7 +52,7 @@ set Na93df800 [stack 0]
   xpos 279
   ypos 163
  }
-set Na93dec00 [stack 0]
+set N74930000 [stack 0]
  Shuffle {
   in depth
   name Shuffle1
@@ -61,8 +64,8 @@ set Na93dec00 [stack 0]
   xpos 279
   ypos 306
  }
-push $Na93dec00
-push $Na93df800
+push $N74930000
+push $N7e421000
  Dilate {
   channels alpha
   name AlphaDilate1
@@ -83,7 +86,14 @@ push $Na93df800
   xpos 172
   ypos 205
  }
-push $Na93dfc00
+set N8526e000 [stack 0]
+ Dot {
+  name Dot6
+  xpos 172
+  ypos 250
+ }
+push $N8526e000
+push $N7e421400
  Grade {
   inputs 1+1
   black {0.008999999613 0.02102400549 0.04500000179 0}
@@ -92,6 +102,13 @@ push $Na93dfc00
   name Fog1
   xpos 0
   ypos 201
+ }
+ ColorCorrect {
+  inputs 1+1
+  mix {{parent.Fog1.mix}}
+  name ColorCorrect1
+  xpos 0
+  ypos 246
  }
  Switch {
   inputs 2
