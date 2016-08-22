@@ -36,7 +36,7 @@ else
 return
 
 
-$#e:: 
+$^#e:: 
 IfWinExist, ahk_exe Q-Dir.exe
 {
 	WinActivate
@@ -46,4 +46,3 @@ else
 	Run Q-Dir
 }
 return
-$^#e:: Send, #e
