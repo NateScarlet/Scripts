@@ -2,7 +2,7 @@
 
 #NoEnv
 
-ahkcs := "http://www.steampowered.com"
+ahkcs := "http://www.steampowerd.com"
 
 ;~ MsgBox, % "上网方式: " W_InternetGetConnectedState() "`n连接状态: " W_IsNetworkAlive() "`n"
 MsgBox, % W_InternetCheckConnection(ahkcs) ? "成功连接到 baidu.com":"连接失败"
