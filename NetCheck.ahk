@@ -12,20 +12,27 @@ CoordMode, Mouse, Client
 
 
 ahkcs := "http://www.steampowerd.com"
-Menu, Tray, Icon, imageres.dll, 21
+Menu, Tray, Icon, imageres.dll, 85
 
 Loop
 {
-        NetStatus := % W_InternetCheckConnection(ahkcs) ? "网络正常": "网络中断"
+        ;~ 图标变化
+        If (W_InternetCheckConnection(ahkcs))
+        {
+                NetStatus := "网络正常"
+                Menu, Tray, Icon, imageres.dll, 21
+        }
+        else
+        {
+                NetStatus := "网络中断"
+                Menu, Tray, Icon, imageres.dll, 85
+        }
+        ;~ 气泡提示
         If (NetStatus != LastNetStatus)
         {
                 TrayTip, , %NetStatus%
                 LastNetStatus := NetStatus
         }
-        If (NetStatus = "网络正常")
-                Menu, Tray, Icon, imageres.dll, 21
-        If (NetStatus != "网络正常")
-                Menu, Tray, Icon, imageres.dll, 85
         Sleep, 1000
 }
 ;        判断是否可以与某个 URL 建立连接
