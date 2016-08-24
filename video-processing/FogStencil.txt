@@ -22,7 +22,7 @@ Blur {
 }
 Grade {
  channels alpha
- whitepoint 0.47
+ whitepoint 0.15
  name Grade6
  selected true
  xpos 950
