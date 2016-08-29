@@ -177,7 +177,6 @@ push $Nad44e880
 push $Nb03a6800
  Grade {
   inputs 1+1
-  whitepoint 1.5
   maskChannelMask rgba.red
   name Grade3
   label NormalLight
