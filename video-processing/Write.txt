@@ -1,0 +1,118 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Dot {
+ name Dot2
+ selected true
+ xpos 222
+ ypos 559
+}
+set N4485e400 [stack 0]
+Write {
+ file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
+ proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
+ file_type jpeg
+ _jpeg_quality 1
+ last {{first}}
+ use_limit true
+ checkHashOnRead false
+ version 4
+ name Write_JPG
+ selected true
+ xpos 188
+ ypos 669
+}
+Dot {
+ name Dot3
+ selected true
+ xpos 222
+ ypos 703
+}
+set N86a81800 [stack 0]
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression1
+ label SaturationToRGB
+ selected true
+ xpos 78
+ ypos 741
+}
+push $N86a81800
+Group {
+ name HueToRGB1
+ selected true
+ xpos 188
+ ypos 795
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -78
+  ypos -79
+ }
+ Colorspace {
+  colorspace_in sRGB
+  colorspace_out HSV
+  name Colorspace1
+  xpos -78
+  ypos -39
+ }
+ Shuffle {
+  in rgb
+  green white
+  blue white
+  out rgb
+  name Shuffle1
+  xpos -78
+  ypos -13
+ }
+ Colorspace {
+  colorspace_in HSV
+  colorspace_out sRGB
+  name Colorspace2
+  xpos -78
+  ypos 13
+ }
+ Output {
+  name Output1
+  xpos -78
+  ypos 113
+ }
+end_group
+push $N4485e400
+Write {
+ file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+ proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
+ colorspace sRGB
+ file_type mov
+ meta_codec "raw "
+ meta_encoder mov32
+ mov32_codec "raw "
+ mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+ mov64_codec ap4h
+ mov64_advanced 1
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ mov64_gop_size 12
+ mov64_b_frames 0
+ checkHashOnRead false
+ version 1
+ name Write_MOV
+ selected true
+ xpos 78
+ ypos 614
+}
+Read {
+ inputs 0
+ file "\[value Write_JPG.file]"
+ first {{parent.Write_JPG.last}}
+ last {{first}}
+ origset true
+ name ReadWrite_JPG
+ selected true
+ xpos 298
+ ypos 645
+}

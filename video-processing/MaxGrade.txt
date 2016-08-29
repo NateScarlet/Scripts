@@ -2,11 +2,11 @@ set cut_paste_input [stack 0]
 version 10.0 v1
 push $cut_paste_input
 Group {
- name MaxGrade2
+ name MaxGrade1
  tile_color 0x79a8ffff
  selected true
- xpos 398
- ypos -1748
+ xpos 982
+ ypos -1232
  addUserKnob {20 MaxGrade}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
@@ -15,15 +15,14 @@ Group {
  addUserKnob {41 framesbehind l "Frames to look at" T TimeEcho1.framesbehind}
  addUserKnob {41 frmaesfade l "Frames to fade out" T TimeEcho1.frmaesfade}
  addUserKnob {26 ""}
- addUserKnob {41 ROI T CurveTool1.ROI}
- addUserKnob {41 resetROI l Reset -STARTLINE T CurveTool1.resetROI}
  addUserKnob {41 go l Go! T CurveTool1.go}
- addUserKnob {26 ""}
  addUserKnob {41 maxlumapixdata l "Maximum Luminence Pixel" T CurveTool1.maxlumapixdata}
  addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
- addUserKnob {26 ""}
  addUserKnob {41 minlumapixdata l "Minimum Luminence Pixel" T CurveTool1.minlumapixdata}
  addUserKnob {41 minlumapixvalue l "Minimum Luminence Pixel value" T CurveTool1.minlumapixvalue}
+ addUserKnob {41 smooth T CurveTool1.smooth}
+ addUserKnob {41 rgbMax_smoothed T CurveTool1.rgbMax_smoothed}
+ addUserKnob {41 rgbMin_smoothed T CurveTool1.rgbMin_smoothed}
  addUserKnob {26 ""}
  addUserKnob {6 switchMax l Max +STARTLINE}
  switchMax true
@@ -44,13 +43,13 @@ Group {
   xpos 214
   ypos -582
  }
-set Nb0201800 [stack 0]
+set N63809000 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set N4fa7e800 [stack 0]
+set Nb771c00 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -61,11 +60,12 @@ set N4fa7e800 [stack 0]
   xpos 434
   ypos -390
  }
-push $Nb0201800
+push $N63809000
  Grade {
-  blackpoint {{"(parent.switchMin==1)?\nmin(\n       parent.CurveTool1.minlumapixvalue.r,\n       parent.CurveTool1.minlumapixvalue.g,\n       parent.CurveTool1.minlumapixvalue.b     \n)\n:0"}}
-  whitepoint {{"(parent.switchMax==1)?\nmax(\n        parent.CurveTool1.maxlumapixvalue.r,\n        parent.CurveTool1.maxlumapixvalue.g,\n        parent.CurveTool1.maxlumapixvalue.b\n)\n:1"}}
+  blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
+  whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
   name Grade1
+  selected true
   xpos 180
   ypos -466
  }
@@ -73,7 +73,6 @@ push $Nb0201800
   inputs 2
   mix {{1-parent.mix}}
   name Merge1
-  selected true
   xpos 180
   ypos -394
  }
@@ -82,7 +81,7 @@ push $Nb0201800
   xpos 180
   ypos -346
  }
-push $N4fa7e800
+push $Nb771c00
  TimeEcho {
   framesbehind 25
   frmaesfade 25
@@ -92,7 +91,7 @@ push $N4fa7e800
  }
  CurveTool {
   operation "Max Luma Pixel"
-  ROI {0 0 1920 1080}
+  ROI {0 0 {width} {height}}
   autocropdata {{parent.CurveTool1.ROI.x} {parent.CurveTool1.ROI.y} {parent.CurveTool1.ROI.r} {parent.CurveTool1.ROI.t}}
   maxlumapixdata {{curve} {curve}}
   maxlumapixvalue {{curve} {curve} {curve}}
@@ -101,5 +100,16 @@ push $N4fa7e800
   name CurveTool1
   xpos 290
   ypos -466
+  addUserKnob {20 User}
+  addUserKnob {7 rgbMax}
+  rgbMax {{"max(\n       maxlumapixvalue.r,\n       maxlumapixvalue.g,\n       maxlumapixvalue.b     \n)"}}
+  addUserKnob {7 rgbMin}
+  rgbMin {{"min(\n       minlumapixvalue.r,\n       minlumapixvalue.g,\n       minlumapixvalue.b     \n)"}}
+  addUserKnob {7 smooth R 0 100}
+  smooth 10
+  addUserKnob {7 rgbMax_smoothed}
+  rgbMax_smoothed {{(smooth!=0)?rgbMax.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMax}}
+  addUserKnob {7 rgbMin_smoothed}
+  rgbMin_smoothed {{(smooth!=0)?rgbMin.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMin}}
  }
 end_group

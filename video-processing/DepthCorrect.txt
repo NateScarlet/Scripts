@@ -1,0 +1,78 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name DepthCorrect1
+ tile_color 0x823a7dff
+ selected true
+ xpos 493
+ ypos -385
+ addUserKnob {20 User}
+ addUserKnob {41 go l Go! T CurveTool1.go}
+ addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
+ addUserKnob {41 multiple T Expression2.multiple}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 510
+  ypos -562
+ }
+ Dot {
+  name Dot2
+  xpos 544
+  ypos -486
+ }
+set Nb03a7800 [stack 0]
+ Expression {
+  temp_name0 minDepth
+  temp_expr0 mD*multiple
+  channel0 depth
+  expr0 min(minDepth,z)
+  name Expression2
+  label minDepth
+  selected true
+  xpos 510
+  ypos -376
+  addUserKnob {20 User}
+  addUserKnob {7 multiple R 0 2}
+  multiple 1
+  addUserKnob {7 mD}
+  mD {{parent.CurveTool1.maxlumapixvalue.r}}
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -246
+ }
+push $Nb03a7800
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -486
+ }
+ Dilate {
+  channels depth
+  size {{-width/10}}
+  name Dilate2
+  xpos 620
+  ypos -472
+ }
+ Premult {
+  channels depth
+  name Premult1
+  xpos 620
+  ypos -424
+ }
+ CurveTool {
+  operation "Max Luma Pixel"
+  channels depth
+  ROI {0 0 {width} {height}}
+  autocropdata {480 270 1440 810}
+  maxlumapixvalue {0 0 0}
+  minlumapixvalue {0 0 0}
+  name CurveTool1
+  xpos 620
+  ypos -376
+ }
+end_group
