@@ -4,26 +4,26 @@ push $cut_paste_input
 Dot {
  name Dot13
  selected true
- xpos 104
- ypos -2118
+ xpos 324
+ ypos -516
 }
-set N39bbe800 [stack 0]
-push $N39bbe800
+set N60c92c00 [stack 0]
+push $N60c92c00
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
 Shuffle {
  in BumpNormals
  name Shuffle2
  selected true
- xpos 180
- ypos -2122
+ xpos 400
+ ypos -520
 }
 Group {
  inputs 2
  name Mask3D_RS1
  tile_color 0x417c3eff
  selected true
- xpos 180
- ypos -2002
+ xpos 400
+ ypos -400
  addUserKnob {20 User}
  addUserKnob {18 pos l Position t "Select the colour that corresponds to the position you want."}
  pos {0.1597469896 -0.1521629989 0.3190000057}
@@ -133,14 +133,14 @@ Group {
   xpos 95
   ypos 762
  }
-set N2bbbf800 [stack 0]
+set N63808c00 [stack 0]
  Output {
   name Output1
   selected true
   xpos 95
   ypos 839
  }
-push $N2bbbf800
+push $N63808c00
  Viewer {
   name Viewer1
   selected true
@@ -148,3 +148,13 @@ push $N2bbbf800
   ypos 627
  }
 end_group
+push $N60c92c00
+Grade {
+ inputs 1+1
+ whitepoint 1.5
+ maskChannelMask rgba.red
+ name Grade3
+ selected true
+ xpos 290
+ ypos -400
+}
