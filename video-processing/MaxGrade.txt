@@ -5,8 +5,8 @@ Group {
  name MaxGrade1
  tile_color 0x79a8ffff
  selected true
- xpos 982
- ypos -1232
+ xpos 459
+ ypos -1062
  addUserKnob {20 MaxGrade}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
@@ -21,6 +21,7 @@ Group {
  addUserKnob {41 minlumapixdata l "Minimum Luminence Pixel" T CurveTool1.minlumapixdata}
  addUserKnob {41 minlumapixvalue l "Minimum Luminence Pixel value" T CurveTool1.minlumapixvalue}
  addUserKnob {41 smooth T CurveTool1.smooth}
+ addUserKnob {41 subSmooth T CurveTool1.subSmooth}
  addUserKnob {41 rgbMax_smoothed T CurveTool1.rgbMax_smoothed}
  addUserKnob {41 rgbMin_smoothed T CurveTool1.rgbMin_smoothed}
  addUserKnob {26 ""}
@@ -43,13 +44,13 @@ Group {
   xpos 214
   ypos -582
  }
-set N63809000 [stack 0]
+set N87792400 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set Nb771c00 [stack 0]
+set N4ccca000 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -60,12 +61,11 @@ set Nb771c00 [stack 0]
   xpos 434
   ypos -390
  }
-push $N63809000
+push $N87792400
  Grade {
   blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
   whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
   name Grade1
-  selected true
   xpos 180
   ypos -466
  }
@@ -81,7 +81,7 @@ push $N63809000
   xpos 180
   ypos -346
  }
-push $Nb771c00
+push $N4ccca000
  TimeEcho {
   framesbehind 25
   frmaesfade 25
@@ -98,6 +98,7 @@ push $Nb771c00
   minlumapixdata {{curve} {curve}}
   minlumapixvalue {{curve} {curve} {curve}}
   name CurveTool1
+  selected true
   xpos 290
   ypos -466
   addUserKnob {20 User}
@@ -107,9 +108,15 @@ push $Nb771c00
   rgbMin {{"min(\n       minlumapixvalue.r,\n       minlumapixvalue.g,\n       minlumapixvalue.b     \n)"}}
   addUserKnob {7 smooth R 0 100}
   smooth 10
+  addUserKnob {7 subSmooth -STARTLINE R 1 5}
+  subSmooth 1
+  addUserKnob {7 rgbMax_smoothTemp}
+  rgbMax_smoothTemp {{(smooth!=0)?rgbMax.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMax}}
+  addUserKnob {7 rgbMin_smoothTemp}
+  rgbMin_smoothTemp {{(smooth!=0)?rgbMin.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMin}}
   addUserKnob {7 rgbMax_smoothed}
-  rgbMax_smoothed {{(smooth!=0)?rgbMax.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMax}}
+  rgbMax_smoothed {{"(subSmooth!=0)?\n    (\n    (smooth!=0)?\n        rgbMax_smoothTemp.integrate(frame-subSmooth,frame+subSmooth)/(2*subSmooth)\n        :rgbMax\n    )\n:rgbMax_smoothTemp"}}
   addUserKnob {7 rgbMin_smoothed}
-  rgbMin_smoothed {{(smooth!=0)?rgbMin.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMin}}
+  rgbMin_smoothed {{"(subSmooth!=0)?\n    (\n    (smooth!=0)?\n        rgbMin_smoothTemp.integrate(frame-subSmooth,frame+subSmooth)/(2*subSmooth)\n        :rgbMin\n    )\n:rgbMin_smoothTemp"}}
  }
 end_group
