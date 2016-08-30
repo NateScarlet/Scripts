@@ -5,8 +5,8 @@ Group {
  name DepthCorrect1
  tile_color 0x823a7dff
  selected true
- xpos 493
- ypos -385
+ xpos -315
+ ypos -114
  addUserKnob {20 User}
  addUserKnob {41 go l Go! T CurveTool1.go}
  addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
@@ -16,24 +16,57 @@ Group {
   inputs 0
   name Input1
   xpos 510
-  ypos -562
+  ypos -634
  }
  Dot {
   name Dot2
   xpos 544
-  ypos -486
+  ypos -558
  }
-set Nb03a7800 [stack 0]
+set N4d13c00 [stack 0]
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -558
+ }
+ Expression {
+  channel0 depth
+  expr0 (a==1)?z:1
+  name Expression3
+  xpos 620
+  ypos -514
+ }
+ Expression {
+  channel0 depth
+  expr0 (z==1)?0:z
+  name Expression1
+  xpos 620
+  ypos -466
+ }
+ CurveTool {
+  operation "Max Luma Pixel"
+  channels depth
+  ROI {0 0 {width} {height}}
+  autocropdata {480 270 1440 810}
+  maxlumapixdata {{curve} {curve}}
+  maxlumapixvalue {{curve} {curve} 0}
+  minlumapixdata {{curve} {curve}}
+  minlumapixvalue {{curve} {curve} 0}
+  name CurveTool1
+  xpos 620
+  ypos -376
+ }
+push $N4d13c00
  Expression {
   temp_name0 minDepth
   temp_expr0 mD*multiple
   channel0 depth
   expr0 min(minDepth,z)
+  unpremult rgba.alpha
   name Expression2
   label minDepth
-  selected true
   xpos 510
-  ypos -376
+  ypos -383
   addUserKnob {20 User}
   addUserKnob {7 multiple R 0 2}
   multiple 1
@@ -43,36 +76,6 @@ set Nb03a7800 [stack 0]
  Output {
   name Output1
   xpos 510
-  ypos -246
- }
-push $Nb03a7800
- Dot {
-  name Dot1
-  xpos 654
-  ypos -486
- }
- Dilate {
-  channels depth
-  size {{-width/10}}
-  name Dilate2
-  xpos 620
-  ypos -472
- }
- Premult {
-  channels depth
-  name Premult1
-  xpos 620
-  ypos -424
- }
- CurveTool {
-  operation "Max Luma Pixel"
-  channels depth
-  ROI {0 0 {width} {height}}
-  autocropdata {480 270 1440 810}
-  maxlumapixvalue {0 0 0}
-  minlumapixvalue {0 0 0}
-  name CurveTool1
-  xpos 620
-  ypos -376
+  ypos -250
  }
 end_group
