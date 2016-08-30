@@ -5,8 +5,8 @@ Group {
  name MaxGrade1
  tile_color 0x79a8ffff
  selected true
- xpos 459
- ypos -1062
+ xpos 419
+ ypos -749
  addUserKnob {20 MaxGrade}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
@@ -44,13 +44,13 @@ Group {
   xpos 214
   ypos -582
  }
-set N87792400 [stack 0]
+set Naac29800 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set N4ccca000 [stack 0]
+set Naac29400 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -61,7 +61,7 @@ set N4ccca000 [stack 0]
   xpos 434
   ypos -390
  }
-push $N87792400
+push $Naac29800
  Grade {
   blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
   whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
@@ -81,7 +81,7 @@ push $N87792400
   xpos 180
   ypos -346
  }
-push $N4ccca000
+push $Naac29400
  TimeEcho {
   framesbehind 25
   frmaesfade 25
@@ -107,9 +107,9 @@ push $N4ccca000
   addUserKnob {7 rgbMin}
   rgbMin {{"min(\n       minlumapixvalue.r,\n       minlumapixvalue.g,\n       minlumapixvalue.b     \n)"}}
   addUserKnob {7 smooth R 0 100}
-  smooth 10
+  smooth {{(last_frame-first_frame)/2}}
   addUserKnob {7 subSmooth -STARTLINE R 1 5}
-  subSmooth 1
+  subSmooth {{smooth/10}}
   addUserKnob {7 rgbMax_smoothTemp}
   rgbMax_smoothTemp {{(smooth!=0)?rgbMax.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMax}}
   addUserKnob {7 rgbMin_smoothTemp}
