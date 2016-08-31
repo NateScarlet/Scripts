@@ -1,64 +1,112 @@
 set cut_paste_input [stack 0]
 version 10.0 v1
 push $cut_paste_input
-push $cut_paste_input
 Group {
- inputs 2
  name SSS1
- tile_color 0xdb9476ff
  selected true
- xpos 66
- ypos -1231
- addUserKnob {20 SSS}
- addUserKnob {41 saturation T ColorCorrect1.saturation}
- addUserKnob {41 contrast T ColorCorrect1.contrast}
- addUserKnob {41 gamma T ColorCorrect1.gamma}
- addUserKnob {41 gain T ColorCorrect1.gain}
- addUserKnob {41 offset T ColorCorrect1.offset}
- addUserKnob {41 mix T Merge2.mix}
+ xpos 522
+ ypos -1946
+ addUserKnob {20 User l SSS}
+ addUserKnob {6 RGB_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 size l erode T Dilate1.size}
+ addUserKnob {18 RGB_Gain R 0 2}
+ RGB_Gain {1 1 1}
+ addUserKnob {6 RGB_Gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 white l R_gain T SSS_R1.white}
+ addUserKnob {41 white_1 l G_gain T SSS_G1.white}
+ addUserKnob {41 white_2 l B_gain T SSS_B1.white}
+ addUserKnob {18 RGB_Gamma R 0 2}
+ RGB_Gamma {1.714808822 1.202397585 0.9827932119}
+ addUserKnob {6 RGB_Gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 R_gamma T SSS_R1.gamma}
+ addUserKnob {41 G_gamma T SSS_G1.gamma}
+ addUserKnob {41 B_gamma T SSS_B1.gamma}
+ addUserKnob {41 mix T Merge1.mix}
 }
  Input {
   inputs 0
   name Input1
-  xpos 222
-  ypos -542
+  xpos 0
+  ypos -4
  }
+set N6b9f1000 [stack 0]
  Dot {
   name Dot1
-  xpos 256
-  ypos -491
- }
-set Nbd8aa400 [stack 0]
- Dot {
-  name Dot3
-  xpos 342
-  ypos -491
+  xpos 154
  }
 add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
- ColorCorrect {
+ Dilate {
   channels SSS
-  name ColorCorrect1
-  xpos 308
-  ypos -465
+  name Dilate1
+  xpos 120
+  ypos 38
  }
  Dot {
-  name Dot2
-  xpos 342
-  ypos -401
+  name Dot13
+  xpos 154
+  ypos 113
  }
-push $Nbd8aa400
+set N6b9f0400 [stack 0]
+ Dot {
+  name Dot14
+  xpos 154
+  ypos 190
+ }
+set N6b9f0000 [stack 0]
+ Dot {
+  name Dot12
+  xpos 154
+  ypos 237
+ }
+push $N6b9f0000
+push $N6b9f0400
+push $N6b9f1000
+ Grade {
+  inputs 1+1
+  white {1 1 {parent.RGB_Gain.b} 1}
+  gamma {1 1 {parent.RGB_Gamma.b} 1}
+  maskChannelMask SSS.blue
+  name SSS_B1
+  xpos 0
+  ypos 109
+ }
+ Grade {
+  inputs 1+1
+  white {1 {parent.RGB_Gain.g} 1 1}
+  gamma {1 {parent.RGB_Gamma.g} 1 1}
+  maskChannelMask SSS.red
+  name SSS_G1
+  xpos 0
+  ypos 186
+ }
+ Grade {
+  inputs 1+1
+  white {{parent.RGB_Gain.r} 1 1 1}
+  gamma {{parent.RGB_Gamma.r} 1 1 1}
+  maskChannelMask SSS.red
+  name SSS_R1
+  xpos 0
+  ypos 233
+ }
+push $N6b9f1000
+ Dot {
+  name Dot2
+  xpos -93
+ }
+ Dot {
+  name Dot3
+  xpos -93
+  ypos 307
+ }
  Merge2 {
   inputs 2
-  operation screen
-  Achannels SSS
-  name Merge2
-  selected true
-  xpos 222
-  ypos -405
+  name Merge1
+  xpos 0
+  ypos 303
  }
  Output {
   name Output1
-  xpos 222
-  ypos -345
+  xpos 0
+  ypos 384
  }
 end_group
