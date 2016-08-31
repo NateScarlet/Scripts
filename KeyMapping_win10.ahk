@@ -10,10 +10,35 @@ if not A_IsAdmin ;确保管理员权限
 CoordMode, Mouse, Screen
 MouseGetPos, rawX, rawY
 CoordMode, Mouse, Client
+$#1:: 
+IfWinExist, ahk_exe firefox.exe
+{
+	WinActivate
+}
+else
+{
+	Run firefox
+}
+return
 
+$#2:: 
+Run PS
+return
 
+$#3:: 
+IfWinExist, ahk_exe EmEditor.exe
+{
+	WinActivate
+}
+else
+{
+	Run txt
+}
+return
 
-
+$^#f:: 
+Run Everything
+return
 
 
 CoordMode, Mouse, Screen
