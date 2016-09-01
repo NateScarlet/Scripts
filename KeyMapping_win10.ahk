@@ -36,7 +36,7 @@ else
 }
 return
 
-$^#f:: 
+$#f:: 
 Run Everything
 return
 
