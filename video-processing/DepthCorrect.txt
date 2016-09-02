@@ -5,12 +5,13 @@ Group {
  name DepthCorrect1
  tile_color 0x823a7dff
  selected true
- xpos -126
- ypos -1309
+ xpos 541
+ ypos -2049
  addUserKnob {20 User}
  addUserKnob {41 go l Go! T CurveTool1.go}
  addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
  addUserKnob {41 multiple T Expression2.multiple}
+ addUserKnob {41 unpremult l "(un)premult by" T Expression2.unpremult}
 }
  Input {
   inputs 0
@@ -23,7 +24,7 @@ Group {
   xpos 544
   ypos -558
  }
-set N2834f800 [stack 0]
+set N61a06000 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -40,7 +41,6 @@ set N2834f800 [stack 0]
   channels depth
   size -2
   name Dilate1
-  selected true
   xpos 620
   ypos -458
  }
@@ -57,7 +57,7 @@ set N2834f800 [stack 0]
   xpos 620
   ypos -376
  }
-push $N2834f800
+push $N61a06000
  Expression {
   temp_name0 minDepth
   temp_expr0 mD*multiple
@@ -66,6 +66,7 @@ push $N2834f800
   unpremult rgba.alpha
   name Expression2
   label minDepth
+  selected true
   xpos 510
   ypos -383
   addUserKnob {20 User}
