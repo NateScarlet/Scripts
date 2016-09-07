@@ -1,45 +1,135 @@
 set cut_paste_input [stack 0]
 version 10.0 v1
-push $cut_paste_input
-GodRays {
- channels alpha
- translate {280 -740}
- scale 1.16
- to_color 0
- steps 50
- name GodRays1
- selected true
- xpos 950
- ypos -88
-}
-Blur {
- channels alpha
- size 23.5
- name Blur2
- selected true
- xpos 950
- ypos -40
-}
-Grade {
- channels alpha
- whitepoint 0.15
- name Grade6
- selected true
- xpos 950
- ypos 8
-}
-Dot {
- name Dot6
- selected true
- xpos 984
- ypos 42
-}
 push 0
-Merge2 {
+push $cut_paste_input
+Group {
  inputs 2
- operation stencil
- name Merge2
+ name FogStencil
+ tile_color 0x4c81a8ff
  selected true
- xpos 840
- ypos 38
+ xpos 283
+ ypos -53
+ addUserKnob {20 FogStencil}
+ addUserKnob {41 translate T GodRays1.translate}
+ addUserKnob {41 rotate T GodRays1.rotate}
+ addUserKnob {41 scale T GodRays1.scale}
+ addUserKnob {41 skew T GodRays1.skew}
+ addUserKnob {41 center T GodRays1.center}
+ addUserKnob {41 from_color l "from color" T GodRays1.from_color}
+ addUserKnob {41 to_color l "to color" T GodRays1.to_color}
+ addUserKnob {41 gamma T GodRays1.gamma}
+ addUserKnob {41 LightBlocking T Merge1.mix}
+ addUserKnob {41 mix T Merge2.mix}
 }
+ Input {
+  inputs 0
+  name Stencil
+  xpos 290
+  ypos -298
+  number 1
+ }
+ Dot {
+  name Dot8
+  xpos 324
+  ypos -222
+ }
+set N249c8800 [stack 0]
+ Dot {
+  name Dot5
+  xpos 434
+  ypos -222
+ }
+set N249c8400 [stack 0]
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -222
+ }
+ Dot {
+  name Dot7
+  xpos 544
+  ypos 66
+ }
+push $N249c8400
+ GodRays {
+  channels alpha
+  translate {-6 -56}
+  scale 1.12
+  center {1038 1260}
+  to_color 0
+  steps 50
+  max true
+  name GodRays1
+  xpos 400
+  ypos -112
+ }
+ set C24a0fc00 [stack 0]
+ Multiply {
+  inputs 1+1
+  channels alpha
+  value 0
+  name Multiply1
+  xpos 400
+  ypos 56
+ }
+push $N249c8800
+ Invert {
+  channels alpha
+  name Invert1
+  xpos 290
+  ypos -160
+ }
+clone $C24a0fc00 {
+  xpos 290
+  ypos -112
+  selected false
+ }
+ Invert {
+  channels alpha
+  name Invert2
+  xpos 290
+  ypos -64
+ }
+ Merge2 {
+  inputs 2
+  operation max
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  mix 0.815
+  name Merge1
+  xpos 290
+  ypos 56
+ }
+ Median {
+  channels alpha
+  size 1
+  ignore_top_line false
+  name Median1
+  xpos 290
+  ypos 104
+ }
+ Dot {
+  name Dot6
+  xpos 324
+  ypos 138
+ }
+ Input {
+  inputs 0
+  name Fog
+  xpos 180
+  ypos -298
+ }
+ Merge2 {
+  inputs 2
+  operation stencil
+  name Merge2
+  xpos 180
+  ypos 134
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos 230
+ }
+end_group
