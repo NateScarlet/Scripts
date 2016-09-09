@@ -36,7 +36,6 @@ Expression {
  selected true
  xpos 78
  ypos 741
- postage_stamp true
 }
 push $N86a81800
 Group {
@@ -44,7 +43,6 @@ Group {
  selected true
  xpos 188
  ypos 795
- postage_stamp true
 }
  Input {
   inputs 0
