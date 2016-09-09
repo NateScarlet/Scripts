@@ -1,11 +1,11 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Group {
  name HueToRGB1
  selected true
  xpos 1492
  ypos 878
+ postage_stamp true
 }
  Input {
   inputs 0

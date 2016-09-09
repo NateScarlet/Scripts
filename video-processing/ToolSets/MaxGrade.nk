@@ -1,12 +1,11 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Group {
  name MaxGrade1
  tile_color 0x79a8ffff
  selected true
- xpos 243
- ypos -760
+ xpos 512
+ ypos -373
  addUserKnob {20 MaxGrade}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
@@ -33,20 +32,20 @@ Group {
   inputs 0
   name Input1
   xpos 180
-  ypos -730
+  ypos -681
  }
  Dot {
   name Dot1
   xpos 214
   ypos -582
  }
-set N3516d000 [stack 0]
+set N7ed0d000 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set N3516cc00 [stack 0]
+set N7ed0cc00 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -57,7 +56,7 @@ set N3516cc00 [stack 0]
   xpos 434
   ypos -390
  }
-push $N3516d000
+push $N7ed0d000
  Grade {
   blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
   whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
@@ -67,6 +66,7 @@ push $N3516d000
  }
  Merge2 {
   inputs 2
+  operation copy
   mix {{1-parent.mix}}
   name Merge1
   xpos 180
@@ -77,7 +77,7 @@ push $N3516d000
   xpos 180
   ypos -346
  }
-push $N3516cc00
+push $N7ed0cc00
  CurveTool {
   operation "Max Luma Pixel"
   ROI {0 0 {width} {height}}

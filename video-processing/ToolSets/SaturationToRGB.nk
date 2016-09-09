@@ -1,5 +1,4 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Expression {
  channel0 rgb
@@ -9,4 +8,5 @@ Expression {
  selected true
  xpos 13
  ypos 677
+ postage_stamp true
 }
