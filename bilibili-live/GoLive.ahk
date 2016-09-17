@@ -12,23 +12,23 @@ CoordMode, Mouse, Screen
 MouseGetPos, rawX, rawY
 CoordMode, Mouse, Window
 
-ÈÎÎñ¹ÜÀíÆ÷:
-WinClose ahk_exe Taskmgr.exe
-WinWaitClose ahk_exe Taskmgr.exe
-Run, Taskmgr
-WinWait, ahk_exe Taskmgr.exe
-WinActivate
-WinWaitActive
-WinMove, ahk_exe Taskmgr.exe, , %A_ScreenWidth%, 170
-Click, , 66, 66
-Click, , 80, 100, 2
+;~ ÈÎÎñ¹ÜÀíÆ÷:
+;~ WinClose ahk_exe Taskmgr.exe
+;~ WinWaitClose ahk_exe Taskmgr.exe
+;~ Run, Taskmgr
+;~ WinWait, ahk_exe Taskmgr.exe
+;~ WinActivate
+;~ WinWaitActive
+;~ WinMove, ahk_exe Taskmgr.exe, , %A_ScreenWidth%, 170
+;~ Click, , 66, 66
+;~ Click, , 80, 100, 2
 
-ÉùÒô:
-WinClose, ÉùÒô ahk_class #32770
-Run rundll32.exe shell32.dll`,Control_RunDLL mmsys.cpl @1
-WinWait, ÉùÒô ahk_class #32770
-Click, 85, 55
-WinMove 2725, 120
+;~ ÉùÒô:
+;~ WinClose, ÉùÒô ahk_class #32770
+;~ Run rundll32.exe shell32.dll`,Control_RunDLL mmsys.cpl @1
+;~ WinWait, ÉùÒô ahk_class #32770
+;~ Click, 85, 55
+;~ WinMove 2725, 120
 
 µ¯Ä»¼§:
 TargetWin = BÕ¾—Ä»¼§ ahk_exe Bililive_dm.exe

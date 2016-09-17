@@ -81,6 +81,7 @@ IfWinActive, Scene Switcher
 }
 WinWaitNotActive, Scene Switcher
 WinWait, %TargetWin%
+WinActivate
 WinMove, %TargetWin%, , %A_ScreenWidth%, 120
 WinMaximize
 WinSet, Transparent, % (0.75 * 255), %TargetWin%
