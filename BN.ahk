@@ -137,7 +137,7 @@ LogIn(UserName, Password, Region)
    ;~ 确认登录
    VerificationIf()
    Send, {Enter}
-   WinWaitClose, , , 5
+   WinWaitClose, , , 10
    if (ErrorLevel = 1)
    {
       MsgBox, 本次未能成功登录
