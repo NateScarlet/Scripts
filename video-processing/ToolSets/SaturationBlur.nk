@@ -1,0 +1,59 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name SaturationBlur1
+ tile_color 0x7aa9ffff
+ selected true
+ xpos 175
+ ypos -2384
+ addUserKnob {20 SaturationBlur}
+ addUserKnob {41 size T Blur6.size}
+ addUserKnob {41 filter T Blur6.filter}
+ addUserKnob {41 maskChannelInput l mask T Blur6.maskChannelInput}
+ addUserKnob {41 inject -STARTLINE T Blur6.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Blur6.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Blur6.fringe}
+ addUserKnob {41 mix T Blur6.mix}
+}
+ Input {
+  inputs 0
+  name Mask
+  xpos 510
+  ypos 38
+  number 1
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos 400
+  ypos -10
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 400
+  ypos 14
+ }
+ Blur {
+  inputs 1+1
+  channels {-rgba.red rgba.green -rgba.blue none}
+  size 80
+  mix 0.3
+  name Blur6
+  selected true
+  xpos 400
+  ypos 38
+ }
+ Colorspace {
+  colorspace_in HSV
+  name Colorspace2
+  xpos 400
+  ypos 86
+ }
+ Output {
+  name Output1
+  xpos 400
+  ypos 182
+ }
+end_group

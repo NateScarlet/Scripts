@@ -1,15 +1,16 @@
 set cut_paste_input [stack 0]
+version 10.0 v1
 push $cut_paste_input
 EXPTool {
  red {{this.lightRandom}}
  green {{red}}
  blue {{green}}
- name Exposure2
+ name Exposure4
  label "Light Flicker"
  selected true
- xpos 53
- ypos 708
- addUserKnob {20 User}
+ xpos 659
+ ypos -77
+ addUserKnob {20 LightFlicker}
  addUserKnob {7 amplitude R 0 10}
  amplitude 0.22
  addUserKnob {7 speed R 0 10}
