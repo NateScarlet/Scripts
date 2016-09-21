@@ -1,0 +1,41 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+ModifyMetaData {
+ metadata {
+  {set first_frame "\[value input.first]"}
+  {set last_frame "\[value input.last]"}
+ }
+ name ModifyMetaData1
+ label " <font color = red>put this node  \nafter WRITE node</font>"
+ note_font Verdana
+ selected true
+ xpos 70
+ ypos -98
+}
+Shuffle {
+ red alpha
+ green alpha
+ blue alpha
+ name Shuffle2
+ selected true
+ xpos 70
+ ypos -34
+}
+Write {
+ file "images/\[lindex \[split \[basename \[metadata input/filename]] .] 0]/\[lindex \[split \[basename \[metadata input/filename]] .] 0].%04d.png"
+ proxy "images/\[lindex \[split \[basename \[metadata input/filename]] .] 0]/\[lindex \[split \[basename \[metadata input/filename]] .] 0]_proxy.%04d.png"
+ file_type png
+ datatype "16 bit"
+ first {{"\[metadata first_frame]"}}
+ last {{"\[metadata last_frame]"}}
+ use_limit true
+ checkHashOnRead false
+ version 6
+ beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}')+'/';\npathHead = '' if absolutePath else project_directory;\nos.makedirs(pathHead+os.path.dirname(file));\n"
+ name Write2
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ selected true
+ xpos 70
+ ypos -3
+}

@@ -1,0 +1,105 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name HSVBlur1
+ tile_color 0x7aa9ffff
+ selected true
+ xpos 280
+ ypos -5195
+ addUserKnob {20 SaturationBlur}
+ addUserKnob {26 Blur_Size l "Blur Size"}
+ addUserKnob {41 size l H T HBlur.size}
+ addUserKnob {41 size_1 l S T SBlur.size}
+ addUserKnob {41 size_2 l V T VBlur.size}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {41 maskChannelMask l mask T HBlur.maskChannelMask}
+ addUserKnob {41 maskChannelInput l "" -STARTLINE T HBlur.maskChannelInput}
+ addUserKnob {41 inject -STARTLINE T HBlur.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T HBlur.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T HBlur.fringe}
+ addUserKnob {41 mix T HBlur.mix}
+}
+ Input {
+  inputs 0
+  name Mask
+  xpos 510
+  ypos -34
+  number 1
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos 42
+ }
+set Nff034c00 [stack 0]
+ Dot {
+  name Dot2
+  xpos 544
+  ypos 66
+ }
+set Nff034800 [stack 0]
+ Dot {
+  name Dot3
+  xpos 544
+  ypos 90
+ }
+push $Nff034800
+push $Nff034c00
+ Input {
+  inputs 0
+  name Input
+  xpos 400
+  ypos -34
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 400
+  ypos 14
+ }
+ Blur {
+  inputs 1+1
+  channels {rgba.red -rgba.green -rgba.blue none}
+  mix 0.3
+  name HBlur
+  xpos 400
+  ypos 38
+ }
+ Blur {
+  inputs 1+1
+  channels {-rgba.red rgba.green -rgba.blue none}
+  size 80
+  maskChannelInput {{{parent.HBlur.maskChannelInput}}}
+  inject {{parent.HBlur.inject}}
+  invert_mask {{parent.HBlur.invert_mask}}
+  fringe {{parent.HBlur.fringe}}
+  mix {{parent.HBlur.mix}}
+  name SBlur
+  xpos 400
+  ypos 62
+ }
+ Blur {
+  inputs 1+1
+  channels {-rgba.red -rgba.green rgba.blue none}
+  maskChannelInput {{{parent.HBlur.maskChannelInput}}}
+  inject {{parent.HBlur.inject}}
+  invert_mask {{parent.HBlur.invert_mask}}
+  fringe {{parent.HBlur.fringe}}
+  mix {{parent.HBlur.mix}}
+  name VBlur
+  xpos 400
+  ypos 86
+ }
+ Colorspace {
+  colorspace_in HSV
+  name Colorspace2
+  xpos 400
+  ypos 134
+ }
+ Output {
+  name Output1
+  xpos 400
+  ypos 158
+ }
+end_group
