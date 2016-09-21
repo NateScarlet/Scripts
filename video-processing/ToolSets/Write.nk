@@ -1,117 +1,136 @@
 set cut_paste_input [stack 0]
+BackdropNode {
+inputs 0
+name BackdropNode1
+tile_color 0x9fbcc6ff
+label Write
+note_font_size 42
+selected true
+xpos -1714
+ypos 2299
+bdwidth 348
+bdheight 396
+}
 push $cut_paste_input
 Dot {
- name Dot2
- selected true
- xpos 222
- ypos 559
+name Dot2
+selected true
+xpos -1546
+ypos 2395
 }
-set N4485e400 [stack 0]
+set N31254800 [stack 0]
 Write {
- file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
- proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
- file_type jpeg
- _jpeg_quality 1
- last {{first}}
- use_limit true
- checkHashOnRead false
- version 4
- name Write_JPG
- selected true
- xpos 188
- ypos 669
+file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
+proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
+file_type jpeg
+_jpeg_quality 1
+first {{"\[value root.first_frame]"}}
+last {{first}}
+use_limit true
+checkHashOnRead false
+version 15
+in_colorspace linear
+out_colorspace linear
+beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+name Write_JPG
+selected true
+xpos -1580
+ypos 2505
 }
 Dot {
- name Dot3
- selected true
- xpos 222
- ypos 703
+name Dot3
+selected true
+xpos -1546
+ypos 2539
 }
-set N86a81800 [stack 0]
+set N31254000 [stack 0]
 Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name Expression1
- label SaturationToRGB
- selected true
- xpos 78
- ypos 741
+channel0 rgb
+expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+name Expression1
+label SaturationToRGB
+selected true
+xpos -1690
+ypos 2577
 }
-push $N86a81800
+push $N31254000
 Group {
- name HueToRGB1
- selected true
- xpos 188
- ypos 795
+name HueToRGB1
+selected true
+xpos -1580
+ypos 2631
 }
- Input {
-  inputs 0
-  name Input1
-  xpos -78
-  ypos -79
- }
- Colorspace {
-  colorspace_in sRGB
-  colorspace_out HSV
-  name Colorspace1
-  xpos -78
-  ypos -39
- }
- Shuffle {
-  in rgb
-  green white
-  blue white
-  out rgb
-  name Shuffle1
-  xpos -78
-  ypos -13
- }
- Colorspace {
-  colorspace_in HSV
-  colorspace_out sRGB
-  name Colorspace2
-  xpos -78
-  ypos 13
- }
- Output {
-  name Output1
-  xpos -78
-  ypos 113
- }
-end_group
-push $N4485e400
-Write {
- file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
- colorspace sRGB
- file_type mov
- meta_codec "raw "
- meta_encoder mov32
- mov32_codec "raw "
- mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
- mov64_codec ap4h
- mov64_advanced 1
- mov64_bitrate 20000
- mov64_bitrate_tolerance 40000000
- mov64_quality_min 2
- mov64_quality_max 31
- mov64_gop_size 12
- mov64_b_frames 0
- checkHashOnRead false
- version 1
- name Write_MOV
- selected true
- xpos 78
- ypos 614
-}
-Read {
+Input {
  inputs 0
- file "\[value Write_JPG.file]"
- first {{parent.Write_JPG.last}}
- last {{first}}
- origset true
- name ReadWrite_JPG
- selected true
- xpos 298
- ypos 645
+ name Input1
+ xpos -78
+ ypos -79
+}
+Colorspace {
+ colorspace_in sRGB
+ colorspace_out HSV
+ name Colorspace1
+ xpos -78
+ ypos -39
+}
+Shuffle {
+ in rgb
+ green white
+ blue white
+ out rgb
+ name Shuffle1
+ xpos -78
+ ypos -13
+}
+Colorspace {
+ colorspace_in HSV
+ colorspace_out sRGB
+ name Colorspace2
+ xpos -78
+ ypos 13
+}
+Output {
+ name Output1
+ xpos -78
+ ypos 113
+}
+end_group
+Read {
+inputs 0
+file "\[value Write_JPG.file]"
+first {{parent.Write_JPG.last}}
+last {{first}}
+origset true
+name ReadWrite_JPG
+selected true
+xpos -1470
+ypos 2481
+}
+push $N31254800
+Write {
+file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
+colorspace sRGB
+file_type mov
+meta_codec "raw "
+meta_encoder mov32
+mov32_codec "raw "
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+mov64_codec ap4h
+mov64_advanced 1
+mov64_bitrate 20000
+mov64_bitrate_tolerance 40000000
+mov64_quality_min 2
+mov64_quality_max 31
+mov64_gop_size 12
+mov64_b_frames 0
+checkHashOnRead false
+version 3
+in_colorspace linear
+out_colorspace linear
+beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+name Write_MOV
+selected true
+xpos -1690
+ypos 2450
 }

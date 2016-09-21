@@ -1,0 +1,154 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+BackdropNode {
+ inputs 0
+ name BackdropNode4
+ tile_color 0x718bc6ff
+ label BG_A.Light_Yellow
+ note_font_size 42
+ selected true
+ xpos 32
+ ypos -3358
+ bdwidth 376
+ bdheight 283
+ z_order 1
+}
+push $cut_paste_input
+Dot {
+ name Dot16
+ selected true
+ xpos 104
+ ypos -3822
+}
+set N1df98c00 [stack 0]
+Dot {
+ name Dot17
+ selected true
+ xpos 214
+ ypos -3822
+}
+set N1df98800 [stack 0]
+Dot {
+ name Dot18
+ selected true
+ xpos 324
+ ypos -3822
+}
+push 0
+Dot {
+ name Dot19
+ selected true
+ xpos 324
+ ypos -3702
+}
+push $N1df98800
+Keyer {
+ operation "luminance key"
+ range {0.1867629605 1 1 1}
+ name Keyer3
+ selected true
+ xpos 180
+ ypos -3784
+}
+ChannelMerge {
+ inputs 2
+ operation in
+ name ChannelMerge1
+ selected true
+ xpos 180
+ ypos -3719
+}
+Blur {
+ channels alpha
+ size 3.4
+ name Blur1
+ selected true
+ xpos 180
+ ypos -3664
+}
+Dot {
+ name Dot20
+ selected true
+ xpos 214
+ ypos -3606
+}
+push $N1df98c00
+add_layer {BG_A BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Water_depth}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 BG_A.Light_Yellow
+ name Copy3
+ selected true
+ xpos 70
+ ypos -3616
+}
+push 0
+ColorCorrect {
+ saturation 0.48
+ gamma {1.346666694 0.8866665959 0.3466666937 1}
+ gain {0.3306500018 0.2537000179 -0.07435002923 0.2700000107}
+ highlights.gain {0.9660000205 1 -0.7000000477 1}
+ maskChannelInput BG_A.Light_Yellow
+ name ColorCorrect9
+ selected true
+ xpos 70
+ ypos -3304
+}
+Dot {
+ name Dot21
+ selected true
+ xpos 104
+ ypos -3246
+}
+set N1f467c00 [stack 0]
+Dot {
+ name Dot22
+ selected true
+ xpos 104
+ ypos -3246
+}
+Premult {
+ channels alpha
+ alpha BG_A.Light_Yellow
+ name Premult1
+ selected true
+ xpos 180
+ ypos -3256
+}
+Blur {
+ channels alpha
+ size 35
+ name Blur2
+ selected true
+ xpos 180
+ ypos -3184
+}
+Dot {
+ name Dot23
+ selected true
+ xpos 214
+ ypos -3126
+}
+push $N1f467c00
+Grade {
+ inputs 1+1
+ white 1.5
+ add {0.2870000005 0.0172200352 0 0.150000006}
+ name Grade3
+ label Light
+ selected true
+ xpos 70
+ ypos -3136
+}
+push 0
+add_layer {BG_A_depth3Split BG_A_depth3Split.Far BG_A_depth3Split.Middle BG_A_depth3Split.Close BG_A_depth3Split.Focus}
+ColorCorrect {
+ contrast {0.75 0.6900000572 0.5100000501 0.8000000119}
+ gain 0.5
+ maskChannelInput BG_A_depth3Split.Far
+ name ColorCorrect18
+ selected true
+ xpos 70
+ ypos -2810
+}

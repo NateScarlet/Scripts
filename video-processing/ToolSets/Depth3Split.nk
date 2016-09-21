@@ -1,0 +1,100 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+add_layer {BG_A_depth3Split BG_A_depth3Split.Far BG_A_depth3Split.Middle BG_A_depth3Split.Close BG_A_depth3Split.Focus}
+Shuffle {
+ red black
+ green black
+ blue black
+ alpha black
+ out BG_A_depth3Split
+ name Shuffle6
+ selected true
+ xpos 480
+ ypos -4509
+}
+Keyer {
+ input depth
+ output BG_A_depth3Split.Far
+ operation "luminance key"
+ range {0.00304516 0.00800937 1 1}
+ name Keyer10
+ label "\[value input]"
+ selected true
+ xpos 480
+ ypos -4457
+}
+Keyer {
+ input depth
+ output BG_A_depth3Split.Middle
+ operation "luminance key"
+ range {0.00206128 0.002407609245 0.00420761 0.00498098}
+ name Keyer7
+ label "\[value input]"
+ selected true
+ xpos 480
+ ypos -4385
+}
+Keyer {
+ input depth
+ output BG_A_depth3Split.Close
+ invert true
+ operation "luminance key"
+ range {0 0.00221174 1 1}
+ name Keyer8
+ label "\[value input]"
+ selected true
+ xpos 480
+ ypos -4313
+}
+Keyer {
+ input depth
+ output BG_A_depth3Split.Focus
+ invert true
+ operation "luminance key"
+ range {0.00026101 0.0006454 0.002045402894 0.00547842}
+ name Keyer5
+ label "\[value input]"
+ selected true
+ xpos 480
+ ypos -4261
+}
+ColorCorrect {
+ contrast {0.75 0.6900000572 0.5100000501 0.8000000119}
+ gain 0.5
+ maskChannelInput BG_A_depth3Split.Far
+ name ColorCorrect18
+ selected true
+ xpos 480
+ ypos -4100
+}
+ColorCorrect {
+ saturation 1.16
+ contrast {0.7436899543 0.7502000332 0.6200000048 0.6200000048}
+ maskChannelInput BG_A_depth3Split.Middle
+ name ColorCorrect19
+ selected true
+ xpos 480
+ ypos -4052
+}
+ColorCorrect {
+ contrast 1.3
+ gain 2.15
+ maskChannelInput BG_A_depth3Split.Close
+ name ColorCorrect20
+ selected true
+ xpos 480
+ ypos -4004
+}
+ZDefocus2 {
+ z_channel BG_A_depth3Split.Focus
+ math direct
+ size 8
+ max_size 25
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus2
+ selected true
+ xpos 480
+ ypos -3926
+}
