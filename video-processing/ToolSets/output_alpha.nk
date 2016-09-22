@@ -1,26 +1,49 @@
 set cut_paste_input [stack 0]
 version 10.0 v1
 push $cut_paste_input
-ModifyMetaData {
- metadata {
-  {set first_frame "\[value input.first]"}
-  {set last_frame "\[value input.last]"}
- }
- name ModifyMetaData1
- label " <font color = red>put this node  \nafter WRITE node</font>"
- note_font Verdana
+Group {
+ name Metadata_FrameRange
  selected true
- xpos 70
- ypos -98
+ xpos 400
+ ypos 230
 }
+ Input {
+  inputs 0
+  name Input1
+  xpos 251
+  ypos 188
+ }
+ ModifyMetaData {
+  metadata {
+   {set first_frame "\[value parent.input.first]"}
+   {set last_frame "\[value parent.input.last]"}
+  }
+  name ModifyMetaData1
+  note_font Verdana
+  xpos 251
+  ypos 254
+ }
+ Assert {
+  expression {{"\[string is integer \[metadata first_frame]]" x1 1}}
+  message "节点：\[value parent.name] 的前一个节点应为Write节点"
+  name Assert2
+  xpos 251
+  ypos 291
+ }
+ Output {
+  name Output1
+  xpos 251
+  ypos 391
+ }
+end_group
 Shuffle {
  red alpha
  green alpha
  blue alpha
  name Shuffle2
  selected true
- xpos 70
- ypos -34
+ xpos 400
+ ypos 278
 }
 Write {
  file "images/\[lindex \[split \[basename \[metadata input/filename]] .] 0]/\[lindex \[split \[basename \[metadata input/filename]] .] 0].%04d.png"
@@ -36,6 +59,6 @@ Write {
  name Write2
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
- xpos 70
- ypos -3
+ xpos 400
+ ypos 332
 }

@@ -1,0 +1,38 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+ name Metadata_FrameRange
+ selected true
+ xpos 430
+ ypos 147
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 251
+  ypos 188
+ }
+ ModifyMetaData {
+  metadata {
+   {set first_frame "\[value parent.input.first]"}
+   {set last_frame "\[value parent.input.last]"}
+  }
+  name ModifyMetaData1
+  note_font Verdana
+  xpos 251
+  ypos 254
+ }
+ Assert {
+  expression {{"\[string is integer \[metadata first_frame]]" x1 1}}
+  message "节点：\[value parent.name] 的前一个节点应为Write节点"
+  name Assert2
+  xpos 251
+  ypos 291
+ }
+ Output {
+  name Output1
+  xpos 251
+  ypos 391
+ }
+end_group
