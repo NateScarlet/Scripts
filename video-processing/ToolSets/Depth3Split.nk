@@ -1,100 +1,96 @@
 set cut_paste_input [stack 0]
 version 10.0 v1
 push $cut_paste_input
-add_layer {BG_A_depth3Split BG_A_depth3Split.Far BG_A_depth3Split.Middle BG_A_depth3Split.Close BG_A_depth3Split.Focus}
+Group {
+name Depth3Split
+tile_color 0xff00ff
+selected true
+xpos 70
+ypos -4197
+addUserKnob {20 Depth3Split}
+addUserKnob {6 preview +STARTLINE}
+preview true
+addUserKnob {41 input T Middle.input}
+addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+addUserKnob {41 invert -STARTLINE T Middle.invert}
+addUserKnob {41 operation T Middle.operation}
+addUserKnob {41 range T Middle.range}
+addUserKnob {26 Focus_div l Focus}
+addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
+addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+addUserKnob {41 range_1 l range T Focus.range}
+}
+Input {
+inputs 0
+name Input
+xpos 180
+ypos -586
+}
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
 Shuffle {
- red black
- green black
- blue black
- alpha black
- out BG_A_depth3Split
- name Shuffle6
- selected true
- xpos 480
- ypos -4509
+red black
+green black
+blue black
+alpha black
+out depth3split
+name Shuffle
+xpos 180
+ypos -538
 }
 Keyer {
- input depth
- output BG_A_depth3Split.Far
- operation "luminance key"
- range {0.00304516 0.00800937 1 1}
- name Keyer10
- label "\[value input]"
- selected true
- xpos 480
- ypos -4457
+input {{{parent.Middle.input}}}
+output depth3split.Far
+operation "luminance key"
+range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+name Far
+label "\[value input]"
+xpos 180
+ypos -503
 }
 Keyer {
- input depth
- output BG_A_depth3Split.Middle
- operation "luminance key"
- range {0.00206128 0.002407609245 0.00420761 0.00498098}
- name Keyer7
- label "\[value input]"
- selected true
- xpos 480
- ypos -4385
+input depth
+output depth3split.Middle
+operation "luminance key"
+range {0 0.0005732081969 0.00250478 0.00797384}
+name Middle
+label "\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]"
+selected true
+xpos 180
+ypos -431
 }
 Keyer {
- input depth
- output BG_A_depth3Split.Close
- invert true
- operation "luminance key"
- range {0 0.00221174 1 1}
- name Keyer8
- label "\[value input]"
- selected true
- xpos 480
- ypos -4313
+input {{{parent.Middle.input}}}
+output depth3split.Close
+invert true
+operation "luminance key"
+range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+name Close
+label "\[value input]"
+xpos 180
+ypos -358
 }
 Keyer {
- input depth
- output BG_A_depth3Split.Focus
- invert true
- operation "luminance key"
- range {0.00026101 0.0006454 0.002045402894 0.00547842}
- name Keyer5
- label "\[value input]"
- selected true
- xpos 480
- ypos -4261
+input {{{parent.Middle.input}}}
+output depth3split.Focus
+operation "luminance key"
+range {0 0 0 0.000573208}
+name Focus
+xpos 180
+ypos -306
 }
-ColorCorrect {
- contrast {0.75 0.6900000572 0.5100000501 0.8000000119}
- gain 0.5
- maskChannelInput BG_A_depth3Split.Far
- name ColorCorrect18
- selected true
- xpos 480
- ypos -4100
+Shuffle {
+in depth3split
+red blue
+blue red
+name Shuffle1
+xpos 180
+ypos -224
+disable {{1-parent.preview}}
 }
-ColorCorrect {
- saturation 1.16
- contrast {0.7436899543 0.7502000332 0.6200000048 0.6200000048}
- maskChannelInput BG_A_depth3Split.Middle
- name ColorCorrect19
- selected true
- xpos 480
- ypos -4052
+Output {
+name Output1
+xpos 180
+ypos -125
 }
-ColorCorrect {
- contrast 1.3
- gain 2.15
- maskChannelInput BG_A_depth3Split.Close
- name ColorCorrect20
- selected true
- xpos 480
- ypos -4004
-}
-ZDefocus2 {
- z_channel BG_A_depth3Split.Focus
- math direct
- size 8
- max_size 25
- legacy_resize_mode false
- show_legacy_resize_mode false
- name ZDefocus2
- selected true
- xpos 480
- ypos -3926
-}
+end_group

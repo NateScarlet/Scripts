@@ -1,0 +1,148 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+name EdgeLight2
+tile_color 0x417c3eff
+selected true
+xpos 735
+ypos -1359
+addUserKnob {20 EdgeLight}
+addUserKnob {41 channels l "edge channels" T EdgeDetect1.channels}
+addUserKnob {26 Range}
+addUserKnob {41 translate T GodRays2.translate}
+addUserKnob {41 rotate T GodRays2.rotate}
+addUserKnob {41 scale T GodRays2.scale}
+addUserKnob {41 skew T GodRays2.skew}
+addUserKnob {41 center T GodRays2.center}
+addUserKnob {41 size l "blur size" T Blur4.size}
+addUserKnob {41 p0 l "mask 0" T Ramp8.p0}
+addUserKnob {41 p1 l "mask 1" T Ramp8.p1}
+addUserKnob {26 Grade}
+addUserKnob {41 black l lift T Grade11.black}
+addUserKnob {41 white l gain T Grade11.white}
+addUserKnob {41 gamma T Grade11.gamma}
+addUserKnob {41 mix T Grade11.mix}
+}
+Input {
+inputs 0
+name Input1
+xpos 510
+ypos -658
+}
+Dot {
+name Dot37
+xpos 544
+ypos -606
+}
+set Nfd586400 [stack 0]
+Dot {
+name Dot3
+xpos 544
+ypos -198
+}
+set Nd2858c00 [stack 0]
+push $Nfd586400
+Dot {
+name Dot1
+xpos 654
+ypos -606
+}
+Keyer {
+input alpha
+operation "max keyer"
+name Keyer1
+xpos 620
+ypos -568
+}
+Dot {
+name Dot38
+xpos 654
+ypos -510
+}
+set Nfd586c00 [stack 0]
+Dot {
+name Dot39
+xpos 764
+ypos -510
+}
+GodRays {
+channels alpha
+translate {{parent.GodRays2.translate} {parent.GodRays2.translate}}
+center {{parent.GodRays2.center} {parent.GodRays2.center}}
+steps 10
+max true
+name GodRays3
+xpos 730
+ypos -424
+}
+push $Nfd586c00
+EdgeDetectWrapper {
+channels alpha
+name EdgeDetect1
+label "\[knob GodRays3.channels \[value this.channels]]"
+xpos 620
+ypos -479
+}
+Merge2 {
+inputs 2
+operation stencil
+name Merge1
+xpos 620
+ypos -418
+}
+GodRays {
+translate {134 -132}
+center {1318 940}
+to_color 0
+steps 10
+max true
+name GodRays2
+xpos 620
+ypos -376
+}
+Blur {
+channels alpha
+size 100
+name Blur4
+xpos 620
+ypos -328
+}
+Ramp {
+invert true
+p0 {-500 600}
+p1 {-100 600}
+color 0
+name Ramp8
+xpos 620
+ypos -274
+}
+ChannelMerge {
+inputs 2
+operation in
+name ChannelMerge1
+xpos 620
+ypos -215
+}
+Dot {
+name Dot2
+xpos 654
+ypos -126
+}
+push $Nd2858c00
+Grade {
+inputs 1+1
+black {0.01871959679 0.01801999845 0.05299999937 0}
+white 9
+gamma 1.3
+name Grade11
+label Light
+xpos 510
+ypos -136
+}
+Output {
+name Output1
+xpos 510
+ypos -34
+}
+end_group
