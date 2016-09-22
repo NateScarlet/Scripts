@@ -5,13 +5,14 @@ name Depth3Split
 tile_color 0xff00ff
 selected true
 xpos 70
-ypos -4058
+ypos -4042
 addUserKnob {20 Depth3Split}
 addUserKnob {6 preview +STARTLINE}
 preview true
 addUserKnob {41 input T Middle.input}
 addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
 addUserKnob {41 invert -STARTLINE T Middle.invert}
+addUserKnob {41 value l multiply T Multiply1.value}
 addUserKnob {41 operation T Middle.operation}
 addUserKnob {41 range T Middle.range}
 addUserKnob {26 Focus_div l Focus}
@@ -19,6 +20,9 @@ addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.F
 addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
 addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
 addUserKnob {41 range_1 l range T Focus.range}
+addUserKnob {41 gamma T Grade1.gamma}
+addUserKnob {41 size l "blur size" T Blur1.size}
+addUserKnob {41 filter l "blur filter" T Blur1.filter}
 }
 Input {
 inputs 0
@@ -35,7 +39,13 @@ alpha black
 out depth3split
 name Shuffle
 xpos 180
-ypos -538
+ypos -562
+}
+Multiply {
+channels depth
+name Multiply1
+xpos 180
+ypos -520
 }
 Keyer {
 input {{{parent.Middle.input}}}
@@ -45,7 +55,7 @@ range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
 name Far
 label "\[value input]"
 xpos 180
-ypos -503
+ypos -479
 }
 Keyer {
 input depth
@@ -53,7 +63,7 @@ output depth3split.Middle
 operation "luminance key"
 range {0 0.0005732081969 0.00250478 0.00797384}
 name Middle
-label "\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]"
+label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
 xpos 180
 ypos -431
 }
@@ -66,17 +76,30 @@ range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
 name Close
 label "\[value input]"
 xpos 180
-ypos -358
+ypos -383
 }
 Keyer {
 input {{{parent.Middle.input}}}
 output depth3split.Focus
 invert true
 operation "luminance key"
-range {0 0 0 0.000573208}
+range {0 0 0 0.008891268191}
 name Focus
 xpos 180
-ypos -306
+ypos -328
+}
+Grade {
+channels {none none none depth3split.Focus}
+name Grade1
+selected true
+xpos 180
+ypos -280
+}
+Blur {
+channels {none none none depth3split.Focus}
+name Blur1
+xpos 180
+ypos -232
 }
 Shuffle {
 in depth3split
@@ -84,12 +107,12 @@ red blue
 blue red
 name Shuffle1
 xpos 180
-ypos -224
+ypos -178
 disable {{1-parent.preview}}
 }
 Output {
 name Output1
 xpos 180
-ypos -125
+ypos -130
 }
 end_group
