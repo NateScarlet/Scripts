@@ -1,12 +1,11 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Group {
 name Depth3Split
 tile_color 0xff00ff
 selected true
 xpos 70
-ypos -4197
+ypos -4058
 addUserKnob {20 Depth3Split}
 addUserKnob {6 preview +STARTLINE}
 preview true
@@ -55,7 +54,6 @@ operation "luminance key"
 range {0 0.0005732081969 0.00250478 0.00797384}
 name Middle
 label "\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]"
-selected true
 xpos 180
 ypos -431
 }
@@ -73,6 +71,7 @@ ypos -358
 Keyer {
 input {{{parent.Middle.input}}}
 output depth3split.Focus
+invert true
 operation "luminance key"
 range {0 0 0 0.000573208}
 name Focus
