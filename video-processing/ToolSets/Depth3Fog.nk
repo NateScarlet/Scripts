@@ -1,0 +1,310 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Group {
+name Depth3Fog1
+tile_color 0xff00ff
+selected true
+xpos 473
+ypos -4873
+addUserKnob {20 Depth3Split}
+addUserKnob {6 preview +STARTLINE}
+addUserKnob {41 input T Middle.input}
+addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+addUserKnob {41 invert -STARTLINE T Middle.invert}
+addUserKnob {41 value l multiply T Multiply1.value}
+addUserKnob {41 operation T Middle.operation}
+addUserKnob {41 range T Middle.range}
+addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+}
+Input {
+inputs 0
+name Input
+xpos 180
+ypos -586
+}
+Dot {
+name Dot2
+xpos 214
+ypos -510
+}
+set Nb5a97c00 [stack 0]
+Dot {
+name Dot3
+xpos 434
+ypos -510
+}
+Multiply {
+channels depth
+name Multiply1
+xpos 400
+ypos -496
+}
+Keyer {
+input {{{parent.Middle.input}}}
+operation "luminance key"
+range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+name Far
+label "\[value input]"
+xpos 400
+ypos -431
+}
+set Nf6174400 [stack 0]
+Keyer {
+input depth
+operation "luminance key"
+range {0 0.002252513333 0.004505026667 0.006757542952}
+name Middle
+label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+xpos 400
+ypos -383
+}
+set Nf6174000 [stack 0]
+Keyer {
+input {{{parent.Middle.input}}}
+invert true
+operation "luminance key"
+range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+name Close
+label "\[value input]"
+xpos 400
+ypos -335
+}
+set Nf5a6bc00 [stack 0]
+push $Nf6174000
+push $Nf6174400
+push 0
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
+Copy {
+inputs 2
+from0 rgba.alpha
+to0 CH_A.red
+name Copy1
+xpos 510
+ypos -424
+}
+Copy {
+inputs 2
+from0 rgba.alpha
+to0 rgba.green
+name Copy2
+xpos 510
+ypos -376
+}
+Copy {
+inputs 2
+from0 rgba.alpha
+to0 rgba.blue
+name Copy3
+xpos 510
+ypos -328
+}
+Dot {
+name Dot1
+xpos 544
+ypos -150
+}
+push $Nf6174400
+push 0
+push $Nf5a6bc00
+push $Nf6174000
+Merge2 {
+inputs 3+1
+operation plus
+Achannels alpha
+Bchannels alpha
+output alpha
+name Merge2
+xpos 290
+ypos -328
+}
+push $Nf6174000
+push $Nf6174400
+Merge2 {
+inputs 2
+operation plus
+Achannels alpha
+Bchannels alpha
+output alpha
+name Merge1
+xpos 290
+ypos -376
+}
+push $Nf6174400
+push $Nb5a97c00
+Grade {
+inputs 1+1
+black {0.008999999613 0.02102400549 0.04500000179 0}
+mix 0.33
+name Grade1
+xpos 180
+ypos -418
+}
+set C8bc80800 [stack 0]
+clone $C8bc80800 {
+inputs 1+1
+xpos 180
+ypos -370
+selected false
+}
+clone $C8bc80800 {
+inputs 1+1
+xpos 180
+ypos -322
+selected false
+}
+Switch {
+inputs 2
+which {{parent.preview}}
+name Switch1
+xpos 180
+ypos -154
+}
+Output {
+name Output1
+xpos 180
+ypos -58
+}
+Group {
+inputs 0
+name DepthFog1
+tile_color 0x7aa9ffff
+xpos -40
+ypos -346
+addUserKnob {20 DepthFog}
+addUserKnob {6 switch l preview +STARTLINE}
+switch true
+addUserKnob {26 Range}
+addUserKnob {6 premult +STARTLINE}
+addUserKnob {41 size l erode -STARTLINE T AlphaDilate1.size}
+addUserKnob {41 blackpoint T DepthRange1.blackpoint}
+addUserKnob {41 whitepoint T DepthRange1.whitepoint}
+addUserKnob {41 gamma T DepthRange1.gamma}
+addUserKnob {26 FogColor}
+addUserKnob {41 black l lift T Fog1.black}
+addUserKnob {41 white l gain T Fog1.white}
+addUserKnob {41 saturation T ColorCorrect1.saturation}
+addUserKnob {41 contrast T ColorCorrect1.contrast}
+addUserKnob {41 gamma_1 l gamma T ColorCorrect1.gamma}
+addUserKnob {41 mix T Fog1.mix}
+}
+Input {
+inputs 0
+name Input1
+xpos -40
+ypos -82
+}
+set N4cb09800 [stack 0]
+Dot {
+name Dot4
+xpos 104
+ypos -78
+}
+set N4cb09400 [stack 0]
+Dot {
+name Dot2
+xpos 324
+ypos -78
+}
+Grade {
+channels depth
+whitepoint 0.01
+gamma 0.5
+name DepthRange1
+xpos 290
+ypos -16
+}
+Dot {
+name Dot3
+xpos 324
+ypos 66
+}
+set N4cb08800 [stack 0]
+Shuffle {
+in depth
+name Shuffle1
+xpos 290
+ypos 230
+}
+Dot {
+name Dot5
+xpos 324
+ypos 306
+}
+push $N4cb08800
+push $N4cb09400
+Dilate {
+channels alpha
+name AlphaDilate1
+xpos 70
+ypos -16
+}
+ChannelMerge {
+inputs 2
+A depth.Z
+operation in
+name ChannelMerge3
+xpos 70
+ypos 49
+}
+push $N4cb08800
+Shuffle {
+in depth
+green red
+blue red
+out alpha
+name Shuffle2
+xpos 180
+ypos 110
+}
+Switch {
+inputs 2
+which {{parent.premult}}
+name Switch2
+label premult
+xpos 70
+ypos 152
+}
+Dot {
+name Dot1
+xpos 104
+ypos 210
+}
+set N4c51b000 [stack 0]
+Dot {
+name Dot6
+xpos 104
+ypos 258
+}
+push $N4c51b000
+push $N4cb09800
+Grade {
+inputs 1+1
+black {0.008999999613 0.02102400549 0.04500000179 0}
+gamma 0.79
+name Fog1
+xpos -40
+ypos 206
+}
+ColorCorrect {
+inputs 1+1
+mix {{parent.Fog1.mix}}
+name ColorCorrect1
+selected true
+xpos -40
+ypos 254
+}
+Switch {
+inputs 2
+which {{parent.switch}}
+name Switch1
+xpos -40
+ypos 302
+}
+Output {
+name Output1
+xpos -40
+ypos 398
+}
+end_group
+end_group

@@ -1,11 +1,12 @@
 set cut_paste_input [stack 0]
+version 10.0 v1
 push $cut_paste_input
 Group {
- name HardClip1
+ name HardClip2
  tile_color 0x79a8ffff
  selected true
- xpos 254
- ypos -446
+ xpos 1827
+ ypos -2571
  addUserKnob {20 MaxGrade}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
@@ -24,7 +25,8 @@ Group {
  switchMax true
  addUserKnob {6 switchMin l Min -STARTLINE}
  switchMin true
- addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 gamma T ValueGamma1.gamma}
+ addUserKnob {41 saturation T ValueGamma1.saturation}
  addUserKnob {7 mix}
  mix 1
 }
@@ -32,20 +34,20 @@ Group {
   inputs 0
   name Input1
   xpos 180
-  ypos -681
+  ypos -682
  }
  Dot {
   name Dot1
   xpos 214
   ypos -582
  }
-set Nb0fbf400 [stack 0]
+set Ndad8c800 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set Nb0fbf000 [stack 0]
+set Ndad8c400 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -56,7 +58,7 @@ set Nb0fbf000 [stack 0]
   xpos 434
   ypos -390
  }
-push $Nb0fbf400
+push $Ndad8c800
  Grade {
   blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
   whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
@@ -64,6 +66,108 @@ push $Nb0fbf400
   xpos 180
   ypos -466
  }
+ Group {
+  name ValueGamma1
+  help 只调整亮度不影响饱和度和色相
+  tile_color 0x79a8ffff
+  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
+  selected true
+  xpos 180
+  ypos -418
+  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+  addUserKnob {41 channels T Colorspace1.channels}
+  addUserKnob {7 lift}
+  addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+  gain 1
+  addUserKnob {7 gamma R 0 4}
+  gamma 1
+  addUserKnob {41 saturation T Saturation1.saturation}
+  addUserKnob {41 maskChannelInput l mask T Grade1.maskChannelInput}
+  addUserKnob {41 inject -STARTLINE T Grade1.inject}
+  addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+  addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+  addUserKnob {41 mix T Grade1.mix}
+ }
+  Input {
+   inputs 0
+   name Input
+   xpos 510
+   ypos -634
+  }
+  Dot {
+   name Dot1
+   xpos 544
+   ypos -582
+  }
+set N4d9dd800 [stack 0]
+  Dot {
+   name Dot2
+   xpos 654
+   ypos -582
+  }
+  Input {
+   inputs 0
+   name InputMask
+   xpos 730
+   ypos -466
+   number 1
+  }
+  Switch {
+   inputs 2
+   which {{"\[string is digit \[input parent 1]]"}}
+   name Switch1
+   xpos 620
+   ypos -466
+  }
+set Nd265cd80 [stack 0]
+  Dot {
+   name Dot3
+   xpos 654
+   ypos -366
+  }
+push $Nd265cd80
+push $N4d9dd800
+  Colorspace {
+   colorspace_out HSV
+   name Colorspace1
+   xpos 510
+   ypos -514
+  }
+  Grade {
+   inputs 1+1
+   channels {none none none rgba.blue}
+   black {{parent.lift}}
+   white {{parent.gain}}
+   gamma {{parent.gamma}}
+   name Grade1
+   xpos 510
+   ypos -472
+  }
+  Colorspace {
+   channels {{{parent.Colorspace1.channels}}}
+   colorspace_in HSV
+   name Colorspace2
+   xpos 510
+   ypos -418
+  }
+  Saturation {
+   inputs 1+1
+   channels {{{parent.Colorspace1.channels}}}
+   maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+   inject {{parent.Grade1.inject}}
+   invert_mask {{parent.Grade1.invert_mask}}
+   fringe {{parent.Grade1.fringe}}
+   mix {{parent.Grade1.mix}}
+   name Saturation1
+   xpos 510
+   ypos -370
+  }
+  Output {
+   name Output1
+   xpos 510
+   ypos -298
+  }
+ end_group
  Merge2 {
   inputs 2
   operation copy
@@ -77,7 +181,7 @@ push $Nb0fbf400
   xpos 180
   ypos -346
  }
-push $Nb0fbf000
+push $Ndad8c400
  CurveTool {
   operation "Max Luma Pixel"
   ROI {0 0 {width} {height}}
