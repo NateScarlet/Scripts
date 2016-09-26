@@ -1,119 +1,114 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Group {
-name SaturationSoftClip2
-tile_color 0xafa35cff
-selected true
-xpos 1237
-ypos -3328
-addUserKnob {20 SaturationSoftClip}
-addUserKnob {41 conversion T SoftClip1.conversion}
-addUserKnob {41 softclip_min l "softclip min" T SoftClip1.softclip_min}
-addUserKnob {41 softclip_max l "softclip max" T SoftClip1.softclip_max}
-addUserKnob {41 reverse T SoftClip1.reverse}
-addUserKnob {41 maskChannelMask l mask T Merge1.maskChannelMask}
-addUserKnob {41 maskChannelInput l "" -STARTLINE T Merge1.maskChannelInput}
-addUserKnob {41 inject -STARTLINE T Merge1.inject}
-addUserKnob {41 invert_mask l invert -STARTLINE T Merge1.invert_mask}
-addUserKnob {41 fringe -STARTLINE T Merge1.fringe}
-addUserKnob {41 mix T Merge1.mix}
+ name SaturationSoftClip2
+ tile_color 0xafa35cff
+ selected true
+ xpos 70
+ ypos -2731
+ addUserKnob {20 SaturationSoftClip}
+ addUserKnob {41 conversion T SoftClip1.conversion}
+ addUserKnob {41 softclip_min l "softclip min" T SoftClip1.softclip_min}
+ addUserKnob {41 softclip_max l "softclip max" T SoftClip1.softclip_max}
+ addUserKnob {41 mix T Merge1.mix}
 }
-Input {
-inputs 0
-name Input
-xpos -40
-ypos -226
-}
-Dot {
-name Dot4
-xpos -6
-ypos -150
-}
-set N27e15000 [stack 0]
-Dot {
-name Dot5
-xpos 214
-ypos -150
-}
-Dot {
-name Dot6
-xpos 214
-ypos 18
-}
-set N27e15400 [stack 0]
-Input {
-inputs 0
-name InputMask
-label "\n\n"
-xpos 290
-ypos 86
-number 1
-}
-Switch {
-inputs 2
-which {{"\[string is digit \[input \[node parent] 1]]"}}
-name Switch1
-xpos 180
-ypos 86
-}
-push $N27e15000
-Colorspace {
-colorspace_in sRGB
-colorspace_out HSV
-name Colorspace1
-xpos -40
-ypos -106
-}
-Dot {
-name Dot1
-xpos -6
-ypos -78
-}
-set Nd9091c00 [stack 0]
-Dot {
-name Dot2
-xpos 104
-ypos -78
-}
-Dot {
-name Dot3
-xpos 104
-ypos -6
-}
-push $Nd9091c00
-SoftClip {
-name SoftClip1
-xpos -40
-ypos -58
-}
-Copy {
-inputs 2
-from0 rgba.red
-to0 rgba.red
-from1 rgba.blue
-to1 rgba.blue
-name Copy1
-xpos -40
-ypos -23
-}
-Colorspace {
-colorspace_in HSV
-colorspace_out sRGB
-name Colorspace2
-xpos -40
-ypos 38
-}
-push $N27e15400
-Merge2 {
-inputs 2+1
-name Merge1
-xpos -40
-ypos 86
-}
-Output {
-name Output1
-xpos -40
-ypos 134
-}
+ Input {
+  inputs 0
+  name Input
+  xpos -40
+  ypos -226
+ }
+ Dot {
+  name Dot4
+  xpos -6
+  ypos -150
+ }
+set Nd219f800 [stack 0]
+ Dot {
+  name Dot5
+  xpos 214
+  ypos -150
+ }
+ Dot {
+  name Dot6
+  xpos 214
+  ypos 18
+ }
+set N2d7e9800 [stack 0]
+ Input {
+  inputs 0
+  name InputMask
+  label "\n\n"
+  xpos 290
+  ypos 86
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input \[node parent] 1]]"}}
+  name Switch1
+  selected true
+  xpos 180
+  ypos 86
+ }
+push $Nd219f800
+ Colorspace {
+  colorspace_in sRGB
+  colorspace_out HSV
+  name Colorspace1
+  xpos -40
+  ypos -106
+ }
+ Dot {
+  name Dot1
+  xpos -6
+  ypos -78
+ }
+set N2d7e8c00 [stack 0]
+ Dot {
+  name Dot2
+  xpos 104
+  ypos -78
+ }
+ Dot {
+  name Dot3
+  xpos 104
+  ypos -6
+ }
+push $N2d7e8c00
+ SoftClip {
+  conversion "logarithmic compress"
+  name SoftClip1
+  xpos -40
+  ypos -58
+ }
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  from1 rgba.blue
+  to1 rgba.blue
+  name Copy1
+  xpos -40
+  ypos -23
+ }
+ Colorspace {
+  colorspace_in HSV
+  colorspace_out sRGB
+  name Colorspace2
+  xpos -40
+  ypos 38
+ }
+push $N2d7e9800
+ Merge2 {
+  inputs 2+1
+  name Merge1
+  xpos -40
+  ypos 86
+ }
+ Output {
+  name Output1
+  xpos -40
+  ypos 134
+ }
 end_group

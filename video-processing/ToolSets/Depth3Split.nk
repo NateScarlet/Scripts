@@ -1,5 +1,4 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 push $cut_paste_input
 Group {
 name Depth3Split

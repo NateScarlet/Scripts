@@ -1,0 +1,98 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Dot {
+name Dot31
+selected true
+xpos 104
+ypos -4350
+}
+set N33931800 [stack 0]
+Dot {
+name Dot32
+selected true
+xpos 214
+ypos -4350
+}
+set N33931400 [stack 0]
+Dot {
+name Dot33
+selected true
+xpos 324
+ypos -4350
+}
+HueKeyer {
+lut {amount {curve 0 x0.8579158783 0 0 1 1 0 0}
+  sat_thrsh {curve 0.1 x0.8579158783 0.1 0.1 0.1 0.1 0.1 0.1}}
+invert false
+name HueKeyer2
+selected true
+xpos 290
+ypos -4312
+}
+Dot {
+name Dot34
+selected true
+xpos 324
+ypos -4206
+}
+push $N33931400
+Expression {
+expr0 (a==0)?1:r
+expr1 (a==0)?1:g
+expr2 (a==0)?1:b
+name Expression3
+selected true
+xpos 180
+ypos -4306
+}
+Keyer {
+invert true
+operation "luminance key"
+range {0.001420418676 0.003636271811 1 1}
+name Keyer1
+selected true
+xpos 180
+ypos -4264
+}
+ChannelMerge {
+inputs 2
+operation in
+name ChannelMerge3
+selected true
+xpos 180
+ypos -4223
+}
+Median {
+channels alpha
+ignore_top_line false
+name Median1
+selected true
+xpos 180
+ypos -4168
+}
+Dilate {
+channels alpha
+size 3.2
+name Dilate2
+selected true
+xpos 180
+ypos -4120
+}
+Blur {
+channels alpha
+size 22
+name Blur4
+selected true
+xpos 180
+ypos -4072
+}
+push $N33931800
+ColorCorrect {
+inputs 1+1
+gamma 1.5
+mix 0.8
+name ColorCorrect11
+selected true
+xpos 70
+ypos -4066
+}
