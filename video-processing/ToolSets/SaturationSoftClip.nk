@@ -4,12 +4,16 @@ Group {
  name SaturationSoftClip2
  tile_color 0xafa35cff
  selected true
- xpos 70
- ypos -2731
+ xpos 865
+ ypos -3343
  addUserKnob {20 SaturationSoftClip}
  addUserKnob {41 conversion T SoftClip1.conversion}
  addUserKnob {41 softclip_min l "softclip min" T SoftClip1.softclip_min}
  addUserKnob {41 softclip_max l "softclip max" T SoftClip1.softclip_max}
+ addUserKnob {41 mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T Merge1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Merge1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Merge1.fringe}
  addUserKnob {41 mix T Merge1.mix}
 }
  Input {
@@ -23,7 +27,7 @@ Group {
   xpos -6
   ypos -150
  }
-set Nd219f800 [stack 0]
+set Nd68bf800 [stack 0]
  Dot {
   name Dot5
   xpos 214
@@ -34,7 +38,7 @@ set Nd219f800 [stack 0]
   xpos 214
   ypos 18
  }
-set N2d7e9800 [stack 0]
+set Nd68be800 [stack 0]
  Input {
   inputs 0
   name InputMask
@@ -47,11 +51,17 @@ set N2d7e9800 [stack 0]
   inputs 2
   which {{"\[string is digit \[input \[node parent] 1]]"}}
   name Switch1
-  selected true
   xpos 180
   ypos 86
  }
-push $Nd219f800
+ Premult {
+  channels none
+  alpha none
+  name MaskChannelChoose
+  xpos 70
+  ypos 80
+ }
+push $Nd68bf800
  Colorspace {
   colorspace_in sRGB
   colorspace_out HSV
@@ -64,7 +74,7 @@ push $Nd219f800
   xpos -6
   ypos -78
  }
-set N2d7e8c00 [stack 0]
+set Nbd9eec00 [stack 0]
  Dot {
   name Dot2
   xpos 104
@@ -75,7 +85,7 @@ set N2d7e8c00 [stack 0]
   xpos 104
   ypos -6
  }
-push $N2d7e8c00
+push $Nbd9eec00
  SoftClip {
   conversion "logarithmic compress"
   name SoftClip1
@@ -99,10 +109,12 @@ push $N2d7e8c00
   xpos -40
   ypos 38
  }
-push $N2d7e9800
+push $Nd68be800
  Merge2 {
   inputs 2+1
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
   name Merge1
+  selected true
   xpos -40
   ypos 86
  }

@@ -1,11 +1,11 @@
 set cut_paste_input [stack 0]
 push $cut_paste_input
 Group {
- name NormalLight1
+ name NormalLight2
  tile_color 0x417c3eff
  selected true
- xpos 290
- ypos -460
+ xpos 257
+ ypos -3537
  addUserKnob {20 NormalLight}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 pos l Position T Mask3D_RS1.pos}
@@ -13,40 +13,50 @@ Group {
  addUserKnob {41 rad l Radius T Mask3D_RS1.rad}
  addUserKnob {41 fall l "Falloff Exponent" T Mask3D_RS1.fall}
  addUserKnob {41 gain l Hardness T Mask3D_RS1.gain}
- addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 ""}
  addUserKnob {41 black l lift T Grade3.black}
  addUserKnob {41 white l gain T Grade3.white}
  addUserKnob {41 multiply T Grade3.multiply}
  addUserKnob {41 add l offset T Grade3.add}
  addUserKnob {41 gamma T Grade3.gamma}
- addUserKnob {41 mix T Grade3.mix}
+ addUserKnob {41 mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T MaskMixMerge.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T MaskMixMerge.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T MaskMixMerge.fringe}
+ addUserKnob {41 mix T MaskMixMerge.mix}
 }
  Input {
   inputs 0
-  name Input1
-  xpos 509
-  ypos -538
+  name Input
+  xpos 510
+  ypos -682
  }
  Dot {
-  name Dot13
-  xpos 543
-  ypos -498
+  name Dot2
+  xpos 544
+  ypos -606
  }
-set Nb03a6800 [stack 0]
-push $Nb03a6800
+set N6851f000 [stack 0]
+ Dot {
+  name Dot13
+  xpos 544
+  ypos -486
+ }
+set N6a8b5c00 [stack 0]
+push $N6a8b5c00
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
  Shuffle {
   in BumpNormals
   name Shuffle2
-  xpos 619
-  ypos -502
+  xpos 620
+  ypos -490
  }
  Group {
   inputs 2
   name Mask3D_RS1
   tile_color 0x417c3eff
-  xpos 619
-  ypos -382
+  xpos 620
+  ypos -370
   addUserKnob {20 User}
   addUserKnob {18 pos l Position t "Select the colour that corresponds to the position you want."}
   pos {0.1597469896 -0.1521629989 0.3190000057}
@@ -156,14 +166,14 @@ add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNo
    xpos 95
    ypos 762
   }
-set N5529ac00 [stack 0]
+set N67062000 [stack 0]
   Output {
    name Output1
    selected true
    xpos 95
    ypos 839
   }
-push $N5529ac00
+push $N67062000
   Viewer {
    name Viewer1
    selected true
@@ -171,28 +181,80 @@ push $N5529ac00
    ypos 627
   }
  end_group
-set Nad44e880 [stack 0]
-push $Nad44e880
-push $Nb03a6800
+set N39ef2000 [stack 0]
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -246
+ }
+push $N6851f000
+ Dot {
+  name Dot43
+  selected true
+  xpos 874
+  ypos -606
+ }
+ Dot {
+  name Dot44
+  selected true
+  xpos 874
+  ypos -390
+ }
+set N6711d000 [stack 0]
+ Input {
+  inputs 0
+  name InputMask
+  label "\n\n"
+  selected true
+  xpos 950
+  ypos -322
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input \[node parent] 1]]"}}
+  name SwitchMaskInput
+  selected true
+  xpos 840
+  ypos -322
+ }
+ Premult {
+  channels none
+  alpha none
+  name MaskChannelChoose
+  selected true
+  xpos 730
+  ypos -322
+ }
+push $N39ef2000
+push $N6a8b5c00
  Grade {
   inputs 1+1
   maskChannelMask rgba.red
   name Grade3
   label NormalLight
-  xpos 509
-  ypos -388
+  xpos 510
+  ypos -376
+ }
+push $N6711d000
+ Merge2 {
+  inputs 2+1
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  name MaskMixMerge
+  selected true
+  xpos 510
+  ypos -322
  }
  Switch {
   inputs 2
   which {{parent.preview}}
   name Switch1
-  selected true
-  xpos 509
-  ypos -304
+  xpos 510
+  ypos -250
  }
  Output {
   name Output1
-  xpos 509
-  ypos -213
+  xpos 510
+  ypos -202
  }
 end_group
