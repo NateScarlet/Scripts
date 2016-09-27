@@ -1,0 +1,49 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Dot {
+ name Dot43
+ selected true
+ xpos 544
+ ypos -3538
+}
+Dot {
+ name Dot44
+ selected true
+ xpos 544
+ ypos -3322
+}
+set N52205800 [stack 0]
+Input {
+ inputs 0
+ name InputMask
+ label "\n\n"
+ selected true
+ xpos 620
+ ypos -3254
+ number 1
+}
+Switch {
+ inputs 2
+ which {{"\[string is digit \[input \[node parent] 1]]"}}
+ name SwitchMaskInput
+ selected true
+ xpos 510
+ ypos -3254
+}
+Premult {
+ channels none
+ name MaskChannelChoose
+ selected true
+ xpos 400
+ ypos -3254
+}
+push 0
+push $N52205800
+Merge2 {
+ inputs 2+1
+ maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+ name MaskMixMerge
+ selected true
+ xpos 180
+ ypos -3254
+}

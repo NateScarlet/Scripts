@@ -1,0 +1,285 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Group {
+ name Depth3Fog1
+ tile_color 0xff8200ff
+ label "\[knob_default this.mix 1]"
+ selected true
+ xpos 410
+ ypos -2856
+ addUserKnob {20 Depth3Fog}
+ addUserKnob {26 Range_div l Range}
+ addUserKnob {6 preview +STARTLINE}
+ preview true
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {41 alpha l "premultiply by" T Premult1.alpha}
+ addUserKnob {41 gamma_1 l "far gamma" T Far_Gamma.gamma}
+ addUserKnob {41 gamma_2 l "middle gamma" T Middle_Gamma.gamma}
+ addUserKnob {41 gamma_3 l "close gamma" T Close_Gamma.gamma}
+ addUserKnob {26 Color}
+ addUserKnob {41 channels T Grade1.channels}
+ addUserKnob {41 black l lift T Grade1.black}
+ addUserKnob {41 white l gain T Grade1.white}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T MaskMixMerge.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T MaskMixMerge.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T MaskMixMerge.fringe}
+ addUserKnob {41 mix T MaskMixMerge.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -874
+ }
+ Dot {
+  name Dot2
+  xpos 214
+  ypos -798
+ }
+set Naef1cc00 [stack 0]
+ Dot {
+  name Dot3
+  xpos 544
+  ypos -798
+ }
+set Naef1c800 [stack 0]
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 510
+  ypos -784
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 510
+  ypos -719
+ }
+set Na3ec0c00 [stack 0]
+push 0
+push $Na3ec0c00
+ Keyer {
+  input depth
+  operation "luminance key"
+  range {0.003190627632 0.005730653333 0.008270676667 0.01081068429}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 510
+  ypos -575
+ }
+set Nbd8ac400 [stack 0]
+ Dot {
+  name Dot4
+  xpos 544
+  ypos -510
+ }
+set Nbd8ad800 [stack 0]
+ Dot {
+  name Dot6
+  xpos 654
+  ypos -510
+ }
+ Keyer {
+  input depth
+  operation "luminance key"
+  range {{"2 * parent.Close.range.A - parent.Close.range.B"} {parent.Close.range.A} 1 1}
+  name Close_Cut
+  label "\[value input]"
+  xpos 620
+  ypos -407
+ }
+push $Nbd8ad800
+ Keyer {
+  input {{{parent.Middle.input}}}
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 510
+  ypos -479
+ }
+ ChannelMerge {
+  inputs 2
+  operation in
+  name ChannelMerge1
+  xpos 510
+  ypos -407
+ }
+push $Nbd8ac400
+ Merge2 {
+  inputs 3+1
+  operation plus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge2
+  xpos 400
+  ypos -400
+ }
+ Grade {
+  channels alpha
+  name Close_Gamma
+  xpos 290
+  ypos -400
+ }
+set Na78a2800 [stack 0]
+push $Nbd8ac400
+push $Na3ec0c00
+ Merge2 {
+  inputs 2
+  operation plus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge1
+  xpos 400
+  ypos -568
+ }
+ Grade {
+  channels alpha
+  name Middle_Gamma
+  xpos 290
+  ypos -568
+ }
+set N9f0c1800 [stack 0]
+push $Na3ec0c00
+ Grade {
+  channels alpha
+  name Far_Gamma
+  xpos 290
+  ypos -712
+ }
+set N9f0c1c00 [stack 0]
+push $Naef1cc00
+ Dot {
+  name Dot5
+  xpos 104
+  ypos -798
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.red
+  name Copy1
+  xpos 70
+  ypos -640
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.green
+  name Copy2
+  xpos 70
+  ypos -472
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.blue
+  name Copy3
+  xpos 70
+  ypos -304
+ }
+ Dot {
+  name Dot1
+  xpos 104
+  ypos 18
+ }
+push $Naef1c800
+ Dot {
+  name Dot40
+  xpos 874
+  ypos -798
+ }
+ Dot {
+  name Dot41
+  xpos 874
+  ypos -150
+ }
+set Naa57a800 [stack 0]
+ Input {
+  inputs 0
+  name InputMask
+  label "\n\n"
+  xpos 950
+  ypos -82
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input \[node parent] 1]]"}}
+  name Switch3
+  xpos 840
+  ypos -82
+ }
+ Premult {
+  channels none
+  name MaskChannelChoose
+  selected true
+  xpos 730
+  ypos -88
+ }
+push $Na78a2800
+push $N9f0c1800
+push $N9f0c1c00
+push $Naef1cc00
+ Grade {
+  inputs 1+1
+  black {0.008999999613 0.02102400549 0.04500000179 0}
+  gamma 0.8
+  name Grade1
+  xpos 180
+  ypos -706
+ }
+ set Caef1d000 [stack 0]
+clone $Caef1d000 {
+  inputs 1+1
+  xpos 180
+  ypos -562
+  selected false
+ }
+clone $Caef1d000 {
+  inputs 1+1
+  xpos 180
+  ypos -394
+  selected false
+ }
+push $Naa57a800
+ Merge2 {
+  inputs 2+1
+  maskChannelMask {{{parent.Premult2.alpha}}}
+  name MaskMixMerge
+  xpos 180
+  ypos -82
+ }
+ Premult {
+  channels {{{parent.Grade1.channels}}}
+  name Premult1
+  xpos 180
+  ypos -34
+ }
+ Switch {
+  inputs 2
+  which {{parent.preview}}
+  name SwitchPreview
+  xpos 180
+  ypos 14
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos 62
+ }
+end_group

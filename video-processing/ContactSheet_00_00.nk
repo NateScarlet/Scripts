@@ -1,0 +1,2502 @@
+#! C:/Program Files/Nuke10.0v1/nuke-10.0.1.dll -nx
+#write_info Write1 file:"[file rootname [value root.name]].png" format:"8990 5057 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1" fps:"0" colorspace:"sRGB" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
+version 10.0 v1
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="124" w="1920" h="1076" screen="0">
+        <splitter orientation="1">
+            <split size="40"/>
+            <dock id="" hideTitles="1" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="1860" stretch="1"/>
+            <splitter orientation="2">
+                <split size="1015"/>
+                <dock id="" activePageId="Viewer.1">
+                    <page id="Viewer.2"/>
+                    <page id="Viewer.1"/>
+                </dock>
+            </splitter>
+        </splitter>
+    </window>
+    <window x="1920" y="0" w="1920" h="1080" maximized="1" screen="1">
+        <splitter orientation="1">
+            <split size="1262"/>
+            <dock id="" activePageId="DAG.1" focus="true">
+                <page id="DopeSheet.1"/>
+                <page id="Curve Editor.1"/>
+                <page id="DAG.1"/>
+                <page id="uk.co.thefoundry.scripteditor.1"/>
+            </dock>
+            <split size="638"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name E:/SNJYW/EP02/05/ContactSheet_02_05.nk
+ project_directory "\[python \{nuke.script_directory()\}]"
+ last_frame 1
+ lock_range true
+ fps 25
+ format "23040 12960 0 0 23040 12960 1 "
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+ onScriptLoad "def image(index):\n    list = os.listdir(nuke.script_directory()+r'\\images');\n    if index < len(list):\n        return 'images/'+list\[index];\n    else:\n        return ;"
+ onScriptSave nuke.delete(nuke.toNode('Viewer1'))
+ addUserKnob {20 User}
+ addUserKnob {7 ad}
+ addUserKnob {20 mariTab l Mari}
+ addUserKnob {26 cmdStatus l "listen status" t "The status of Nuke's command port" T <b>Disabled</b>}
+ addUserKnob {26 sendStatus l "send status" t "The status of Nuke's connection to Mari" T <b>Inactive</b>}
+ addUserKnob {3 socketPort l "nuke command port" t "Port to listen on. Make sure this matches the command port set in Mari's \"Nuke\" Palette."}
+ socketPort 50107
+ addUserKnob {6 enableSocket l enabled -STARTLINE}
+ addUserKnob {26 divider l "" +STARTLINE}
+ addUserKnob {20 advanced n 1}
+ advanced 0
+ addUserKnob {3 portRange l "port range" t "If the main specified command port is unavailable, Nuke will try using the next port number, and continue until successful or the indicated number of ports have been tried."}
+ portRange 200
+ addUserKnob {4 enablePortRange l "" t "Indicates whether to use a range of ports up to the given number, or to use only the single one specified." -STARTLINE M {"use range" "single port only"}}
+ addUserKnob {6 localhostOnly l "local host only" t "This determines whether the Mari bridge server will listen for connections from any machine, or from \"localhost\" (the local machine) only.<p>Only allowing connections from localhost is more secure, but will prevent you from using the Nuke&lt;&gt;Mari workflow across the network." +STARTLINE}
+ addUserKnob {1 hostName l "mari host" t "The machine name or IP address that Mari is running on.\nLeave empty if both Mari and Nuke are running on the same machine."}
+ hostName localhost
+ addUserKnob {3 socketPortSend l port t "Port that Mari is listening to. Make sure this matches the command port set in Mari's preferences." -STARTLINE}
+ socketPortSend 6100
+ addUserKnob {2 mariDataDir l "mari data dir" t "Path to directory that will hold transient data to be sent to Mari (exrs, objs and fbx files). If this is left empty, a \"mari\" directory will be created in the nk file's location"}
+ mariDataDir "\[getenv NUKE_TEMP_DIR]/mariData"
+ addUserKnob {2 mariLocation l "mari launch path" t "The path to launch Mari from.<br>This can also be set using the <b>MARI_INSTALL_PATH</b> environment variable."}
+ addUserKnob {20 endGroup n -1}
+}
+Read {
+ inputs 0
+ file "\[python \{image(100)\}]"
+ origset true
+ name Read3
+ xpos -2790
+ ypos -1353
+}
+Transform {
+ translate {0 40}
+ center {1024 778}
+ name Transform2
+ xpos -2790
+ ypos -1282
+}
+set C4b78800 [stack 0]
+Reformat {
+ format "1920 1160 0 0 1920 1160 1 bbb"
+ name Reformat1
+ xpos -2790
+ ypos -1264
+}
+set C4b78400 [stack 0]
+Text2 {
+ font_size_toolbar 100
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message "\[lrange \[split \[basename \[metadata input/filename]] ._] 3 3]"
+ old_expression_markers {{0 -1}
+   }
+ box {0 0 0 80}
+ transforms {{0 2}
+   }
+ cursor_position 60
+ scale {1 1}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{0 1080}
+   }
+ group_animations {{0} imported: 0 selected: items: "root transform/"}
+ animation_layers {{1 11 1024 778 0 0 1 1 0 0 0 0}
+   }
+ color {0.145 0.15 0.14 1}
+ color_panelDropped true
+ name Text1
+ xpos -2790
+ ypos -1234
+}
+set C4b79000 [stack 0]
+Read {
+ inputs 0
+ file "\[python \{image(99)\}]"
+ name Read5
+ xpos -2680
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2680
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2680
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2680
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(98)\}]"
+ name Read6
+ xpos -2570
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2570
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2570
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2570
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(97)\}]"
+ name Read7
+ xpos -2460
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2460
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2460
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2460
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(96)\}]"
+ name Read8
+ xpos -2350
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2350
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2350
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2350
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(95)\}]"
+ name Read9
+ xpos -2240
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2240
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2240
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2240
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(94)\}]"
+ name Read10
+ xpos -2130
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2130
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2130
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2130
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(93)\}]"
+ name Read11
+ xpos -2020
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -2020
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -2020
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -2020
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(92)\}]"
+ name Read12
+ xpos -1910
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1910
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1910
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1910
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(91)\}]"
+ name Read13
+ xpos -1800
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1800
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1800
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1800
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(90)\}]"
+ name Read14
+ xpos -1690
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1690
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1690
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1690
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(89)\}]"
+ name Read15
+ xpos -1580
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1580
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1580
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1580
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(88)\}]"
+ name Read16
+ xpos -1470
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1470
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1470
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1470
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(87)\}]"
+ name Read17
+ xpos -1360
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1360
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1360
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1360
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(86)\}]"
+ name Read18
+ xpos -1250
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1250
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1250
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1250
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(85)\}]"
+ name Read19
+ xpos -1140
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1140
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1140
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1140
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(84)\}]"
+ name Read20
+ xpos -1030
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -1030
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -1030
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -1030
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(83)\}]"
+ name Read21
+ xpos -920
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -920
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -920
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -920
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(82)\}]"
+ name Read23
+ xpos -810
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -810
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -810
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -810
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(81)\}]"
+ name Read25
+ xpos -700
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -700
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -700
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -700
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(80)\}]"
+ name Read26
+ xpos -590
+ ypos -1353
+}
+clone $C4b78800 {
+ xpos -590
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -590
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -590
+ ypos -1234
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(79)\}]"
+ name Read27
+ xpos -480
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos -480
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -480
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -480
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(78)\}]"
+ name Read28
+ xpos -370
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos -370
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -370
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -370
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(77)\}]"
+ name Read29
+ xpos -260
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos -260
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -260
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -260
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(76)\}]"
+ name Read30
+ xpos -150
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos -150
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -150
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -150
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(75)\}]"
+ name Read31
+ xpos -40
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos -40
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos -40
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos -40
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(74)\}]"
+ name Read33
+ xpos 70
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 70
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 70
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 70
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(73)\}]"
+ name Read34
+ xpos 180
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 180
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 180
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 180
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(72)\}]"
+ name Read36
+ xpos 290
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 290
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 290
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 290
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(71)\}]"
+ name Read37
+ xpos 400
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 400
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 400
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 400
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(70)\}]"
+ name Read38
+ xpos 510
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 510
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 510
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 510
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(69)\}]"
+ name Read39
+ xpos 620
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 620
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 620
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 620
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(68)\}]"
+ name Read40
+ xpos 730
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 730
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 730
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 730
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(67)\}]"
+ name Read41
+ xpos 840
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 840
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 840
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 840
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(66)\}]"
+ origset true
+ name Read42
+ xpos 950
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 950
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 950
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 950
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(65)\}]"
+ name Read43
+ xpos 1060
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1060
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1060
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1060
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(64)\}]"
+ name Read44
+ xpos 1170
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1170
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1170
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1170
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(63)\}]"
+ name Read45
+ xpos 1280
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1280
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1280
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1280
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(62)\}]"
+ name Read46
+ xpos 1390
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1390
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1390
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1390
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(61)\}]"
+ name Read47
+ xpos 1500
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1500
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1500
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1500
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(60)\}]"
+ name Read48
+ xpos 1610
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1610
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1610
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1610
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(59)\}]"
+ name Read49
+ xpos 1720
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1720
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1720
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1720
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(58)\}]"
+ name Read51
+ xpos 1830
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1830
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1830
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1830
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(57)\}]"
+ name Read52
+ xpos 1940
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 1940
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 1940
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 1940
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(56)\}]"
+ name Read53
+ xpos 2050
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2050
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2050
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2050
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(55)\}]"
+ name Read54
+ xpos 2160
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2160
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2160
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2160
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(54)\}]"
+ name Read55
+ xpos 2270
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2270
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2270
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2270
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(53)\}]"
+ name Read56
+ xpos 2380
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2380
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2380
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2380
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(52)\}]"
+ name Read57
+ xpos 2490
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2490
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2490
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2490
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(51)\}]"
+ name Read58
+ xpos 2600
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2600
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2600
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2600
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(50)\}]"
+ name Read59
+ xpos 2710
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2710
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2710
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2710
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(49)\}]"
+ name Read60
+ xpos 2820
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2820
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2820
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2820
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(48)\}]"
+ name Read61
+ xpos 2930
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 2930
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 2930
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 2930
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(47)\}]"
+ name Read62
+ xpos 3040
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3040
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3040
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3040
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(46)\}]"
+ name Read63
+ xpos 3150
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3150
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3150
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3150
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(45)\}]"
+ name Read64
+ xpos 3260
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3260
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3260
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3260
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(44)\}]"
+ name Read65
+ xpos 3370
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3370
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3370
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3370
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(43)\}]"
+ name Read66
+ xpos 3480
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3480
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3480
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3480
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(42)\}]"
+ name Read67
+ xpos 3590
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3590
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3590
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3590
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(41)\}]"
+ name Read68
+ xpos 3700
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3700
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3700
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3700
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(40)\}]"
+ name Read69
+ xpos 3810
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3810
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3810
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3810
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(39)\}]"
+ name Read70
+ xpos 3920
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 3920
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 3920
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 3920
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(38)\}]"
+ name Read71
+ xpos 4030
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4030
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4030
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4030
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(37)\}]"
+ name Read72
+ xpos 4140
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4140
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4140
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4140
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(36)\}]"
+ name Read73
+ xpos 4250
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4250
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4250
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4250
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(35)\}]"
+ name Read74
+ xpos 4360
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4360
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4360
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4360
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(34)\}]"
+ name Read75
+ xpos 4470
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4470
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4470
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4470
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(33)\}]"
+ name Read76
+ xpos 4580
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4580
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4580
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4580
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(32)\}]"
+ name Read77
+ xpos 4690
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4690
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4690
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4690
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(31)\}]"
+ name Read78
+ xpos 4800
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4800
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4800
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4800
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(30)\}]"
+ name Read79
+ xpos 4910
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 4910
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 4910
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 4910
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(29)\}]"
+ name Read80
+ xpos 5020
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5020
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5020
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5020
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(28)\}]"
+ name Read81
+ xpos 5130
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5130
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5130
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5130
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(27)\}]"
+ name Read82
+ xpos 5240
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5240
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5240
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5240
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(26)\}]"
+ name Read83
+ xpos 5350
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5350
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5350
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5350
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(25)\}]"
+ name Read84
+ xpos 5460
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5460
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5460
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5460
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(24)\}]"
+ origset true
+ name Read85
+ xpos 5570
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5570
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5570
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5570
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(23)\}]"
+ origset true
+ name Read86
+ xpos 5680
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5680
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5680
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5680
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(22)\}]"
+ origset true
+ name Read87
+ xpos 5790
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5790
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5790
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5790
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(21)\}]"
+ name Read88
+ xpos 5900
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 5900
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 5900
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 5900
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(20)\}]"
+ name Read89
+ xpos 6010
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6010
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6010
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6010
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(19)\}]"
+ name Read90
+ xpos 6120
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6120
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6120
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6120
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(18)\}]"
+ name Read91
+ xpos 6230
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6230
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6230
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6230
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(17)\}]"
+ name Read92
+ xpos 6340
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6340
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6340
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6340
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(16)\}]"
+ name Read93
+ xpos 6450
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6450
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6450
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6450
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(15)\}]"
+ name Read94
+ xpos 6560
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6560
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6560
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6560
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(14)\}]"
+ name Read95
+ xpos 6670
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6670
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6670
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6670
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(13)\}]"
+ name Read96
+ xpos 6780
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6780
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6780
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6780
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(12)\}]"
+ name Read97
+ xpos 6890
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 6890
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 6890
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 6890
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(11)\}]"
+ name Read98
+ xpos 7000
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 7000
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7000
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7000
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(10)\}]"
+ name Read99
+ xpos 7110
+ ypos -1377
+}
+clone $C4b78800 {
+ xpos 7110
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7110
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7110
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(9)\}]"
+ name Read100
+ xpos 7220
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7220
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7220
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7220
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(8)\}]"
+ name Read101
+ xpos 7330
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7330
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7330
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7330
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(7)\}]"
+ name Read102
+ xpos 7440
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7440
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7440
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7440
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(6)\}]"
+ name Read103
+ xpos 7550
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7550
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7550
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7550
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(5)\}]"
+ name Read104
+ xpos 7660
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7660
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7660
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7660
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(4)\}]"
+ name Read105
+ xpos 7770
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7770
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7770
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7770
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(3)\}]"
+ name Read106
+ xpos 7880
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7880
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7880
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7880
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(2)\}]"
+ origset true
+ name Read107
+ xpos 7990
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 7990
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 7990
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 7990
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(1)\}]"
+ origset true
+ name Read108
+ xpos 8100
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 8100
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 8100
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 8100
+ ypos -1210
+ selected false
+}
+Read {
+ inputs 0
+ file "\[python \{image(0)\}]"
+ origset true
+ name Read109
+ xpos 8210
+ ypos -1360
+}
+clone $C4b78800 {
+ xpos 8210
+ ypos -1282
+ selected false
+}
+clone $C4b78400 {
+ xpos 8210
+ ypos -1264
+ selected false
+}
+clone $C4b79000 {
+ xpos 8210
+ ypos -1210
+ selected false
+}
+ContactSheet {
+ inputs 101
+ width {{rows*width+gap*(rows+1)}}
+ height {{columns*height+gap*(columns+1)}}
+ rows {{"ceil(pow(\[python \{len(os.listdir(nuke.script_directory()+r'\\images'))\}], 0.5))"}}
+ columns {{rows}}
+ gap 50
+ roworder TopBottom
+ name ContactSheet1
+ xpos 2820
+ ypos 62
+}
+Transform {
+ translate {{1250*Reformat2.scale} {100*Reformat2.scale}}
+ center {{input.width/2} {input.height/2}}
+ name Transform1
+ xpos 2820
+ ypos 131
+}
+Read {
+ inputs 0
+ file E:/SNJYW/灯光合成模板_底板.jpg
+ format "11520 6480 0 0 11520 6480 1 "
+ origset true
+ name Read32
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ xpos 2587
+ ypos 346
+}
+Text2 {
+ font_size_toolbar 100
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message "\[lindex \[split \[basename \[value root.name]] _.] 1]"
+ old_message {{48 50}
+   }
+ old_expression_markers {{0 1}
+   }
+ box {288 6084.399902 1650 6440}
+ xjustify center
+ yjustify center
+ transforms {{0 2}
+   }
+ cursor_position 50
+ global_font_scale 3
+ scale {1 1}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{834.3999634 6283.200195}
+   }
+ group_animations {{0} imported: 0 selected: items: "root transform/"}
+ animation_layers {{1 11 5760 3240 0 0 1 1 0 0 0 0}
+   }
+ color 0.155
+ name Text2
+ xpos 2590
+ ypos 464
+}
+Text2 {
+ font_size_toolbar 100
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message "\[lindex \[split \[basename \[value root.name]] _.] 2]"
+ old_message {{48 53}
+   }
+ old_expression_markers {{0 1}
+   }
+ box {278 4660.399658 1660 5015.999756}
+ xjustify center
+ yjustify center
+ transforms {{0 2}
+   }
+ cursor_position 50
+ global_font_scale 3
+ scale {1 1}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{834.3999634 6283.200195}
+   }
+ group_animations {{0} imported: 0 selected: items: "root transform/"}
+ animation_layers {{1 11 5760 3240 0 0 1 1 0 0 0 0}
+   }
+ color 0.155
+ name Text3
+ xpos 2590
+ ypos 490
+}
+Reformat {
+ type scale
+ scale {{ContactSheet1.width/input.width*scale2}}
+ name Reformat2
+ xpos 2590
+ ypos 569
+ addUserKnob {20 User}
+ addUserKnob {7 scale2}
+ scale2 1.13365
+}
+Merge2 {
+ inputs 2
+ name Merge1
+ xpos 2820
+ ypos 825
+}
+Write {
+ file "\[file rootname \[value root.name]].png"
+ colorspace sRGB
+ file_type png
+ checkHashOnRead false
+ version 18
+ name Write1
+ xpos 2820
+ ypos 1013
+ postage_stamp true
+}
+set N34af6c00 [stack 0]
+Group {
+ name HueToRGB1
+ xpos 2820
+ ypos 1232
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -78
+  ypos -79
+ }
+ Colorspace {
+  colorspace_in sRGB
+  colorspace_out HSV
+  name Colorspace1
+  xpos -78
+  ypos -39
+ }
+ Shuffle {
+  in rgb
+  green white
+  blue white
+  out rgb
+  name Shuffle1
+  xpos -78
+  ypos -13
+ }
+ Colorspace {
+  colorspace_in HSV
+  colorspace_out sRGB
+  name Colorspace2
+  xpos -78
+  ypos 13
+ }
+ Output {
+  name Output1
+  xpos -78
+  ypos 113
+ }
+end_group
+push $N34af6c00
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression2
+ xpos 2600
+ ypos 1136
+}
+Read {
+ inputs 0
+ file "\[value Write1.file]"
+ origset true
+ version 1
+ name Read1
+ xpos 2930
+ ypos 1010
+}

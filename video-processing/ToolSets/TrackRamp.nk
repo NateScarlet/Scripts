@@ -1,0 +1,66 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Dot {
+name Dot12
+selected true
+xpos 89
+ypos -5440
+}
+set Nee767c00 [stack 0]
+Reformat {
+type scale
+scale 2
+resize none
+center false
+name Reformat3
+selected true
+xpos 165
+ypos -5444
+}
+Ramp {
+output alpha
+replace true
+p0 {208 164}
+p1 {-186 1246}
+type smooth0
+name Ramp3
+selected true
+xpos 165
+ypos -5402
+}
+Transform {
+translate {{"(!invert) ? Tracker1.translate.x : -Tracker1.translate.x"} {"(!invert) ? Tracker1.translate.y : -Tracker1.translate.y"}}
+rotate {{"(!invert) ? Tracker1.rotate : -Tracker1.rotate"}}
+scale {{"(!invert) ? Tracker1.scale.w : 1/Tracker1.scale.w"}}
+center {{"(!invert) ? Tracker1.center.x : Tracker1.center.x + Tracker1.translate.x"} {"(!invert) ? Tracker1.center.y : Tracker1.center.y + Tracker1.translate.y"}}
+filter {{Tracker1.filter}}
+name Transform_MatchMove2
+selected true
+xpos 165
+ypos -5348
+addUserKnob {20 User}
+addUserKnob {4 transform M {stabilize match-move}}
+transform match-move
+addUserKnob {4 src_transform l "src transform" M {none stabilize "stabilize 1-pt" match-move "match-move 1-pt" "remove jitter"}}
+src_transform {{Tracker1.transform}}
+addUserKnob {6 invert -STARTLINE}
+invert {{"\[python -execlocal srcTransformKnob\\ =\\ nuke.thisNode()\\\['src\\_transform'\\]\\nsrcTransformName\\ =\\ srcTransformKnob.enumName(int(srcTransformKnob.getValue()))\\ndestTransform\\ =\\ nuke.thisNode()\\\['transform'\\].getValue()\\nsrcTransformIsStabilize\\ =\\ (srcTransformName.find('stabilize')==0\\ or\\ srcTransformName.find('remove\\ jitter')==0)\\ninvertDueToDestStabilize\\ =\\ (destTransform\\ ==\\ 0\\ and\\ not\\ srcTransformIsStabilize)\\ninvertDueToSrcStabilize\\ =\\ (destTransform\\ ==\\ 1\\ and\\ srcTransformIsStabilize)\\nret\\ =\\ (invertDueToDestStabilize\\ or\\ invertDueToSrcStabilize)]"}}
+}
+Transform {
+translate {{-width/4} {-height/4}}
+center {1920 1080}
+name Transform4
+selected true
+xpos 165
+ypos -5324
+}
+push $Nee767c00
+Copy {
+inputs 2
+from0 rgba.alpha
+to0 rgba.alpha
+name Copy2
+selected true
+xpos 55
+ypos -5330
+}

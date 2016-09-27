@@ -1,0 +1,45 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Dot {
+name Dot26
+selected true
+xpos 104
+ypos -510
+}
+Noise {
+replace true
+size 84
+zoffset {{x/100}}
+octaves 91
+center {960 540}
+name Noise1
+selected true
+xpos 70
+ypos -490
+}
+Crop {
+box {0 {height-5} {width} {height}}
+name Crop1
+selected true
+xpos 70
+ypos -466
+}
+GodRays {
+translate {-560 -926}
+scale 1.75
+center {1286 1468}
+to_color 0
+steps 11
+max true
+name GodRays2
+selected true
+xpos 70
+ypos -424
+}
+Blur {
+size 11.2
+name Blur3
+selected true
+xpos 70
+ypos -376
+}

@@ -5,7 +5,7 @@ name Depth3Split
 tile_color 0xff00ff
 selected true
 xpos 70
-ypos -4042
+ypos -4347
 addUserKnob {20 Depth3Split}
 addUserKnob {6 preview +STARTLINE}
 preview true
@@ -15,6 +15,7 @@ addUserKnob {41 invert -STARTLINE T Middle.invert}
 addUserKnob {41 value l multiply T Multiply1.value}
 addUserKnob {41 operation T Middle.operation}
 addUserKnob {41 range T Middle.range}
+addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
 addUserKnob {26 Focus_div l Focus}
 addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
 addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
@@ -61,7 +62,7 @@ Keyer {
 input depth
 output depth3split.Middle
 operation "luminance key"
-range {0 0.0005732081969 0.00250478 0.00797384}
+range {0 0.002252513333 0.004505026667 0.006757542952}
 name Middle
 label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
 xpos 180
@@ -91,7 +92,6 @@ ypos -328
 Grade {
 channels {none none none depth3split.Focus}
 name Grade1
-selected true
 xpos 180
 ypos -280
 }
@@ -113,6 +113,6 @@ disable {{1-parent.preview}}
 Output {
 name Output1
 xpos 180
-ypos -130
+ypos -58
 }
 end_group
