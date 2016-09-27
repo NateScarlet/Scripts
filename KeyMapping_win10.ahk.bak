@@ -41,6 +41,6 @@ IfWinExist, ahk_exe Q-Dir.exe
 }
 else
 {
-	Run *RunAs Q-Dir
+	Run Q-Dir
 }
 return

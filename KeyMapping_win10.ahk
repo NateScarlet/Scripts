@@ -34,7 +34,7 @@ $#f::
 Run Everything
 return
 
-$#e:: 
+$^#e:: 
 IfWinExist, ahk_exe Q-Dir.exe
 {
 	WinActivate
