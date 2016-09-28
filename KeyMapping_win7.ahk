@@ -42,6 +42,10 @@ else
 return
 
 
+$#e:: 
+Run, %Windir%\explorer.exe
+return
+
 $^#e:: 
 IfWinExist, ahk_exe Q-Dir.exe
 {
@@ -52,6 +56,8 @@ else
 	Run Q-Dir
 }
 return
+
+
 
 $#Tab::
 Run, Dexpot
