@@ -1,6 +1,6 @@
 import nuke
 def nodePresetsStartup():
-  nuke.setUserPreset("AddChannels", "Depth", {'channels': 'depth', 'color': '1', 'selected': 'true'})
+  nuke.setUserPreset("AddChannels", "depth", {'channels': 'depth', 'color': '1', 'selected': 'true'})
   nuke.setUserPreset("ChannelMerge", "depth.z", {'A': 'depth.Z', 'output': 'depth.Z', 'operation': 'min', 'B': 'depth.Z', 'selected': 'true'})
   nuke.setUserPreset("ColorCorrect", "ShadowWarm", {'shadows.gamma': '0.86', 'shadows.gain': '7.575611115 2.787825584 1.515122175 1', 'selected': 'true', 'lookup': 'shadow {curve 1 s0 x0.01183120441 0 s0}\nmidtone {1-shadow-highlight}\nhighlight {curve x0.06572888792 0 s0 x0.1314577758 1 s0}', 'offset': '0.004999999888 0.002457999857 0.001899999916 0.004999999888'})
   nuke.setUserPreset("Copy", "depth.Z", {'to0': 'depth.Z', 'selected': 'true', 'from0': 'depth.Z'})
@@ -13,7 +13,7 @@ def nodePresetsStartup():
   nuke.setUserPreset("Expression", "minDepth", {'temp_name0': 'minDepth', 'selected': 'true', 'label': 'minDepth', 'expr0': 'min(minDepth,z)', 'channel0': 'depth', 'temp_expr0': '0.00169'})
   nuke.setUserPreset("Glow2", "A", {'indicators': '16', 'mix': '0.25', 'saturation': '0.5', 'selected': 'true', 'size': '5'})
   nuke.setUserPreset("Glow2", "EffectOnly", {'effect_only': 'true', 'selected': 'true', 'tolerance': '0.195', 'brightness': '1.66'})
-  nuke.setUserPreset("GodRays", "Aberration", {'maskChannelInput': '-rgba.alpha', 'tile_color': '0xff8200ff', 'selected': 'true', 'label': 'Aberration', 'channels': '-rgba.red -rgba.green rgba.blue none', 'translate': '3 -2'})
+  nuke.setUserPreset("GodRays", "Aberration", {'selected': 'true', 'tile_color': '0xff8200ff', 'maskChannelInput': '-rgba.alpha', 'label': 'Aberration', 'channels': '-rgba.red -rgba.green rgba.blue none', 'translate': '3 -2'})
   nuke.setUserPreset("GodRays", "Aberration_B", {'scale': '1.02', 'selected': 'true', 'label': 'Aberration_B', 'channels': '-rgba.red -rgba.green rgba.blue none', 'mix': '0.5', 'indicators': '16'})
   nuke.setUserPreset("Grade", "Shadow", {'white': '0.001', 'selected': 'true', 'gamma': '1.896666527 2.006666899 2.096666574 2', 'label': 'Shadow'})
   nuke.setUserPreset("Grade", "LiftBlack", {'selected': 'true', 'black': '0.003566666739 0.00690666819 0.01356666628 0', 'label': 'LiftBlack', 'maskChannelInput': '-rgba.alpha', 'unpremult': 'rgba.alpha'})
@@ -41,6 +41,7 @@ def nodePresetsStartup():
   nuke.setUserPreset("Merge2", "AO", {'screen_alpha': 'true', 'operation': 'multiply', 'selected': 'true', 'label': 'AO'})
   nuke.setUserPreset("ModifyMetaData", "frameRange", {'selected': 'true', 'metadata': '{set first_frame "\\[value input.first]"}\n{set last_frame "\\[value input.last]"}'})
   nuke.setUserPreset("Multiply", "alpha*0", {'channels': 'alpha', 'selected': 'true', 'value': '0'})
+  nuke.setUserPreset("Premult", "depth", {'channels': 'depth', 'selected': 'true'})
   nuke.setUserPreset("Radial", "Soft:0.5 Invert", {'softness': '0.5', 'invert': 'true', 'selected': 'true', 'area': '-79.98813498 -174 1999.988135 1254'})
   nuke.setUserPreset("Ramp", "Black", {'color': '0', 'p0': '1358 1076', 'p1': '404 22', 'type': 'smooth1', 'selected': 'true'})
   nuke.setUserPreset("Ramp", "Mask", {'p0': '600 600', 'p1': '1400 600', 'premult': 'all', 'selected': 'true', 'label': 'Mask', 'output': 'none'})
@@ -54,4 +55,4 @@ def nodePresetsStartup():
   nuke.setUserPreset("Write", "InputName.####.png", {'checkHashOnRead': 'false', 'file_type': 'png', 'beforeRender': 'file = nuke.tcl(\'eval list {\'+nuke.thisNode()["file"].value()+\'}\');\nabsolutePath = os.path.splitdrive(file)[0];\nproject_directory = nuke.tcl(\'eval list {\'+nuke.root()["project_directory"].value()+\'}\')+\'/\';\npathHead = \'\' if absolutePath else project_directory;\nos.makedirs(pathHead+os.path.dirname(file));\n', 'selected': 'true', 'label': '<font size="3" color =#548DD4><b> Frame range :</b></font> <font color = red>[value first] - [value last] </font>', 'version': '6', 'use_limit': 'true', 'proxy': 'images/[lindex [split [basename [metadata input/filename]] .] 0]/[lindex [split [basename [metadata input/filename]] .] 0]_proxy.%04d.png', 'file': 'images/[lindex [split [basename [metadata input/filename]] .] 0]/[lindex [split [basename [metadata input/filename]] .] 0].%04d.png', 'indicators': '2', 'last': '{"\\[metadata last_frame]"}', 'first': '{"\\[metadata first_frame]"}', 'png.datatype': '16 bit'})
   nuke.setUserPreset("ZDefocus2", "math:depth", {'center': '0.01153501403', 'selected': 'true', 'dof': '0.5', 'focal_point': '882 569', 'legacy_resize_mode': 'false', 'math': 'depth', 'indicators': '8', 'show_legacy_resize_mode': 'false', 'max_size': '50', 'size': '12.5'})
   nuke.setUserPreset("ZDefocus2", "math:depth CloseRange", {'center': '0.0010277119', 'selected': 'true', 'focal_point': '978 664', 'legacy_resize_mode': 'false', 'math': 'depth', 'show_legacy_resize_mode': 'false', 'max_size': '50', 'size': '25'})
-  nuke.setUserPreset("ZDefocus2", "direct", {'z_channel': 'BG_A_depth3Split.Focus', 'selected': 'true', 'legacy_resize_mode': 'false', 'math': 'direct', 'show_legacy_resize_mode': 'false', 'max_size': '25', 'size': '8'})
+  nuke.setUserPreset("ZDefocus2", "direct", {'z_channel': 'depth3split.Focus', 'selected': 'true', 'legacy_resize_mode': 'false', 'show_legacy_resize_mode': 'false', 'math': 'direct', 'size': '10'})

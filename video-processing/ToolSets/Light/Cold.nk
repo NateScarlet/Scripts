@@ -1,0 +1,49 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+Ramp {
+ inputs 0
+ p0 {484 538}
+ p1 {110 1106}
+ type smooth0
+ name Ramp6
+ selected true
+ xpos 70
+ ypos -2146
+}
+Ramp {
+ p0 {1464 526}
+ p1 {2086 736}
+ type smooth0
+ name Ramp7
+ selected true
+ xpos 70
+ ypos -2122
+}
+Ramp {
+ output none
+ premult all
+ p0 {958 102}
+ p1 {952 316}
+ name Ramp8
+ label Mask
+ selected true
+ xpos 70
+ ypos -2087
+}
+Dot {
+ name Dot36
+ selected true
+ xpos 104
+ ypos -2022
+}
+push $cut_paste_input
+Grade {
+ inputs 1+1
+ gamma {0.8824753165 1.200646639 1.133830667 1}
+ maskChannelMask rgba.blue
+ name Grade9
+ label Cold
+ selected true
+ xpos -40
+ ypos -2032
+}

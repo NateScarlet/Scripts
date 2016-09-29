@@ -1,14 +1,13 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
 BackdropNode {
  inputs 0
- name BackdropNode1
+ name BackdropNode4
  tile_color 0x9fbcc6ff
  label Write
  note_font_size 42
  selected true
- xpos -38
- ypos -304
+ xpos -174
+ ypos 2466
  bdwidth 348
  bdheight 396
 }
@@ -16,10 +15,38 @@ push $cut_paste_input
 Dot {
  name Dot2
  selected true
- xpos 130
- ypos -208
+ xpos -6
+ ypos 2562
 }
-set N4a10400 [stack 0]
+set N341d0000 [stack 0]
+Write {
+ file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+ proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
+ colorspace sRGB
+ file_type mov
+ meta_codec "raw "
+ meta_encoder mov32
+ mov32_codec "raw "
+ mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+ mov64_codec ap4h
+ mov64_advanced 1
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ mov64_gop_size 12
+ mov64_b_frames 0
+ checkHashOnRead false
+ version 3
+ in_colorspace linear
+ out_colorspace linear
+ beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+ name Write_MOV
+ selected true
+ xpos -150
+ ypos 2617
+}
+push $N341d0000
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -29,37 +56,26 @@ Write {
  last {{first}}
  use_limit true
  checkHashOnRead false
- version 15
- in_colorspace linear
- out_colorspace linear
+ version 19
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_JPG
+ label "\[knob_default which 1]"
  selected true
- xpos 96
- ypos -98
+ xpos -40
+ ypos 2672
 }
 Dot {
  name Dot3
  selected true
- xpos 130
- ypos -64
+ xpos -6
+ ypos 2706
 }
-set N4a11c00 [stack 0]
-Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name Expression1
- label SaturationToRGB
- selected true
- xpos -14
- ypos -26
-}
-push $N4a11c00
+set N46468c00 [stack 0]
 Group {
  name HueToRGB1
  selected true
- xpos 96
- ypos 28
+ xpos -40
+ ypos 2798
 }
  Input {
   inputs 0
@@ -96,43 +112,28 @@ Group {
   ypos 113
  }
 end_group
-push $N4a10400
-Write {
- file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
- colorspace sRGB
- file_type mov
- meta_codec "raw "
- meta_encoder mov32
- mov32_codec "raw "
- mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
- mov64_codec ap4h
- mov64_advanced 1
- mov64_bitrate 20000
- mov64_bitrate_tolerance 40000000
- mov64_quality_min 2
- mov64_quality_max 31
- mov64_gop_size 12
- mov64_b_frames 0
- checkHashOnRead false
- version 3
- in_colorspace linear
- out_colorspace linear
- beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
- name Write_MOV
- selected true
- xpos -14
- ypos -153
-}
 Read {
  inputs 0
  file "\[value Write_JPG.file]"
  first {{parent.Write_JPG.last}}
  last {{first}}
  origset true
+ version 1
+ in_colorspace linear
+ out_colorspace linear
  name ReadWrite_JPG
  selected true
- xpos 206
- ypos -122
+ xpos 70
+ ypos 2648
  disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
+}
+push $N46468c00
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression1
+ label SaturationToRGB
+ selected true
+ xpos -150
+ ypos 2744
 }

@@ -1,0 +1,80 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+Dot {
+ name Dot41
+ selected true
+ xpos -6
+ ypos -4806
+}
+set N32eaf800 [stack 0]
+Dot {
+ name Dot42
+ selected true
+ xpos 104
+ ypos -4806
+}
+add_layer {Card3D Card3D.red Card3D.green Card3D.blue Card3D.alpha}
+FilterErode {
+ channels Card3D
+ size -39
+ filter triangle
+ name FilterErode1
+ selected true
+ xpos 70
+ ypos -4792
+}
+Noise {
+ output Card3D
+ opacity 0.135
+ type turbulence
+ size 1980
+ octaves 141
+ gain 1
+ gamma 1
+ center {960 540}
+ name Noise1
+ selected true
+ xpos 70
+ ypos -4744
+}
+Blur {
+ channels Card3D
+ size 6.6
+ name Blur2
+ selected true
+ xpos 70
+ ypos -4696
+}
+Grade {
+ channels Card3D
+ add -0.5
+ black_clamp false
+ name Grade8
+ selected true
+ xpos 70
+ ypos -4648
+}
+IDistort {
+ uv Card3D
+ blur Card3D.alpha
+ blur_scale 3
+ name IDistort1
+ selected true
+ xpos 70
+ ypos -4600
+}
+Dot {
+ name Dot43
+ selected true
+ xpos 104
+ ypos -4542
+}
+push $N32eaf800
+Merge2 {
+ inputs 2
+ name Merge6
+ selected true
+ xpos -40
+ ypos -4546
+}

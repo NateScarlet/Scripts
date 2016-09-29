@@ -4,15 +4,19 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 Sleep, 60000
-ToDir("x:")
-ToDir("y:")
-ToDir("z:")
-Sleep, 1000
-Send, !{F4 3}
+
+ToDir("X:")
+ToDir("Y:")
+ToDir("Z:")
 ExitApp
 
+;~ 路径是大小写敏感的
 ToDir(dir)
 {
+
 	Run, explorer.exe %dir%
+	WinWaitActive, ahk_exe explorer.exe, 地址: %dir%
+	Sleep, 0
+	WinClose,
 }
 
