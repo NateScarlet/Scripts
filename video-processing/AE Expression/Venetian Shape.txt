@@ -1,0 +1,11 @@
+size
+
+x=width/effect("Slider Control")(1);
+y=height;
+[x,y]
+
+position
+
+w=width/effect("Slider Control")(1);
+x=(index*2-1)*w-width/2-w/2;
+[x,0]
