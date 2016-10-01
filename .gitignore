@@ -50,3 +50,4 @@ Temporary Items
 *.bak
 *.bak
 KeyMapping_win10.ahk.bak
+*.pyc
