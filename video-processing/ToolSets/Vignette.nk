@@ -1,0 +1,23 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+Radial {
+ inputs 0
+ invert true
+ area {-318.5093488 -279.503618 2238.509349 1359.503618}
+ softness 0.65
+ name Radial2
+ selected true
+ xpos 400
+ ypos -3106
+}
+push $cut_paste_input
+Grade {
+ inputs 1+1
+ white 0.001
+ gamma 2
+ name Grade4
+ label Vignette
+ selected true
+ xpos 290
+ ypos -3112
+}

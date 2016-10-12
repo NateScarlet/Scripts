@@ -2,13 +2,13 @@ set cut_paste_input [stack 0]
 version 10.0 v1
 BackdropNode {
  inputs 0
- name BackdropNode2
+ name BackdropNode8
  tile_color 0x388e8e00
  label MP
  note_font_size 42
  selected true
- xpos -324
- ypos -3596
+ xpos -812
+ ypos -7838
  bdwidth 649
  bdheight 759
  z_order 1
@@ -17,8 +17,8 @@ push $cut_paste_input
 Ramp {
  name Ramp1
  selected true
- xpos 180
- ypos -3274
+ xpos -308
+ ypos -7516
 }
 Read {
  inputs 0
@@ -27,48 +27,51 @@ Read {
  origset true
  name Read2
  selected true
- xpos -40
- ypos -3448
+ xpos -528
+ ypos -7690
 }
 Reformat {
- name Reformat1
+ name Reformat2
  selected true
- xpos -40
- ypos -3346
+ xpos -528
+ ypos -7588
 }
 Transform {
  translate {-46 130}
  scale 3.762000084
  center {960 540}
- name Transform1
+ name Transform4
  selected true
- xpos -40
- ypos -3322
+ xpos -528
+ ypos -7564
 }
 HueShift {
  name HueShift1
  selected true
- xpos -40
- ypos -3298
+ xpos -528
+ ypos -7540
 }
 HueShift {
  inputs 1+1
  name HueShift2
  selected true
- xpos -40
- ypos -3274
+ xpos -528
+ ypos -7516
 }
 AddChannels {
  channels depth
  color 100
- name AddChannels1
+ name AddChannels3
  selected true
- xpos -40
- ypos -3256
+ xpos -528
+ ypos -7227
 }
+push 0
 Switch {
- name Switch1
+ inputs 2
+ which 1
+ name Switch6
  selected true
- xpos -40
- ypos -2866
+ xpos -528
+ ypos -7030
 }

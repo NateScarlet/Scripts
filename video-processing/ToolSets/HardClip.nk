@@ -1,12 +1,13 @@
 set cut_paste_input [stack 0]
+version 10.0 v1
 push $cut_paste_input
 Group {
- name HardClip2
+ name HardClip5
  tile_color 0x79a8ffff
  selected true
- xpos 1827
- ypos -2571
- addUserKnob {20 MaxGrade}
+ xpos 766
+ ypos -6393
+ addUserKnob {20 HardClip}
  addUserKnob {41 SampleChannels T CurveTool1.channels}
  addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
  addUserKnob {26 ""}
@@ -26,6 +27,7 @@ Group {
  switchMin true
  addUserKnob {41 gamma T ValueGamma1.gamma}
  addUserKnob {41 saturation T ValueGamma1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
  addUserKnob {7 mix}
  mix 1
 }
@@ -40,13 +42,13 @@ Group {
   xpos 214
   ypos -582
  }
-set Ndad8c800 [stack 0]
+set Nbddeb000 [stack 0]
  Dot {
   name Dot2
   xpos 324
   ypos -582
  }
-set Ndad8c400 [stack 0]
+set Nbddeac00 [stack 0]
  Dot {
   name Dot4
   xpos 434
@@ -57,7 +59,7 @@ set Ndad8c400 [stack 0]
   xpos 434
   ypos -390
  }
-push $Ndad8c800
+push $Nbddeb000
  Grade {
   blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
   whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
@@ -70,9 +72,8 @@ push $Ndad8c800
   help 只调整亮度不影响饱和度和色相
   tile_color 0x79a8ffff
   label "\[knob_default gain 1]\n\[knob_default gamma 1]"
-  selected true
   xpos 180
-  ypos -418
+  ypos -443
   addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
   addUserKnob {41 channels T Colorspace1.channels}
   addUserKnob {7 lift}
@@ -98,7 +99,7 @@ push $Ndad8c800
    xpos 544
    ypos -582
   }
-set N4d9dd800 [stack 0]
+set N60e1f800 [stack 0]
   Dot {
    name Dot2
    xpos 654
@@ -118,14 +119,14 @@ set N4d9dd800 [stack 0]
    xpos 620
    ypos -466
   }
-set Nd265cd80 [stack 0]
+set N1eb8e880 [stack 0]
   Dot {
    name Dot3
    xpos 654
    ypos -366
   }
-push $Nd265cd80
-push $N4d9dd800
+push $N1eb8e880
+push $N60e1f800
   Colorspace {
    colorspace_out HSV
    name Colorspace1
@@ -158,6 +159,7 @@ push $N4d9dd800
    fringe {{parent.Grade1.fringe}}
    mix {{parent.Grade1.mix}}
    name Saturation1
+   selected true
    xpos 510
    ypos -370
   }
@@ -167,6 +169,12 @@ push $N4d9dd800
    ypos -298
   }
  end_group
+ Grade {
+  name Grade2
+  selected true
+  xpos 180
+  ypos -417
+ }
  Merge2 {
   inputs 2
   operation copy
@@ -180,7 +188,7 @@ push $N4d9dd800
   xpos 180
   ypos -346
  }
-push $Ndad8c400
+push $Nbddeac00
  CurveTool {
   operation "Max Luma Pixel"
   ROI {0 0 {width} {height}}

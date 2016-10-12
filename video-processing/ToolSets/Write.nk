@@ -6,8 +6,8 @@ BackdropNode {
  label Write
  note_font_size 42
  selected true
- xpos -174
- ypos 2466
+ xpos 45
+ ypos -149
  bdwidth 348
  bdheight 396
 }
@@ -15,10 +15,10 @@ push $cut_paste_input
 Dot {
  name Dot2
  selected true
- xpos -6
- ypos 2562
+ xpos 213
+ ypos -53
 }
-set N341d0000 [stack 0]
+set Ndc124800 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -43,16 +43,16 @@ Write {
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_MOV
  selected true
- xpos -150
- ypos 2617
+ xpos 69
+ ypos 2
 }
-push $N341d0000
+push $Ndc124800
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
  file_type jpeg
  _jpeg_quality 1
- first {{"\[value root.first_frame]"}}
+ first {{first_frame+ceil((last_frame-first_frame)/2)}}
  last {{first}}
  use_limit true
  checkHashOnRead false
@@ -61,21 +61,21 @@ Write {
  name Write_JPG
  label "\[knob_default which 1]"
  selected true
- xpos -40
- ypos 2672
+ xpos 179
+ ypos 57
 }
 Dot {
  name Dot3
  selected true
- xpos -6
- ypos 2706
+ xpos 213
+ ypos 91
 }
-set N46468c00 [stack 0]
+set Ndc125400 [stack 0]
 Group {
  name HueToRGB1
  selected true
- xpos -40
- ypos 2798
+ xpos 179
+ ypos 183
 }
  Input {
   inputs 0
@@ -123,17 +123,17 @@ Read {
  out_colorspace linear
  name ReadWrite_JPG
  selected true
- xpos 70
- ypos 2648
+ xpos 289
+ ypos 33
  disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
 }
-push $N46468c00
+push $Ndc125400
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
  name Expression1
  label SaturationToRGB
  selected true
- xpos -150
- ypos 2744
+ xpos 69
+ ypos 129
 }
