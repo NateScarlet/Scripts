@@ -1,0 +1,11 @@
+xn = 8;
+yn = 4;
+a = Math.floor(index/xn);
+b = (index-a*xn);
+yi = b==0?a:a+1;
+xi = index-(yi-1)*xn;
+xs = thisComp.layer("Expression Control").effect("Slider Control")("Slider");
+ys = thisComp.layer("Expression Control").effect("Slider Control 2")("Slider");
+x = xs*xi-xs/2;
+y = ys*yi-ys/2;
+[x,y]

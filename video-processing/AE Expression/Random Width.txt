@@ -1,0 +1,5 @@
+raw = content("Rectangle 1").content("Rectangle Path 1").size;
+a = 50 //¿í¶ÈËæ»ú·¶Î§;seedRandom(raw[0], timeless = true);
+b = raw[0]-a<0?0:raw[0]-a;
+w = random(b,raw[0]+a);
+[w,raw[1]]

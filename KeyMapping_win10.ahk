@@ -31,7 +31,7 @@ else
 return
 
 $#f:: 
-Run Everything
+Run, Everything
 return
 
 $^#e:: 
