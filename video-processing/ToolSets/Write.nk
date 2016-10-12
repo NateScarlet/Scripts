@@ -6,8 +6,8 @@ BackdropNode {
  label Write
  note_font_size 42
  selected true
- xpos 45
- ypos -149
+ xpos -64
+ ypos -438
  bdwidth 348
  bdheight 396
 }
@@ -15,10 +15,10 @@ push $cut_paste_input
 Dot {
  name Dot2
  selected true
- xpos 213
- ypos -53
+ xpos 104
+ ypos -342
 }
-set Ndc124800 [stack 0]
+set N4cd0400 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -43,10 +43,10 @@ Write {
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_MOV
  selected true
- xpos 69
- ypos 2
+ xpos -40
+ ypos -287
 }
-push $Ndc124800
+push $N4cd0400
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -58,24 +58,25 @@ Write {
  checkHashOnRead false
  version 19
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+ afterRender "nuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value())"
  name Write_JPG
  label "\[knob_default which 1]"
  selected true
- xpos 179
- ypos 57
+ xpos 70
+ ypos -232
 }
 Dot {
  name Dot3
  selected true
- xpos 213
- ypos 91
+ xpos 104
+ ypos -198
 }
-set Ndc125400 [stack 0]
+set N4cd1800 [stack 0]
 Group {
  name HueToRGB1
  selected true
- xpos 179
- ypos 183
+ xpos 70
+ ypos -106
 }
  Input {
   inputs 0
@@ -112,6 +113,16 @@ Group {
   ypos 113
  }
 end_group
+push $N4cd1800
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression1
+ label SaturationToRGB
+ selected true
+ xpos -40
+ ypos -160
+}
 Read {
  inputs 0
  file "\[value Write_JPG.file]"
@@ -122,18 +133,9 @@ Read {
  in_colorspace linear
  out_colorspace linear
  name ReadWrite_JPG
+ label "第 \[value first] 帧"
  selected true
- xpos 289
- ypos 33
+ xpos 180
+ ypos -262
  disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
-}
-push $Ndc125400
-Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name Expression1
- label SaturationToRGB
- selected true
- xpos 69
- ypos 129
 }
