@@ -17,6 +17,7 @@ return
 
 $#2:: 
 Run PS
+Run, XnView
 return
 
 $#3:: 
@@ -31,7 +32,7 @@ else
 return
 
 $#f:: 
-Run, %Shortcuts%/Everything
+Run, Everything
 return
 
 $^#e:: 
