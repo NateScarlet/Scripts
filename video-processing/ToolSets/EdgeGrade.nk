@@ -1,0 +1,45 @@
+set cut_paste_input [stack 0]
+    push $cut_paste_input
+Dot {
+ name Dot9
+ selected true
+ xpos 324
+ ypos -3438
+}
+set N2bd15400 [stack 0]
+Dot {
+ name Dot12
+ selected true
+ xpos 434
+ ypos -3438
+}
+EdgeDetectWrapper {
+ channels alpha
+ name EdgeDetect1
+ selected true
+ xpos 400
+ ypos -3400
+}
+Blur {
+ size 27.5
+ name Blur3
+ selected true
+ xpos 400
+ ypos -3352
+}
+Dot {
+ name Dot10
+ selected true
+ xpos 434
+ ypos -3294
+}
+push $N2bd15400
+Grade {
+ inputs 1+1
+ white 0.33
+ name Grade4
+ label Edge
+ selected true
+ xpos 290
+ ypos -3304
+}

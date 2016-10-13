@@ -1,0 +1,9 @@
+set cut_paste_input [stack 0]
+    push $cut_paste_input
+NoOp {
+name setRootFormat_HD1080_fps25_
+label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
+selected true
+xpos 697
+ypos 363
+}

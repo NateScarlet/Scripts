@@ -1,0 +1,9 @@
+set cut_paste_input [stack 0]
+    push $cut_paste_input
+NoOp {
+ name setRootFrameRangeToInput
+ label "\[knob root.first_frame \[value input.first]]\n\[knob root.last_frame \[value input.last]]\n\[knob root.lock_range 1]"
+ selected true
+ xpos 373
+ ypos -12703
+}

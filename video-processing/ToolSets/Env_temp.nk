@@ -6,10 +6,10 @@ BackdropNode {
  label 3D_Env
  note_font_size 42
  selected true
- xpos 128
- ypos -5526
- bdwidth 1945
- bdheight 2748
+ xpos 75
+ ypos -7724
+ bdwidth 2267
+ bdheight 3010
  z_order -1
 }
 BackdropNode {
@@ -19,12 +19,12 @@ BackdropNode {
  label 参考
  note_font_size 42
  selected true
- xpos 686
- ypos -4015
+ xpos 466
+ ypos -6271
  bdwidth 168
  bdheight 541
 }
-clone node2d319800|Read|14404 Read {
+clone node23807400|Read|2344 Read {
  inputs 0
  file Z:/SNJYW/Render/EP02/03/Ep02_03_sc125/EP02_03_sc125_BG_A/Ep02_03_sc125.%04d.exr
  format "1920 1080 0 0 1920 1080 1 HD_1080"
@@ -36,22 +36,22 @@ clone node2d319800|Read|14404 Read {
  name BG_A
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
- xpos 730
- ypos -3651
+ xpos 620
+ ypos -4875
 }
-set C2d319800 [stack 0]
-push $cut_paste_input
-clone node2d319400|Axis2|14404 Axis2 {
+set C23807400 [stack 0]
+clone node492b000|Axis2|2344 Axis2 {
+ inputs 0
  uniform_scale 0.1
  name Axis1
  label "全局尺寸: \n\[value uniform_scale]"
  selected true
  xpos 1180
- ypos -3630
+ ypos -6006
  addUserKnob {20 User l 控制}
  addUserKnob {41 uniform_scale_1 l 全局3D尺寸 t 全局3D尺寸 T Axis1.uniform_scale}
 }
-clone node24697c00|Camera2|14404 Camera2 {
+clone node492a800|Camera2|2344 Camera2 {
  read_from_file true
  rot_order XYZ
  translate {{curve x1 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.778662682 3.777390718 3.773504972 3.766902924 3.757480145 3.745133877 3.72976017 3.711256027 3.68951726 3.664441109 3.635923624 3.603861332 3.568150997 3.528689146 3.485371828 3.438096285 3.386758327 3.331254721 3.271481991 3.207337141 3.138715982 3.065515041 2.987631321 2.904961109 2.817400932 2.724847078 2.62719655 2.524345398 2.416190386 2.300829649 2.176229954 2.042089224 1.898105979 1.74397862 1.579405546 1.404084921 1.217715144 1.019994497 0.8106215 0.5892944932 0.3557116687 0.1095716059 -0.149427712 -0.421587646 -0.7072097659 -1.006596088 -1.320047855} {curve x1 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.55251884 17.54968071 17.54098701 17.52616119 17.50493622 17.47703743 17.44219017 17.40012741 17.35057068 17.29325104 17.22789764 17.15423775 17.07199669 16.98090363 16.8806839 16.77106857 16.6517868 16.52256203 16.3831234 16.23320007 16.07251549 15.90080261 15.71778679 15.52319622 15.31675816 15.0982008 14.86725044 14.6236372 14.36708641 14.1051302 13.84534836 13.58754158 13.33151627 13.07707024 12.82400703 12.5721302 12.32124138 12.07114315 11.82163811 11.57252789 11.32361507 11.07470322 10.82559299 10.57608795 10.32598972 10.0751009 9.823224068} {curve x1 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.4413147 360.8366699 361.2206726 361.5931702 361.9538879 362.3026123 362.6390991 362.9631348 363.2744446 363.5728455 363.8580933 364.1299133 364.3881226 364.6324768 364.862793 365.0787354 365.2801514 365.4667664 365.6383667 365.7947388 365.9356384 366.0608215 366.1700439 366.2631226 366.3397827 366.3998413 366.4429932 366.4690552 366.4778137 366.4659119 366.4304504 366.3716736 366.289978 366.1856079 366.0589294 365.9102173 365.7397766 365.5479736 365.335083 365.1013794 364.8471985 364.5729065 364.2787476 363.9650879 363.6322021 363.2803955 362.9100037}}
@@ -67,10 +67,331 @@ clone node24697c00|Camera2|14404 Camera2 {
  name Camera3
  selected true
  xpos 1070
- ypos -3630
+ ypos -6006
 }
-set N2d318c00 [stack 0]
-clone node2d318800|Read|14404 Read {
+set N23806800 [stack 0]
+Read {
+ inputs 0
+ file "Z:/SNJYW/Comp/sucai/09. Fire/Fire_05.mov"
+ format "2048 1152 0 0 2048 1152 1 "
+ last 351
+ origlast 351
+ origset true
+ mov32_codec {{0} "Apple PNG (appl - png )"}
+ mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+ name Read13
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ selected true
+ xpos 2066
+ ypos -6616
+}
+Transform {
+ translate {28 164}
+ rotate 5.991692066
+ scale 0.67
+ center {960 540}
+ name Transform8
+ selected true
+ xpos 2066
+ ypos -6508
+}
+set N60cf7000 [stack 0]
+Blur {
+ size 200
+ name Blur1
+ selected true
+ xpos 2176
+ ypos -6482
+}
+Roto {
+ output none
+ premultiply rgba
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097152}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px x42f20000
+        {0 0}
+        {x43d2ba04 x4393ac5d}
+        {0 0}
+        {xc38e0000 x42ea0000}
+        {x44d34e80 x435a58bb}
+        {x438e0000 xc2ea0000}
+        {x43070000 xc1900000}
+        {x44922e80 x429ab178}
+        {xc306fff8 x41900000}
+        {x42b00000 xc2240000}
+        {x43daba04 x433458bb}
+        {xc2b00000 x42240000}}}
+      {cc
+       {f 8192}
+       {px x42f20000
+        {0 0}
+        {xbf87d100 x420bef98}
+        {0 0}
+        {xc38e0000 x42ea0000}
+        {x41555280 x420171cc}
+        {x438e0000 xc2ea0000}
+        {x43070000 xc1900000}
+        {xc0940a00 xc20ac58c}
+        {xc306fff8 x41900000}
+        {x42b00000 xc2240000}
+        {xc16c7fe0 xc1fdce0c}
+        {xc2b00000 x42240000}}}}
+     {tx x42f20000 x4465d000 x431e8000}
+     {a inv 1 fx xc2c80000 fy xc2c80000 osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x42f20000 ltm x42f20000 tt x40800000}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 121
+ lifetime_end 121
+ motionblur_shutter_offset_type centred
+ feather -100
+ inverted true
+ source_black_outside true
+ name Roto4
+ selected true
+ xpos 2176
+ ypos -6444
+}
+push $N60cf7000
+Glow2 {
+ tolerance 0.25
+ brightness 0.4
+ name Glow1
+ selected true
+ xpos 2066
+ ypos -6482
+}
+ColorCorrect {
+ saturation 0.7
+ gain 0.8
+ name ColorCorrect24
+ selected true
+ xpos 2066
+ ypos -6456
+}
+OFXcom.genarts.sapphire.stylize.s_filmdamage_v1 {
+ grain_amp 0
+ "Grain Details" 0
+ grain_amp_red 0.9
+ grain_amp_green 1
+ grain_amp_blue 1.6
+ grain_amp_darks 0.2
+ grain_amp_brights 0
+ grain_blur 0
+ grain_blur_red 1
+ grain_blur_green 0.9
+ grain_blur_blue 1.2
+ grain_mono false
+ grain_hold Frame
+ "Color Correct" 0
+ saturation 1
+ scale_lights 1
+ offset_darks 0
+ tint_lights 1
+ tint_darks 0
+ stain_density 0
+ "Stains Details" 0
+ vary_stain_density 0.2
+ stain_print 1
+ stain_negative 0
+ stain_size 1
+ vary_stain_size 0.5
+ stain_opacity 0.5
+ vary_stain_opacity 0.5
+ vary_stain_brightness 0
+ vary_stain_color 0
+ stain_color1 0
+ stain_color2 {0.25 0.125 0}
+ dust_density 0
+ "Dust Details" 0
+ vary_dust_density 0.2
+ dust_on_print 1
+ dust_on_negative 0
+ dust_size 1
+ vary_dust_size 0.5
+ dust_opacity 0.8
+ vary_dust_opacity 0.5
+ vary_dust_brightness 0
+ vary_dust_color 0
+ dust_color1 0
+ dust_color2 0
+ hairs 0
+ "Hair Details" 0
+ hair_persistence 3
+ hair_wiggle_amp 0.1
+ hair_wiggle_freq 1
+ hair_opacity 1
+ hair_size 1
+ vary_hair_size 1
+ hair_color 0
+ scratches 0
+ "Scratches Details" 0
+ black_scratches 1
+ white_scratches 0.1
+ black_scratch_length 10
+ white_scratch_length 2
+ scratch_width 0.15
+ vary_scratches_width 1
+ scratches_taper 0.1
+ scratch_opacity 1
+ scratch_roughness 1
+ scratch_rough_freq 150
+ gaps 0.28
+ gaps_freq 120
+ scratch_area_center 0
+ scratch_area_width 1
+ weave_amount 1
+ weave_frequency 0.1
+ shake_amplitude 0
+ "Shake Details" 0
+ shake_frequency 1
+ shake_jumpiness 1
+ shake_random 0.1
+ shake_always 0.5
+ interframe_border_height 0.1
+ shake_time_offset 0
+ shake_motion_blur 0.1
+ flicker 0.3
+ "Flicker Details" 0
+ flicker_rand_amp 1
+ flicker_rand_freq 10
+ flicker_wave_amp 0
+ flicker_wave_freq 5
+ defocus 0
+ "Defocus Details" 0
+ defocus_rand_amp 1
+ defocus_rand_freq 10
+ defocus_wave_amp 0
+ defocus_wave_freq 5
+ vignette_darkness 0.1
+ "Vignette Details" 0
+ vignette_radius 1
+ vignette_edge_softness 0.5
+ vignette_rel_height 0.75
+ seed 0.123
+ Enable_GPU true
+ version 8.1
+ version2 9375170
+ name S_FilmDamage1
+ selected true
+ xpos 2066
+ ypos -6406
+}
+Merge2 {
+ inputs 2
+ operation screen
+ name Merge7
+ selected true
+ xpos 2176
+ ypos -6406
+}
+Retime {
+ input.last 351
+ output.first -100
+ output.first_lock true
+ output.last 484
+ speed 0.6
+ time ""
+ name Retime11
+ selected true
+ xpos 2176
+ ypos -6380
+}
+Keyer {
+ operation "max keyer"
+ name Keyer1
+ selected true
+ xpos 2176
+ ypos -6354
+}
+Unpremult {
+ name Unpremult17
+ selected true
+ xpos 2176
+ ypos -6316
+}
+ColorCorrect {
+ gain 2.3
+ name ColorCorrect23
+ selected true
+ xpos 2176
+ ypos -6290
+ disable true
+}
+Premult {
+ name Premult19
+ selected true
+ xpos 2176
+ ypos -6264
+}
+Glow2 {
+ name Glow15
+ selected true
+ xpos 2176
+ ypos -6238
+ disable true
+}
+Card2 {
+ translate {3.301943064 0.72100009 33.60003281}
+ rotate {0 -22.13813633 0}
+ scaling {0.3676969409 0.4446703494 0.4446703494}
+ uniform_scale 10
+ control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+ name Card4
+ label "Right\nFront"
+ selected true
+ xpos 2176
+ ypos -6212
+}
+push 0
+Switch {
+ inputs 2
+ which 1
+ name Switch9
+ selected true
+ xpos 2176
+ ypos -6129
+ disable true
+}
+clone node23806400|Read|2344 Read {
  inputs 0
  file "Z:/SNJYW/Comp/sucai/09. Fire/motionVFX_steady_bonfire_03.mp4"
  format "2048 1152 0 0 2048 1152 1 "
@@ -83,9 +404,9 @@ clone node2d318800|Read|14404 Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 950
- ypos -5235
+ ypos -7611
 }
-set C2d318800 [stack 0]
+set C23806400 [stack 0]
 Retime {
  input.last 2160
  output.first -123
@@ -95,14 +416,14 @@ Retime {
  name Retime6
  selected true
  xpos 950
- ypos -5098
+ ypos -7474
 }
 Keyer {
  operation "max keyer"
  name Keyer16
  selected true
  xpos 950
- ypos -5056
+ ypos -7432
 }
 GridWarp3 {
  toolbar_visibility_src false
@@ -175,7 +496,7 @@ GridWarp3 {
  name GridWarp3_3
  selected true
  xpos 950
- ypos -4984
+ ypos -7360
 }
 Transform {
  translate {22 326}
@@ -184,20 +505,20 @@ Transform {
  name Transform1
  selected true
  xpos 950
- ypos -4954
+ ypos -7330
 }
 Unpremult {
  name Unpremult14
  selected true
  xpos 950
- ypos -4930
+ ypos -7306
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect18
  selected true
  xpos 950
- ypos -4906
+ ypos -7282
 }
 Group {
  name ValueGamma2
@@ -206,7 +527,7 @@ Group {
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
  xpos 950
- ypos -4882
+ ypos -7258
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
@@ -232,7 +553,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N3158b800 [stack 0]
+set N2386a400 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -252,14 +573,14 @@ set N3158b800 [stack 0]
   xpos 620
   ypos -466
  }
-set N33dec400 [stack 0]
+set N4905a80 [stack 0]
  Dot {
   name Dot3
   xpos 654
   ypos -366
  }
-push $N33dec400
-push $N3158b800
+push $N4905a80
+push $N2386a400
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -305,15 +626,7 @@ Premult {
  name Premult16
  selected true
  xpos 950
- ypos -4858
-}
-Glow2 {
- tint {0.9894000292 0.4700000286 1 1}
- brightness 3.1
- name Glow16
- selected true
- xpos 950
- ypos -4834
+ ypos -7234
 }
 Card2 {
  translate {0.8580875993 3.784116745 -22.73150444}
@@ -336,12 +649,12 @@ Card2 {
  label "Middle\nStairDown"
  selected true
  xpos 950
- ypos -4727
+ ypos -7103
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1830
- ypos -4587
+ ypos -6963
  selected true
 }
 Keyer {
@@ -349,32 +662,26 @@ Keyer {
  name Keyer15
  selected true
  xpos 1830
- ypos -4480
+ ypos -6856
 }
 Unpremult {
  name Unpremult13
  selected true
  xpos 1830
- ypos -4402
+ ypos -6778
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect17
  selected true
  xpos 1830
- ypos -4354
+ ypos -6730
 }
 Premult {
  name Premult15
  selected true
  xpos 1830
- ypos -4258
-}
-Glow2 {
- name Glow15
- selected true
- xpos 1830
- ypos -4162
+ ypos -6634
 }
 Card2 {
  translate {0.7877865434 1.324000001 -30.44516945}
@@ -396,12 +703,12 @@ Card2 {
  label "Right\nFront"
  selected true
  xpos 1830
- ypos -4055
+ ypos -6431
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1940
- ypos -4491
+ ypos -6867
  selected true
 }
 Retime {
@@ -413,39 +720,33 @@ Retime {
  name Retime9
  selected true
  xpos 1940
- ypos -4378
+ ypos -6754
 }
 Keyer {
  operation "max keyer"
  name Keyer17
  selected true
  xpos 1940
- ypos -4312
+ ypos -6688
 }
 Unpremult {
  name Unpremult15
  selected true
  xpos 1940
- ypos -4234
+ ypos -6610
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect19
  selected true
  xpos 1940
- ypos -4186
+ ypos -6562
 }
 Premult {
  name Premult17
  selected true
  xpos 1940
- ypos -4090
-}
-Glow2 {
- name Glow17
- selected true
- xpos 1940
- ypos -3994
+ ypos -6466
 }
 Cylinder {
  radius 6.4
@@ -455,12 +756,12 @@ Cylinder {
  name Cylinder3
  selected true
  xpos 1940
- ypos -3898
+ ypos -6274
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1720
- ypos -4611
+ ypos -6987
  selected true
 }
 Keyer {
@@ -468,32 +769,26 @@ Keyer {
  name Keyer7
  selected true
  xpos 1720
- ypos -4504
+ ypos -6880
 }
 Unpremult {
  name Unpremult11
  selected true
  xpos 1720
- ypos -4426
+ ypos -6802
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect15
  selected true
  xpos 1720
- ypos -4378
+ ypos -6754
 }
 Premult {
  name Premult13
  selected true
  xpos 1720
- ypos -4282
-}
-Glow2 {
- name Glow13
- selected true
- xpos 1720
- ypos -4186
+ ypos -6658
 }
 Cylinder {
  radius 2.2
@@ -503,12 +798,12 @@ Cylinder {
  name Cylinder1
  selected true
  xpos 1720
- ypos -4114
+ ypos -6490
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1610
- ypos -4731
+ ypos -7107
  selected true
 }
 Retime {
@@ -520,39 +815,33 @@ Retime {
  name Retime8
  selected true
  xpos 1610
- ypos -4642
+ ypos -7018
 }
 Keyer {
  operation "max keyer"
  name Keyer5
  selected true
  xpos 1610
- ypos -4576
+ ypos -6952
 }
 Unpremult {
  name Unpremult10
  selected true
  xpos 1610
- ypos -4498
+ ypos -6874
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect13
  selected true
  xpos 1610
- ypos -4450
+ ypos -6826
 }
 Premult {
  name Premult12
  selected true
  xpos 1610
- ypos -4354
-}
-Glow2 {
- name Glow8
- selected true
- xpos 1610
- ypos -4258
+ ypos -6730
 }
 Cylinder {
  radius 6.4
@@ -562,12 +851,12 @@ Cylinder {
  name Cylinder2
  selected true
  xpos 1610
- ypos -4186
+ ypos -6562
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1500
- ypos -4827
+ ypos -7203
  selected true
 }
 Keyer {
@@ -575,32 +864,26 @@ Keyer {
  name Keyer8
  selected true
  xpos 1500
- ypos -4720
+ ypos -7096
 }
 Unpremult {
  name Unpremult9
  selected true
  xpos 1500
- ypos -4642
+ ypos -7018
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect10
  selected true
  xpos 1500
- ypos -4594
+ ypos -6970
 }
 Premult {
  name Premult8
  selected true
  xpos 1500
- ypos -4498
-}
-Glow2 {
- name Glow7
- selected true
- xpos 1500
- ypos -4402
+ ypos -6874
 }
 Card2 {
  translate {5.018393993 2.724318504 -0.8284927011}
@@ -622,12 +905,12 @@ Card2 {
  label "Right\nFront"
  selected true
  xpos 1500
- ypos -4295
+ ypos -6671
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1390
- ypos -4899
+ ypos -7275
  selected true
 }
 Retime {
@@ -639,39 +922,33 @@ Retime {
  name Retime5
  selected true
  xpos 1390
- ypos -4786
+ ypos -7162
 }
 Keyer {
  operation "max keyer"
  name Keyer3
  selected true
  xpos 1390
- ypos -4744
+ ypos -7120
 }
 Unpremult {
  name Unpremult5
  selected true
  xpos 1390
- ypos -4690
+ ypos -7066
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect2
  selected true
  xpos 1390
- ypos -4642
+ ypos -7018
 }
 Premult {
  name Premult2
  selected true
  xpos 1390
- ypos -4618
-}
-Glow2 {
- name Glow3
- selected true
- xpos 1390
- ypos -4522
+ ypos -6994
 }
 Card2 {
  translate {0.8463096619 0.9150000215 -11.81988621}
@@ -693,12 +970,12 @@ Card2 {
  label "Main\n"
  selected true
  xpos 1390
- ypos -4408
+ ypos -6784
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1280
- ypos -4923
+ ypos -7299
  selected true
 }
 Retime {
@@ -710,39 +987,33 @@ Retime {
  name Retime3
  selected true
  xpos 1280
- ypos -4810
+ ypos -7186
 }
 Keyer {
  operation "max keyer"
  name Keyer13
  selected true
  xpos 1280
- ypos -4768
+ ypos -7144
 }
 Unpremult {
  name Unpremult8
  selected true
  xpos 1280
- ypos -4714
+ ypos -7090
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect11
  selected true
  xpos 1280
- ypos -4666
+ ypos -7042
 }
 Premult {
  name Premult11
  selected true
  xpos 1280
- ypos -4642
-}
-Glow2 {
- name Glow2
- selected true
- xpos 1280
- ypos -4546
+ ypos -7018
 }
 Card2 {
  translate {-2.424219847 2.299999952 -7.11081934}
@@ -764,12 +1035,12 @@ Card2 {
  label Left
  selected true
  xpos 1280
- ypos -4480
+ ypos -6856
 }
-clone $C2d318800 {
+clone $C23806400 {
  inputs 0
  xpos 1170
- ypos -5043
+ ypos -7419
  selected true
 }
 Keyer {
@@ -777,7 +1048,7 @@ Keyer {
  name Keyer6
  selected true
  xpos 1170
- ypos -4936
+ ypos -7312
 }
 GridWarp3 {
  toolbar_visibility_src false
@@ -850,7 +1121,7 @@ GridWarp3 {
  name GridWarp3_2
  selected true
  xpos 1170
- ypos -4840
+ ypos -7216
 }
 Transform {
  scale 0.7
@@ -858,34 +1129,26 @@ Transform {
  name Transform2
  selected true
  xpos 1170
- ypos -4786
+ ypos -7162
 }
 Unpremult {
  name Unpremult7
  selected true
  xpos 1170
- ypos -4738
+ ypos -7114
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect5
  selected true
  xpos 1170
- ypos -4690
+ ypos -7066
 }
 Premult {
  name Premult10
  selected true
  xpos 1170
- ypos -4666
-}
-Glow2 {
- tint {0.9894000292 0.4700000286 1 1}
- brightness 3.1
- name Glow1
- selected true
- xpos 1170
- ypos -4642
+ ypos -7042
 }
 Card2 {
  translate {1.201334238 7.15474638 -19.96999931}
@@ -908,12 +1171,12 @@ Card2 {
  label "Middle\nStairUp"
  selected true
  xpos 1170
- ypos -4559
+ ypos -6935
 }
-clone $C2d319800 {
+clone $C23807400 {
  inputs 0
  xpos 730
- ypos -3939
+ ypos -6315
  selected true
 }
 add_layer {P P.red P.green P.blue}
@@ -923,7 +1186,7 @@ Multiply {
  name Multiply4
  selected true
  xpos 730
- ypos -3832
+ ypos -6208
 }
 Multiply {
  channels P
@@ -931,24 +1194,25 @@ Multiply {
  name Multiply1
  selected true
  xpos 730
- ypos -3784
+ ypos -6160
 }
 PositionToPoints2 {
  display textured
- render_mode textured
+ render_mode off
+ cast_shadow false
+ receive_shadow false
  P_channel P
  name PositionToPoints_Reference
- label "仅作为3D参考 渲染时关闭"
+ label 3D参考
  selected true
  xpos 730
- ypos -3736
- disable true
+ ypos -6112
 }
-push $N2d318c00
-clone $C2d318800 {
+push $N23806800
+clone $C23806400 {
  inputs 0
  xpos 1060
- ypos -5163
+ ypos -7539
  selected true
 }
 Retime {
@@ -960,14 +1224,14 @@ Retime {
  name Retime4
  selected true
  xpos 1060
- ypos -5074
+ ypos -7450
 }
 Keyer {
  operation "max keyer"
  name Keyer12
  selected true
  xpos 1060
- ypos -5032
+ ypos -7408
 }
 GridWarp3 {
  toolbar_visibility_src false
@@ -1040,7 +1304,7 @@ GridWarp3 {
  name GridWarp3_1
  selected true
  xpos 1060
- ypos -4960
+ ypos -7336
 }
 Transform {
  translate {22 326}
@@ -1049,20 +1313,20 @@ Transform {
  name Transform3
  selected true
  xpos 1060
- ypos -4930
+ ypos -7306
 }
 Unpremult {
  name Unpremult6
  selected true
  xpos 1060
- ypos -4906
+ ypos -7282
 }
 ColorCorrect {
  gain 2.3
  name ColorCorrect7
  selected true
  xpos 1060
- ypos -4882
+ ypos -7258
 }
 Group {
  name ValueGamma1
@@ -1071,7 +1335,7 @@ Group {
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
  xpos 1060
- ypos -4858
+ ypos -7234
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
@@ -1097,7 +1361,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N4646d800 [stack 0]
+set N2f8af000 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -1117,14 +1381,14 @@ set N4646d800 [stack 0]
   xpos 620
   ypos -466
  }
-set N4643ed00 [stack 0]
+set N29baad00 [stack 0]
  Dot {
   name Dot3
   xpos 654
   ypos -366
  }
-push $N4643ed00
-push $N4646d800
+push $N29baad00
+push $N2f8af000
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -1170,15 +1434,7 @@ Premult {
  name Premult9
  selected true
  xpos 1060
- ypos -4834
-}
-Glow2 {
- tint {0.9894000292 0.4700000286 1 1}
- brightness 3.1
- name Glow6
- selected true
- xpos 1060
- ypos -4738
+ ypos -7210
 }
 Card2 {
  translate {-0.57622356 4.44765308 -19.59640121}
@@ -1201,15 +1457,14 @@ Card2 {
  label "Middle\nStairDown"
  selected true
  xpos 1060
- ypos -4655
+ ypos -7031
 }
 Scene {
- inputs 12
+ inputs 13
  name Scene1
- label "\[knob PositionToPoints_Reference.disable 1]"
  selected true
  xpos 960
- ypos -3798
+ ypos -6126
 }
 push 0
 ScanlineRender {
@@ -1220,15 +1475,7 @@ ScanlineRender {
  name ScanlineRender2
  selected true
  xpos 950
- ypos -3610
-}
-Assert {
- expression {{parent.PositionToPoints_Reference.disable}}
- message "PositionToPoints_Reference 仅作为3D参考 渲染时应关闭"
- name Assert1
- selected true
- xpos 950
- ypos -3562
+ ypos -5986
 }
 Expression {
  temp_name0 mul
@@ -1239,120 +1486,209 @@ Expression {
  label "depth: 1/z *\[value temp_expr0]"
  selected true
  xpos 950
- ypos -3520
+ ypos -5872
 }
-set N347e2400 [stack 0]
+set N2f95b800 [stack 0]
+clone $C23807400 {
+ inputs 0
+ xpos 510
+ ypos -6003
+ selected true
+}
+push $N2f95b800
 ZMerge {
  inputs 2
  name ZMerge3
  selected true
- xpos 730
- ypos -3514
+ xpos 510
+ ypos -5866
 }
-clone $C2d319800 {
- inputs 0
- xpos 620
- ypos -2931
+Dot {
+ name Dot4
  selected true
+ xpos 544
+ ypos -5814
 }
-push $N347e2400
+Switch {
+ inputs 2
+ which 1
+ name Switch3
+ selected true
+ xpos 950
+ ypos -5818
+}
+Unpremult {
+ name Unpremult12
+ selected true
+ xpos 950
+ ypos -5770
+}
+ColorCorrect {
+ midtones.gamma 0.7
+ name ColorCorrect3
+ selected true
+ xpos 950
+ ypos -5770
+}
+Dot {
+ name Dot22
+ selected true
+ xpos 984
+ ypos -5718
+}
+set N319a5c00 [stack 0]
+Keyer {
+ input depth
+ operation "luminance key"
+ range {0 0.006066765991 1 1}
+ name Keyer2
+ label "\[value input]"
+ selected true
+ xpos 1060
+ ypos -5735
+}
+Dot {
+ name Dot23
+ selected true
+ xpos 1094
+ ypos -5646
+}
+push $N319a5c00
+ColorCorrect {
+ inputs 1+1
+ saturation 0.8
+ gain {0.6724999547 0.6200000048 0.5674999356 0.8000000119}
+ name ColorCorrect9
+ selected true
+ xpos 950
+ ypos -5650
+}
+Premult {
+ name Premult14
+ selected true
+ xpos 950
+ ypos -5458
+}
+Multiply {
+ channels rgba
+ value 0.8
+ name Multiply6
+ selected true
+ xpos 950
+ ypos -5410
+}
 add_layer {Env_3D Env_3D.red Env_3D.green Env_3D.blue Env_3D.alpha}
 Shuffle {
  out Env_3D
  name Shuffle3
  selected true
  xpos 950
- ypos -3490
+ ypos -5362
 }
 Dot {
  name Dot1
  selected true
  xpos 984
- ypos -3390
+ ypos -5334
 }
 Dot {
  name Dot10
  selected true
  xpos 544
- ypos -3390
+ ypos -5334
 }
-set N3416f000 [stack 0]
+set N319e5c00 [stack 0]
+Glow2 {
+ tint {1.280000091 1 0.7200000882 1}
+ name Glow2
+ selected true
+ xpos 502
+ ypos -5161
+}
+Glow2 {
+ tolerance 0.405
+ saturation 0.27
+ size 33.5
+ mix 0.565
+ name Glow14
+ selected true
+ xpos 510
+ ypos -5098
+}
 Dot {
  name Dot12
  selected true
  xpos 544
- ypos -3006
+ ypos -4950
 }
-set N3416ec00 [stack 0]
+set N319e5000 [stack 0]
 Premult {
  channels depth
  name Premult1
  selected true
  xpos 510
- ypos -2968
+ ypos -4912
 }
 ZMerge {
  inputs 2
  name ZMerge4
  selected true
  xpos 510
- ypos -2890
+ ypos -4834
 }
-push $N3416ec00
-push $N3416f000
+push $N319e5000
+push $N319e5c00
 Dot {
  name Dot7
  selected true
  xpos 434
- ypos -3390
+ ypos -5334
 }
 Dilate {
- channels {none none none Env_3D.alpha}
- size 10
+ channels {none none none rgba.alpha}
+ size 47
  name Dilate1
  selected true
  xpos 400
- ypos -3352
+ ypos -5296
 }
 Blur {
- channels {none none none Env_3D.alpha}
+ channels {none none none rgba.alpha}
  size 50
  name Blur2
  selected true
  xpos 400
- ypos -3280
+ ypos -5224
 }
 Dot {
  name Dot9
  selected true
  xpos 434
- ypos -3198
+ ypos -5142
 }
-push $cut_paste_input
+push 0
 Dot {
  name Dot6
  label "BG_A Input"
  selected true
  xpos 324
- ypos -3462
+ ypos -5334
 }
-EXPTool {
+ColorCorrect {
  inputs 1+1
- red 0.45
- green 0.45
- blue 0.45
- maskChannelMask Env_3D.alpha
- name Exposure2
+ saturation 0.94
+ gain {9.05902195 5.64666605 2.394311905 10}
+ name ColorCorrect12
  selected true
  xpos 290
- ypos -3202
+ ypos -5146
 }
 ZMerge {
  inputs 2
  name ZMerge2
  selected true
  xpos 290
- ypos -3010
+ ypos -4954
  cached true
 }
 Copy {
@@ -1362,5 +1698,5 @@ Copy {
  name Copy1
  selected true
  xpos 290
- ypos -2896
+ ypos -4840
 }
