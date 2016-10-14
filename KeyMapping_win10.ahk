@@ -16,7 +16,8 @@ else
 return
 
 $#2:: 
-Run PS
+Run, PS
+Run, XnView
 return
 
 $#3:: 
