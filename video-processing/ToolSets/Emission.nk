@@ -1,106 +1,150 @@
 set cut_paste_input [stack 0]
-push $cut_paste_input
+    push $cut_paste_input
 Group {
  name Emission1
  tile_color 0xff8200ff
  selected true
- xpos 2178
- ypos 909
- addUserKnob {20 User}
- addUserKnob {41 Gain T Control.Gain}
- addUserKnob {41 Gamma T Control.Gamma}
+ xpos 290
+ ypos -5350
+ addUserKnob {20 tab l Emission}
+ addUserKnob {26 div1 l "Depth Falloff"}
+ addUserKnob {41 whitepoint l farpoint T Grade1.whitepoint}
+ addUserKnob {41 mix T Multiply1.mix}
+ addUserKnob {26 div1 l Color}
+ addUserKnob {41 Gain l gain T Control.Gain}
+ addUserKnob {41 Gamma l gamma T Control.Gamma}
  addUserKnob {41 saturation T Saturation1.saturation}
  addUserKnob {26 Glow}
  addUserKnob {41 size T FilterErode1.size}
  addUserKnob {41 filter T FilterErode1.filter}
- addUserKnob {41 Gain_1 l Gain T Control1.Gain}
- addUserKnob {41 Gamma_1 l Gamma T Control1.Gamma}
+ addUserKnob {41 Gain_1 l gain T Control1.Gain}
+ addUserKnob {41 Gamma_1 l gamma T Control1.Gamma}
  addUserKnob {41 saturation_1 l saturation T Saturation2.saturation}
 }
  Input {
   inputs 0
   name Input1
-  xpos 313
-  ypos -538
+  xpos 290
+  ypos -706
  }
+ Dot {
+  name Dot3
+  xpos 324
+  ypos -654
+ }
+set N84329400 [stack 0]
+ Dot {
+  name Dot4
+  xpos 544
+  ypos -654
+ }
+ Premult {
+  channels alpha
+  alpha depth.Z
+  name Premult1
+  xpos 510
+  ypos -616
+ }
+ Grade {
+  channels {none none none rgba.alpha}
+  whitepoint 0.12
+  name Grade1
+  xpos 510
+  ypos -568
+ }
+ Dot {
+  name Dot13
+  xpos 544
+  ypos -486
+ }
+push $N84329400
  Dot {
   name Dot5
-  xpos 347
-  ypos -498
+  xpos 324
+  ypos -534
  }
-set N2056e400 [stack 0]
+set N28d7c400 [stack 0]
  Dot {
   name Dot6
-  xpos 480
-  ypos -498
+  xpos 434
+  ypos -534
+ }
+add_layer {Emission Emission.red Emission.green Emission.blue Emission.alpha}
+ Multiply {
+  inputs 1+1
+  channels Emission
+  value 0
+  name Multiply1
+  selected true
+  xpos 400
+  ypos -496
  }
  Dot {
   name Dot7
-  xpos 480
-  ypos -412
+  xpos 434
+  ypos -414
  }
-set N2059dc00 [stack 0]
+set N28db3c00 [stack 0]
  Dot {
   name Dot8
-  xpos 480
-  ypos -386
+  xpos 434
+  ypos -390
  }
-set N2059d800 [stack 0]
+set N28db3800 [stack 0]
  Dot {
   name Dot9
-  xpos 480
-  ypos -360
+  xpos 434
+  ypos -366
  }
-set N2059d400 [stack 0]
+set N28db3400 [stack 0]
  Dot {
   name Dot1
-  xpos 480
-  ypos -331
+  xpos 434
+  ypos -342
  }
-set N2059d000 [stack 0]
-add_layer {Emission Emission.red Emission.green Emission.blue Emission.alpha}
+set N28db3000 [stack 0]
  FilterErode {
   channels Emission
-  size -20
+  size -11
   filter gaussian
   name FilterErode1
-  xpos 446
-  ypos -263
+  xpos 400
+  ypos -256
  }
  Dot {
   name Dot10
-  xpos 480
-  ypos -109
+  xpos 434
+  ypos -102
  }
-set N2059c800 [stack 0]
+set N28db2800 [stack 0]
  Dot {
   name Dot11
-  xpos 480
-  ypos -71
+  xpos 434
+  ypos -78
  }
-set N2059c400 [stack 0]
+set N28db2400 [stack 0]
  Dot {
   name Dot12
-  xpos 480
+  xpos 434
   ypos -30
  }
-set N2059c000 [stack 0]
+set N28db2000 [stack 0]
  Dot {
   name Dot2
-  xpos 480
-  ypos 17
+  xpos 434
+  ypos 18
  }
-push $N2059c000
-push $N2059c400
-push $N2059c800
-push $N2059d000
-push $N2059d400
-push $N2059d800
-push $N2059dc00
-push $N2056e400
+push $N28db2000
+push $N28db2400
+push $N28db2800
+push $N28db3000
+push $N28db3400
+push $N28db3800
+push $N28db3c00
+push $N28d7c400
  NoOp {
   name Control
-  xpos 313
+  xpos 290
   ypos -442
   addUserKnob {20 User}
   addUserKnob {18 Gain R 1 2}
@@ -116,8 +160,8 @@ push $N2056e400
   gamma {{parent.Control.Gamma.r} 1 1 1}
   maskChannelMask Emission.red
   name R
-  xpos 313
-  ypos -416
+  xpos 290
+  ypos -418
  }
  Grade {
   inputs 1+1
@@ -125,8 +169,8 @@ push $N2056e400
   gamma {1 {parent.Control.Gamma.g} 1 1}
   maskChannelMask Emission.green
   name G
-  xpos 313
-  ypos -390
+  xpos 290
+  ypos -394
  }
  Grade {
   inputs 1+1
@@ -134,19 +178,19 @@ push $N2056e400
   gamma {1 1 {parent.Control.Gamma.b} 1}
   maskChannelMask Emission.blue
   name B
-  xpos 313
-  ypos -364
+  xpos 290
+  ypos -370
  }
  Saturation {
   inputs 1+1
   name Saturation1
-  xpos 313
-  ypos -335
+  xpos 290
+  ypos -346
  }
  NoOp {
   name Control1
-  xpos 313
-  ypos -175
+  xpos 290
+  ypos -178
   addUserKnob {20 User}
   addUserKnob {18 Gain R 1 2}
   Gain 1.5
@@ -162,8 +206,8 @@ push $N2056e400
   maskChannelMask Emission.red
   unpremult rgba.alpha
   name R1
-  xpos 313
-  ypos -119
+  xpos 290
+  ypos -112
  }
  Grade {
   inputs 1+1
@@ -172,8 +216,8 @@ push $N2056e400
   maskChannelMask Emission.green
   unpremult rgba.alpha
   name G1
-  xpos 313
-  ypos -81
+  xpos 290
+  ypos -88
  }
  Grade {
   inputs 1+1
@@ -182,18 +226,31 @@ push $N2056e400
   maskChannelMask Emission.blue
   unpremult rgba.alpha
   name B1
-  xpos 313
+  xpos 290
   ypos -40
  }
  Saturation {
   inputs 1+1
+  saturation 1.3
   name Saturation2
-  xpos 313
-  ypos 13
+  xpos 290
+  ypos 14
  }
+set N28e19400 [stack 0]
  Output {
   name Output1
-  xpos 313
-  ypos 60
+  xpos 290
+  ypos 254
+ }
+push $N28e19400
+ Viewer {
+  frame_range 174-280
+  fps 25
+  colour_sample_bbox {0.1916666627 -0.1875 0.193749994 -0.1854166687}
+  samplepoints {{0.1916666627 -0.1875}
+    }
+  name Viewer1
+  xpos 163
+  ypos 106
  }
 end_group

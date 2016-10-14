@@ -1,6 +1,5 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
-push $cut_paste_input
+    push $cut_paste_input
 add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Rooftop BG_A.StoneLight BG_A.Water_depth}
 Group {
 name BlurColorCorrect1

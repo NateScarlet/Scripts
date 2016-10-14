@@ -1,197 +1,265 @@
 set cut_paste_input [stack 0]
-push $cut_paste_input
+    push $cut_paste_input
 add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
 Group {
-name LayerGrade1
-tile_color 0x7aa9ffff
-label "\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]"
-selected true
-xpos 323
-ypos -62
-addUserKnob {20 LayerGrade}
-addUserKnob {26 dev1 l "Layer Affect"}
-addUserKnob {41 in l layer T Shuffle1.in}
-addUserKnob {41 size l erode T Dilate1.size}
-addUserKnob {41 size_1 l "blur size" T Blur1.size}
-addUserKnob {7 layer_mix l mix}
-layer_mix 1
-addUserKnob {26 dev2 l Grade}
-addUserKnob {41 channels T GradeR1.channels}
-addUserKnob {18 saturation R 0 4}
-saturation 1
-addUserKnob {6 saturation_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
-addUserKnob {18 lift}
-addUserKnob {6 lift_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
-addUserKnob {18 gain R 0 4}
-gain 1
-addUserKnob {6 gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
-addUserKnob {18 gamma R 0 2}
-gamma {1.714808822 1.202397585 0.9827932119}
-addUserKnob {6 gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
-addUserKnob {41 mix T Merge1.mix}
+ name LayerGrade6
+ tile_color 0x7aa9ffff
+ label "\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]"
+ selected true
+ xpos 522
+ ypos -5442
+ addUserKnob {20 LayerGrade}
+ addUserKnob {6 preview l "view range" +STARTLINE}
+ addUserKnob {41 in l layer T Shuffle1.in}
+ addUserKnob {7 layer_mix l "layer color affect"}
+ layer_mix 1
+ addUserKnob {41 size l erode T Dilate1.size}
+ addUserKnob {41 size_1 l "blur size" T Blur1.size}
+ addUserKnob {41 whitepoint T Grade3.whitepoint}
+ addUserKnob {26 div1 l "Depth Falloff"}
+ addUserKnob {41 whitepoint_1 l farpoint T Grade2.whitepoint}
+ addUserKnob {41 mix T Multiply1.mix}
+ addUserKnob {26 dev2 l Grade}
+ addUserKnob {41 channels T GradeR1.channels}
+ addUserKnob {18 saturation R 0 4}
+ saturation 1
+ addUserKnob {6 saturation_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 lift}
+ lift {0 0 0}
+ addUserKnob {6 lift_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 gain R 0 4}
+ gain 1
+ addUserKnob {6 gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 gamma R 0 2}
+ gamma {1.714808822 1.202397585 0.9827932119}
+ addUserKnob {6 gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {41 mix_1 l mix T Merge1.mix}
 }
-Input {
-inputs 0
-name Input
-xpos -40
-ypos -185
-}
-set N25ac1000 [stack 0]
-Dot {
-name Dot1
-xpos 104
-ypos -181
-}
-Shuffle {
-in SSS
-name Shuffle1
-xpos 70
-ypos -161
-}
-Dilate {
-channels rgba
-name Dilate1
-xpos 70
-ypos -130
-}
-Blur {
-name Blur1
-xpos 70
-ypos -88
-}
-Grade {
-whitepoint 0.01
-mix {{1-parent.layer_mix}}
-name Grade1
-xpos 70
-ypos -34
-}
-Dot {
-name Dot4
-xpos 104
-ypos 18
-}
-set N54d3cc00 [stack 0]
-Dot {
-name Dot5
-xpos 104
-ypos 66
-}
-set N37210000 [stack 0]
-Dot {
-name Dot6
-xpos 104
-ypos 114
-}
-set N37210400 [stack 0]
-Dot {
-name Dot12
-xpos 104
-ypos 162
-}
-set N25aa9800 [stack 0]
-Dot {
-name Dot14
-xpos 104
-ypos 210
-}
-set N25aa9400 [stack 0]
-Dot {
-name Dot13
-xpos 104
-ypos 258
-}
-push $N25aa9400
-push $N25aa9800
-push $N37210400
-push $N37210000
-push $N54d3cc00
-push $N25ac1000
-Saturation {
-inputs 1+1
-channels {rgba.red -rgba.green -rgba.blue -rgba.alpha}
-saturation {{parent.saturation.r}}
-maskChannelMask rgba.red
-name SaturationR1
-xpos -40
-ypos 14
-}
-Saturation {
-inputs 1+1
-channels {-rgba.red rgba.green -rgba.blue -rgba.alpha}
-saturation {{parent.saturation.g}}
-maskChannelMask rgba.green
-name SaturationG1
-xpos -40
-ypos 62
-}
-Saturation {
-inputs 1+1
-channels {-rgba.red -rgba.green rgba.blue -rgba.alpha}
-saturation {{parent.saturation.b}}
-maskChannelMask rgba.blue
-name SaturationB1
-xpos -40
-ypos 110
-}
-Grade {
-inputs 1+1
-black {{parent.lift.r} 0 0 0}
-white {{parent.gain.r} 1 1 1}
-gamma {{parent.gamma.r} 1 1 1}
-maskChannelMask rgba.red
-name GradeR1
-label "\[knob parent.Merge1.Achannels \[value channels]]\n\[knob parent.Merge1.Bchannels \[value channels]]\n\[knob parent.Merge1.output \[value channels]]"
-selected true
-xpos -40
-ypos 158
-}
-Grade {
-inputs 1+1
-channels {{{parent.R1.channels}}}
-black {0 {parent.lift.g} 0 0}
-white {1 {parent.gain.g} 1 1}
-gamma {1 {parent.gamma.g} 1 1}
-maskChannelMask rgba.green
-name GradeG1
-xpos -40
-ypos 206
-}
-Grade {
-inputs 1+1
-channels {{{parent.R1.channels}}}
-black {0 0 {parent.lift.b} 0}
-white {1 1 {parent.gain.b} 1}
-gamma {1 1 {parent.gamma.b} 1}
-maskChannelMask rgba.blue
-name GradeB1
-xpos -40
-ypos 254
-}
-push $N25ac1000
-Dot {
-name Dot2
-xpos -116
-ypos -181
-}
-Dot {
-name Dot3
-xpos -116
-ypos 306
-}
-Merge2 {
-inputs 2
-operation copy
-Achannels rgb
-Bchannels rgb
-output rgb
-name Merge1
-xpos -40
-ypos 302
-}
-Output {
-name Output1
-xpos -40
-ypos 374
-}
+ Input {
+  inputs 0
+  name Input
+  xpos -40
+  ypos -418
+ }
+set Nff3ab000 [stack 0]
+ Dot {
+  name Dot1
+  xpos 104
+  ypos -414
+ }
+set Nff3aac00 [stack 0]
+ Dot {
+  name Dot7
+  xpos 214
+  ypos -414
+ }
+ Premult {
+  channels alpha
+  alpha depth.Z
+  name Premult1
+  xpos 180
+  ypos -352
+ }
+ Grade {
+  channels {none none none rgba.alpha}
+  whitepoint 0.075
+  name Grade2
+  xpos 180
+  ypos -304
+ }
+ Dot {
+  name Dot8
+  xpos 214
+  ypos -222
+ }
+push $Nff3aac00
+ Shuffle {
+  in SSS
+  name Shuffle1
+  xpos 70
+  ypos -298
+ }
+ Multiply {
+  inputs 1+1
+  channels rgba
+  value 0
+  mix 0
+  name Multiply1
+  xpos 70
+  ypos -226
+  disable {{"\[string is digit \[input parent 0]]"}}
+ }
+ Dilate {
+  channels rgba
+  name Dilate1
+  xpos 70
+  ypos -191
+ }
+ Blur {
+  name Blur1
+  xpos 70
+  ypos -149
+ }
+ Grade {
+  whitepoint 0.01
+  mix {{1-parent.layer_mix}}
+  name Grade1
+  xpos 70
+  ypos -95
+ }
+ Grade {
+  name Grade3
+  xpos 70
+  ypos -52
+ }
+ SoftClip {
+  conversion "logarithmic compress"
+  softclip_min 0
+  name SoftClip1
+  selected true
+  xpos 70
+  ypos -26
+ }
+ Dot {
+  name Dot4
+  xpos 104
+  ypos 18
+ }
+set N88008400 [stack 0]
+ Dot {
+  name Dot5
+  xpos 104
+  ypos 66
+ }
+set N88008000 [stack 0]
+ Dot {
+  name Dot6
+  xpos 104
+  ypos 114
+ }
+set Nd61fdc00 [stack 0]
+ Dot {
+  name Dot12
+  xpos 104
+  ypos 162
+ }
+set Nd61fd800 [stack 0]
+ Dot {
+  name Dot14
+  xpos 104
+  ypos 210
+ }
+set Nd61fd400 [stack 0]
+ Dot {
+  name Dot13
+  xpos 104
+  ypos 258
+ }
+set Nd61fd000 [stack 0]
+ Dot {
+  name Dot9
+  xpos 104
+  ypos 354
+ }
+push $Nd61fd000
+push $Nd61fd400
+push $Nd61fd800
+push $Nd61fdc00
+push $N88008000
+push $N88008400
+push $Nff3ab000
+ Saturation {
+  inputs 1+1
+  channels {rgba.red -rgba.green -rgba.blue -rgba.alpha}
+  saturation {{parent.saturation.r}}
+  maskChannelMask rgba.red
+  name SaturationR1
+  xpos -40
+  ypos 14
+ }
+ Saturation {
+  inputs 1+1
+  channels {-rgba.red rgba.green -rgba.blue -rgba.alpha}
+  saturation {{parent.saturation.g}}
+  maskChannelMask rgba.green
+  name SaturationG1
+  xpos -40
+  ypos 62
+ }
+ Saturation {
+  inputs 1+1
+  channels {-rgba.red -rgba.green rgba.blue -rgba.alpha}
+  saturation {{parent.saturation.b}}
+  maskChannelMask rgba.blue
+  name SaturationB1
+  xpos -40
+  ypos 110
+ }
+ Grade {
+  inputs 1+1
+  black {{parent.lift.r} 0 0 0}
+  white {{parent.gain.r} 1 1 1}
+  gamma {{parent.gamma.r} 1 1 1}
+  maskChannelMask rgba.red
+  name GradeR1
+  label "\[knob parent.Merge1.Achannels \[value channels]]\n\[knob parent.Merge1.Bchannels \[value channels]]\n\[knob parent.Merge1.output \[value channels]]"
+  xpos -40
+  ypos 158
+ }
+ Grade {
+  inputs 1+1
+  channels {{{parent.R1.channels}}}
+  black {0 {parent.lift.g} 0 0}
+  white {1 {parent.gain.g} 1 1}
+  gamma {1 {parent.gamma.g} 1 1}
+  maskChannelMask rgba.green
+  name GradeG1
+  xpos -40
+  ypos 206
+ }
+ Grade {
+  inputs 1+1
+  channels {{{parent.R1.channels}}}
+  black {0 0 {parent.lift.b} 0}
+  white {1 1 {parent.gain.b} 1}
+  gamma {1 1 {parent.gamma.b} 1}
+  maskChannelMask rgba.blue
+  name GradeB1
+  xpos -40
+  ypos 254
+ }
+push $Nff3ab000
+ Dot {
+  name Dot2
+  xpos -116
+  ypos -414
+ }
+ Dot {
+  name Dot3
+  xpos -116
+  ypos 306
+ }
+ Merge2 {
+  inputs 2
+  operation copy
+  Achannels rgb
+  Bchannels rgb
+  output rgb
+  name Merge1
+  xpos -40
+  ypos 302
+ }
+ Merge2 {
+  inputs 2
+  operation copy
+  name Merge2
+  xpos -40
+  ypos 350
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos -40
+  ypos 374
+ }
 end_group

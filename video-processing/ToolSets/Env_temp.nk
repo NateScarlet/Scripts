@@ -1,6 +1,5 @@
 set cut_paste_input [stack 0]
-version 10.0 v1
-BackdropNode {
+    BackdropNode {
  inputs 0
  name BackdropNode6
  tile_color 0xc67185ff

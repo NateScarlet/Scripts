@@ -1,0 +1,70 @@
+set cut_paste_input [stack 0]
+    Group {
+ inputs 0
+ name TopRays1
+ label "\[knob_default speed 1]"
+ selected true
+ xpos 528
+ ypos -5617
+ addUserKnob {20 tab1 l Rays}
+ addUserKnob {7 speed R 0 10}
+ speed 1
+ addUserKnob {41 translate T GodRays1.translate}
+ addUserKnob {41 rotate T GodRays1.rotate}
+ addUserKnob {41 scale T GodRays1.scale}
+ addUserKnob {41 skew T GodRays1.skew}
+ addUserKnob {41 center T GodRays1.center}
+ addUserKnob {41 from_color l "from color" T GodRays1.from_color}
+ addUserKnob {41 to_color l "to color" T GodRays1.to_color}
+ addUserKnob {41 gamma T GodRays1.gamma}
+ addUserKnob {41 steps T GodRays1.steps}
+ addUserKnob {41 max -STARTLINE T GodRays1.max}
+ addUserKnob {41 blur_size l "blur size" T Blur3.size}
+}
+ Noise {
+  inputs 0
+  replace true
+  size 84
+  zoffset {{x/100*parent.speed}}
+  octaves 91
+  center {960 540}
+  name Noise1
+  selected true
+  xpos 511
+  ypos -562
+ }
+ Crop {
+  box {0 {height-5} {width} {height}}
+  name Crop1
+  xpos 511
+  ypos -508
+ }
+ GodRays {
+  translate {90 -975}
+  scale 1.75
+  center {1110 1690}
+  to_color 0
+  steps 9
+  max true
+  name GodRays1
+  xpos 511
+  ypos -436
+ }
+ set C842d7400 [stack 0]
+clone $C842d7400 {
+  xpos 511
+  ypos -392
+  selected false
+ }
+ Blur {
+  size 11.2
+  name Blur3
+  xpos 511
+  ypos -346
+ }
+ Output {
+  name Output1
+  xpos 511
+  ypos -199
+ }
+end_group
