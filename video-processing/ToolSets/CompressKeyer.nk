@@ -1,0 +1,174 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+add_layer {BG_A BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Rooftop BG_A.StoneLight BG_A.Water_depth}
+Group {
+name CompressKeyer1
+tile_color 0xff00ff
+selected true
+xpos 200
+ypos 90
+addUserKnob {20 tab1 l CompressKeyer}
+addUserKnob {41 input T Keyer3.input}
+addUserKnob {26 div1 l Keyer}
+addUserKnob {6 keyer_preview l preview +STARTLINE}
+addUserKnob {41 operation T Keyer3.operation}
+addUserKnob {41 range T Keyer3.range}
+addUserKnob {41 invert T Keyer3.invert}
+addUserKnob {26 div2 l "Hue Keyer"}
+addUserKnob {6 hueKeyer_preview l preview +STARTLINE}
+addUserKnob {41 lut l "" +STARTLINE T HueKeyer1.lut}
+addUserKnob {41 invert_1 l invert T HueKeyer1.invert}
+addUserKnob {26 "" +STARTLINE}
+addUserKnob {6 blur_preview l preview +STARTLINE}
+addUserKnob {41 blur_size l "blur size" T Blur1.size}
+addUserKnob {41 output T Copy3.to0}
+}
+Input {
+inputs 0
+name Input1
+xpos 400
+ypos -106
+}
+Dot {
+name Dot16
+xpos 434
+ypos -30
+}
+set N2065e400 [stack 0]
+Dot {
+name Dot17
+xpos 544
+ypos -30
+}
+set N2065e000 [stack 0]
+Dot {
+name Dot18
+xpos 654
+ypos -30
+}
+HueKeyer {
+channels {{{parent.Keyer3.input}}}
+lut {amount {curve x-1.953731775 0 0 0 1 1 0 0 s0}
+  sat_thrsh {curve x-1.953731775 0.1 0.1 0.1 0.1 0.1 0.1 0.1 s0}}
+invert false
+name HueKeyer1
+xpos 620
+ypos 32
+}
+set N206b5c00 [stack 0]
+Dot {
+name Dot19
+xpos 654
+ypos 90
+}
+push $N2065e000
+Keyer {
+operation "luminance key"
+range {0.1867629605 1 1 1}
+name Keyer3
+xpos 510
+ypos 32
+}
+set N206b5400 [stack 0]
+ChannelMerge {
+inputs 2
+operation in
+name ChannelMerge1
+xpos 510
+ypos 73
+}
+Blur {
+channels alpha
+size 3.4
+name Blur1
+xpos 510
+ypos 128
+}
+set N25bcb000 [stack 0]
+Dot {
+name Dot2
+xpos 874
+ypos 138
+}
+Dot {
+name Dot1
+xpos 874
+ypos 354
+}
+push $N206b5c00
+Dot {
+name Dot4
+xpos 764
+ypos 42
+}
+Dot {
+name Dot3
+xpos 764
+ypos 306
+}
+push $N206b5400
+Dot {
+name Dot6
+xpos 654
+ypos 138
+}
+Dot {
+name Dot5
+xpos 654
+ypos 258
+}
+push $N25bcb000
+Dot {
+name Dot20
+xpos 544
+ypos 186
+}
+push $N2065e400
+Copy {
+inputs 2
+from0 rgba.alpha
+to0 BG_A.Light_Yellow
+name Copy3
+xpos 400
+ypos 176
+}
+ShuffleCopy {
+inputs 2
+red alpha
+green alpha
+blue alpha
+name ShuffleCopy1
+label keyerPreview
+xpos 400
+ypos 248
+disable {{1-parent.keyer_preview}}
+}
+ShuffleCopy {
+inputs 2
+red alpha
+green alpha
+blue alpha
+name ShuffleCopy2
+label hueKeyerPreview
+xpos 400
+ypos 296
+disable {{1-parent.hueKeyer_preview}}
+}
+ShuffleCopy {
+inputs 2
+red alpha
+green alpha
+blue alpha
+name ShuffleCopy3
+label blurPreview
+xpos 400
+ypos 344
+disable {{1-parent.blur_preview}}
+}
+Output {
+name Output1
+xpos 400
+ypos 422
+}
+end_group

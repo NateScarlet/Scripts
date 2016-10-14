@@ -1,64 +1,94 @@
 set cut_paste_input [stack 0]
+version 10.0 v1
 push $cut_paste_input
 Dot {
- name Dot7
- selected true
- xpos -6
- ypos -54
+name Dot7
+selected true
+xpos -6
+ypos -657
 }
-set N57446c00 [stack 0]
+set N23933000 [stack 0]
 Dot {
- name Dot9
- selected true
- xpos 104
- ypos -54
+name Dot9
+selected true
+xpos 214
+ypos -654
 }
 Ramp {
- replace true
- p0 {606 206}
- p1 {1922 1096}
- type smooth0
- name Ramp1
- selected true
- xpos 70
- ypos -34
+replace true
+p0 {1684 -166}
+p1 {86 1024}
+type smooth0
+name Ramp1
+selected true
+xpos 180
+ypos -634
 }
 add_layer {MP MP.red MP.green MP.blue MP.alpha}
 Multiply {
- channels alpha
- value 0.055
- maskChannelInput MP.alpha
- name Multiply1
- selected true
- xpos 70
- ypos 8
-}
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.Shadow}
-Multiply {
- channels alpha
- value 0.016
- maskChannelInput CH_A.alpha
- name Multiply2
- selected true
- xpos 70
- ypos 56
+channels alpha
+value 2.2
+maskChannelInput MP.alpha
+name Multiply2
+selected true
+xpos 180
+ypos -592
 }
 Dot {
- name Dot10
- selected true
- xpos 104
- ypos 90
+name Dot10
+selected true
+xpos 214
+ypos -510
 }
-push $N57446c00
+set N23932000 [stack 0]
+push $N23933000
+ColorCorrect {
+inputs 1+1
+gain {0.756000042 1.052999973 1.350000024 1}
+name ColorCorrect2
+selected true
+xpos -40
+ypos -514
+}
+Dot {
+name Dot13
+selected true
+xpos -6
+ypos -438
+}
+set N876dd000 [stack 0]
+Keyer {
+operation "luminance key"
+name Keyer1
+selected true
+xpos 70
+ypos -448
+}
+push $N23932000
+Dot {
+name Dot12
+selected true
+xpos 214
+ypos -390
+}
+Merge2 {
+inputs 2
+operation stencil
+name Merge2
+selected true
+xpos 70
+ypos -394
+}
+push $N876dd000
 Grade {
- inputs 1+1
- black 0.01
- white 2
- gamma {0.6897417903 1.091919184 1.564040422 1}
- mix 0.2
- name Grade2
- label Fog
- selected true
- xpos -40
- ypos 80
+inputs 1+1
+black 0.01
+white 2
+gamma {1.251232386 1.395124078 1.564040422 1}
+mix 0.2
+name Grade2
+label Fog
+selected true
+xpos -40
+ypos -400
 }

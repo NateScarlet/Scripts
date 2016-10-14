@@ -1,0 +1,140 @@
+set cut_paste_input [stack 0]
+version 10.0 v1
+push $cut_paste_input
+add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Rooftop BG_A.StoneLight BG_A.Water_depth}
+Group {
+name BlurColorCorrect1
+tile_color 0x79a8ffff
+label "\[value mask]"
+selected true
+xpos 293
+ypos -1701
+addUserKnob {20 tab2 l ColorCorrect}
+addUserKnob {41 channels T ColorCorrect2.channels}
+addUserKnob {20 master l "@b;master" n 1}
+addUserKnob {41 saturation T ColorCorrect2.saturation}
+addUserKnob {41 saturation_panelDropped l "panel dropped state" T ColorCorrect2.saturation_panelDropped}
+addUserKnob {41 contrast T ColorCorrect2.contrast}
+addUserKnob {41 contrast_panelDropped l "panel dropped state" T ColorCorrect2.contrast_panelDropped}
+addUserKnob {41 gamma T ColorCorrect2.gamma}
+addUserKnob {41 gamma_panelDropped l "panel dropped state" T ColorCorrect2.gamma_panelDropped}
+addUserKnob {41 gain T ColorCorrect2.gain}
+addUserKnob {41 gain_panelDropped l "panel dropped state" T ColorCorrect2.gain_panelDropped}
+addUserKnob {41 offset T ColorCorrect2.offset}
+addUserKnob {41 offset_panelDropped l "panel dropped state" T ColorCorrect2.offset_panelDropped}
+addUserKnob {20 "" n -1}
+addUserKnob {20 shadows l "@b;shadows" n 1}
+addUserKnob {41 shadows.saturation l saturation T ColorCorrect2.shadows.saturation}
+addUserKnob {41 shadows.saturation_panelDropped l "panel dropped state" T ColorCorrect2.shadows.saturation_panelDropped}
+addUserKnob {41 shadows.contrast l contrast T ColorCorrect2.shadows.contrast}
+addUserKnob {41 shadows.contrast_panelDropped l "panel dropped state" T ColorCorrect2.shadows.contrast_panelDropped}
+addUserKnob {41 shadows.gamma l gamma T ColorCorrect2.shadows.gamma}
+addUserKnob {41 shadows.gamma_panelDropped l "panel dropped state" T ColorCorrect2.shadows.gamma_panelDropped}
+addUserKnob {41 shadows.gain l gain T ColorCorrect2.shadows.gain}
+addUserKnob {41 shadows.gain_panelDropped l "panel dropped state" T ColorCorrect2.shadows.gain_panelDropped}
+addUserKnob {41 shadows.offset l offset T ColorCorrect2.shadows.offset}
+addUserKnob {41 shadows.offset_panelDropped l "panel dropped state" T ColorCorrect2.shadows.offset_panelDropped}
+addUserKnob {20 "" n -1}
+addUserKnob {20 midtones l "@b;midtones" n 1}
+addUserKnob {41 midtones.saturation l saturation T ColorCorrect2.midtones.saturation}
+addUserKnob {41 midtones.saturation_panelDropped l "panel dropped state" T ColorCorrect2.midtones.saturation_panelDropped}
+addUserKnob {41 midtones.contrast l contrast T ColorCorrect2.midtones.contrast}
+addUserKnob {41 midtones.contrast_panelDropped l "panel dropped state" T ColorCorrect2.midtones.contrast_panelDropped}
+addUserKnob {41 midtones.gamma l gamma T ColorCorrect2.midtones.gamma}
+addUserKnob {41 midtones.gamma_panelDropped l "panel dropped state" T ColorCorrect2.midtones.gamma_panelDropped}
+addUserKnob {41 midtones.gain l gain T ColorCorrect2.midtones.gain}
+addUserKnob {41 midtones.gain_panelDropped l "panel dropped state" T ColorCorrect2.midtones.gain_panelDropped}
+addUserKnob {41 midtones.offset l offset T ColorCorrect2.midtones.offset}
+addUserKnob {41 midtones.offset_panelDropped l "panel dropped state" T ColorCorrect2.midtones.offset_panelDropped}
+addUserKnob {20 "" n -1}
+addUserKnob {20 highlights l "@b;highlights" n 1}
+addUserKnob {41 highlights.saturation l saturation T ColorCorrect2.highlights.saturation}
+addUserKnob {41 highlights.saturation_panelDropped l "panel dropped state" T ColorCorrect2.highlights.saturation_panelDropped}
+addUserKnob {41 highlights.contrast l contrast T ColorCorrect2.highlights.contrast}
+addUserKnob {41 highlights.contrast_panelDropped l "panel dropped state" T ColorCorrect2.highlights.contrast_panelDropped}
+addUserKnob {41 highlights.gamma l gamma T ColorCorrect2.highlights.gamma}
+addUserKnob {41 highlights.gamma_panelDropped l "panel dropped state" T ColorCorrect2.highlights.gamma_panelDropped}
+addUserKnob {41 highlights.gain l gain T ColorCorrect2.highlights.gain}
+addUserKnob {41 highlights.gain_panelDropped l "panel dropped state" T ColorCorrect2.highlights.gain_panelDropped}
+addUserKnob {41 highlights.offset l offset T ColorCorrect2.highlights.offset}
+addUserKnob {41 highlights.offset_panelDropped l "panel dropped state" T ColorCorrect2.highlights.offset_panelDropped}
+addUserKnob {20 "" n -1}
+addUserKnob {20 tab3 l Ranges}
+addUserKnob {41 test_1 l test T ColorCorrect2.test}
+addUserKnob {26 div1 l Blur}
+addUserKnob {41 size l erode T Dilate1.size}
+addUserKnob {41 size_1 l "blur size" T Blur6.size}
+addUserKnob {26 div2 l Ranges}
+addUserKnob {41 lookup l "" +STARTLINE T ColorCorrect2.lookup}
+addUserKnob {41 mask T Premult2.alpha}
+addUserKnob {41 mix_luminance l "mix luminance" T ColorCorrect2.mix_luminance}
+addUserKnob {41 mix T ColorCorrect2.mix}
+}
+Input {
+inputs 0
+name Input
+xpos 510
+ypos -562
+}
+Dot {
+name Dot1
+xpos 544
+ypos -510
+}
+set N7d21a800 [stack 0]
+Premult {
+channels alpha
+alpha BG_A.Light_Yellow
+name Premult2
+xpos 620
+ypos -520
+}
+Dilate {
+size 5
+name Dilate1
+xpos 620
+ypos -472
+}
+Blur {
+channels alpha
+size 14.8
+name Blur6
+xpos 620
+ypos -424
+}
+Dot {
+name Dot47
+xpos 654
+ypos -366
+}
+set Nf987dc00 [stack 0]
+push $Nf987dc00
+push $N7d21a800
+ColorCorrect {
+inputs 1+1
+gamma 2.6
+gain {2.560000181 0.8799999356 -0.4399998188 1}
+mix 0.43
+name ColorCorrect2
+selected true
+xpos 510
+ypos -370
+disable {{"\[string is digit \[input \[node parent] 0]]"}}
+}
+ShuffleCopy {
+inputs 2
+red alpha
+green alpha
+blue alpha
+name ShuffleCopy1
+label "Blur Test"
+xpos 510
+ypos -328
+disable {{1-parent.ColorCorrect2.test}}
+}
+Output {
+name Output1
+xpos 510
+ypos -274
+}
+end_group
