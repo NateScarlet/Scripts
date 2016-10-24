@@ -1,0 +1,642 @@
+set cut_paste_input [stack 0]
+    BackdropNode {
+ inputs 0
+ name BackdropNode11
+ tile_color 0x8e8e3800
+ label Book_FX
+ note_font_size 42
+ selected true
+ xpos 38
+ ypos -10576
+ bdwidth 804
+ bdheight 1039
+}
+push $cut_paste_input
+Dot {
+ name Dot110
+ selected true
+ xpos -6
+ ypos -10494
+}
+set N478e0800 [stack 0]
+Crop {
+ box {{-width*2} {-height*2} {width*2} {height*2}}
+ reformat true
+ crop false
+ name Crop1
+ selected true
+ xpos 70
+ ypos -10498
+}
+Dot {
+ name Dot104
+ selected true
+ xpos 214
+ ypos -10494
+}
+set N478e0000 [stack 0]
+Dot {
+ name Dot106
+ selected true
+ xpos 324
+ ypos -10494
+}
+add_layer {HeavenlyBook HeavenlyBook.alpha}
+Premult {
+ channels alpha
+ alpha HeavenlyBook.alpha
+ name Premult30
+ selected true
+ xpos 290
+ ypos -10480
+}
+Roto {
+ output {none none none HeavenlyBook.alpha}
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097664}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px
+        {1 x40800000 x40a00000 x40c00000 x40e00000 x41000000 x41400000}
+        {{{1 -}}
+      {{xbf800000 -}}}
+        {{{x4578802e 0 1 xc1f66680 1}
+       {x4574a694 -}
+       {x4577971b x424b39a0 1 x424b39a0 1}
+       {x457b0061 x421cc220 1 x421cc220 1}
+       {x457c7d2c x4181d880 1 x4181d880 1}
+       {x457ca9a4 x40d31f9a 1 x40d31f9a 1}
+       {x457e8cfb x40ba5a33 1 0 1}}
+      {{x45072858 0 1 x3fdc5300 1}
+       {x450a4ebe x423bd450 1 x423bd450 1}
+       {x4512e59d x42fe4ff0 1 x42fe4ff0 1}
+       {x451a33bd x42d45e50 1 x42d45e50 1}
+       {x45202b82 x42a47f10 1 x42a47f10 1}
+       {x4524ff72 x4282cd06 1 x4282cd06 1}
+       {x45349b8b x428017d9 1 0 1}}}
+        {{{xbf800000 -}}
+      {{1 -}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{x458c7ac2 -}
+       {x458a8df5 xc2766680 1 xc2766680 1}
+       {x45842526 xc31f1ce0 1 xc31f1ce0 1}
+       {x45809c27 -}
+       {x45819cf8 x41e87d00 1 x41e87d00 1}
+       {x4581c3b8 x41c98600 1 x41c98600 1}
+       {x45858c96 x41c708e0 1 0 1}}
+      {{x44dd03e3 -}
+       {x44e350af x42499980 1 x42499980 1}
+       {x45003c56 x439002fe 1 x439002fe 1}
+       {x4515a917 x436752b0 1 x436752b0 1}
+       {x451d26ac x4292b5c0 1 x4292b5c0 1}
+       {x45232b0a x4162e4cd 1 x4162e4cd 1}
+       {x45219524 x4116cffa 1 0 1}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{x458e42c2 0 1 xc115cac0 1}
+       {x458c55f5 xc22b8120 1 xc22b8120 1}
+       {x4588e6b9 xc2c239c0 1 xc2c239c0 1}
+       {x45864427 -}
+       {x45888395 -}      x45882752
+       {x45875496 xc135cc33 1 0 1}}
+      {{x44cd83e4 -}
+       {x44d3d0b0 x42499980 1 x42499980 1}
+       {x44ebc5d6 x434b0600 1 x434b0600 1}
+       {x45034918 -}
+       {x4503059f -}      x450926fc
+       {x4519d524 x42dafb63 1 0 1}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{x457b102e 0 1 xc1f66680 1}
+       {x45773694 -}
+       {x457b137a x42cb9cc0 1 x42cb9cc0 1}
+       {x4581f830 x42e31600 1 x42e31600 1}
+       {x4584a26d -}
+       {x45831524 xc1af6200 1 xc1af6200 1}
+       {x45808e7e xc20cee30 1 0 1}}
+      {{x44f8b0b0 -}
+       {x44fefd7c x42499980 1 x42499980 1}
+       {x450aa9db -}
+       {x450803bd xc218d080 1 xc218d080 1}
+       {x4505e357 -}
+       {x450cd348 x42c10920 1 x42c10920 1}
+       {x4529cb8b x431b1e5e 1 0 1}}}
+        {{{x 5
+        {0 -}}      0
+       {0 -}}
+      {{x 5
+        {0 -}}      0
+       {0 -}}}
+        {{{0 -}}
+      {{0 -}}}
+        {{{x4576902e 0 1 xc1f66680 1}
+       {x4572b694 -}
+       {x4575a71b x424b39a0 1 x424b39a0 1}
+       {x45791061 x421cc220 1 x421cc220 1}
+       {x457a8d2c x4181d880 1 x4181d880 1}
+       {x457ab9a4 x40d31f9a 1 x40d31f9a 1}
+       {x457c9cfb x40ba5a33 1 0 1}}
+      {{x45058858 0 1 x3fdc5300 1}
+       {x4508aebe x423bd450 1 x423bd450 1}
+       {x4511459d x42fe4ff0 1 x42fe4ff0 1}
+       {x451893bd x42d45e50 1 x42d45e50 1}
+       {x451e8b82 x42a47f10 1 x42a47f10 1}
+       {x45235f72 x4282cd06 1 x4282cd06 1}
+       {x4532fb8b x428017d9 1 0 1}}}
+        {{{0 -}}
+      {{0 -}}}}}     idem}
+     {tx x40800000 x4388e666 xc2f86666}
+     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x40800000 ltm x40800000 tt x40800000 vis
+   {{x40e00000 1 0 1 xbf800000 1 257}
+    {x41000000 0 xbf800000 1 0 1 257}}}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { addPoints str 1 ssx 1 ssy 1 sf 1 }
+  { removePoints str 1 ssx 1 ssy 1 sf 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 4
+ lifetime_end 4
+ visible {{curve K x7 1 0}}
+ motionblur_shutter_offset_type centred
+ source_black_outside true
+ name Roto3
+ selected true
+ xpos 290
+ ypos -10384
+}
+add_layer {hand_book hand_book.alpha}
+Roto {
+ output {none none none hand_book.alpha}
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097664}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px
+        {x41700000 x421c0000 x42680000 x42920000 x42b60000 x42e00000 x43020000 x432a0000}
+        {{xc1700000
+       {x 7
+        {xc1700000 -}}}
+      {xc2ac0000
+       {x 7
+        {xc2ac0000 -}}}}
+        {{x45699332
+       {x4575a666 0 1 xc10d7943 1}
+       {x456ea666 -}
+       {x456ed332 x3f0f599a 1 x3f0f599a 1}
+       {x45709333 x3fd9b5be 1 x3fd9b5be 1}
+       {x4572f888 x40af3cdb 1 x40af3cdb 1}
+       {x45831c45 -}
+       {x458197b3 xbfe92466 1 0 1}}
+      {x45280ffd
+       {x45200331 0 1 x410d7958 1}
+       {x45270332 -}
+       {x45262332 xc0333333 1 xc0333333 1}
+       {x451f2332 xc0ac94d2 1 xc0ac94d2 1}
+       {x4518fddc xc08d66df 1 xc08d66df 1}
+       {x45145ddc -}
+       {x4518626d x401a48f3 1 0 1}}}
+        {{x41700000
+       {x 7
+        {x41700000 -}}}
+      {x42ac0000
+       {x 7
+        {x42ac0000 -}}}}
+        {{xc2500000
+       {xc2500000 0 1 xb7a1af28 1}
+       {x 2
+        {xc2500040 -}}
+       {x 4
+        {xc2500000 -}}}
+      {x425c0000
+       {x 7
+        {x425c0000 -}}}}
+        {{x457d7334
+       {x4584c334 0 1 xc10d7943 1}
+       {x45814334 -}
+       {x4581599a x3f0f599a 1 x3f0f599a 1}
+       {x4582399a x3fd9b555 1 x3fd9b555 1}
+       {x45836c44 x40af3c92 1 x40af3c92 1}
+       {x458d0c45 x40e377dd 1 x40e377dd 1}
+       {x45904e8e x3eb689e5 1 0 1}}
+      {x45343ffd
+       {x452c3331 0 1 x410d7958 1}
+       {x45333332 -}
+       {x45325332 xc0333333 1 xc0333333 1}
+       {x452b5332 xc0ac94d2 1 xc0ac94d2 1}
+       {x45252ddc xc08d66df 1 xc08d66df 1}
+       {x45208ddc xc0285ac2 1 xc0285ac2 1}
+       {x451ba4b8 xbfd0c9a4 1 0 1}}}
+        {{x42500000
+       {x 7
+        {x42500000 -}}}
+      {xc25c0000
+       {x 7
+        {xc25c0000 -}}}}
+        {{x43320000
+       {x 7
+        {x43320000 -}}}
+      {x41100000
+       {x 7
+        {x41100000 -}}}}
+        {{x458556ee
+       {x458b6088 0 1 xc10d7943 1}
+       {x4587e088 -}
+       {x4587f6ee x3f0f599a 1 x3f0f599a 1}
+       {x4588d6ee x3fd9b555 1 x3fd9b555 1}
+       {x458a0998 x40af3c92 1 x40af3c92 1}
+       {x4593a999 x40e377dd 1 x40e377dd 1}
+       {x4596ebe2 x3eb689e5 1 0 1}}
+      {x4519fffd
+       {x4511f331 0 1 x410d7958 1}
+       {x4518f332 -}
+       {x45181332 xc0333333 1 xc0333333 1}
+       {x45111332 xc0ac94d2 1 xc0ac94d2 1}
+       {x450aeddc xc08d66df 1 xc08d66df 1}
+       {x45064ddc xc0285ac2 1 xc0285ac2 1}
+       {x450164b8 xbfd0c9a4 1 0 1}}}
+        {{xc3320000
+       {x 7
+        {xc3320000 -}}}
+      {xc1100000
+       {x 7
+        {xc1100000 -}}}}
+        {{x41c80000
+       {x 7
+        {x41c80000 -}}}
+      {xc2820000
+       {x 7
+        {xc2820000 -}}}}
+        {{x456c3332
+       {x45784666 0 1 xc10d7943 1}
+       {x45714666 -}
+       {x45717332 x3f0f599a 1 x3f0f599a 1}
+       {x45733333 x3fd9b5be 1 x3fd9b5be 1}
+       {x45759888 x40af3cdb 1 x40af3cdb 1}
+       {x45846c45 -}
+       {x4582e7b3 xbfe92466 1 0 1}}
+      {x451cfffd
+       {x4514f331 0 1 x410d7958 1}
+       {x451bf332 -}
+       {x451b1332 xc0333333 1 xc0333333 1}
+       {x45141332 xc0ac94d2 1 xc0ac94d2 1}
+       {x450deddc xc08d66df 1 xc08d66df 1}
+       {x45094ddc -}
+       {x450d526d x401a48f3 1 0 1}}}
+        {{xc1c80000
+       {x 7
+        {xc1c80000 -}}}
+      {x42820000
+       {x 7
+        {x42820000 -}}}}}}     idem}
+     {tx x433f0000 x44ace800 x445ee000}
+     {a r 0 g 0 b 0 a 0 inv 1 osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x433f0000 ltm x433f0000 tt x40800000}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 tt 5 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ color 0
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 191
+ lifetime_end 191
+ motionblur_shutter_offset_type centred
+ inverted true
+ source_black_outside true
+ name Roto2
+ selected true
+ xpos 290
+ ypos -10336
+}
+Dot {
+ name Dot108
+ selected true
+ xpos 324
+ ypos -10302
+}
+set N47916c00 [stack 0]
+Dot {
+ name Dot69
+ selected true
+ xpos 434
+ ypos -10302
+}
+set N47916800 [stack 0]
+Dot {
+ name Dot107
+ selected true
+ xpos 544
+ ypos -10302
+}
+set N47916400 [stack 0]
+Dot {
+ name Dot114
+ selected true
+ xpos 654
+ ypos -10302
+}
+EdgeDetectWrapper {
+ channels {none none none HeavenlyBook.alpha}
+ name EdgeDetect1
+ selected true
+ xpos 620
+ ypos -10216
+}
+Dilate {
+ channels {none none none hand_book.alpha}
+ size 6
+ name Dilate13
+ selected true
+ xpos 620
+ ypos -10168
+}
+Premult {
+ channels alpha
+ alpha hand_book.alpha
+ invert true
+ name Premult36
+ selected true
+ xpos 620
+ ypos -10120
+}
+Blur {
+ channels alpha
+ size 30
+ name Blur9
+ selected true
+ xpos 620
+ ypos -10024
+}
+Dot {
+ name Dot115
+ selected true
+ xpos 654
+ ypos -9726
+}
+push $N47916400
+FilterErode {
+ size -20
+ filter gaussian
+ name FilterErode2
+ selected true
+ xpos 510
+ ypos -10000
+}
+Premult {
+ channels alpha
+ alpha hand_book.alpha
+ invert true
+ name Premult32
+ selected true
+ xpos 510
+ ypos -9952
+}
+FilterErode {
+ size -20
+ filter gaussian
+ name FilterErode3
+ selected true
+ xpos 510
+ ypos -9904
+}
+Blur {
+ size 50
+ filter quadratic
+ name Blur7
+ selected true
+ xpos 510
+ ypos -9856
+}
+Dot {
+ name Dot105
+ selected true
+ xpos 544
+ ypos -9774
+}
+push $N47916800
+Noise {
+ replace true
+ zoffset {{x/1000}}
+ gain 1
+ gamma 1
+ center {960 540}
+ name Noise2
+ selected true
+ xpos 400
+ ypos -10258
+}
+push $N47916c00
+Merge2 {
+ inputs 2
+ operation mask
+ Bchannels {HeavenlyBook.alpha none none HeavenlyBook.alpha}
+ name Merge31
+ selected true
+ xpos 290
+ ypos -10258
+}
+GodRays {
+ channels alpha
+ translate {{curve x1 260 x4 380 x8 590 642 x28 640 570 x65 624 x91 578 x110 500 x128 390 x143 290 198 x170 204} {curve x1 600 x4 632 x8 445 262 x28 264 324 x65 154 x91 264 x110 305 x128 465 x143 550 696 x170 726}}
+ scale {{curve x8 1.2 x91 1.25 x158 1.6}}
+ center {{curve x8 3505 x12 3470 x28 3380 3425 x110 3405 x128 3470 x143 3955 4145 x170 4075 x5758 3553.720459 x5782 3561.720459 x5798 3579.720459 x5845 3537.720459} {curve x8 2165 x12 2305 x28 2410 2285 x110 2110 x128 2065 x143 1640 1575 x170 1660 x5759 2474.141113 x5783 3020.141113 x5799 2872.141113 x5846 2968.141113}}
+ to_color 0
+ steps 10
+ max true
+ name GodRays2
+ selected true
+ xpos 290
+ ypos -10216
+}
+Grade {
+ channels alpha
+ blackpoint 0.00024
+ whitepoint 0.738
+ mix {{curve x162 0 s0 x170 1 s0}}
+ name Grade7
+ selected true
+ xpos 290
+ ypos -10168
+}
+Premult {
+ channels alpha
+ alpha HeavenlyBook.alpha
+ invert true
+ name Premult33
+ selected true
+ xpos 290
+ ypos -10120
+}
+Dilate {
+ channels {none none none hand_book.alpha}
+ size 1
+ name Dilate11
+ selected true
+ xpos 290
+ ypos -10072
+}
+Premult {
+ channels alpha
+ alpha hand_book.alpha
+ invert true
+ name Premult34
+ selected true
+ xpos 290
+ ypos -9976
+}
+Blur {
+ channels alpha
+ size 7.8
+ name Blur6
+ selected true
+ xpos 290
+ ypos -9928
+}
+Multiply {
+ channels alpha
+ name Multiply31
+ selected true
+ xpos 290
+ ypos -9880
+}
+Dot {
+ name Dot109
+ selected true
+ xpos 324
+ ypos -9846
+}
+push $N478e0000
+ColorCorrect {
+ inputs 1+1
+ gamma {3.633333206 3.53922987 2.288999796 3.299999952}
+ gain {1.461900115 1.476666808 0.7383334041 1}
+ name ColorCorrect35
+ selected true
+ xpos 180
+ ypos -9850
+}
+Grade {
+ inputs 1+1
+ white {3.321774721 2.653426886 0.785078764 10}
+ multiply 10
+ gamma {2.575000048 2.115000248 1.425000072 2}
+ mix 0.2
+ name Grade12
+ selected true
+ xpos 180
+ ypos -9778
+}
+Grade {
+ inputs 1+1
+ white 2
+ gamma {3.319974899 1.304924846 -0.2101252079 1}
+ name Grade13
+ selected true
+ xpos 180
+ ypos -9730
+}
+Transform {
+ translate {{-Crop1.width/2} {-Crop1.height/2}}
+ center {3840 2160}
+ black_outside false
+ name Transform4
+ selected true
+ xpos 180
+ ypos -9706
+}
+Reformat {
+ resize none
+ center false
+ name Reformat2
+ selected true
+ xpos 180
+ ypos -9658
+}
+Dot {
+ name Dot103
+ selected true
+ xpos 214
+ ypos -9606
+}
+push $N478e0800
+Switch {
+ inputs 2
+ which 1
+ name Switch11
+ selected true
+ xpos -40
+ ypos -9610
+}
