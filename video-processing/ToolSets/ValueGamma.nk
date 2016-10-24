@@ -1,13 +1,13 @@
 set cut_paste_input [stack 0]
 push $cut_paste_input
 Group {
- name ValueGamma1
+ name ValueGamma3
  help 只调整亮度不影响饱和度和色相
  tile_color 0x79a8ffff
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
- xpos -20
- ypos -110
+ xpos 400
+ ypos -15087
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
@@ -16,6 +16,7 @@ Group {
  addUserKnob {7 gamma R 0 4}
  gamma 1
  addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
  addUserKnob {41 alpha l mask T MaskChannelChoose.alpha}
  addUserKnob {41 inject -STARTLINE T Grade1.inject}
  addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
@@ -33,7 +34,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N3015c00 [stack 0]
+set N8084cc00 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -53,11 +54,10 @@ set N3015c00 [stack 0]
   xpos 620
   ypos -466
  }
-set N493fd680 [stack 0]
+set Nb7034d80 [stack 0]
  Premult {
   alpha none
   name MaskChannelChoose
-  selected true
   xpos 620
   ypos -440
  }
@@ -66,8 +66,8 @@ set N493fd680 [stack 0]
   xpos 654
   ypos -366
  }
-push $N493fd680
-push $N3015c00
+push $Nb7034d80
+push $N8084cc00
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -82,7 +82,6 @@ push $N3015c00
   gamma {{parent.gamma}}
   maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
   name Grade1
-  selected true
   xpos 510
   ypos -472
  }
@@ -103,13 +102,21 @@ push $N3015c00
   fringe {{parent.Grade1.fringe}}
   mix {{parent.Grade1.mix}}
   name Saturation1
-  selected true
   xpos 510
   ypos -370
+ }
+ Grade {
+  maskChannelInput {{{parent.Grade1.maskChannelMask}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  name Grade2
+  xpos 510
+  ypos -333
  }
  Output {
   name Output1
   xpos 510
-  ypos -298
+  ypos -271
  }
 end_group
