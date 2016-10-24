@@ -1,0 +1,266 @@
+set cut_paste_input [stack 0]
+BackdropNode {
+ inputs 0
+ name BackdropNode11
+ tile_color 0x950695ff
+ label "Zdefocus v1.0"
+ selected true
+ xpos -157
+ ypos -12723
+ bdwidth 314
+ bdheight 357
+}
+Constant {
+ inputs 0
+ channels depth
+ color 0.0022
+ name Constant1
+ selected true
+ xpos 70
+ ypos -12656
+}
+Roto {
+ output alpha
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097664}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px
+        {x41980000 x42180000}
+        {{xc3060000}
+      {xc30b0000}}
+        {{x44e0adb6 x44de8924}
+      {x44495b6e x44524924}}
+        {{x43060000}
+      {x430b0000}}
+        {{xc08ea800}
+      {x42c1f5c8}}
+        {{x4505f002}
+      {x4442c000}}
+        {{x407ff800}
+      {xc2ae0000}}
+        {{x42780000}
+      {xc1400000}}
+        {{x44e9fb6f}
+      {x440d5b6e}}
+        {{xc2780000}
+      {x41400000}}}}
+      {cc
+       {f 8192}
+       {px
+        {x41980000 x42180000}
+        {{xc3060000}
+      {xc30b0000}}
+        {{xc274c3e0}
+      {x426bfce0}}
+        {{x43060000}
+      {x430b0000}}
+        {{xc06cd400}
+      {x42c20630}}
+        {{x42cccf20}
+      {x4103f800}}
+        {{x40661400}
+      {xc2bc7f00}}
+        {{x42780000}
+      {xc1400000}}
+        {{xc18135c0}
+      {xc3084efc}}
+        {{xc2780000}
+      {x41400000}}}}}
+     {tx x41980000 x44ef1555 x44209555}
+     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x41980000 ltm x41980000 tt x40800000}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 19
+ lifetime_end 19
+ motionblur_shutter_offset_type centred
+ source_black_outside true
+ name Roto1
+ selected true
+ xpos 70
+ ypos -12560
+}
+set Nc4af000 [stack 0]
+push $Nc4af000
+push $cut_paste_input
+Dot {
+ name Dot71
+ selected true
+ xpos -6
+ ypos -12622
+}
+Merge2 {
+ inputs 2+1
+ operation min
+ Achannels depth
+ Bchannels depth
+ output depth
+ name Merge7
+ selected true
+ xpos -40
+ ypos -12560
+ disable true
+}
+Group {
+ name Depth3Split1
+ tile_color 0xff00ff
+ selected true
+ xpos -40
+ ypos -12522
+ addUserKnob {20 Depth3Split}
+ addUserKnob {6 preview +STARTLINE}
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {26 Focus_div l Focus}
+ addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
+ addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {41 range_1 l range T Focus.range}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 size l "blur size" T Blur1.size}
+ addUserKnob {41 filter l "blur filter" T Blur1.filter}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -586
+ }
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  out depth3split
+  name Shuffle
+  xpos 180
+  ypos -562
+ }
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 180
+  ypos -520
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Far
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 180
+  ypos -479
+ }
+ Keyer {
+  input depth
+  output depth3split.Middle
+  operation "luminance key"
+  range {0 0.002252513333 0.004505026667 0.006757542952}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 180
+  ypos -431
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Close
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 180
+  ypos -383
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Focus
+  invert true
+  operation "luminance key"
+  range {-1 -1 0 0.009864193661}
+  name Focus
+  xpos 180
+  ypos -328
+ }
+ Grade {
+  channels {none none none depth3split.Focus}
+  gamma 5
+  name Grade1
+  xpos 180
+  ypos -280
+ }
+ Blur {
+  channels {none none none depth3split.Focus}
+  name Blur1
+  xpos 180
+  ypos -232
+ }
+ Shuffle {
+  in depth3split
+  red blue
+  blue red
+  name Shuffle1
+  xpos 180
+  ypos -178
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos -58
+ }
+end_group
+SoftClip {
+ conversion "logarithmic compress"
+ softclip_min 1
+ name SoftClip3
+ selected true
+ xpos -40
+ ypos -12496
+}
+ZDefocus2 {
+ z_channel depth3split.Focus
+ math direct
+ size 50
+ max_size 25
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus1
+ selected true
+ xpos -40
+ ypos -12440
+}
