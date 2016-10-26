@@ -1,0 +1,65 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+add_layer {PuzzleMatte PuzzleMatte.red PuzzleMatte.green PuzzleMatte.blue PuzzleMatte.alpha}
+add_layer {window window.alpha}
+Shuffle {
+in PuzzleMatte
+out window
+name Shuffle1
+selected true
+xpos 290
+ypos -20626
+}
+Dilate {
+channels {none none none window.alpha}
+size 3
+name Dilate4
+selected true
+xpos 290
+ypos -20584
+}
+Blur {
+channels {none none none window.alpha}
+size 5
+name Blur1
+selected true
+xpos 290
+ypos -20536
+}
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+Premult {
+channels {none none none window.alpha}
+alpha depth3split.Far
+name Premult3
+selected true
+xpos 290
+ypos -20488
+}
+Expression {
+channel0 window
+expr0 (rgba.red<0.05)?(rgba.alpha==1)?0:1:window.alpha
+name Expression2
+label "\[value channel0]"
+selected true
+xpos 290
+ypos -20450
+}
+push 0
+ColorCorrect {
+saturation 0
+gain {0.01200000942 0.08436000347 0.1199999973 1}
+maskChannelInput window.alpha
+name ColorCorrect7
+selected true
+xpos 290
+ypos -20368
+}
+EdgeBlur {
+controlchannel window.alpha
+size 2
+name EdgeBlur1
+label "\[value controlchannel]"
+selected true
+xpos 290
+ypos -20320
+}

@@ -3,21 +3,21 @@ BackdropNode {
  inputs 0
  name BackdropNode11
  tile_color 0x950695ff
- label "Zdefocus v1.0"
+ label "Zdefocus v1.2"
  selected true
  xpos -157
- ypos -12723
- bdwidth 314
- bdheight 357
+ ypos -9212
+ bdwidth 373
+ bdheight 414
 }
 Constant {
  inputs 0
  channels depth
- color 0.0022
+ color 0.01124
  name Constant1
  selected true
  xpos 70
- ypos -12656
+ ypos -9145
 }
 Roto {
  output alpha
@@ -32,47 +32,119 @@ Roto {
      {{cc
        {f 8192}
        {px
-        {x41980000 x42180000}
-        {{xc3060000}
-      {xc30b0000}}
-        {{x44e0adb6 x44de8924}
-      {x44495b6e x44524924}}
-        {{x43060000}
-      {x430b0000}}
-        {{xc08ea800}
-      {x42c1f5c8}}
-        {{x4505f002}
-      {x4442c000}}
-        {{x407ff800}
-      {xc2ae0000}}
-        {{x42780000}
-      {xc1400000}}
-        {{x44e9fb6f}
-      {x440d5b6e}}
-        {{xc2780000}
-      {x41400000}}}}
+        {1 x42080000 x42840000}
+        {{xc3060000
+       {x 2
+        {xc3060000 -}}}
+      {xc30b0000
+       {x 2
+        {xc30b0000 -}}}}
+        {{x449f31f3
+       {x44a2bca0 0 1 x406caab0 1}
+       {x44b1874b x406caab0 1 0 1}}
+      {x43dd2537
+       {x43e3cfe2 0 1 xbf12aaa0 1}
+       {x43daa538 xbf12aaa0 1 0 1}}}
+        {{x43060000
+       {x 2
+        {x43060000 -}}}
+      {x430b0000
+       {x 2
+        {x430b0000 -}}}}
+        {{xc08ea800
+       {x 2
+        {xc08ea800 -}}}
+      {x42c1f5c8
+       {x 2
+        {x42c1f5c8 -}}}}
+        {{x44cc1555
+       {x44cfa002 0 1 x406caab0 1}
+       {x44de6aad x406caab0 1 0 1}}
+      {x43c1d557
+       {x43c88002 0 1 xbf12aaa0 1}
+       {x43bf5558 xbf12aaa0 1 0 1}}}
+        {{x407ff800
+       {x 2
+        {x407ff800 -}}}
+      {xc2ae0000
+       {x 2
+        {xc2ae0000 -}}}}
+        {{x42780000
+       {x 2
+        {x42780000 -}}}
+      {xc1400000
+       {x 2
+        {xc1400000 -}}}}
+        {{x44aa30c1
+       {x44adbb6e 0 1 x406caab0 1}
+       {x44bc8619 x406caab0 1 0 1}}
+      {x432e1865
+       {x433b6dbb 0 1 xbf12aaa0 1}
+       {x43291867 xbf12aaa0 1 0 1}}}
+        {{xc2780000
+       {x 2
+        {xc2780000 -}}}
+      {x41400000
+       {x 2
+        {x41400000 -}}}}}}
       {cc
        {f 8192}
        {px
-        {x41980000 x42180000}
-        {{xc3060000}
-      {xc30b0000}}
-        {{xc274c3e0}
-      {x426bfce0}}
-        {{x43060000}
-      {x430b0000}}
-        {{xc06cd400}
-      {x42c20630}}
-        {{x42cccf20}
-      {x4103f800}}
-        {{x40661400}
-      {xc2bc7f00}}
-        {{x42780000}
-      {xc1400000}}
-        {{xc18135c0}
-      {xc3084efc}}
-        {{xc2780000}
-      {x41400000}}}}}
+        {1 x42080000 x42840000}
+        {{xc3060000
+       {x 2
+        {xc3060000 -}}}
+      {xc30b0000
+       {x 2
+        {xc30b0000 -}}}}
+        {{xc274c3e0
+       {x 2
+        {xc274c3e0 -}}}
+      {x426bfce0
+       {x 2
+        {x426bfce0 -}}}}
+        {{x43060000
+       {x 2
+        {x43060000 -}}}
+      {x430b0000
+       {x 2
+        {x430b0000 -}}}}
+        {{xc06cd400
+       {x 2
+        {xc06cd400 -}}}
+      {x42c20630
+       {x 2
+        {x42c20630 -}}}}
+        {{x42cccf20
+       {x 2
+        {x42cccf20 -}}}
+      {x4103f800
+       {x 2
+        {x4103f800 -}}}}
+        {{x40661400
+       {x 2
+        {x40661400 -}}}
+      {xc2bc7f00
+       {x 2
+        {xc2bc7f00 -}}}}
+        {{x42780000
+       {x 2
+        {x42780000 -}}}
+      {xc1400000
+       {x 2
+        {xc1400000 -}}}}
+        {{xc18135c0
+       {x 2
+        {xc18135c0 -}}}
+      {xc3084efc
+       {x 2
+        {xc3084efc -}}}}
+        {{xc2780000
+       {x 2
+        {xc2780000 -}}}
+      {x41400000
+       {x 2
+        {x41400000 -}}}}}}}
      {tx x41980000 x44ef1555 x44209555}
      {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x41980000 ltm x41980000 tt x40800000}}}}}}
  toolbox {selectAll {
@@ -105,16 +177,28 @@ Roto {
  name Roto1
  selected true
  xpos 70
- ypos -12560
+ ypos -9049
 }
-set Nc4af000 [stack 0]
-push $Nc4af000
+set N989c8400 [stack 0]
+push $N989c8400
 push $cut_paste_input
 Dot {
- name Dot71
+ name Dot144
+ label "BG_A\n\[input this 0 BG_A]"
  selected true
- xpos -6
- ypos -12622
+ xpos 99
+ ypos -9164
+ hide_input true
+}
+push 0
+Switch {
+ inputs 2
+ which 1
+ name Switch11
+ selected true
+ xpos -40
+ ypos -9168
+ disable true
 }
 Merge2 {
  inputs 2+1
@@ -122,18 +206,18 @@ Merge2 {
  Achannels depth
  Bchannels depth
  output depth
- name Merge7
+ name Merge11
  selected true
  xpos -40
- ypos -12560
+ ypos -9049
  disable true
 }
 Group {
- name Depth3Split1
+ name Depth3Split2
  tile_color 0xff00ff
  selected true
  xpos -40
- ypos -12522
+ ypos -9011
  addUserKnob {20 Depth3Split}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
@@ -189,7 +273,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   input depth
   output depth3split.Middle
   operation "luminance key"
-  range {0 0.002252513333 0.004505026667 0.006757542952}
+  range {0.0001 0.0002417036667 0.0004834073333 0.0007251114671}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
@@ -211,14 +295,13 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   output depth3split.Focus
   invert true
   operation "luminance key"
-  range {-1 -1 0 0.009864193661}
+  range {0 0.000227267 0.0003093356366 0.00240402}
   name Focus
   xpos 180
   ypos -328
  }
  Grade {
   channels {none none none depth3split.Focus}
-  gamma 5
   name Grade1
   xpos 180
   ypos -280
@@ -247,20 +330,38 @@ end_group
 SoftClip {
  conversion "logarithmic compress"
  softclip_min 1
- name SoftClip3
+ name SoftClip5
  selected true
  xpos -40
- ypos -12496
+ ypos -8985
 }
 ZDefocus2 {
  z_channel depth3split.Focus
  math direct
- size 50
- max_size 25
+ size 25
+ max_size {{size}}
  legacy_resize_mode false
  show_legacy_resize_mode false
  name ZDefocus1
  selected true
  xpos -40
- ypos -12440
+ ypos -8950
+ cached true
+}
+EdgeBlur {
+ controlchannel depth3split.Close
+ size {{parent.ZDefocus1.size}}
+ name EdgeBlur4
+ selected true
+ xpos -40
+ ypos -8912
+}
+Crop {
+ box {0 0 1920 1080}
+ reformat true
+ crop false
+ name Crop3
+ selected true
+ xpos -40
+ ypos -8833
 }

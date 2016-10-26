@@ -1,5 +1,5 @@
-#! C:/Program Files/Nuke10.0v1/nuke-10.0.1.dll -nx
-#write_info Write1 file:"[file rootname [value root.name]].png" format:"8990 5057 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1" fps:"0" colorspace:"sRGB" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
+#! C:/Program Files/Nuke10.0v4/nuke-10.0.4.dll -nx
+#write_info Write1 file:"[file rootname [value root.name]].png" format:"57 32 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1" fps:"0" colorspace:"sRGB" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
 define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 <layout version="1.0">
     <window x="0" y="124" w="1920" h="1076" screen="0">
@@ -12,21 +12,27 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
             <splitter orientation="2">
                 <split size="1015"/>
                 <dock id="" activePageId="Viewer.1">
-                    <page id="Viewer.2"/>
                     <page id="Viewer.1"/>
+                    <page id="uk.co.thefoundry.scripteditor.1"/>
                 </dock>
             </splitter>
         </splitter>
     </window>
-    <window x="1920" y="0" w="1920" h="1080" maximized="1" screen="1">
+    <window x="1920" y="0" w="1920" h="1080" screen="1">
         <splitter orientation="1">
             <split size="1262"/>
-            <dock id="" activePageId="DAG.1" focus="true">
-                <page id="DopeSheet.1"/>
-                <page id="Curve Editor.1"/>
-                <page id="DAG.1"/>
-                <page id="uk.co.thefoundry.scripteditor.1"/>
-            </dock>
+            <splitter orientation="2">
+                <split size="157"/>
+                <dock id="" activePageId="Error Console.1">
+                    <page id="Error Console.1"/>
+                </dock>
+                <split size="883"/>
+                <dock id="" activePageId="DAG.1" focus="true">
+                    <page id="DAG.1"/>
+                    <page id="Curve Editor.1"/>
+                    <page id="DopeSheet.1"/>
+                </dock>
+            </splitter>
             <split size="638"/>
             <dock id="" activePageId="Properties.1">
                 <page id="Properties.1"/>
@@ -37,7 +43,7 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 }
 Root {
  inputs 0
- name E:/SNJYW/EP02/05/ContactSheet_02_05.nk
+ name E:/SNJYW/ContactSheet_00_00.nk
  project_directory "\[python \{nuke.script_directory()\}]"
  last_frame 1
  lock_range true
@@ -45,6 +51,7 @@ Root {
  format "23040 12960 0 0 23040 12960 1 "
  proxy_type scale
  proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+ colorManagement Nuke
  onScriptLoad "def image(index):\n    list = os.listdir(nuke.script_directory()+r'\\images');\n    if index < len(list):\n        return 'images/'+list\[index];\n    else:\n        return ;"
  onScriptSave nuke.delete(nuke.toNode('Viewer1'))
  addUserKnob {20 User}
@@ -73,27 +80,27 @@ Root {
 }
 Read {
  inputs 0
- file "\[python \{image(100)\}]"
+ file "\[python \{image(400)\}]"
  origset true
- name Read3
- xpos -2790
- ypos -1353
+ name ReadImage400_1
+ xpos 32740
+ ypos -15921
 }
 Transform {
  translate {0 40}
  center {1024 778}
  name Transform2
- xpos -2790
- ypos -1282
+ xpos 32740
+ ypos -15849
 }
-set C4b78800 [stack 0]
+set C4b58800 [stack 0]
 Reformat {
  format "1920 1160 0 0 1920 1160 1 bbb"
  name Reformat1
- xpos -2790
- ypos -1264
+ xpos 32740
+ ypos -15823
 }
-set C4b78400 [stack 0]
+set C4b58400 [stack 0]
 Text2 {
  font_size_toolbar 100
  font_width_toolbar 100
@@ -116,2219 +123,11618 @@ Text2 {
  color {0.145 0.15 0.14 1}
  color_panelDropped true
  name Text1
- xpos -2790
- ypos -1234
+ xpos 32740
+ ypos -15785
 }
-set C4b79000 [stack 0]
+set C4bb6800 [stack 0]
+Dot {
+ name Dot401
+ label "\[input ContactSheet1 400 this]"
+ xpos 32774
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(399)\}]"
+ origset true
+ name ReadImage399_1
+ xpos 32630
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32630
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32630
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32630
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot400
+ label "\[input ContactSheet1 399 this]"
+ xpos 32664
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(398)\}]"
+ origset true
+ name ReadImage398_1
+ xpos 32520
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32520
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32520
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32520
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot399
+ label "\[input ContactSheet1 398 this]"
+ xpos 32554
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(397)\}]"
+ origset true
+ name ReadImage397_1
+ xpos 32410
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32410
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32410
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32410
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot398
+ label "\[input ContactSheet1 397 this]"
+ xpos 32444
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(396)\}]"
+ origset true
+ name ReadImage396_1
+ xpos 32300
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32300
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32300
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32300
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot397
+ label "\[input ContactSheet1 396 this]"
+ xpos 32334
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(395)\}]"
+ origset true
+ name ReadImage395_1
+ xpos 32190
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32190
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32190
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32190
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot396
+ label "\[input ContactSheet1 395 this]"
+ xpos 32224
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(394)\}]"
+ origset true
+ name ReadImage394_1
+ xpos 32080
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 32080
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 32080
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 32080
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot395
+ label "\[input ContactSheet1 394 this]"
+ xpos 32114
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(393)\}]"
+ origset true
+ name ReadImage393_1
+ xpos 31970
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31970
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31970
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31970
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot394
+ label "\[input ContactSheet1 393 this]"
+ xpos 32004
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(392)\}]"
+ origset true
+ name ReadImage392_1
+ xpos 31860
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31860
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31860
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31860
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot393
+ label "\[input ContactSheet1 392 this]"
+ xpos 31894
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(391)\}]"
+ origset true
+ name ReadImage391_1
+ xpos 31750
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31750
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31750
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31750
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot392
+ label "\[input ContactSheet1 391 this]"
+ xpos 31784
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(390)\}]"
+ origset true
+ name ReadImage390_1
+ xpos 31640
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31640
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31640
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31640
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot391
+ label "\[input ContactSheet1 390 this]"
+ xpos 31674
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(389)\}]"
+ origset true
+ name ReadImage389_1
+ xpos 31530
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31530
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31530
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31530
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot390
+ label "\[input ContactSheet1 389 this]"
+ xpos 31564
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(388)\}]"
+ origset true
+ name ReadImage388_1
+ xpos 31420
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31420
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31420
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31420
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot389
+ label "\[input ContactSheet1 388 this]"
+ xpos 31454
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(387)\}]"
+ origset true
+ name ReadImage387_1
+ xpos 31310
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31310
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31310
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31310
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot388
+ label "\[input ContactSheet1 387 this]"
+ xpos 31344
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(386)\}]"
+ origset true
+ name ReadImage386_1
+ xpos 31200
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31200
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31200
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31200
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot387
+ label "\[input ContactSheet1 386 this]"
+ xpos 31234
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(385)\}]"
+ origset true
+ name ReadImage385_1
+ xpos 31090
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 31090
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 31090
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 31090
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot386
+ label "\[input ContactSheet1 385 this]"
+ xpos 31124
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(384)\}]"
+ origset true
+ name ReadImage384_1
+ xpos 30980
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30980
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30980
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30980
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot385
+ label "\[input ContactSheet1 384 this]"
+ xpos 31014
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(383)\}]"
+ origset true
+ name ReadImage383_1
+ xpos 30870
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30870
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30870
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30870
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot384
+ label "\[input ContactSheet1 383 this]"
+ xpos 30904
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(382)\}]"
+ origset true
+ name ReadImage382_1
+ xpos 30760
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30760
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30760
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30760
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot383
+ label "\[input ContactSheet1 382 this]"
+ xpos 30794
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(381)\}]"
+ origset true
+ name ReadImage381_1
+ xpos 30650
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30650
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30650
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30650
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot382
+ label "\[input ContactSheet1 381 this]"
+ xpos 30684
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(380)\}]"
+ origset true
+ name ReadImage380_1
+ xpos 30540
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30540
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30540
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30540
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot381
+ label "\[input ContactSheet1 380 this]"
+ xpos 30574
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(379)\}]"
+ origset true
+ name ReadImage379_1
+ xpos 30430
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30430
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30430
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30430
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot380
+ label "\[input ContactSheet1 379 this]"
+ xpos 30464
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(378)\}]"
+ origset true
+ name ReadImage378_1
+ xpos 30320
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30320
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30320
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30320
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot379
+ label "\[input ContactSheet1 378 this]"
+ xpos 30354
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(377)\}]"
+ origset true
+ name ReadImage377_1
+ xpos 30210
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30210
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30210
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30210
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot378
+ label "\[input ContactSheet1 377 this]"
+ xpos 30244
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(376)\}]"
+ origset true
+ name ReadImage376_1
+ xpos 30100
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 30100
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 30100
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 30100
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot377
+ label "\[input ContactSheet1 376 this]"
+ xpos 30134
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(375)\}]"
+ origset true
+ name ReadImage375_1
+ xpos 29990
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29990
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29990
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29990
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot376
+ label "\[input ContactSheet1 375 this]"
+ xpos 30024
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(374)\}]"
+ origset true
+ name ReadImage374_1
+ xpos 29880
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29880
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29880
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29880
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot375
+ label "\[input ContactSheet1 374 this]"
+ xpos 29914
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(373)\}]"
+ origset true
+ name ReadImage373_1
+ xpos 29770
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29770
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29770
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29770
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot374
+ label "\[input ContactSheet1 373 this]"
+ xpos 29804
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(372)\}]"
+ origset true
+ name ReadImage372_1
+ xpos 29660
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29660
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29660
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29660
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot373
+ label "\[input ContactSheet1 372 this]"
+ xpos 29694
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(371)\}]"
+ origset true
+ name ReadImage371_1
+ xpos 29550
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29550
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29550
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29550
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot372
+ label "\[input ContactSheet1 371 this]"
+ xpos 29584
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(370)\}]"
+ origset true
+ name ReadImage370_1
+ xpos 29440
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29440
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29440
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29440
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot371
+ label "\[input ContactSheet1 370 this]"
+ xpos 29474
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(369)\}]"
+ origset true
+ name ReadImage369_1
+ xpos 29330
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29330
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29330
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29330
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot370
+ label "\[input ContactSheet1 369 this]"
+ xpos 29364
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(368)\}]"
+ origset true
+ name ReadImage368_1
+ xpos 29220
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29220
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29220
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29220
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot369
+ label "\[input ContactSheet1 368 this]"
+ xpos 29254
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(367)\}]"
+ origset true
+ name ReadImage367_1
+ xpos 29110
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29110
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29110
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29110
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot368
+ label "\[input ContactSheet1 367 this]"
+ xpos 29144
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(366)\}]"
+ origset true
+ name ReadImage366_1
+ xpos 29000
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 29000
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 29000
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 29000
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot367
+ label "\[input ContactSheet1 366 this]"
+ xpos 29034
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(365)\}]"
+ origset true
+ name ReadImage365_1
+ xpos 28890
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28890
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28890
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28890
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot366
+ label "\[input ContactSheet1 365 this]"
+ xpos 28924
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(364)\}]"
+ origset true
+ name ReadImage364_1
+ xpos 28780
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28780
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28780
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28780
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot365
+ label "\[input ContactSheet1 364 this]"
+ xpos 28814
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(363)\}]"
+ origset true
+ name ReadImage363_1
+ xpos 28670
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28670
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28670
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28670
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot364
+ label "\[input ContactSheet1 363 this]"
+ xpos 28704
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(362)\}]"
+ origset true
+ name ReadImage362_1
+ xpos 28560
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28560
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28560
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28560
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot363
+ label "\[input ContactSheet1 362 this]"
+ xpos 28594
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(361)\}]"
+ origset true
+ name ReadImage361_1
+ xpos 28450
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28450
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28450
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28450
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot362
+ label "\[input ContactSheet1 361 this]"
+ xpos 28484
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(360)\}]"
+ origset true
+ name ReadImage360_1
+ xpos 28340
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28340
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28340
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28340
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot361
+ label "\[input ContactSheet1 360 this]"
+ xpos 28374
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(359)\}]"
+ origset true
+ name ReadImage359_1
+ xpos 28230
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28230
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28230
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28230
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot360
+ label "\[input ContactSheet1 359 this]"
+ xpos 28264
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(358)\}]"
+ origset true
+ name ReadImage358_1
+ xpos 28120
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28120
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28120
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28120
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot359
+ label "\[input ContactSheet1 358 this]"
+ xpos 28154
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(357)\}]"
+ origset true
+ name ReadImage357_1
+ xpos 28010
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 28010
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 28010
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 28010
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot358
+ label "\[input ContactSheet1 357 this]"
+ xpos 28044
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(356)\}]"
+ origset true
+ name ReadImage356_1
+ xpos 27900
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27900
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27900
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27900
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot357
+ label "\[input ContactSheet1 356 this]"
+ xpos 27934
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(355)\}]"
+ origset true
+ name ReadImage355_1
+ xpos 27790
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27790
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27790
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27790
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot356
+ label "\[input ContactSheet1 355 this]"
+ xpos 27824
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(354)\}]"
+ origset true
+ name ReadImage354_1
+ xpos 27680
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27680
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27680
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27680
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot355
+ label "\[input ContactSheet1 354 this]"
+ xpos 27714
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(353)\}]"
+ origset true
+ name ReadImage353_1
+ xpos 27570
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27570
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27570
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27570
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot354
+ label "\[input ContactSheet1 353 this]"
+ xpos 27604
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(352)\}]"
+ origset true
+ name ReadImage352_1
+ xpos 27460
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27460
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27460
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27460
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot353
+ label "\[input ContactSheet1 352 this]"
+ xpos 27494
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(351)\}]"
+ origset true
+ name ReadImage351_1
+ xpos 27350
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27350
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27350
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27350
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot352
+ label "\[input ContactSheet1 351 this]"
+ xpos 27384
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(350)\}]"
+ origset true
+ name ReadImage350_1
+ xpos 27240
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27240
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27240
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27240
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot351
+ label "\[input ContactSheet1 350 this]"
+ xpos 27274
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(349)\}]"
+ origset true
+ name ReadImage349_1
+ xpos 27130
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27130
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27130
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27130
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot350
+ label "\[input ContactSheet1 349 this]"
+ xpos 27164
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(348)\}]"
+ origset true
+ name ReadImage348_1
+ xpos 27020
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 27020
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 27020
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 27020
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot349
+ label "\[input ContactSheet1 348 this]"
+ xpos 27054
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(347)\}]"
+ origset true
+ name ReadImage347_1
+ xpos 26910
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26910
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26910
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26910
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot348
+ label "\[input ContactSheet1 347 this]"
+ xpos 26944
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(346)\}]"
+ origset true
+ name ReadImage346_1
+ xpos 26800
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26800
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26800
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26800
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot347
+ label "\[input ContactSheet1 346 this]"
+ xpos 26834
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(345)\}]"
+ origset true
+ name ReadImage345_1
+ xpos 26690
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26690
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26690
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26690
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot346
+ label "\[input ContactSheet1 345 this]"
+ xpos 26724
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(344)\}]"
+ origset true
+ name ReadImage344_1
+ xpos 26580
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26580
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26580
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26580
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot345
+ label "\[input ContactSheet1 344 this]"
+ xpos 26614
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(343)\}]"
+ origset true
+ name ReadImage343_1
+ xpos 26470
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26470
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26470
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26470
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot344
+ label "\[input ContactSheet1 343 this]"
+ xpos 26504
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(342)\}]"
+ origset true
+ name ReadImage342_1
+ xpos 26360
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26360
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26360
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26360
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot343
+ label "\[input ContactSheet1 342 this]"
+ xpos 26394
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(341)\}]"
+ origset true
+ name ReadImage341_1
+ xpos 26250
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26250
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26250
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26250
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot342
+ label "\[input ContactSheet1 341 this]"
+ xpos 26284
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(340)\}]"
+ origset true
+ name ReadImage340_1
+ xpos 26140
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26140
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26140
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26140
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot341
+ label "\[input ContactSheet1 340 this]"
+ xpos 26174
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(339)\}]"
+ origset true
+ name ReadImage339_1
+ xpos 26030
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 26030
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 26030
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 26030
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot340
+ label "\[input ContactSheet1 339 this]"
+ xpos 26064
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(338)\}]"
+ origset true
+ name ReadImage338_1
+ xpos 25920
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25920
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25920
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25920
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot339
+ label "\[input ContactSheet1 338 this]"
+ xpos 25954
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(337)\}]"
+ origset true
+ name ReadImage337_1
+ xpos 25810
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25810
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25810
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25810
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot338
+ label "\[input ContactSheet1 337 this]"
+ xpos 25844
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(336)\}]"
+ origset true
+ name ReadImage336_1
+ xpos 25700
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25700
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25700
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25700
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot337
+ label "\[input ContactSheet1 336 this]"
+ xpos 25734
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(335)\}]"
+ origset true
+ name ReadImage335_1
+ xpos 25590
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25590
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25590
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25590
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot336
+ label "\[input ContactSheet1 335 this]"
+ xpos 25624
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(334)\}]"
+ origset true
+ name ReadImage334_1
+ xpos 25480
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25480
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25480
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25480
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot335
+ label "\[input ContactSheet1 334 this]"
+ xpos 25514
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(333)\}]"
+ origset true
+ name ReadImage333_1
+ xpos 25370
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25370
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25370
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25370
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot334
+ label "\[input ContactSheet1 333 this]"
+ xpos 25404
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(332)\}]"
+ origset true
+ name ReadImage332_1
+ xpos 25260
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25260
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25260
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25260
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot333
+ label "\[input ContactSheet1 332 this]"
+ xpos 25294
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(331)\}]"
+ origset true
+ name ReadImage331_1
+ xpos 25150
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25150
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25150
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25150
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot332
+ label "\[input ContactSheet1 331 this]"
+ xpos 25184
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(330)\}]"
+ origset true
+ name ReadImage330_1
+ xpos 25040
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 25040
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 25040
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 25040
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot331
+ label "\[input ContactSheet1 330 this]"
+ xpos 25074
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(329)\}]"
+ origset true
+ name ReadImage329_1
+ xpos 24930
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24930
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24930
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24930
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot330
+ label "\[input ContactSheet1 329 this]"
+ xpos 24964
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(328)\}]"
+ origset true
+ name ReadImage328_1
+ xpos 24820
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24820
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24820
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24820
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot329
+ label "\[input ContactSheet1 328 this]"
+ xpos 24854
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(327)\}]"
+ origset true
+ name ReadImage327_1
+ xpos 24710
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24710
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24710
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24710
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot328
+ label "\[input ContactSheet1 327 this]"
+ xpos 24744
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(326)\}]"
+ origset true
+ name ReadImage326_1
+ xpos 24600
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24600
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24600
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24600
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot327
+ label "\[input ContactSheet1 326 this]"
+ xpos 24634
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(325)\}]"
+ origset true
+ name ReadImage325_1
+ xpos 24490
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24490
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24490
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24490
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot326
+ label "\[input ContactSheet1 325 this]"
+ xpos 24524
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(324)\}]"
+ origset true
+ name ReadImage324_1
+ xpos 24380
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24380
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24380
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24380
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot325
+ label "\[input ContactSheet1 324 this]"
+ xpos 24414
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(323)\}]"
+ origset true
+ name ReadImage323_1
+ xpos 24270
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24270
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24270
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24270
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot324
+ label "\[input ContactSheet1 323 this]"
+ xpos 24304
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(322)\}]"
+ origset true
+ name ReadImage322_1
+ xpos 24160
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24160
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24160
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24160
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot323
+ label "\[input ContactSheet1 322 this]"
+ xpos 24194
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(321)\}]"
+ origset true
+ name ReadImage321_1
+ xpos 24050
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 24050
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 24050
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 24050
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot322
+ label "\[input ContactSheet1 321 this]"
+ xpos 24084
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(320)\}]"
+ origset true
+ name ReadImage320_1
+ xpos 23940
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23940
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23940
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23940
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot321
+ label "\[input ContactSheet1 320 this]"
+ xpos 23974
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(319)\}]"
+ origset true
+ name ReadImage319_1
+ xpos 23830
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23830
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23830
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23830
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot320
+ label "\[input ContactSheet1 319 this]"
+ xpos 23864
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(318)\}]"
+ origset true
+ name ReadImage318_1
+ xpos 23720
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23720
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23720
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23720
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot319
+ label "\[input ContactSheet1 318 this]"
+ xpos 23754
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(317)\}]"
+ origset true
+ name ReadImage317_1
+ xpos 23610
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23610
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23610
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23610
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot318
+ label "\[input ContactSheet1 317 this]"
+ xpos 23644
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(316)\}]"
+ origset true
+ name ReadImage316_1
+ xpos 23500
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23500
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23500
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23500
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot317
+ label "\[input ContactSheet1 316 this]"
+ xpos 23534
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(315)\}]"
+ origset true
+ name ReadImage315_1
+ xpos 23390
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23390
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23390
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23390
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot316
+ label "\[input ContactSheet1 315 this]"
+ xpos 23424
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(314)\}]"
+ origset true
+ name ReadImage314_1
+ xpos 23280
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23280
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23280
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23280
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot315
+ label "\[input ContactSheet1 314 this]"
+ xpos 23314
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(313)\}]"
+ origset true
+ name ReadImage313_1
+ xpos 23170
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23170
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23170
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23170
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot314
+ label "\[input ContactSheet1 313 this]"
+ xpos 23204
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(312)\}]"
+ origset true
+ name ReadImage312_1
+ xpos 23060
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 23060
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 23060
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 23060
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot313
+ label "\[input ContactSheet1 312 this]"
+ xpos 23094
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(311)\}]"
+ origset true
+ name ReadImage311_1
+ xpos 22950
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22950
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22950
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22950
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot312
+ label "\[input ContactSheet1 311 this]"
+ xpos 22984
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(310)\}]"
+ origset true
+ name ReadImage310_1
+ xpos 22840
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22840
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22840
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22840
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot311
+ label "\[input ContactSheet1 310 this]"
+ xpos 22874
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(309)\}]"
+ origset true
+ name ReadImage309_1
+ xpos 22730
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22730
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22730
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22730
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot310
+ label "\[input ContactSheet1 309 this]"
+ xpos 22764
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(308)\}]"
+ origset true
+ name ReadImage308_1
+ xpos 22620
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22620
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22620
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22620
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot309
+ label "\[input ContactSheet1 308 this]"
+ xpos 22654
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(307)\}]"
+ origset true
+ name ReadImage307_1
+ xpos 22510
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22510
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22510
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22510
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot308
+ label "\[input ContactSheet1 307 this]"
+ xpos 22544
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(306)\}]"
+ origset true
+ name ReadImage306_1
+ xpos 22400
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22400
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22400
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22400
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot307
+ label "\[input ContactSheet1 306 this]"
+ xpos 22434
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(305)\}]"
+ origset true
+ name ReadImage305_1
+ xpos 22290
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22290
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22290
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22290
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot306
+ label "\[input ContactSheet1 305 this]"
+ xpos 22324
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(304)\}]"
+ origset true
+ name ReadImage304_1
+ xpos 22180
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22180
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22180
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22180
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot305
+ label "\[input ContactSheet1 304 this]"
+ xpos 22214
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(303)\}]"
+ origset true
+ name ReadImage303_1
+ xpos 22070
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 22070
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 22070
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 22070
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot304
+ label "\[input ContactSheet1 303 this]"
+ xpos 22104
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(302)\}]"
+ origset true
+ name ReadImage302_1
+ xpos 21960
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21960
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21960
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21960
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot303
+ label "\[input ContactSheet1 302 this]"
+ xpos 21994
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(301)\}]"
+ origset true
+ name ReadImage301_1
+ xpos 21850
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21850
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21850
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21850
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot302
+ label "\[input ContactSheet1 301 this]"
+ xpos 21884
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(300)\}]"
+ origset true
+ name ReadImage300_1
+ xpos 21740
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21740
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21740
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21740
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot301
+ label "\[input ContactSheet1 300 this]"
+ xpos 21774
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(299)\}]"
+ origset true
+ name ReadImage299_1
+ xpos 21630
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21630
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21630
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21630
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot300
+ label "\[input ContactSheet1 299 this]"
+ xpos 21664
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(298)\}]"
+ origset true
+ name ReadImage298_1
+ xpos 21520
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21520
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21520
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21520
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot299
+ label "\[input ContactSheet1 298 this]"
+ xpos 21554
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(297)\}]"
+ origset true
+ name ReadImage297_1
+ xpos 21410
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21410
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21410
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21410
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot298
+ label "\[input ContactSheet1 297 this]"
+ xpos 21444
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(296)\}]"
+ origset true
+ name ReadImage296_1
+ xpos 21300
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21300
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21300
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21300
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot297
+ label "\[input ContactSheet1 296 this]"
+ xpos 21334
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(295)\}]"
+ origset true
+ name ReadImage295_1
+ xpos 21190
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21190
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21190
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21190
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot296
+ label "\[input ContactSheet1 295 this]"
+ xpos 21224
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(294)\}]"
+ origset true
+ name ReadImage294_1
+ xpos 21080
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 21080
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 21080
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 21080
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot295
+ label "\[input ContactSheet1 294 this]"
+ xpos 21114
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(293)\}]"
+ origset true
+ name ReadImage293_1
+ xpos 20970
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20970
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20970
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20970
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot294
+ label "\[input ContactSheet1 293 this]"
+ xpos 21004
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(292)\}]"
+ origset true
+ name ReadImage292_1
+ xpos 20860
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20860
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20860
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20860
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot293
+ label "\[input ContactSheet1 292 this]"
+ xpos 20894
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(291)\}]"
+ origset true
+ name ReadImage291_1
+ xpos 20750
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20750
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20750
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20750
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot292
+ label "\[input ContactSheet1 291 this]"
+ xpos 20784
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(290)\}]"
+ origset true
+ name ReadImage290_1
+ xpos 20640
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20640
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20640
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20640
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot291
+ label "\[input ContactSheet1 290 this]"
+ xpos 20674
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(289)\}]"
+ origset true
+ name ReadImage289_1
+ xpos 20530
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20530
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20530
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20530
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot290
+ label "\[input ContactSheet1 289 this]"
+ xpos 20564
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(288)\}]"
+ origset true
+ name ReadImage288_1
+ xpos 20420
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20420
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20420
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20420
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot289
+ label "\[input ContactSheet1 288 this]"
+ xpos 20454
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(287)\}]"
+ origset true
+ name ReadImage287_1
+ xpos 20310
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20310
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20310
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20310
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot288
+ label "\[input ContactSheet1 287 this]"
+ xpos 20344
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(286)\}]"
+ origset true
+ name ReadImage286_1
+ xpos 20200
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20200
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20200
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20200
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot287
+ label "\[input ContactSheet1 286 this]"
+ xpos 20234
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(285)\}]"
+ origset true
+ name ReadImage285_1
+ xpos 20090
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 20090
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 20090
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 20090
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot286
+ label "\[input ContactSheet1 285 this]"
+ xpos 20124
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(284)\}]"
+ origset true
+ name ReadImage284_1
+ xpos 19980
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19980
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19980
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19980
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot285
+ label "\[input ContactSheet1 284 this]"
+ xpos 20014
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(283)\}]"
+ origset true
+ name ReadImage283_1
+ xpos 19870
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19870
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19870
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19870
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot284
+ label "\[input ContactSheet1 283 this]"
+ xpos 19904
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(282)\}]"
+ origset true
+ name ReadImage282_1
+ xpos 19760
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19760
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19760
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19760
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot283
+ label "\[input ContactSheet1 282 this]"
+ xpos 19794
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(281)\}]"
+ origset true
+ name ReadImage281_1
+ xpos 19650
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19650
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19650
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19650
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot282
+ label "\[input ContactSheet1 281 this]"
+ xpos 19684
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(280)\}]"
+ origset true
+ name ReadImage280_1
+ xpos 19540
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19540
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19540
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19540
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot281
+ label "\[input ContactSheet1 280 this]"
+ xpos 19574
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(279)\}]"
+ origset true
+ name ReadImage279_1
+ xpos 19430
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19430
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19430
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19430
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot280
+ label "\[input ContactSheet1 279 this]"
+ xpos 19464
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(278)\}]"
+ origset true
+ name ReadImage278_1
+ xpos 19320
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19320
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19320
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19320
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot279
+ label "\[input ContactSheet1 278 this]"
+ xpos 19354
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(277)\}]"
+ origset true
+ name ReadImage277_1
+ xpos 19210
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19210
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19210
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19210
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot278
+ label "\[input ContactSheet1 277 this]"
+ xpos 19244
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(276)\}]"
+ origset true
+ name ReadImage276_1
+ xpos 19100
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 19100
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 19100
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 19100
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot277
+ label "\[input ContactSheet1 276 this]"
+ xpos 19134
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(275)\}]"
+ origset true
+ name ReadImage275_1
+ xpos 18990
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18990
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18990
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18990
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot276
+ label "\[input ContactSheet1 275 this]"
+ xpos 19024
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(274)\}]"
+ origset true
+ name ReadImage274_1
+ xpos 18880
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18880
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18880
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18880
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot275
+ label "\[input ContactSheet1 274 this]"
+ xpos 18914
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(273)\}]"
+ origset true
+ name ReadImage273_1
+ xpos 18770
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18770
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18770
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18770
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot274
+ label "\[input ContactSheet1 273 this]"
+ xpos 18804
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(272)\}]"
+ origset true
+ name ReadImage272_1
+ xpos 18660
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18660
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18660
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18660
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot273
+ label "\[input ContactSheet1 272 this]"
+ xpos 18694
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(271)\}]"
+ origset true
+ name ReadImage271_1
+ xpos 18550
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18550
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18550
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18550
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot272
+ label "\[input ContactSheet1 271 this]"
+ xpos 18584
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(270)\}]"
+ origset true
+ name ReadImage270_1
+ xpos 18440
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18440
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18440
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18440
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot271
+ label "\[input ContactSheet1 270 this]"
+ xpos 18474
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(269)\}]"
+ origset true
+ name ReadImage269_1
+ xpos 18330
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18330
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18330
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18330
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot270
+ label "\[input ContactSheet1 269 this]"
+ xpos 18364
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(268)\}]"
+ origset true
+ name ReadImage268_1
+ xpos 18220
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18220
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18220
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18220
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot269
+ label "\[input ContactSheet1 268 this]"
+ xpos 18254
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(267)\}]"
+ origset true
+ name ReadImage267_1
+ xpos 18110
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18110
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18110
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18110
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot268
+ label "\[input ContactSheet1 267 this]"
+ xpos 18144
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(266)\}]"
+ origset true
+ name ReadImage266_1
+ xpos 18000
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 18000
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 18000
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 18000
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot267
+ label "\[input ContactSheet1 266 this]"
+ xpos 18034
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(265)\}]"
+ origset true
+ name ReadImage265_1
+ xpos 17890
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17890
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17890
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17890
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot266
+ label "\[input ContactSheet1 265 this]"
+ xpos 17924
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(264)\}]"
+ origset true
+ name ReadImage264_1
+ xpos 17780
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17780
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17780
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17780
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot265
+ label "\[input ContactSheet1 264 this]"
+ xpos 17814
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(263)\}]"
+ origset true
+ name ReadImage263_1
+ xpos 17670
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17670
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17670
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17670
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot264
+ label "\[input ContactSheet1 263 this]"
+ xpos 17704
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(262)\}]"
+ origset true
+ name ReadImage262_1
+ xpos 17560
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17560
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17560
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17560
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot263
+ label "\[input ContactSheet1 262 this]"
+ xpos 17594
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(261)\}]"
+ origset true
+ name ReadImage261_1
+ xpos 17450
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17450
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17450
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17450
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot262
+ label "\[input ContactSheet1 261 this]"
+ xpos 17484
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(260)\}]"
+ origset true
+ name ReadImage260_1
+ xpos 17340
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17340
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17340
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17340
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot261
+ label "\[input ContactSheet1 260 this]"
+ xpos 17374
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(259)\}]"
+ origset true
+ name ReadImage259_1
+ xpos 17230
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17230
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17230
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17230
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot260
+ label "\[input ContactSheet1 259 this]"
+ xpos 17264
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(258)\}]"
+ origset true
+ name ReadImage258_1
+ xpos 17120
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17120
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17120
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17120
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot259
+ label "\[input ContactSheet1 258 this]"
+ xpos 17154
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(257)\}]"
+ origset true
+ name ReadImage257_1
+ xpos 17010
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 17010
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 17010
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 17010
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot258
+ label "\[input ContactSheet1 257 this]"
+ xpos 17044
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(256)\}]"
+ origset true
+ name ReadImage256_1
+ xpos 16900
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16900
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16900
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16900
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot257
+ label "\[input ContactSheet1 256 this]"
+ xpos 16934
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(255)\}]"
+ origset true
+ name ReadImage255_1
+ xpos 16790
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16790
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16790
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16790
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot256
+ label "\[input ContactSheet1 255 this]"
+ xpos 16824
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(254)\}]"
+ origset true
+ name ReadImage254_1
+ xpos 16680
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16680
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16680
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16680
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot255
+ label "\[input ContactSheet1 254 this]"
+ xpos 16714
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(253)\}]"
+ origset true
+ name ReadImage253_1
+ xpos 16570
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16570
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16570
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16570
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot254
+ label "\[input ContactSheet1 253 this]"
+ xpos 16604
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(252)\}]"
+ origset true
+ name ReadImage252_1
+ xpos 16460
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16460
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16460
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16460
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot253
+ label "\[input ContactSheet1 252 this]"
+ xpos 16494
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(251)\}]"
+ origset true
+ name ReadImage251_1
+ xpos 16350
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16350
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16350
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16350
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot252
+ label "\[input ContactSheet1 251 this]"
+ xpos 16384
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(250)\}]"
+ origset true
+ name ReadImage250_1
+ xpos 16240
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16240
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16240
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16240
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot251
+ label "\[input ContactSheet1 250 this]"
+ xpos 16274
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(249)\}]"
+ origset true
+ name ReadImage249_1
+ xpos 16130
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16130
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16130
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16130
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot250
+ label "\[input ContactSheet1 249 this]"
+ xpos 16164
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(248)\}]"
+ origset true
+ name ReadImage248_1
+ xpos 16020
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 16020
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 16020
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 16020
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot249
+ label "\[input ContactSheet1 248 this]"
+ xpos 16054
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(247)\}]"
+ origset true
+ name ReadImage247_1
+ xpos 15910
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15910
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15910
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15910
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot248
+ label "\[input ContactSheet1 247 this]"
+ xpos 15944
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(246)\}]"
+ origset true
+ name ReadImage246_1
+ xpos 15800
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15800
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15800
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15800
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot247
+ label "\[input ContactSheet1 246 this]"
+ xpos 15834
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(245)\}]"
+ origset true
+ name ReadImage245_1
+ xpos 15690
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15690
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15690
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15690
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot246
+ label "\[input ContactSheet1 245 this]"
+ xpos 15724
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(244)\}]"
+ origset true
+ name ReadImage244_1
+ xpos 15580
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15580
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15580
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15580
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot245
+ label "\[input ContactSheet1 244 this]"
+ xpos 15614
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(243)\}]"
+ origset true
+ name ReadImage243_1
+ xpos 15470
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15470
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15470
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15470
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot244
+ label "\[input ContactSheet1 243 this]"
+ xpos 15504
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(242)\}]"
+ origset true
+ name ReadImage242_1
+ xpos 15360
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15360
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15360
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15360
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot243
+ label "\[input ContactSheet1 242 this]"
+ xpos 15394
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(241)\}]"
+ origset true
+ name ReadImage241_1
+ xpos 15250
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15250
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15250
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15250
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot242
+ label "\[input ContactSheet1 241 this]"
+ xpos 15284
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(240)\}]"
+ origset true
+ name ReadImage240_1
+ xpos 15140
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15140
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15140
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15140
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot241
+ label "\[input ContactSheet1 240 this]"
+ xpos 15174
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(239)\}]"
+ origset true
+ name ReadImage239_1
+ xpos 15030
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 15030
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 15030
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 15030
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot240
+ label "\[input ContactSheet1 239 this]"
+ xpos 15064
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(238)\}]"
+ origset true
+ name ReadImage238_1
+ xpos 14920
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14920
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14920
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14920
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot239
+ label "\[input ContactSheet1 238 this]"
+ xpos 14954
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(237)\}]"
+ origset true
+ name ReadImage237_1
+ xpos 14810
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14810
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14810
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14810
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot238
+ label "\[input ContactSheet1 237 this]"
+ xpos 14844
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(236)\}]"
+ origset true
+ name ReadImage236_1
+ xpos 14700
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14700
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14700
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14700
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot237
+ label "\[input ContactSheet1 236 this]"
+ xpos 14734
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(235)\}]"
+ origset true
+ name ReadImage235_1
+ xpos 14590
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14590
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14590
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14590
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot236
+ label "\[input ContactSheet1 235 this]"
+ xpos 14624
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(234)\}]"
+ origset true
+ name ReadImage234_1
+ xpos 14480
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14480
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14480
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14480
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot235
+ label "\[input ContactSheet1 234 this]"
+ xpos 14514
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(233)\}]"
+ origset true
+ name ReadImage233_1
+ xpos 14370
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14370
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14370
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14370
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot234
+ label "\[input ContactSheet1 233 this]"
+ xpos 14404
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(232)\}]"
+ origset true
+ name ReadImage232_1
+ xpos 14260
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14260
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14260
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14260
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot233
+ label "\[input ContactSheet1 232 this]"
+ xpos 14294
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(231)\}]"
+ origset true
+ name ReadImage231_1
+ xpos 14150
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14150
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14150
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14150
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot232
+ label "\[input ContactSheet1 231 this]"
+ xpos 14184
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(230)\}]"
+ origset true
+ name ReadImage230_1
+ xpos 14040
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 14040
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 14040
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 14040
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot231
+ label "\[input ContactSheet1 230 this]"
+ xpos 14074
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(229)\}]"
+ origset true
+ name ReadImage229_1
+ xpos 13930
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13930
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13930
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13930
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot230
+ label "\[input ContactSheet1 229 this]"
+ xpos 13964
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(228)\}]"
+ origset true
+ name ReadImage228_1
+ xpos 13820
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13820
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13820
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13820
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot229
+ label "\[input ContactSheet1 228 this]"
+ xpos 13854
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(227)\}]"
+ origset true
+ name ReadImage227_1
+ xpos 13710
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13710
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13710
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13710
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot228
+ label "\[input ContactSheet1 227 this]"
+ xpos 13744
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(226)\}]"
+ origset true
+ name ReadImage226_1
+ xpos 13600
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13600
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13600
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13600
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot227
+ label "\[input ContactSheet1 226 this]"
+ xpos 13634
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(225)\}]"
+ origset true
+ name ReadImage225_1
+ xpos 13490
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13490
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13490
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13490
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot226
+ label "\[input ContactSheet1 225 this]"
+ xpos 13524
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(224)\}]"
+ origset true
+ name ReadImage224_1
+ xpos 13380
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13380
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13380
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13380
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot225
+ label "\[input ContactSheet1 224 this]"
+ xpos 13414
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(223)\}]"
+ origset true
+ name ReadImage223_1
+ xpos 13270
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13270
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13270
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13270
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot224
+ label "\[input ContactSheet1 223 this]"
+ xpos 13304
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(222)\}]"
+ origset true
+ name ReadImage222_1
+ xpos 13160
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13160
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13160
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13160
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot223
+ label "\[input ContactSheet1 222 this]"
+ xpos 13194
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(221)\}]"
+ origset true
+ name ReadImage221_1
+ xpos 13050
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 13050
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 13050
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 13050
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot222
+ label "\[input ContactSheet1 221 this]"
+ xpos 13084
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(220)\}]"
+ origset true
+ name ReadImage220_1
+ xpos 12940
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12940
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12940
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12940
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot221
+ label "\[input ContactSheet1 220 this]"
+ xpos 12974
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(219)\}]"
+ origset true
+ name ReadImage219_1
+ xpos 12830
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12830
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12830
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12830
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot220
+ label "\[input ContactSheet1 219 this]"
+ xpos 12864
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(218)\}]"
+ origset true
+ name ReadImage218_1
+ xpos 12720
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12720
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12720
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12720
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot219
+ label "\[input ContactSheet1 218 this]"
+ xpos 12754
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(217)\}]"
+ origset true
+ name ReadImage217_1
+ xpos 12610
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12610
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12610
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12610
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot218
+ label "\[input ContactSheet1 217 this]"
+ xpos 12644
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(216)\}]"
+ origset true
+ name ReadImage216_1
+ xpos 12500
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12500
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12500
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12500
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot217
+ label "\[input ContactSheet1 216 this]"
+ xpos 12534
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(215)\}]"
+ origset true
+ name ReadImage215_1
+ xpos 12390
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12390
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12390
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12390
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot216
+ label "\[input ContactSheet1 215 this]"
+ xpos 12424
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(214)\}]"
+ origset true
+ name ReadImage214_1
+ xpos 12280
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12280
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12280
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12280
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot215
+ label "\[input ContactSheet1 214 this]"
+ xpos 12314
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(213)\}]"
+ origset true
+ name ReadImage213_1
+ xpos 12170
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12170
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12170
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12170
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot214
+ label "\[input ContactSheet1 213 this]"
+ xpos 12204
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(212)\}]"
+ origset true
+ name ReadImage212_1
+ xpos 12060
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 12060
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 12060
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 12060
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot213
+ label "\[input ContactSheet1 212 this]"
+ xpos 12094
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(211)\}]"
+ origset true
+ name ReadImage211_1
+ xpos 11950
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11950
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11950
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11950
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot212
+ label "\[input ContactSheet1 211 this]"
+ xpos 11984
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(210)\}]"
+ origset true
+ name ReadImage210_1
+ xpos 11840
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11840
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11840
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11840
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot211
+ label "\[input ContactSheet1 210 this]"
+ xpos 11874
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(209)\}]"
+ origset true
+ name ReadImage209_1
+ xpos 11730
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11730
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11730
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11730
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot210
+ label "\[input ContactSheet1 209 this]"
+ xpos 11764
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(208)\}]"
+ origset true
+ name ReadImage208_1
+ xpos 11620
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11620
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11620
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11620
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot209
+ label "\[input ContactSheet1 208 this]"
+ xpos 11654
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(207)\}]"
+ origset true
+ name ReadImage207_1
+ xpos 11510
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11510
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11510
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11510
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot208
+ label "\[input ContactSheet1 207 this]"
+ xpos 11544
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(206)\}]"
+ origset true
+ name ReadImage206_1
+ xpos 11400
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11400
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11400
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11400
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot207
+ label "\[input ContactSheet1 206 this]"
+ xpos 11434
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(205)\}]"
+ origset true
+ name ReadImage205_1
+ xpos 11290
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11290
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11290
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11290
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot206
+ label "\[input ContactSheet1 205 this]"
+ xpos 11324
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(204)\}]"
+ origset true
+ name ReadImage204_1
+ xpos 11180
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11180
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11180
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11180
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot205
+ label "\[input ContactSheet1 204 this]"
+ xpos 11214
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(203)\}]"
+ origset true
+ name ReadImage203_1
+ xpos 11070
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 11070
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 11070
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 11070
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot204
+ label "\[input ContactSheet1 203 this]"
+ xpos 11104
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(202)\}]"
+ origset true
+ name ReadImage202_1
+ xpos 10960
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10960
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10960
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10960
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot203
+ label "\[input ContactSheet1 202 this]"
+ xpos 10994
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(201)\}]"
+ origset true
+ name ReadImage201_1
+ xpos 10850
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10850
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10850
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10850
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot202
+ label "\[input ContactSheet1 201 this]"
+ xpos 10884
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(200)\}]"
+ origset true
+ name ReadImage200_1
+ xpos 10740
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10740
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10740
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10740
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot201
+ label "\[input ContactSheet1 200 this]"
+ xpos 10774
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(199)\}]"
+ origset true
+ name ReadImage199_1
+ xpos 10630
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10630
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10630
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10630
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot200
+ label "\[input ContactSheet1 199 this]"
+ xpos 10664
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(198)\}]"
+ origset true
+ name ReadImage198_1
+ xpos 10520
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10520
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10520
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10520
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot199
+ label "\[input ContactSheet1 198 this]"
+ xpos 10554
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(197)\}]"
+ origset true
+ name ReadImage197_1
+ xpos 10410
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10410
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10410
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10410
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot198
+ label "\[input ContactSheet1 197 this]"
+ xpos 10444
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(196)\}]"
+ origset true
+ name ReadImage196_1
+ xpos 10300
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10300
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10300
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10300
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot197
+ label "\[input ContactSheet1 196 this]"
+ xpos 10334
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(195)\}]"
+ origset true
+ name ReadImage195_1
+ xpos 10190
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10190
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10190
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10190
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot196
+ label "\[input ContactSheet1 195 this]"
+ xpos 10224
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(194)\}]"
+ origset true
+ name ReadImage194_1
+ xpos 10080
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 10080
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 10080
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 10080
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot195
+ label "\[input ContactSheet1 194 this]"
+ xpos 10114
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(193)\}]"
+ origset true
+ name ReadImage193_1
+ xpos 9970
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9970
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9970
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9970
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot194
+ label "\[input ContactSheet1 193 this]"
+ xpos 10004
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(192)\}]"
+ origset true
+ name ReadImage192_1
+ xpos 9860
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9860
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9860
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9860
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot193
+ label "\[input ContactSheet1 192 this]"
+ xpos 9894
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(191)\}]"
+ origset true
+ name ReadImage191_1
+ xpos 9750
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9750
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9750
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9750
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot192
+ label "\[input ContactSheet1 191 this]"
+ xpos 9784
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(190)\}]"
+ origset true
+ name ReadImage190_1
+ xpos 9640
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9640
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9640
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9640
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot191
+ label "\[input ContactSheet1 190 this]"
+ xpos 9674
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(189)\}]"
+ origset true
+ name ReadImage189_1
+ xpos 9530
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9530
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9530
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9530
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot190
+ label "\[input ContactSheet1 189 this]"
+ xpos 9564
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(188)\}]"
+ origset true
+ name ReadImage188_1
+ xpos 9420
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9420
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9420
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9420
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot189
+ label "\[input ContactSheet1 188 this]"
+ xpos 9454
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(187)\}]"
+ origset true
+ name ReadImage187_1
+ xpos 9310
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9310
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9310
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9310
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot188
+ label "\[input ContactSheet1 187 this]"
+ xpos 9344
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(186)\}]"
+ origset true
+ name ReadImage186_1
+ xpos 9200
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9200
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9200
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9200
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot187
+ label "\[input ContactSheet1 186 this]"
+ xpos 9234
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(185)\}]"
+ origset true
+ name ReadImage185_1
+ xpos 9090
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 9090
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 9090
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 9090
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot186
+ label "\[input ContactSheet1 185 this]"
+ xpos 9124
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(184)\}]"
+ origset true
+ name ReadImage184_1
+ xpos 8980
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8980
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8980
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8980
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot185
+ label "\[input ContactSheet1 184 this]"
+ xpos 9014
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(183)\}]"
+ origset true
+ name ReadImage183_1
+ xpos 8870
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8870
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8870
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8870
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot184
+ label "\[input ContactSheet1 183 this]"
+ xpos 8904
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(182)\}]"
+ origset true
+ name ReadImage182_1
+ xpos 8760
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8760
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8760
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8760
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot183
+ label "\[input ContactSheet1 182 this]"
+ xpos 8794
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(181)\}]"
+ origset true
+ name ReadImage181_1
+ xpos 8650
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8650
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8650
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8650
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot182
+ label "\[input ContactSheet1 181 this]"
+ xpos 8684
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(180)\}]"
+ origset true
+ name ReadImage180_1
+ xpos 8540
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8540
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8540
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8540
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot181
+ label "\[input ContactSheet1 180 this]"
+ xpos 8574
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(179)\}]"
+ origset true
+ name ReadImage179_1
+ xpos 8430
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8430
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8430
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8430
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot180
+ label "\[input ContactSheet1 179 this]"
+ xpos 8464
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(178)\}]"
+ origset true
+ name ReadImage178_1
+ xpos 8320
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8320
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8320
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8320
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot179
+ label "\[input ContactSheet1 178 this]"
+ xpos 8354
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(177)\}]"
+ origset true
+ name ReadImage177_1
+ xpos 8210
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8210
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8210
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8210
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot178
+ label "\[input ContactSheet1 177 this]"
+ xpos 8244
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(176)\}]"
+ origset true
+ name ReadImage176_1
+ xpos 8100
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 8100
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 8100
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 8100
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot177
+ label "\[input ContactSheet1 176 this]"
+ xpos 8134
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(175)\}]"
+ origset true
+ name ReadImage175_1
+ xpos 7990
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7990
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7990
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7990
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot176
+ label "\[input ContactSheet1 175 this]"
+ xpos 8024
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(174)\}]"
+ origset true
+ name ReadImage174_1
+ xpos 7880
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7880
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7880
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7880
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot175
+ label "\[input ContactSheet1 174 this]"
+ xpos 7914
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(173)\}]"
+ origset true
+ name ReadImage173_1
+ xpos 7770
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7770
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7770
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7770
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot174
+ label "\[input ContactSheet1 173 this]"
+ xpos 7804
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(172)\}]"
+ origset true
+ name ReadImage172_1
+ xpos 7660
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7660
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7660
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7660
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot173
+ label "\[input ContactSheet1 172 this]"
+ xpos 7694
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(171)\}]"
+ origset true
+ name ReadImage171_1
+ xpos 7550
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7550
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7550
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7550
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot172
+ label "\[input ContactSheet1 171 this]"
+ xpos 7584
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(170)\}]"
+ origset true
+ name ReadImage170_1
+ xpos 7440
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7440
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7440
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7440
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot171
+ label "\[input ContactSheet1 170 this]"
+ xpos 7474
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(169)\}]"
+ origset true
+ name ReadImage169_1
+ xpos 7330
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7330
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7330
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7330
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot170
+ label "\[input ContactSheet1 169 this]"
+ xpos 7364
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(168)\}]"
+ origset true
+ name ReadImage168_1
+ xpos 7220
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7220
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7220
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7220
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot169
+ label "\[input ContactSheet1 168 this]"
+ xpos 7254
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(167)\}]"
+ origset true
+ name ReadImage167_1
+ xpos 7110
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7110
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7110
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7110
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot168
+ label "\[input ContactSheet1 167 this]"
+ xpos 7144
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(166)\}]"
+ origset true
+ name ReadImage166_1
+ xpos 7000
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 7000
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 7000
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 7000
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot167
+ label "\[input ContactSheet1 166 this]"
+ xpos 7034
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(165)\}]"
+ origset true
+ name ReadImage165_1
+ xpos 6890
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6890
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6890
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6890
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot166
+ label "\[input ContactSheet1 165 this]"
+ xpos 6924
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(164)\}]"
+ origset true
+ name ReadImage164_1
+ xpos 6780
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6780
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6780
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6780
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot165
+ label "\[input ContactSheet1 164 this]"
+ xpos 6814
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(163)\}]"
+ origset true
+ name ReadImage163_1
+ xpos 6670
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6670
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6670
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6670
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot164
+ label "\[input ContactSheet1 163 this]"
+ xpos 6704
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(162)\}]"
+ origset true
+ name ReadImage162_1
+ xpos 6560
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6560
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6560
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6560
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot163
+ label "\[input ContactSheet1 162 this]"
+ xpos 6594
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(161)\}]"
+ origset true
+ name ReadImage161_1
+ xpos 6450
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6450
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6450
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6450
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot162
+ label "\[input ContactSheet1 161 this]"
+ xpos 6484
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(160)\}]"
+ origset true
+ name ReadImage160_1
+ xpos 6340
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6340
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6340
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6340
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot161
+ label "\[input ContactSheet1 160 this]"
+ xpos 6374
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(159)\}]"
+ origset true
+ name ReadImage159_1
+ xpos 6230
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6230
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6230
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6230
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot160
+ label "\[input ContactSheet1 159 this]"
+ xpos 6264
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(158)\}]"
+ origset true
+ name ReadImage158_1
+ xpos 6120
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6120
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6120
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6120
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot159
+ label "\[input ContactSheet1 158 this]"
+ xpos 6154
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(157)\}]"
+ origset true
+ name ReadImage157_1
+ xpos 6010
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 6010
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 6010
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 6010
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot158
+ label "\[input ContactSheet1 157 this]"
+ xpos 6044
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(156)\}]"
+ origset true
+ name ReadImage156_1
+ xpos 5900
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5900
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5900
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5900
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot157
+ label "\[input ContactSheet1 156 this]"
+ xpos 5934
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(155)\}]"
+ origset true
+ name ReadImage155_1
+ xpos 5790
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5790
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5790
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5790
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot156
+ label "\[input ContactSheet1 155 this]"
+ xpos 5824
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(154)\}]"
+ origset true
+ name ReadImage154_1
+ xpos 5680
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5680
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5680
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5680
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot155
+ label "\[input ContactSheet1 154 this]"
+ xpos 5714
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(153)\}]"
+ origset true
+ name ReadImage153_1
+ xpos 5570
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5570
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5570
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5570
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot154
+ label "\[input ContactSheet1 153 this]"
+ xpos 5604
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(152)\}]"
+ origset true
+ name ReadImage152_1
+ xpos 5460
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5460
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5460
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5460
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot153
+ label "\[input ContactSheet1 152 this]"
+ xpos 5494
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(151)\}]"
+ origset true
+ name ReadImage151_1
+ xpos 5350
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5350
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5350
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5350
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot152
+ label "\[input ContactSheet1 151 this]"
+ xpos 5384
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(150)\}]"
+ origset true
+ name ReadImage150_1
+ xpos 5240
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5240
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5240
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5240
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot151
+ label "\[input ContactSheet1 150 this]"
+ xpos 5274
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(149)\}]"
+ origset true
+ name ReadImage149_1
+ xpos 5130
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5130
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5130
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5130
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot150
+ label "\[input ContactSheet1 149 this]"
+ xpos 5164
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(148)\}]"
+ origset true
+ name ReadImage148_1
+ xpos 5020
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 5020
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 5020
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 5020
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot149
+ label "\[input ContactSheet1 148 this]"
+ xpos 5054
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(147)\}]"
+ origset true
+ name ReadImage147_1
+ xpos 4910
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4910
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4910
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4910
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot148
+ label "\[input ContactSheet1 147 this]"
+ xpos 4944
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(146)\}]"
+ origset true
+ name ReadImage146_1
+ xpos 4800
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4800
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4800
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4800
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot147
+ label "\[input ContactSheet1 146 this]"
+ xpos 4834
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(145)\}]"
+ origset true
+ name ReadImage145_1
+ xpos 4690
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4690
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4690
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4690
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot146
+ label "\[input ContactSheet1 145 this]"
+ xpos 4724
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(144)\}]"
+ origset true
+ name ReadImage144_1
+ xpos 4580
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4580
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4580
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4580
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot145
+ label "\[input ContactSheet1 144 this]"
+ xpos 4614
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(143)\}]"
+ origset true
+ name ReadImage143_1
+ xpos 4470
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4470
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4470
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4470
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot144
+ label "\[input ContactSheet1 143 this]"
+ xpos 4504
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(142)\}]"
+ origset true
+ name ReadImage142_1
+ xpos 4360
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4360
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4360
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4360
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot143
+ label "\[input ContactSheet1 142 this]"
+ xpos 4394
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(141)\}]"
+ origset true
+ name ReadImage141_1
+ xpos 4250
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4250
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4250
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4250
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot142
+ label "\[input ContactSheet1 141 this]"
+ xpos 4284
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(140)\}]"
+ origset true
+ name ReadImage140_1
+ xpos 4140
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4140
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4140
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4140
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot141
+ label "\[input ContactSheet1 140 this]"
+ xpos 4174
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(139)\}]"
+ origset true
+ name ReadImage139_1
+ xpos 4030
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 4030
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 4030
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 4030
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot140
+ label "\[input ContactSheet1 139 this]"
+ xpos 4064
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(138)\}]"
+ origset true
+ name ReadImage138_1
+ xpos 3920
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3920
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3920
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3920
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot139
+ label "\[input ContactSheet1 138 this]"
+ xpos 3954
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(137)\}]"
+ origset true
+ name ReadImage137_1
+ xpos 3810
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3810
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3810
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3810
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot138
+ label "\[input ContactSheet1 137 this]"
+ xpos 3844
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(136)\}]"
+ origset true
+ name ReadImage136_1
+ xpos 3700
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3700
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3700
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3700
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot137
+ label "\[input ContactSheet1 136 this]"
+ xpos 3734
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(135)\}]"
+ origset true
+ name ReadImage135_1
+ xpos 3590
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3590
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3590
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3590
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot136
+ label "\[input ContactSheet1 135 this]"
+ xpos 3624
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(134)\}]"
+ origset true
+ name ReadImage134_1
+ xpos 3480
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3480
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3480
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3480
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot135
+ label "\[input ContactSheet1 134 this]"
+ xpos 3514
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(133)\}]"
+ origset true
+ name ReadImage133_1
+ xpos 3370
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3370
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3370
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3370
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot134
+ label "\[input ContactSheet1 133 this]"
+ xpos 3404
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(132)\}]"
+ origset true
+ name ReadImage132_1
+ xpos 3260
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3260
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3260
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3260
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot133
+ label "\[input ContactSheet1 132 this]"
+ xpos 3294
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(131)\}]"
+ origset true
+ name ReadImage131_1
+ xpos 3150
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3150
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3150
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3150
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot132
+ label "\[input ContactSheet1 131 this]"
+ xpos 3184
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(130)\}]"
+ origset true
+ name ReadImage130_1
+ xpos 3040
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 3040
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 3040
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 3040
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot131
+ label "\[input ContactSheet1 130 this]"
+ xpos 3074
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(129)\}]"
+ origset true
+ name ReadImage129_1
+ xpos 2930
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2930
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2930
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2930
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot130
+ label "\[input ContactSheet1 129 this]"
+ xpos 2964
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(128)\}]"
+ origset true
+ name ReadImage128_1
+ xpos 2820
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2820
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2820
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2820
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot129
+ label "\[input ContactSheet1 128 this]"
+ xpos 2854
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(127)\}]"
+ origset true
+ name ReadImage127_1
+ xpos 2710
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2710
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2710
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2710
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot128
+ label "\[input ContactSheet1 127 this]"
+ xpos 2744
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(126)\}]"
+ origset true
+ name ReadImage126_1
+ xpos 2600
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2600
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2600
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2600
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot127
+ label "\[input ContactSheet1 126 this]"
+ xpos 2634
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(125)\}]"
+ origset true
+ name ReadImage125_1
+ xpos 2490
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2490
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2490
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2490
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot126
+ label "\[input ContactSheet1 125 this]"
+ xpos 2524
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(124)\}]"
+ origset true
+ name ReadImage124_1
+ xpos 2380
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2380
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2380
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2380
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot125
+ label "\[input ContactSheet1 124 this]"
+ xpos 2414
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(123)\}]"
+ origset true
+ name ReadImage123_1
+ xpos 2270
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2270
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2270
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2270
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot124
+ label "\[input ContactSheet1 123 this]"
+ xpos 2304
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(122)\}]"
+ origset true
+ name ReadImage122_1
+ xpos 2160
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2160
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2160
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2160
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot123
+ label "\[input ContactSheet1 122 this]"
+ xpos 2194
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(121)\}]"
+ origset true
+ name ReadImage121_1
+ xpos 2050
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 2050
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 2050
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 2050
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot122
+ label "\[input ContactSheet1 121 this]"
+ xpos 2084
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(120)\}]"
+ origset true
+ name ReadImage120_1
+ xpos 1940
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1940
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1940
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1940
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot121
+ label "\[input ContactSheet1 120 this]"
+ xpos 1974
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(119)\}]"
+ origset true
+ name ReadImage119_1
+ xpos 1830
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1830
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1830
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1830
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot120
+ label "\[input ContactSheet1 119 this]"
+ xpos 1864
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(118)\}]"
+ origset true
+ name ReadImage118_1
+ xpos 1720
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1720
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1720
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1720
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot119
+ label "\[input ContactSheet1 118 this]"
+ xpos 1754
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(117)\}]"
+ origset true
+ name ReadImage117_1
+ xpos 1610
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1610
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1610
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1610
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot118
+ label "\[input ContactSheet1 117 this]"
+ xpos 1644
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(116)\}]"
+ origset true
+ name ReadImage116_1
+ xpos 1500
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1500
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1500
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1500
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot117
+ label "\[input ContactSheet1 116 this]"
+ xpos 1534
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(115)\}]"
+ origset true
+ name ReadImage115_1
+ xpos 1390
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1390
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1390
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1390
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot116
+ label "\[input ContactSheet1 115 this]"
+ xpos 1424
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(114)\}]"
+ origset true
+ name ReadImage114_1
+ xpos 1280
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1280
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1280
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1280
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot115
+ label "\[input ContactSheet1 114 this]"
+ xpos 1314
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(113)\}]"
+ origset true
+ name ReadImage113_1
+ xpos 1170
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1170
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1170
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1170
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot114
+ label "\[input ContactSheet1 113 this]"
+ xpos 1204
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(112)\}]"
+ origset true
+ name ReadImage112_1
+ xpos 1060
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 1060
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 1060
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 1060
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot113
+ label "\[input ContactSheet1 112 this]"
+ xpos 1094
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(111)\}]"
+ origset true
+ name ReadImage111_1
+ xpos 950
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 950
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 950
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 950
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot112
+ label "\[input ContactSheet1 111 this]"
+ xpos 984
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(110)\}]"
+ origset true
+ name ReadImage110_1
+ xpos 840
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 840
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 840
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 840
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot111
+ label "\[input ContactSheet1 110 this]"
+ xpos 874
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(109)\}]"
+ origset true
+ name ReadImage109_1
+ xpos 730
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 730
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 730
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 730
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot110
+ label "\[input ContactSheet1 109 this]"
+ xpos 764
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(108)\}]"
+ origset true
+ name ReadImage108_1
+ xpos 620
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 620
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 620
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 620
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot109
+ label "\[input ContactSheet1 108 this]"
+ xpos 654
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(107)\}]"
+ origset true
+ name ReadImage107_1
+ xpos 510
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 510
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 510
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 510
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot108
+ label "\[input ContactSheet1 107 this]"
+ xpos 544
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(106)\}]"
+ origset true
+ name ReadImage106_1
+ xpos 400
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 400
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 400
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 400
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot107
+ label "\[input ContactSheet1 106 this]"
+ xpos 434
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(105)\}]"
+ origset true
+ name ReadImage105_1
+ xpos 290
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 290
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 290
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 290
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot106
+ label "\[input ContactSheet1 105 this]"
+ xpos 324
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(104)\}]"
+ origset true
+ name ReadImage104_1
+ xpos 180
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 180
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 180
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 180
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot105
+ label "\[input ContactSheet1 104 this]"
+ xpos 214
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(103)\}]"
+ origset true
+ name ReadImage103_1
+ xpos 70
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos 70
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos 70
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos 70
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot104
+ label "\[input ContactSheet1 103 this]"
+ xpos 104
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(102)\}]"
+ origset true
+ name ReadImage102_1
+ xpos -40
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos -40
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos -40
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos -40
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot103
+ label "\[input ContactSheet1 102 this]"
+ xpos -6
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(101)\}]"
+ origset true
+ name ReadImage101_1
+ xpos -150
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos -150
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos -150
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos -150
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot102
+ label "\[input ContactSheet1 101 this]"
+ xpos -116
+ ypos -15759
+}
+Read {
+ inputs 0
+ file "\[python \{image(100)\}]"
+ origset true
+ name ReadImage100_1
+ xpos -260
+ ypos -15921
+}
+clone $C4b58800 {
+ xpos -260
+ ypos -15849
+ selected false
+}
+clone $C4b58400 {
+ xpos -260
+ ypos -15823
+ selected false
+}
+clone $C4bb6800 {
+ xpos -260
+ ypos -15785
+ selected false
+}
+Dot {
+ name Dot101
+ label "\[input ContactSheet1 100 this]"
+ xpos -226
+ ypos -15759
+}
 Read {
  inputs 0
  file "\[python \{image(99)\}]"
- name Read5
- xpos -2680
- ypos -1353
+ origset true
+ name ReadImage99_1
+ xpos -370
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2680
- ypos -1282
+clone $C4b58800 {
+ xpos -370
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2680
- ypos -1264
+clone $C4b58400 {
+ xpos -370
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2680
- ypos -1234
+clone $C4bb6800 {
+ xpos -370
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot100
+ label "\[input ContactSheet1 99 this]"
+ xpos -336
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(98)\}]"
- name Read6
- xpos -2570
- ypos -1353
+ origset true
+ name ReadImage98_1
+ xpos -480
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2570
- ypos -1282
+clone $C4b58800 {
+ xpos -480
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2570
- ypos -1264
+clone $C4b58400 {
+ xpos -480
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2570
- ypos -1234
+clone $C4bb6800 {
+ xpos -480
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot99
+ label "\[input ContactSheet1 98 this]"
+ xpos -446
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(97)\}]"
- name Read7
- xpos -2460
- ypos -1353
+ origset true
+ name ReadImage97_1
+ xpos -590
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2460
- ypos -1282
+clone $C4b58800 {
+ xpos -590
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2460
- ypos -1264
+clone $C4b58400 {
+ xpos -590
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2460
- ypos -1234
+clone $C4bb6800 {
+ xpos -590
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot98
+ label "\[input ContactSheet1 97 this]"
+ xpos -556
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(96)\}]"
- name Read8
- xpos -2350
- ypos -1353
+ origset true
+ name ReadImage96_1
+ xpos -700
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2350
- ypos -1282
+clone $C4b58800 {
+ xpos -700
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2350
- ypos -1264
+clone $C4b58400 {
+ xpos -700
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2350
- ypos -1234
+clone $C4bb6800 {
+ xpos -700
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot97
+ label "\[input ContactSheet1 96 this]"
+ xpos -666
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(95)\}]"
- name Read9
- xpos -2240
- ypos -1353
+ origset true
+ name ReadImage95_1
+ xpos -810
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2240
- ypos -1282
+clone $C4b58800 {
+ xpos -810
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2240
- ypos -1264
+clone $C4b58400 {
+ xpos -810
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2240
- ypos -1234
+clone $C4bb6800 {
+ xpos -810
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot96
+ label "\[input ContactSheet1 95 this]"
+ xpos -776
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(94)\}]"
- name Read10
- xpos -2130
- ypos -1353
+ origset true
+ name ReadImage94_1
+ xpos -920
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2130
- ypos -1282
+clone $C4b58800 {
+ xpos -920
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2130
- ypos -1264
+clone $C4b58400 {
+ xpos -920
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2130
- ypos -1234
+clone $C4bb6800 {
+ xpos -920
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot95
+ label "\[input ContactSheet1 94 this]"
+ xpos -886
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(93)\}]"
- name Read11
- xpos -2020
- ypos -1353
+ origset true
+ name ReadImage93_1
+ xpos -1030
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -2020
- ypos -1282
+clone $C4b58800 {
+ xpos -1030
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -2020
- ypos -1264
+clone $C4b58400 {
+ xpos -1030
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -2020
- ypos -1234
+clone $C4bb6800 {
+ xpos -1030
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot94
+ label "\[input ContactSheet1 93 this]"
+ xpos -996
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(92)\}]"
- name Read12
- xpos -1910
- ypos -1353
+ origset true
+ name ReadImage92_1
+ xpos -1140
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1910
- ypos -1282
+clone $C4b58800 {
+ xpos -1140
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1910
- ypos -1264
+clone $C4b58400 {
+ xpos -1140
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1910
- ypos -1234
+clone $C4bb6800 {
+ xpos -1140
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot93
+ label "\[input ContactSheet1 92 this]"
+ xpos -1106
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(91)\}]"
- name Read13
- xpos -1800
- ypos -1353
+ origset true
+ name ReadImage91_1
+ xpos -1250
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1800
- ypos -1282
+clone $C4b58800 {
+ xpos -1250
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1800
- ypos -1264
+clone $C4b58400 {
+ xpos -1250
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1800
- ypos -1234
+clone $C4bb6800 {
+ xpos -1250
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot92
+ label "\[input ContactSheet1 91 this]"
+ xpos -1216
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(90)\}]"
- name Read14
- xpos -1690
- ypos -1353
+ origset true
+ name ReadImage90_1
+ xpos -1360
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1690
- ypos -1282
+clone $C4b58800 {
+ xpos -1360
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1690
- ypos -1264
+clone $C4b58400 {
+ xpos -1360
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1690
- ypos -1234
+clone $C4bb6800 {
+ xpos -1360
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot91
+ label "\[input ContactSheet1 90 this]"
+ xpos -1326
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(89)\}]"
- name Read15
- xpos -1580
- ypos -1353
+ origset true
+ name ReadImage89_1
+ xpos -1470
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1580
- ypos -1282
+clone $C4b58800 {
+ xpos -1470
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1580
- ypos -1264
+clone $C4b58400 {
+ xpos -1470
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1580
- ypos -1234
+clone $C4bb6800 {
+ xpos -1470
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot90
+ label "\[input ContactSheet1 89 this]"
+ xpos -1436
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(88)\}]"
- name Read16
- xpos -1470
- ypos -1353
+ origset true
+ name ReadImage88_1
+ xpos -1580
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1470
- ypos -1282
+clone $C4b58800 {
+ xpos -1580
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1470
- ypos -1264
+clone $C4b58400 {
+ xpos -1580
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1470
- ypos -1234
+clone $C4bb6800 {
+ xpos -1580
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot89
+ label "\[input ContactSheet1 88 this]"
+ xpos -1546
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(87)\}]"
- name Read17
- xpos -1360
- ypos -1353
+ origset true
+ name ReadImage87_1
+ xpos -1690
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1360
- ypos -1282
+clone $C4b58800 {
+ xpos -1690
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1360
- ypos -1264
+clone $C4b58400 {
+ xpos -1690
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1360
- ypos -1234
+clone $C4bb6800 {
+ xpos -1690
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot88
+ label "\[input ContactSheet1 87 this]"
+ xpos -1656
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(86)\}]"
- name Read18
- xpos -1250
- ypos -1353
+ origset true
+ name ReadImage86_1
+ xpos -1800
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1250
- ypos -1282
+clone $C4b58800 {
+ xpos -1800
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1250
- ypos -1264
+clone $C4b58400 {
+ xpos -1800
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1250
- ypos -1234
+clone $C4bb6800 {
+ xpos -1800
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot87
+ label "\[input ContactSheet1 86 this]"
+ xpos -1766
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(85)\}]"
- name Read19
- xpos -1140
- ypos -1353
+ origset true
+ name ReadImage85_1
+ xpos -1910
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1140
- ypos -1282
+clone $C4b58800 {
+ xpos -1910
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1140
- ypos -1264
+clone $C4b58400 {
+ xpos -1910
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1140
- ypos -1234
+clone $C4bb6800 {
+ xpos -1910
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot86
+ label "\[input ContactSheet1 85 this]"
+ xpos -1876
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(84)\}]"
- name Read20
- xpos -1030
- ypos -1353
+ origset true
+ name ReadImage84_1
+ xpos -2020
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -1030
- ypos -1282
+clone $C4b58800 {
+ xpos -2020
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -1030
- ypos -1264
+clone $C4b58400 {
+ xpos -2020
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -1030
- ypos -1234
+clone $C4bb6800 {
+ xpos -2020
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot85
+ label "\[input ContactSheet1 84 this]"
+ xpos -1986
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(83)\}]"
- name Read21
- xpos -920
- ypos -1353
+ origset true
+ name ReadImage83_1
+ xpos -2130
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -920
- ypos -1282
+clone $C4b58800 {
+ xpos -2130
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -920
- ypos -1264
+clone $C4b58400 {
+ xpos -2130
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -920
- ypos -1234
+clone $C4bb6800 {
+ xpos -2130
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot84
+ label "\[input ContactSheet1 83 this]"
+ xpos -2096
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(82)\}]"
- name Read23
- xpos -810
- ypos -1353
+ origset true
+ name ReadImage82_1
+ xpos -2240
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -810
- ypos -1282
+clone $C4b58800 {
+ xpos -2240
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -810
- ypos -1264
+clone $C4b58400 {
+ xpos -2240
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -810
- ypos -1234
+clone $C4bb6800 {
+ xpos -2240
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot83
+ label "\[input ContactSheet1 82 this]"
+ xpos -2206
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(81)\}]"
- name Read25
- xpos -700
- ypos -1353
+ origset true
+ name ReadImage81_1
+ xpos -2350
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -700
- ypos -1282
+clone $C4b58800 {
+ xpos -2350
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -700
- ypos -1264
+clone $C4b58400 {
+ xpos -2350
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -700
- ypos -1234
+clone $C4bb6800 {
+ xpos -2350
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot82
+ label "\[input ContactSheet1 81 this]"
+ xpos -2316
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(80)\}]"
- name Read26
- xpos -590
- ypos -1353
+ origset true
+ name ReadImage80_1
+ xpos -2460
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -590
- ypos -1282
+clone $C4b58800 {
+ xpos -2460
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -590
- ypos -1264
+clone $C4b58400 {
+ xpos -2460
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -590
- ypos -1234
+clone $C4bb6800 {
+ xpos -2460
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot81
+ label "\[input ContactSheet1 80 this]"
+ xpos -2426
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(79)\}]"
- name Read27
- xpos -480
- ypos -1377
+ origset true
+ name ReadImage79_1
+ xpos -2570
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -480
- ypos -1282
+clone $C4b58800 {
+ xpos -2570
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -480
- ypos -1264
+clone $C4b58400 {
+ xpos -2570
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -480
- ypos -1210
+clone $C4bb6800 {
+ xpos -2570
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot80
+ label "\[input ContactSheet1 79 this]"
+ xpos -2536
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(78)\}]"
- name Read28
- xpos -370
- ypos -1377
+ origset true
+ name ReadImage78_1
+ xpos -2680
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -370
- ypos -1282
+clone $C4b58800 {
+ xpos -2680
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -370
- ypos -1264
+clone $C4b58400 {
+ xpos -2680
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -370
- ypos -1210
+clone $C4bb6800 {
+ xpos -2680
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot79
+ label "\[input ContactSheet1 78 this]"
+ xpos -2646
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(77)\}]"
- name Read29
- xpos -260
- ypos -1377
+ origset true
+ name ReadImage77_1
+ xpos -2790
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -260
- ypos -1282
+clone $C4b58800 {
+ xpos -2790
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -260
- ypos -1264
+clone $C4b58400 {
+ xpos -2790
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -260
- ypos -1210
+clone $C4bb6800 {
+ xpos -2790
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot78
+ label "\[input ContactSheet1 77 this]"
+ xpos -2756
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(76)\}]"
- name Read30
- xpos -150
- ypos -1377
+ origset true
+ name ReadImage76_1
+ xpos -2900
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -150
- ypos -1282
+clone $C4b58800 {
+ xpos -2900
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -150
- ypos -1264
+clone $C4b58400 {
+ xpos -2900
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -150
- ypos -1210
+clone $C4bb6800 {
+ xpos -2900
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot77
+ label "\[input ContactSheet1 76 this]"
+ xpos -2866
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(75)\}]"
- name Read31
- xpos -40
- ypos -1377
+ origset true
+ name ReadImage75_1
+ xpos -3010
+ ypos -15921
 }
-clone $C4b78800 {
- xpos -40
- ypos -1282
+clone $C4b58800 {
+ xpos -3010
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos -40
- ypos -1264
+clone $C4b58400 {
+ xpos -3010
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos -40
- ypos -1210
+clone $C4bb6800 {
+ xpos -3010
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot76
+ label "\[input ContactSheet1 75 this]"
+ xpos -2976
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(74)\}]"
- name Read33
- xpos 70
- ypos -1377
+ origset true
+ name ReadImage74_1
+ xpos -3120
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 70
- ypos -1282
+clone $C4b58800 {
+ xpos -3120
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 70
- ypos -1264
+clone $C4b58400 {
+ xpos -3120
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 70
- ypos -1210
+clone $C4bb6800 {
+ xpos -3120
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot75
+ label "\[input ContactSheet1 74 this]"
+ xpos -3086
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(73)\}]"
- name Read34
- xpos 180
- ypos -1377
+ origset true
+ name ReadImage73_1
+ xpos -3230
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 180
- ypos -1282
+clone $C4b58800 {
+ xpos -3230
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 180
- ypos -1264
+clone $C4b58400 {
+ xpos -3230
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 180
- ypos -1210
+clone $C4bb6800 {
+ xpos -3230
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot74
+ label "\[input ContactSheet1 73 this]"
+ xpos -3196
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(72)\}]"
- name Read36
- xpos 290
- ypos -1377
+ origset true
+ name ReadImage72_1
+ xpos -3340
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 290
- ypos -1282
+clone $C4b58800 {
+ xpos -3340
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 290
- ypos -1264
+clone $C4b58400 {
+ xpos -3340
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 290
- ypos -1210
+clone $C4bb6800 {
+ xpos -3340
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot73
+ label "\[input ContactSheet1 72 this]"
+ xpos -3306
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(71)\}]"
- name Read37
- xpos 400
- ypos -1377
+ origset true
+ name ReadImage71_1
+ xpos -3450
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 400
- ypos -1282
+clone $C4b58800 {
+ xpos -3450
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 400
- ypos -1264
+clone $C4b58400 {
+ xpos -3450
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 400
- ypos -1210
+clone $C4bb6800 {
+ xpos -3450
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot72
+ label "\[input ContactSheet1 71 this]"
+ xpos -3416
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(70)\}]"
- name Read38
- xpos 510
- ypos -1377
+ origset true
+ name ReadImage70_1
+ xpos -3560
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 510
- ypos -1282
+clone $C4b58800 {
+ xpos -3560
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 510
- ypos -1264
+clone $C4b58400 {
+ xpos -3560
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 510
- ypos -1210
+clone $C4bb6800 {
+ xpos -3560
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot71
+ label "\[input ContactSheet1 70 this]"
+ xpos -3526
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(69)\}]"
- name Read39
- xpos 620
- ypos -1377
+ origset true
+ name ReadImage69_1
+ xpos -3670
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 620
- ypos -1282
+clone $C4b58800 {
+ xpos -3670
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 620
- ypos -1264
+clone $C4b58400 {
+ xpos -3670
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 620
- ypos -1210
+clone $C4bb6800 {
+ xpos -3670
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot70
+ label "\[input ContactSheet1 69 this]"
+ xpos -3636
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(68)\}]"
- name Read40
- xpos 730
- ypos -1377
+ origset true
+ name ReadImage68_1
+ xpos -3780
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 730
- ypos -1282
+clone $C4b58800 {
+ xpos -3780
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 730
- ypos -1264
+clone $C4b58400 {
+ xpos -3780
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 730
- ypos -1210
+clone $C4bb6800 {
+ xpos -3780
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot69
+ label "\[input ContactSheet1 68 this]"
+ xpos -3746
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(67)\}]"
- name Read41
- xpos 840
- ypos -1377
+ origset true
+ name ReadImage67_1
+ xpos -3890
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 840
- ypos -1282
+clone $C4b58800 {
+ xpos -3890
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 840
- ypos -1264
+clone $C4b58400 {
+ xpos -3890
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 840
- ypos -1210
+clone $C4bb6800 {
+ xpos -3890
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot68
+ label "\[input ContactSheet1 67 this]"
+ xpos -3856
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(66)\}]"
  origset true
- name Read42
- xpos 950
- ypos -1377
+ name ReadImage66_1
+ xpos -4000
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 950
- ypos -1282
+clone $C4b58800 {
+ xpos -4000
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 950
- ypos -1264
+clone $C4b58400 {
+ xpos -4000
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 950
- ypos -1210
+clone $C4bb6800 {
+ xpos -4000
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot67
+ label "\[input ContactSheet1 66 this]"
+ xpos -3966
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(65)\}]"
- name Read43
- xpos 1060
- ypos -1377
+ origset true
+ name ReadImage65_1
+ xpos -4110
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1060
- ypos -1282
+clone $C4b58800 {
+ xpos -4110
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1060
- ypos -1264
+clone $C4b58400 {
+ xpos -4110
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1060
- ypos -1210
+clone $C4bb6800 {
+ xpos -4110
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot66
+ label "\[input ContactSheet1 65 this]"
+ xpos -4076
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(64)\}]"
- name Read44
- xpos 1170
- ypos -1377
+ origset true
+ name ReadImage64_1
+ xpos -4220
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1170
- ypos -1282
+clone $C4b58800 {
+ xpos -4220
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1170
- ypos -1264
+clone $C4b58400 {
+ xpos -4220
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1170
- ypos -1210
+clone $C4bb6800 {
+ xpos -4220
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot65
+ label "\[input ContactSheet1 64 this]"
+ xpos -4186
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(63)\}]"
- name Read45
- xpos 1280
- ypos -1377
+ origset true
+ name ReadImage63_1
+ xpos -4330
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1280
- ypos -1282
+clone $C4b58800 {
+ xpos -4330
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1280
- ypos -1264
+clone $C4b58400 {
+ xpos -4330
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1280
- ypos -1210
+clone $C4bb6800 {
+ xpos -4330
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot64
+ label "\[input ContactSheet1 63 this]"
+ xpos -4296
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(62)\}]"
- name Read46
- xpos 1390
- ypos -1377
+ origset true
+ name ReadImage62_1
+ xpos -4440
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1390
- ypos -1282
+clone $C4b58800 {
+ xpos -4440
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1390
- ypos -1264
+clone $C4b58400 {
+ xpos -4440
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1390
- ypos -1210
+clone $C4bb6800 {
+ xpos -4440
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot63
+ label "\[input ContactSheet1 62 this]"
+ xpos -4406
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(61)\}]"
- name Read47
- xpos 1500
- ypos -1377
+ origset true
+ name ReadImage61_1
+ xpos -4550
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1500
- ypos -1282
+clone $C4b58800 {
+ xpos -4550
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1500
- ypos -1264
+clone $C4b58400 {
+ xpos -4550
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1500
- ypos -1210
+clone $C4bb6800 {
+ xpos -4550
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot62
+ label "\[input ContactSheet1 61 this]"
+ xpos -4516
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(60)\}]"
- name Read48
- xpos 1610
- ypos -1377
+ origset true
+ name ReadImage60_1
+ xpos -4660
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1610
- ypos -1282
+clone $C4b58800 {
+ xpos -4660
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1610
- ypos -1264
+clone $C4b58400 {
+ xpos -4660
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1610
- ypos -1210
+clone $C4bb6800 {
+ xpos -4660
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot61
+ label "\[input ContactSheet1 60 this]"
+ xpos -4626
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(59)\}]"
- name Read49
- xpos 1720
- ypos -1377
+ origset true
+ name ReadImage59_1
+ xpos -4770
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1720
- ypos -1282
+clone $C4b58800 {
+ xpos -4770
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1720
- ypos -1264
+clone $C4b58400 {
+ xpos -4770
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1720
- ypos -1210
+clone $C4bb6800 {
+ xpos -4770
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot60
+ label "\[input ContactSheet1 59 this]"
+ xpos -4736
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(58)\}]"
- name Read51
- xpos 1830
- ypos -1377
+ origset true
+ name ReadImage58_1
+ xpos -4880
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1830
- ypos -1282
+clone $C4b58800 {
+ xpos -4880
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1830
- ypos -1264
+clone $C4b58400 {
+ xpos -4880
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1830
- ypos -1210
+clone $C4bb6800 {
+ xpos -4880
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot59
+ label "\[input ContactSheet1 58 this]"
+ xpos -4846
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(57)\}]"
- name Read52
- xpos 1940
- ypos -1377
+ origset true
+ name ReadImage57_1
+ xpos -4990
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 1940
- ypos -1282
+clone $C4b58800 {
+ xpos -4990
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 1940
- ypos -1264
+clone $C4b58400 {
+ xpos -4990
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 1940
- ypos -1210
+clone $C4bb6800 {
+ xpos -4990
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot58
+ label "\[input ContactSheet1 57 this]"
+ xpos -4956
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(56)\}]"
- name Read53
- xpos 2050
- ypos -1377
+ origset true
+ name ReadImage56_1
+ xpos -5100
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2050
- ypos -1282
+clone $C4b58800 {
+ xpos -5100
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2050
- ypos -1264
+clone $C4b58400 {
+ xpos -5100
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2050
- ypos -1210
+clone $C4bb6800 {
+ xpos -5100
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot57
+ label "\[input ContactSheet1 56 this]"
+ xpos -5066
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(55)\}]"
- name Read54
- xpos 2160
- ypos -1377
+ origset true
+ name ReadImage55_1
+ xpos -5210
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2160
- ypos -1282
+clone $C4b58800 {
+ xpos -5210
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2160
- ypos -1264
+clone $C4b58400 {
+ xpos -5210
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2160
- ypos -1210
+clone $C4bb6800 {
+ xpos -5210
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot56
+ label "\[input ContactSheet1 55 this]"
+ xpos -5176
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(54)\}]"
- name Read55
- xpos 2270
- ypos -1377
+ origset true
+ name ReadImage54_1
+ xpos -5320
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2270
- ypos -1282
+clone $C4b58800 {
+ xpos -5320
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2270
- ypos -1264
+clone $C4b58400 {
+ xpos -5320
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2270
- ypos -1210
+clone $C4bb6800 {
+ xpos -5320
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot55
+ label "\[input ContactSheet1 54 this]"
+ xpos -5286
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(53)\}]"
- name Read56
- xpos 2380
- ypos -1377
+ origset true
+ name ReadImage53_1
+ xpos -5430
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2380
- ypos -1282
+clone $C4b58800 {
+ xpos -5430
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2380
- ypos -1264
+clone $C4b58400 {
+ xpos -5430
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2380
- ypos -1210
+clone $C4bb6800 {
+ xpos -5430
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot54
+ label "\[input ContactSheet1 53 this]"
+ xpos -5396
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(52)\}]"
- name Read57
- xpos 2490
- ypos -1377
+ origset true
+ name ReadImage52_1
+ xpos -5540
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2490
- ypos -1282
+clone $C4b58800 {
+ xpos -5540
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2490
- ypos -1264
+clone $C4b58400 {
+ xpos -5540
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2490
- ypos -1210
+clone $C4bb6800 {
+ xpos -5540
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot53
+ label "\[input ContactSheet1 52 this]"
+ xpos -5506
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(51)\}]"
- name Read58
- xpos 2600
- ypos -1377
+ origset true
+ name ReadImage51_1
+ xpos -5650
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2600
- ypos -1282
+clone $C4b58800 {
+ xpos -5650
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2600
- ypos -1264
+clone $C4b58400 {
+ xpos -5650
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2600
- ypos -1210
+clone $C4bb6800 {
+ xpos -5650
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot52
+ label "\[input ContactSheet1 51 this]"
+ xpos -5616
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(50)\}]"
- name Read59
- xpos 2710
- ypos -1377
+ origset true
+ name ReadImage50_1
+ xpos -5760
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2710
- ypos -1282
+clone $C4b58800 {
+ xpos -5760
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2710
- ypos -1264
+clone $C4b58400 {
+ xpos -5760
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2710
- ypos -1210
+clone $C4bb6800 {
+ xpos -5760
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot51
+ label "\[input ContactSheet1 50 this]"
+ xpos -5726
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(49)\}]"
- name Read60
- xpos 2820
- ypos -1377
+ origset true
+ name ReadImage49_1
+ xpos -5870
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2820
- ypos -1282
+clone $C4b58800 {
+ xpos -5870
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2820
- ypos -1264
+clone $C4b58400 {
+ xpos -5870
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2820
- ypos -1210
+clone $C4bb6800 {
+ xpos -5870
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot50
+ label "\[input ContactSheet1 49 this]"
+ xpos -5836
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(48)\}]"
- name Read61
- xpos 2930
- ypos -1377
+ origset true
+ name ReadImage48_1
+ xpos -5980
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 2930
- ypos -1282
+clone $C4b58800 {
+ xpos -5980
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 2930
- ypos -1264
+clone $C4b58400 {
+ xpos -5980
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 2930
- ypos -1210
+clone $C4bb6800 {
+ xpos -5980
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot49
+ label "\[input ContactSheet1 48 this]"
+ xpos -5946
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(47)\}]"
- name Read62
- xpos 3040
- ypos -1377
+ origset true
+ name ReadImage47_1
+ xpos -6090
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3040
- ypos -1282
+clone $C4b58800 {
+ xpos -6090
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3040
- ypos -1264
+clone $C4b58400 {
+ xpos -6090
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3040
- ypos -1210
+clone $C4bb6800 {
+ xpos -6090
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot48
+ label "\[input ContactSheet1 47 this]"
+ xpos -6056
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(46)\}]"
- name Read63
- xpos 3150
- ypos -1377
+ origset true
+ name ReadImage46_1
+ xpos -6200
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3150
- ypos -1282
+clone $C4b58800 {
+ xpos -6200
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3150
- ypos -1264
+clone $C4b58400 {
+ xpos -6200
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3150
- ypos -1210
+clone $C4bb6800 {
+ xpos -6200
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot47
+ label "\[input ContactSheet1 46 this]"
+ xpos -6166
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(45)\}]"
- name Read64
- xpos 3260
- ypos -1377
+ origset true
+ name ReadImage45_1
+ xpos -6310
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3260
- ypos -1282
+clone $C4b58800 {
+ xpos -6310
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3260
- ypos -1264
+clone $C4b58400 {
+ xpos -6310
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3260
- ypos -1210
+clone $C4bb6800 {
+ xpos -6310
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot46
+ label "\[input ContactSheet1 45 this]"
+ xpos -6276
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(44)\}]"
- name Read65
- xpos 3370
- ypos -1377
+ origset true
+ name ReadImage44_1
+ xpos -6420
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3370
- ypos -1282
+clone $C4b58800 {
+ xpos -6420
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3370
- ypos -1264
+clone $C4b58400 {
+ xpos -6420
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3370
- ypos -1210
+clone $C4bb6800 {
+ xpos -6420
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot45
+ label "\[input ContactSheet1 44 this]"
+ xpos -6386
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(43)\}]"
- name Read66
- xpos 3480
- ypos -1377
+ origset true
+ name ReadImage43_1
+ xpos -6530
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3480
- ypos -1282
+clone $C4b58800 {
+ xpos -6530
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3480
- ypos -1264
+clone $C4b58400 {
+ xpos -6530
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3480
- ypos -1210
+clone $C4bb6800 {
+ xpos -6530
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot44
+ label "\[input ContactSheet1 43 this]"
+ xpos -6496
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(42)\}]"
- name Read67
- xpos 3590
- ypos -1377
+ origset true
+ name ReadImage42_1
+ xpos -6640
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3590
- ypos -1282
+clone $C4b58800 {
+ xpos -6640
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3590
- ypos -1264
+clone $C4b58400 {
+ xpos -6640
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3590
- ypos -1210
+clone $C4bb6800 {
+ xpos -6640
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot43
+ label "\[input ContactSheet1 42 this]"
+ xpos -6606
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(41)\}]"
- name Read68
- xpos 3700
- ypos -1377
+ origset true
+ name ReadImage41_1
+ xpos -6750
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3700
- ypos -1282
+clone $C4b58800 {
+ xpos -6750
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3700
- ypos -1264
+clone $C4b58400 {
+ xpos -6750
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3700
- ypos -1210
+clone $C4bb6800 {
+ xpos -6750
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot42
+ label "\[input ContactSheet1 41 this]"
+ xpos -6716
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(40)\}]"
- name Read69
- xpos 3810
- ypos -1377
+ origset true
+ name ReadImage40_1
+ xpos -6860
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3810
- ypos -1282
+clone $C4b58800 {
+ xpos -6860
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3810
- ypos -1264
+clone $C4b58400 {
+ xpos -6860
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3810
- ypos -1210
+clone $C4bb6800 {
+ xpos -6860
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot41
+ label "\[input ContactSheet1 40 this]"
+ xpos -6826
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(39)\}]"
- name Read70
- xpos 3920
- ypos -1377
+ origset true
+ name ReadImage39_1
+ xpos -6970
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 3920
- ypos -1282
+clone $C4b58800 {
+ xpos -6970
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 3920
- ypos -1264
+clone $C4b58400 {
+ xpos -6970
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 3920
- ypos -1210
+clone $C4bb6800 {
+ xpos -6970
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot40
+ label "\[input ContactSheet1 39 this]"
+ xpos -6936
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(38)\}]"
- name Read71
- xpos 4030
- ypos -1377
+ origset true
+ name ReadImage38_1
+ xpos -7080
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4030
- ypos -1282
+clone $C4b58800 {
+ xpos -7080
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4030
- ypos -1264
+clone $C4b58400 {
+ xpos -7080
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4030
- ypos -1210
+clone $C4bb6800 {
+ xpos -7080
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot39
+ label "\[input ContactSheet1 38 this]"
+ xpos -7046
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(37)\}]"
- name Read72
- xpos 4140
- ypos -1377
+ origset true
+ name ReadImage37_1
+ xpos -7190
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4140
- ypos -1282
+clone $C4b58800 {
+ xpos -7190
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4140
- ypos -1264
+clone $C4b58400 {
+ xpos -7190
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4140
- ypos -1210
+clone $C4bb6800 {
+ xpos -7190
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot38
+ label "\[input ContactSheet1 37 this]"
+ xpos -7156
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(36)\}]"
- name Read73
- xpos 4250
- ypos -1377
+ origset true
+ name ReadImage36_1
+ xpos -7300
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4250
- ypos -1282
+clone $C4b58800 {
+ xpos -7300
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4250
- ypos -1264
+clone $C4b58400 {
+ xpos -7300
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4250
- ypos -1210
+clone $C4bb6800 {
+ xpos -7300
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot37
+ label "\[input ContactSheet1 36 this]"
+ xpos -7266
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(35)\}]"
- name Read74
- xpos 4360
- ypos -1377
+ origset true
+ name ReadImage35_1
+ xpos -7410
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4360
- ypos -1282
+clone $C4b58800 {
+ xpos -7410
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4360
- ypos -1264
+clone $C4b58400 {
+ xpos -7410
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4360
- ypos -1210
+clone $C4bb6800 {
+ xpos -7410
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot36
+ label "\[input ContactSheet1 35 this]"
+ xpos -7376
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(34)\}]"
- name Read75
- xpos 4470
- ypos -1377
+ origset true
+ name ReadImage34_1
+ xpos -7520
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4470
- ypos -1282
+clone $C4b58800 {
+ xpos -7520
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4470
- ypos -1264
+clone $C4b58400 {
+ xpos -7520
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4470
- ypos -1210
+clone $C4bb6800 {
+ xpos -7520
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot35
+ label "\[input ContactSheet1 34 this]"
+ xpos -7486
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(33)\}]"
- name Read76
- xpos 4580
- ypos -1377
+ origset true
+ name ReadImage33_1
+ xpos -7630
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4580
- ypos -1282
+clone $C4b58800 {
+ xpos -7630
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4580
- ypos -1264
+clone $C4b58400 {
+ xpos -7630
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4580
- ypos -1210
+clone $C4bb6800 {
+ xpos -7630
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot34
+ label "\[input ContactSheet1 33 this]"
+ xpos -7596
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(32)\}]"
- name Read77
- xpos 4690
- ypos -1377
+ origset true
+ name ReadImage32_1
+ xpos -7740
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4690
- ypos -1282
+clone $C4b58800 {
+ xpos -7740
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4690
- ypos -1264
+clone $C4b58400 {
+ xpos -7740
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4690
- ypos -1210
+clone $C4bb6800 {
+ xpos -7740
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot33
+ label "\[input ContactSheet1 32 this]"
+ xpos -7706
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(31)\}]"
- name Read78
- xpos 4800
- ypos -1377
+ origset true
+ name ReadImage31_1
+ xpos -7850
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4800
- ypos -1282
+clone $C4b58800 {
+ xpos -7850
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4800
- ypos -1264
+clone $C4b58400 {
+ xpos -7850
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4800
- ypos -1210
+clone $C4bb6800 {
+ xpos -7850
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot32
+ label "\[input ContactSheet1 31 this]"
+ xpos -7816
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(30)\}]"
- name Read79
- xpos 4910
- ypos -1377
+ origset true
+ name ReadImage30_1
+ xpos -7960
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 4910
- ypos -1282
+clone $C4b58800 {
+ xpos -7960
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 4910
- ypos -1264
+clone $C4b58400 {
+ xpos -7960
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 4910
- ypos -1210
+clone $C4bb6800 {
+ xpos -7960
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot31
+ label "\[input ContactSheet1 30 this]"
+ xpos -7926
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(29)\}]"
- name Read80
- xpos 5020
- ypos -1377
+ origset true
+ name ReadImage29_1
+ xpos -8070
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5020
- ypos -1282
+clone $C4b58800 {
+ xpos -8070
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5020
- ypos -1264
+clone $C4b58400 {
+ xpos -8070
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5020
- ypos -1210
+clone $C4bb6800 {
+ xpos -8070
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot30
+ label "\[input ContactSheet1 29 this]"
+ xpos -8036
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(28)\}]"
- name Read81
- xpos 5130
- ypos -1377
+ origset true
+ name ReadImage28_1
+ xpos -8180
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5130
- ypos -1282
+clone $C4b58800 {
+ xpos -8180
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5130
- ypos -1264
+clone $C4b58400 {
+ xpos -8180
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5130
- ypos -1210
+clone $C4bb6800 {
+ xpos -8180
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot29
+ label "\[input ContactSheet1 28 this]"
+ xpos -8146
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(27)\}]"
- name Read82
- xpos 5240
- ypos -1377
+ origset true
+ name ReadImage27_1
+ xpos -8290
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5240
- ypos -1282
+clone $C4b58800 {
+ xpos -8290
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5240
- ypos -1264
+clone $C4b58400 {
+ xpos -8290
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5240
- ypos -1210
+clone $C4bb6800 {
+ xpos -8290
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot28
+ label "\[input ContactSheet1 27 this]"
+ xpos -8256
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(26)\}]"
- name Read83
- xpos 5350
- ypos -1377
+ origset true
+ name ReadImage26_1
+ xpos -8400
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5350
- ypos -1282
+clone $C4b58800 {
+ xpos -8400
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5350
- ypos -1264
+clone $C4b58400 {
+ xpos -8400
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5350
- ypos -1210
+clone $C4bb6800 {
+ xpos -8400
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot27
+ label "\[input ContactSheet1 26 this]"
+ xpos -8366
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(25)\}]"
- name Read84
- xpos 5460
- ypos -1377
+ origset true
+ name ReadImage25_1
+ xpos -8510
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5460
- ypos -1282
+clone $C4b58800 {
+ xpos -8510
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5460
- ypos -1264
+clone $C4b58400 {
+ xpos -8510
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5460
- ypos -1210
+clone $C4bb6800 {
+ xpos -8510
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot26
+ label "\[input ContactSheet1 25 this]"
+ xpos -8476
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(24)\}]"
  origset true
- name Read85
- xpos 5570
- ypos -1377
+ name ReadImage24_1
+ xpos -8620
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5570
- ypos -1282
+clone $C4b58800 {
+ xpos -8620
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5570
- ypos -1264
+clone $C4b58400 {
+ xpos -8620
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5570
- ypos -1210
+clone $C4bb6800 {
+ xpos -8620
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot25
+ label "\[input ContactSheet1 24 this]"
+ xpos -8586
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(23)\}]"
  origset true
- name Read86
- xpos 5680
- ypos -1377
+ name ReadImage23_1
+ xpos -8730
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5680
- ypos -1282
+clone $C4b58800 {
+ xpos -8730
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5680
- ypos -1264
+clone $C4b58400 {
+ xpos -8730
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5680
- ypos -1210
+clone $C4bb6800 {
+ xpos -8730
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot24
+ label "\[input ContactSheet1 23 this]"
+ xpos -8696
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(22)\}]"
  origset true
- name Read87
- xpos 5790
- ypos -1377
+ name ReadImage22_1
+ xpos -8840
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5790
- ypos -1282
+clone $C4b58800 {
+ xpos -8840
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5790
- ypos -1264
+clone $C4b58400 {
+ xpos -8840
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5790
- ypos -1210
+clone $C4bb6800 {
+ xpos -8840
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot23
+ label "\[input ContactSheet1 22 this]"
+ xpos -8806
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(21)\}]"
- name Read88
- xpos 5900
- ypos -1377
+ origset true
+ name ReadImage21_1
+ xpos -8950
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 5900
- ypos -1282
+clone $C4b58800 {
+ xpos -8950
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 5900
- ypos -1264
+clone $C4b58400 {
+ xpos -8950
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 5900
- ypos -1210
+clone $C4bb6800 {
+ xpos -8950
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot22
+ label "\[input ContactSheet1 21 this]"
+ xpos -8916
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(20)\}]"
- name Read89
- xpos 6010
- ypos -1377
+ origset true
+ name ReadImage20_1
+ xpos -9060
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6010
- ypos -1282
+clone $C4b58800 {
+ xpos -9060
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6010
- ypos -1264
+clone $C4b58400 {
+ xpos -9060
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6010
- ypos -1210
+clone $C4bb6800 {
+ xpos -9060
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot21
+ label "\[input ContactSheet1 20 this]"
+ xpos -9026
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(19)\}]"
- name Read90
- xpos 6120
- ypos -1377
+ origset true
+ name ReadImage19_1
+ xpos -9170
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6120
- ypos -1282
+clone $C4b58800 {
+ xpos -9170
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6120
- ypos -1264
+clone $C4b58400 {
+ xpos -9170
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6120
- ypos -1210
+clone $C4bb6800 {
+ xpos -9170
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot20
+ label "\[input ContactSheet1 19 this]"
+ xpos -9136
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(18)\}]"
- name Read91
- xpos 6230
- ypos -1377
+ origset true
+ name ReadImage18_1
+ xpos -9280
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6230
- ypos -1282
+clone $C4b58800 {
+ xpos -9280
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6230
- ypos -1264
+clone $C4b58400 {
+ xpos -9280
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6230
- ypos -1210
+clone $C4bb6800 {
+ xpos -9280
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot19
+ label "\[input ContactSheet1 18 this]"
+ xpos -9246
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(17)\}]"
- name Read92
- xpos 6340
- ypos -1377
+ origset true
+ name ReadImage17_1
+ xpos -9390
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6340
- ypos -1282
+clone $C4b58800 {
+ xpos -9390
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6340
- ypos -1264
+clone $C4b58400 {
+ xpos -9390
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6340
- ypos -1210
+clone $C4bb6800 {
+ xpos -9390
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot18
+ label "\[input ContactSheet1 17 this]"
+ xpos -9356
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(16)\}]"
- name Read93
- xpos 6450
- ypos -1377
+ origset true
+ name ReadImage16_1
+ xpos -9500
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6450
- ypos -1282
+clone $C4b58800 {
+ xpos -9500
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6450
- ypos -1264
+clone $C4b58400 {
+ xpos -9500
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6450
- ypos -1210
+clone $C4bb6800 {
+ xpos -9500
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot17
+ label "\[input ContactSheet1 16 this]"
+ xpos -9466
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(15)\}]"
- name Read94
- xpos 6560
- ypos -1377
+ origset true
+ name ReadImage15_1
+ xpos -9610
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6560
- ypos -1282
+clone $C4b58800 {
+ xpos -9610
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6560
- ypos -1264
+clone $C4b58400 {
+ xpos -9610
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6560
- ypos -1210
+clone $C4bb6800 {
+ xpos -9610
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot16
+ label "\[input ContactSheet1 15 this]"
+ xpos -9576
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(14)\}]"
- name Read95
- xpos 6670
- ypos -1377
+ origset true
+ name ReadImage14_1
+ xpos -9720
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6670
- ypos -1282
+clone $C4b58800 {
+ xpos -9720
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6670
- ypos -1264
+clone $C4b58400 {
+ xpos -9720
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6670
- ypos -1210
+clone $C4bb6800 {
+ xpos -9720
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot15
+ label "\[input ContactSheet1 14 this]"
+ xpos -9686
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(13)\}]"
- name Read96
- xpos 6780
- ypos -1377
+ origset true
+ name ReadImage13_1
+ xpos -9830
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6780
- ypos -1282
+clone $C4b58800 {
+ xpos -9830
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6780
- ypos -1264
+clone $C4b58400 {
+ xpos -9830
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6780
- ypos -1210
+clone $C4bb6800 {
+ xpos -9830
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot14
+ label "\[input ContactSheet1 13 this]"
+ xpos -9796
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(12)\}]"
- name Read97
- xpos 6890
- ypos -1377
+ origset true
+ name ReadImage12_1
+ xpos -9940
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 6890
- ypos -1282
+clone $C4b58800 {
+ xpos -9940
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 6890
- ypos -1264
+clone $C4b58400 {
+ xpos -9940
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 6890
- ypos -1210
+clone $C4bb6800 {
+ xpos -9940
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot13
+ label "\[input ContactSheet1 12 this]"
+ xpos -9906
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(11)\}]"
- name Read98
- xpos 7000
- ypos -1377
+ origset true
+ name ReadImage11_1
+ xpos -10050
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7000
- ypos -1282
+clone $C4b58800 {
+ xpos -10050
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7000
- ypos -1264
+clone $C4b58400 {
+ xpos -10050
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7000
- ypos -1210
+clone $C4bb6800 {
+ xpos -10050
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot12
+ label "\[input ContactSheet1 11 this]"
+ xpos -10016
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(10)\}]"
- name Read99
- xpos 7110
- ypos -1377
+ origset true
+ name ReadImage10_1
+ xpos -10160
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7110
- ypos -1282
+clone $C4b58800 {
+ xpos -10160
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7110
- ypos -1264
+clone $C4b58400 {
+ xpos -10160
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7110
- ypos -1210
+clone $C4bb6800 {
+ xpos -10160
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot11
+ label "\[input ContactSheet1 10 this]"
+ xpos -10126
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(9)\}]"
- name Read100
- xpos 7220
- ypos -1360
+ origset true
+ name ReadImage9_1
+ xpos -10270
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7220
- ypos -1282
+clone $C4b58800 {
+ xpos -10270
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7220
- ypos -1264
+clone $C4b58400 {
+ xpos -10270
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7220
- ypos -1210
+clone $C4bb6800 {
+ xpos -10270
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot10
+ label "\[input ContactSheet1 9 this]"
+ xpos -10236
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(8)\}]"
- name Read101
- xpos 7330
- ypos -1360
+ origset true
+ name ReadImage8_1
+ xpos -10380
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7330
- ypos -1282
+clone $C4b58800 {
+ xpos -10380
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7330
- ypos -1264
+clone $C4b58400 {
+ xpos -10380
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7330
- ypos -1210
+clone $C4bb6800 {
+ xpos -10380
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot9
+ label "\[input ContactSheet1 8 this]"
+ xpos -10346
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(7)\}]"
- name Read102
- xpos 7440
- ypos -1360
+ origset true
+ name ReadImage7_1
+ xpos -10490
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7440
- ypos -1282
+clone $C4b58800 {
+ xpos -10490
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7440
- ypos -1264
+clone $C4b58400 {
+ xpos -10490
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7440
- ypos -1210
+clone $C4bb6800 {
+ xpos -10490
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot8
+ label "\[input ContactSheet1 7 this]"
+ xpos -10456
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(6)\}]"
- name Read103
- xpos 7550
- ypos -1360
+ origset true
+ name ReadImage6_1
+ xpos -10600
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7550
- ypos -1282
+clone $C4b58800 {
+ xpos -10600
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7550
- ypos -1264
+clone $C4b58400 {
+ xpos -10600
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7550
- ypos -1210
+clone $C4bb6800 {
+ xpos -10600
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot7
+ label "\[input ContactSheet1 6 this]"
+ xpos -10566
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(5)\}]"
- name Read104
- xpos 7660
- ypos -1360
+ origset true
+ name ReadImage5_1
+ xpos -10710
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7660
- ypos -1282
+clone $C4b58800 {
+ xpos -10710
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7660
- ypos -1264
+clone $C4b58400 {
+ xpos -10710
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7660
- ypos -1210
+clone $C4bb6800 {
+ xpos -10710
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot6
+ label "\[input ContactSheet1 5 this]"
+ xpos -10676
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(4)\}]"
- name Read105
- xpos 7770
- ypos -1360
+ origset true
+ name ReadImage4_1
+ xpos -10820
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7770
- ypos -1282
+clone $C4b58800 {
+ xpos -10820
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7770
- ypos -1264
+clone $C4b58400 {
+ xpos -10820
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7770
- ypos -1210
+clone $C4bb6800 {
+ xpos -10820
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot5
+ label "\[input ContactSheet1 4 this]"
+ xpos -10786
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(3)\}]"
- name Read106
- xpos 7880
- ypos -1360
+ origset true
+ name ReadImage3_1
+ xpos -10930
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7880
- ypos -1282
+clone $C4b58800 {
+ xpos -10930
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7880
- ypos -1264
+clone $C4b58400 {
+ xpos -10930
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7880
- ypos -1210
+clone $C4bb6800 {
+ xpos -10930
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot4
+ label "\[input ContactSheet1 3 this]"
+ xpos -10896
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(2)\}]"
  origset true
- name Read107
- xpos 7990
- ypos -1360
+ name ReadImage2_1
+ xpos -11040
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 7990
- ypos -1282
+clone $C4b58800 {
+ xpos -11040
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 7990
- ypos -1264
+clone $C4b58400 {
+ xpos -11040
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 7990
- ypos -1210
+clone $C4bb6800 {
+ xpos -11040
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot3
+ label "\[input ContactSheet1 2 this]"
+ xpos -11006
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(1)\}]"
  origset true
- name Read108
- xpos 8100
- ypos -1360
+ name ReadImage1_1
+ xpos -11150
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 8100
- ypos -1282
+clone $C4b58800 {
+ xpos -11150
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 8100
- ypos -1264
+clone $C4b58400 {
+ xpos -11150
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 8100
- ypos -1210
+clone $C4bb6800 {
+ xpos -11150
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot2
+ label "\[input ContactSheet1 1 this]"
+ xpos -11116
+ ypos -15759
 }
 Read {
  inputs 0
  file "\[python \{image(0)\}]"
  origset true
- name Read109
- xpos 8210
- ypos -1360
+ name ReadImage0_1
+ xpos -11260
+ ypos -15921
 }
-clone $C4b78800 {
- xpos 8210
- ypos -1282
+clone $C4b58800 {
+ xpos -11260
+ ypos -15849
  selected false
 }
-clone $C4b78400 {
- xpos 8210
- ypos -1264
+clone $C4b58400 {
+ xpos -11260
+ ypos -15823
  selected false
 }
-clone $C4b79000 {
- xpos 8210
- ypos -1210
+clone $C4bb6800 {
+ xpos -11260
+ ypos -15785
  selected false
+}
+Dot {
+ name Dot1
+ label "\[input ContactSheet1 0 this]"
+ xpos -11226
+ ypos -15759
 }
 ContactSheet {
- inputs 101
+ inputs 401
  width {{rows*width+gap*(rows+1)}}
  height {{columns*height+gap*(columns+1)}}
  rows {{"ceil(pow(\[python \{len(os.listdir(nuke.script_directory()+r'\\images'))\}], 0.5))"}}
@@ -2361,7 +11767,7 @@ Text2 {
  font_width_toolbar 100
  font_height_toolbar 100
  message "\[lindex \[split \[basename \[value root.name]] _.] 1]"
- old_message {{48 50}
+ old_message {{48 48}
    }
  old_expression_markers {{0 1}
    }
@@ -2390,7 +11796,7 @@ Text2 {
  font_width_toolbar 100
  font_height_toolbar 100
  message "\[lindex \[split \[basename \[value root.name]] _.] 2]"
- old_message {{48 53}
+ old_message {{48 48}
    }
  old_expression_markers {{0 1}
    }
@@ -2441,7 +11847,7 @@ Write {
  ypos 1013
  postage_stamp true
 }
-set N34af6c00 [stack 0]
+set N35957c00 [stack 0]
 Group {
  name HueToRGB1
  xpos 2820
@@ -2482,7 +11888,7 @@ Group {
   ypos 113
  }
 end_group
-push $N34af6c00
+push $N35957c00
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
@@ -2498,4 +11904,11 @@ Read {
  name Read1
  xpos 2930
  ypos 1010
+}
+Input {
+ inputs 0
+ name Input6
+ xpos 2820
+ ypos -10
+ number 5
 }
