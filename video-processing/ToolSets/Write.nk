@@ -3,11 +3,11 @@ BackdropNode {
  inputs 0
  name BackdropNode4
  tile_color 0x9fbcc6ff
- label "Write v1.0"
+ label "Write v1.1"
  note_font_size 42
  selected true
  xpos -182
- ypos 360
+ ypos 395
  bdwidth 365
  bdheight 431
 }
@@ -17,15 +17,15 @@ NoOp {
  label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
  selected true
  xpos -40
- ypos 446
+ ypos 481
 }
 Dot {
  name Dot2
  selected true
  xpos -6
- ypos 498
+ ypos 533
 }
-set N39e43000 [stack 0]
+set N5b336400 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -51,41 +51,65 @@ Write {
  name Write_MOV
  selected true
  xpos -150
- ypos 553
+ ypos 588
 }
-push $N39e43000
+Read {
+ inputs 0
+ file "\[value Write_JPG.file]"
+ first {{parent.Write_JPG.last}}
+ last {{first}}
+ origset true
+ version 11
+ in_colorspace linear
+ out_colorspace linear
+ name ReadWrite_JPG
+ label "第 \[value first] 帧"
+ selected true
+ xpos 70
+ ypos 613
+ disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
+}
+push $N5b336400
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
  file_type jpeg
  _jpeg_quality 1
- first {{first_frame+ceil((last_frame-first_frame)/2)}}
+ first {{root.first_frame+ceil((root.last_frame-root.first_frame)/2)}}
  last {{first}}
  use_limit true
  checkHashOnRead false
  version 37
- in_colorspace linear
- out_colorspace linear
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  afterRender "nuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value())"
  name Write_JPG
  label "\[knob_default which 1]"
  selected true
  xpos -40
- ypos 608
+ ypos 643
 }
 Dot {
  name Dot3
  selected true
  xpos -6
- ypos 642
+ ypos 677
 }
-set N39e42000 [stack 0]
+set N67cdb800 [stack 0]
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression1
+ label SaturationToRGB
+ selected true
+ xpos -150
+ ypos 715
+}
+push $N67cdb800
 Group {
  name HueToRGB1
  selected true
  xpos -40
- ypos 734
+ ypos 769
 }
  Input {
   inputs 0
@@ -122,29 +146,3 @@ Group {
   ypos 113
  }
 end_group
-Read {
- inputs 0
- file "\[value Write_JPG.file]"
- first {{parent.Write_JPG.last}}
- last {{first}}
- origset true
- version 11
- in_colorspace linear
- out_colorspace linear
- name ReadWrite_JPG
- label "第 \[value first] 帧"
- selected true
- xpos 70
- ypos 578
- disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
-}
-push $N39e42000
-Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name Expression1
- label SaturationToRGB
- selected true
- xpos -150
- ypos 680
-}

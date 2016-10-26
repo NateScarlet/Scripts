@@ -1,11 +1,11 @@
 set cut_paste_input [stack 0]
 push $cut_paste_input
 Group {
- name DepthFix1
+ name DepthFix2
  tile_color 0x823a7dff
  selected true
- xpos 375
- ypos -4284
+ xpos 620
+ ypos -9779
  addUserKnob {20 User}
  addUserKnob {41 go l Go! T CurveTool1.go}
  addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
@@ -23,7 +23,7 @@ Group {
   xpos 544
   ypos -558
  }
-set N5245f800 [stack 0]
+set Ne9d9c400 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -56,13 +56,13 @@ set N5245f800 [stack 0]
   xpos 620
   ypos -376
  }
-push $N5245f800
+push $Ne9d9c400
  Expression {
   temp_name0 minDepth
   temp_expr0 mD*multiple
   channel0 depth
   expr0 min(minDepth,z)
-  unpremult -rgba.alpha
+  unpremult rgba.alpha
   name Expression2
   label minDepth
   selected true
