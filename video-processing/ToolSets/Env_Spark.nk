@@ -3,11 +3,11 @@ BackdropNode {
  inputs 0
  name BackdropNode7
  tile_color 0xc68939ff
- label "Spark_BG v1.2"
+ label "Spark_BG v2.0"
  note_font_size 42
  selected true
  xpos 120
- ypos -4938
+ ypos -6249
  bdwidth 860
  bdheight 1475
  z_order 1
@@ -16,25 +16,25 @@ BackdropNode {
  inputs 0
  name BackdropNode8
  tile_color 0xc68939ff
- label "Spark_FG v1.2"
+ label "Spark_FG v2.0"
  note_font_size 42
  selected true
  xpos 71
- ypos -3259
+ ypos -4570
  bdwidth 738
  bdheight 1910
  z_order 1
 }
 push 0
 Dot {
- name Dot112
+ name Dot50
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 434
- ypos -1734
+ ypos -3045
  hide_input true
 }
-set Na8a3fc00 [stack 0]
+set Nc0955000 [stack 0]
 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Speark/18.mov
@@ -48,14 +48,14 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 400
- ypos -2619
+ ypos -3930
 }
 Keyer {
  operation "max keyer"
  name Keyer4
  selected true
  xpos 400
- ypos -2512
+ ypos -3823
 }
 Transform {
  rotate 46.31113434
@@ -63,32 +63,32 @@ Transform {
  name Transform7
  selected true
  xpos 400
- ypos -2458
+ ypos -3769
 }
 Unpremult {
  name Unpremult15
  selected true
  xpos 400
- ypos -2434
+ ypos -3745
 }
 ColorCorrect {
  gain {4 1.600509167 0.03792238235 2.299999952}
  name ColorCorrect3
  selected true
  xpos 400
- ypos -2410
+ ypos -3721
 }
 Premult {
  name Premult18
  selected true
  xpos 400
- ypos -2386
+ ypos -3697
 }
 Dot {
- name Dot37
+ name Dot55
  selected true
  xpos 434
- ypos -2262
+ ypos -3573
 }
 Read {
  inputs 0
@@ -107,7 +107,7 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 290
- ypos -3177
+ ypos -4488
 }
 TimeOffset {
  time_offset {{root.first_frame-50}}
@@ -115,14 +115,14 @@ TimeOffset {
  name TimeOffset31
  selected true
  xpos 290
- ypos -3058
+ ypos -4369
 }
 Grade {
  blackpoint {0.001300743315 0.001300743315 0.001300743315 0}
- name Grade1
+ name Grade9
  selected true
  xpos 290
- ypos -3010
+ ypos -4321
 }
 Keyer {
  operation "max keyer"
@@ -130,22 +130,22 @@ Keyer {
  name Keyer18
  selected true
  xpos 290
- ypos -2968
+ ypos -4279
 }
 Dot {
- name Dot31
+ name Dot61
  selected true
  xpos 324
- ypos -2886
+ ypos -4197
 }
-set Nab498800 [stack 0]
+set N8b9e2400 [stack 0]
 Dilate {
  channels alpha
  size -1.8
  name Dilate2
  selected true
  xpos 400
- ypos -2896
+ ypos -4207
 }
 Dilate {
  channels alpha
@@ -153,15 +153,15 @@ Dilate {
  name Dilate3
  selected true
  xpos 400
- ypos -2848
+ ypos -4159
 }
 Grade {
  channels alpha
  whitepoint 0.01
- name Grade2
+ name Grade10
  selected true
  xpos 400
- ypos -2800
+ ypos -4111
 }
 TimeEcho {
  mode Average
@@ -170,7 +170,7 @@ TimeEcho {
  name TimeEcho1
  selected true
  xpos 400
- ypos -2746
+ ypos -4057
 }
 Blur {
  channels alpha
@@ -178,29 +178,29 @@ Blur {
  name Blur3
  selected true
  xpos 400
- ypos -2704
+ ypos -4015
 }
-push $Nab498800
+push $N8b9e2400
 Merge2 {
  inputs 2
  operation mask
  name Merge6
  selected true
  xpos 290
- ypos -2698
+ ypos -4009
 }
 MotionBlur {
  motionEstimation Regularized
  name MotionBlur1
  selected true
  xpos 290
- ypos -2650
+ ypos -3961
 }
 Unpremult {
  name Unpremult22
  selected true
  xpos 290
- ypos -2554
+ ypos -3865
 }
 ColorCorrect {
  gain {2.700000048 2.559660196 2.58611393 2.299999952}
@@ -208,26 +208,26 @@ ColorCorrect {
  name ColorCorrect17
  selected true
  xpos 290
- ypos -2512
+ ypos -3823
 }
 Premult {
  name Premult23
  selected true
  xpos 290
- ypos -2458
+ ypos -3769
 }
 EdgeBlur {
  name EdgeBlur2
  selected true
  xpos 290
- ypos -2416
+ ypos -3727
 }
 Merge2 {
  inputs 2
  name Merge2
  selected true
  xpos 290
- ypos -2266
+ ypos -3577
 }
 Rectangle {
  output none
@@ -237,22 +237,22 @@ Rectangle {
  name Rectangle2
  selected true
  xpos 290
- ypos -2200
+ ypos -3511
 }
 Multiply {
  value 0.42
  name Multiply13
  selected true
  xpos 290
- ypos -2152
+ ypos -3463
 }
 Dot {
- name Dot38
+ name Dot63
  selected true
  xpos 324
- ypos -2022
+ ypos -3333
 }
-set Nadd80400 [stack 0]
+set N9a5a3c00 [stack 0]
 Card2 {
  translate {-16.96323586 0.9500000477 -31.85880852}
  rotate {0 {parent.Camera_3DEnv_1.rotate.y} 0}
@@ -271,14 +271,14 @@ Card2 {
  name Card17
  selected true
  xpos 290
- ypos -1882
+ ypos -3193
 }
-push $Nadd80400
+push $N9a5a3c00
 Dot {
- name Dot39
+ name Dot86
  selected true
  xpos 434
- ypos -2022
+ ypos -3333
 }
 TimeOffset {
  time_offset -50
@@ -286,7 +286,7 @@ TimeOffset {
  name TimeOffset32
  selected true
  xpos 400
- ypos -1882
+ ypos -3193
 }
 Card2 {
  translate {-3.03895545 2.119999886 -19.75726891}
@@ -306,15 +306,15 @@ Card2 {
  name Card18
  selected true
  xpos 400
- ypos -1810
+ ypos -3121
 }
-push $Na8a3fc00
+push $Nc0955000
 Scene {
  inputs 3
  name Scene4
  selected true
  xpos 300
- ypos -1830
+ ypos -3141
 }
 push 0
 ScanlineRender {
@@ -324,88 +324,94 @@ ScanlineRender {
  name ScanlineRender4
  selected true
  xpos 290
- ypos -1738
+ ypos -3049
 }
 Glow2 {
  size 2
  name Glow8
  selected true
  xpos 290
- ypos -1714
+ ypos -3025
 }
 Ramp {
  output none
  premult all
  p0 {1500 128}
  p1 {1302 716}
- name Ramp1
+ name Ramp3
  label Mask
  selected true
  xpos 290
- ypos -1655
+ ypos -2966
 }
 Defocus {
  defocus 30
  name Defocus2
  selected true
  xpos 290
- ypos -1600
+ ypos -2911
 }
 Multiply {
  value 0.5
  name Multiply24
  selected true
  xpos 290
- ypos -1528
+ ypos -2839
 }
 Dot {
- name Dot40
+ name Dot88
  selected true
  xpos 324
- ypos -1470
+ ypos -2781
 }
 push $cut_paste_input
 Dot {
- name Dot46
- selected true
- xpos -6
- ypos -3990
-}
-set N9ecb7c00 [stack 0]
-Dot {
  name Dot47
  selected true
- xpos 214
- ypos -3990
+ xpos -6
+ ypos -6391
 }
 Dot {
- name Dot33
+ name Dot89
+ selected true
+ xpos -6
+ ypos -5301
+}
+set Ne222ac00 [stack 0]
+Dot {
+ name Dot90
  selected true
  xpos 214
- ypos -3726
+ ypos -5301
 }
-set Nae45d800 [stack 0]
+Dot {
+ name Dot91
+ selected true
+ xpos 214
+ ypos -5037
+}
+set Ne777a400 [stack 0]
 Dot {
  name Dot102
  selected true
  xpos 324
- ypos -3726
+ ypos -5037
 }
-set Na7919800 [stack 0]
+set Na8980c00 [stack 0]
 add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels4
  selected true
  xpos 290
- ypos -3640
+ ypos -4951
 }
-push $Na7919800
+push $Na8980c00
 Dot {
- name Dot55
+ name Dot92
  selected true
  xpos 434
- ypos -3726
+ ypos -5037
 }
 add_layer {CH_B CH_B.red CH_B.green CH_B.blue CH_B.alpha}
 AddChannels {
@@ -413,7 +419,7 @@ AddChannels {
  name AddChannels5
  selected true
  xpos 400
- ypos -3664
+ ypos -4975
 }
 push 0
 Dot {
@@ -421,10 +427,10 @@ Dot {
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 654
- ypos -3774
+ ypos -5085
  hide_input true
 }
-set Nadf9d400 [stack 0]
+set Na757e400 [stack 0]
 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Speark/18.mov
@@ -438,23 +444,23 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 620
- ypos -4707
+ ypos -6018
 }
-clone nodeb0e6b400|TimeOffset|17632 TimeOffset {
+clone node7e97de00|TimeOffset|6608 TimeOffset {
  time_offset {{root.first_frame-50}}
  time ""
  name TimeOffset33
  selected true
  xpos 620
- ypos -4618
+ ypos -5929
 }
-set Cb0e6b400 [stack 0]
+set C7e97de00 [stack 0]
 Keyer {
  operation "max keyer"
  name Keyer11
  selected true
  xpos 620
- ypos -4552
+ ypos -5863
 }
 Transform {
  rotate 46.31113434
@@ -462,32 +468,32 @@ Transform {
  name Transform6
  selected true
  xpos 620
- ypos -4498
+ ypos -5809
 }
 Unpremult {
  name Unpremult4
  selected true
  xpos 620
- ypos -4474
+ ypos -5785
 }
 ColorCorrect {
  gain {4 1.600509167 0.03792238235 2.299999952}
  name ColorCorrect14
  selected true
  xpos 620
- ypos -4450
+ ypos -5761
 }
 Premult {
  name Premult7
  selected true
  xpos 620
- ypos -4426
+ ypos -5737
 }
 Dot {
- name Dot69
+ name Dot93
  selected true
  xpos 654
- ypos -4302
+ ypos -5613
 }
 Read {
  inputs 0
@@ -508,19 +514,19 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 510
- ypos -4881
+ ypos -6192
 }
-clone $Cb0e6b400 {
+clone $C7e97de00 {
  xpos 510
- ypos -4762
+ ypos -6073
  selected true
 }
 Grade {
  blackpoint {0.001300743315 0.001300743315 0.001300743315 0}
- name Grade10
+ name Grade11
  selected true
  xpos 510
- ypos -4714
+ ypos -6025
 }
 Keyer {
  operation "max keyer"
@@ -528,40 +534,40 @@ Keyer {
  name Keyer10
  selected true
  xpos 510
- ypos -4672
+ ypos -5983
 }
 Unpremult {
  name Unpremult3
  selected true
  xpos 510
- ypos -4594
+ ypos -5905
 }
 ColorCorrect {
  gain {2.700000048 2.559660196 2.58611393 2.299999952}
  maskChannelInput rgba.alpha
- name ColorCorrect25
+ name ColorCorrect7
  selected true
  xpos 510
- ypos -4552
+ ypos -5863
 }
 Premult {
  name Premult24
  selected true
  xpos 510
- ypos -4498
+ ypos -5809
 }
 EdgeBlur {
  name EdgeBlur3
  selected true
  xpos 510
- ypos -4456
+ ypos -5767
 }
 Merge2 {
  inputs 2
- name Merge1
+ name Merge3
  selected true
  xpos 510
- ypos -4306
+ ypos -5617
 }
 Rectangle {
  output none
@@ -571,29 +577,29 @@ Rectangle {
  name Rectangle1
  selected true
  xpos 510
- ypos -4240
+ ypos -5551
 }
 Multiply {
  value 0.5
- name Multiply22
+ name Multiply2
  selected true
  xpos 510
- ypos -4192
+ ypos -5503
 }
 Defocus {
  defocus 3
  name Defocus1
  selected true
  xpos 510
- ypos -4144
+ ypos -5455
 }
 Dot {
- name Dot86
+ name Dot106
  selected true
  xpos 544
- ypos -4062
+ ypos -5373
 }
-set Na7dd7c00 [stack 0]
+set Na5a4e400 [stack 0]
 Card2 {
  translate {-14.63210201 2.560003757 -31.04088974}
  rotate {0 {parent.Camera_3DEnv_1.rotate.y} 0}
@@ -612,14 +618,14 @@ Card2 {
  name Card4
  selected true
  xpos 510
- ypos -3922
+ ypos -5233
 }
-push $Na7dd7c00
+push $Na5a4e400
 Dot {
- name Dot88
+ name Dot117
  selected true
  xpos 654
- ypos -4062
+ ypos -5373
 }
 TimeOffset {
  time_offset -35
@@ -627,7 +633,7 @@ TimeOffset {
  name TimeOffset46
  selected true
  xpos 620
- ypos -3898
+ ypos -5209
 }
 Card2 {
  translate {3.297166348 3.61999464 -22.29708862}
@@ -647,15 +653,15 @@ Card2 {
  name Card6
  selected true
  xpos 620
- ypos -3850
+ ypos -5161
 }
-push $Nadf9d400
+push $Na757e400
 Scene {
  inputs 3
  name Scene2
  selected true
  xpos 520
- ypos -3870
+ ypos -5181
 }
 push 0
 ScanlineRender {
@@ -665,7 +671,7 @@ ScanlineRender {
  name ScanlineRender2
  selected true
  xpos 510
- ypos -3778
+ ypos -5089
 }
 Glow2 {
  size 2
@@ -673,24 +679,24 @@ Glow2 {
  name Glow12
  selected true
  xpos 510
- ypos -3754
+ ypos -5065
 }
 Ramp {
  output none
  premult all
  p0 {{curve x743 876 x779 928} {curve x743 342 x779 190}}
  p1 {{curve x743 764} {curve x743 706}}
- name Ramp2
+ name Ramp7
  label Mask
  selected true
  xpos 510
- ypos -3647
+ ypos -4958
 }
 Dot {
- name Dot89
+ name Dot129
  selected true
  xpos 544
- ypos -3582
+ ypos -4893
 }
 Multiply {
  inputs 1+1
@@ -699,62 +705,62 @@ Multiply {
  name Multiply23
  selected true
  xpos 400
- ypos -3592
+ ypos -4903
 }
 Multiply {
  inputs 1+1
  value 0
  maskChannelMask CH_A.alpha
- name Multiply28
+ name Multiply30
  selected true
  xpos 290
- ypos -3592
+ ypos -4903
 }
-push $Nae45d800
+push $Ne777a400
 Merge2 {
  inputs 2
- name Merge3
+ name Merge5
  selected true
  xpos 180
- ypos -3586
+ ypos -4897
  cached true
 }
-push $N9ecb7c00
+push $Ne222ac00
 Switch {
  inputs 2
  which 1
  name Switch4
  selected true
  xpos -40
- ypos -3586
+ ypos -4897
 }
 Dot {
- name Dot92
+ name Dot130
  selected true
  xpos -6
- ypos -1806
+ ypos -3117
 }
-set N85e65800 [stack 0]
+set Na5a4f800 [stack 0]
 Dot {
- name Dot93
+ name Dot131
  selected true
  xpos 214
- ypos -1806
+ ypos -3117
 }
 Merge2 {
  inputs 2
- name Merge5
+ name Merge11
  selected true
  xpos 180
- ypos -1474
+ ypos -2785
  cached true
 }
-push $N85e65800
+push $Na5a4f800
 Switch {
  inputs 2
  which 1
  name Switch8
  selected true
  xpos -40
- ypos -1474
+ ypos -2785
 }

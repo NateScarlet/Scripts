@@ -5,9 +5,9 @@ FOR %%i in ("%~dp0\*.nk") do (
 	ECHO %%~ni
 	SET startTime=!time:~0,8!
 	ECHO.
-	"C:\Program Files\Nuke10.0v4\Nuke10.0.exe" -x -p "%%~i" 
+	nuke10.0.exe -x -p "%%~i" 
 	SET finishTime=!time:~0,8!
-	ECHO !date! !startTime! !finishTime!	%%~ni(代理模式) >>Renderlog.txt
+	ECHO !date! !startTime! !finishTime!	%%~ni^(代理模式^) >>Renderlog.txt
 )
 ECHO !time:~0,8! 渲染完成
 START RenderLog.txt

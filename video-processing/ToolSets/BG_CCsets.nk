@@ -1,0 +1,560 @@
+set cut_paste_input [stack 0]
+push $cut_paste_input
+Group {
+ name Depth3Split
+ tile_color 0xff00ff
+ selected true
+ xpos 400
+ ypos -22149
+ addUserKnob {20 Depth3Split}
+ addUserKnob {6 preview +STARTLINE}
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {26 Focus_div l Focus}
+ addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
+ addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {41 range_1 l range T Focus.range}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 size l "blur size" T Blur1.size}
+ addUserKnob {41 filter l "blur filter" T Blur1.filter}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -586
+ }
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  out depth3split
+  name Shuffle
+  xpos 180
+  ypos -562
+ }
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 180
+  ypos -520
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Far
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 180
+  ypos -479
+ }
+ Keyer {
+  input depth
+  output depth3split.Middle
+  operation "luminance key"
+  range {0.0005515362429 0.001713760667 0.002875985333 0.004038206481}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 180
+  ypos -431
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Close
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 180
+  ypos -383
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Focus
+  invert true
+  operation "luminance key"
+  range {-1 -1 -0.00500101 0.009864193661}
+  name Focus
+  xpos 180
+  ypos -328
+ }
+ Grade {
+  channels {none none none depth3split.Focus}
+  name Grade1
+  xpos 180
+  ypos -280
+ }
+ Blur {
+  channels {none none none depth3split.Focus}
+  name Blur1
+  xpos 180
+  ypos -232
+ }
+ Shuffle {
+  in depth3split
+  red blue
+  blue red
+  name Shuffle1
+  xpos 180
+  ypos -178
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos -58
+ }
+end_group
+Unpremult {
+ name Unpremult25
+ selected true
+ xpos 400
+ ypos -22066
+}
+Group {
+ name ValueGamma3
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "\[knob_default gain 1]\n\[knob_default gamma 1]"
+ selected true
+ xpos 400
+ ypos -22011
+ addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 lift}
+ addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+ gain 1
+ addUserKnob {7 gamma R 0 4}
+ gamma 0.7
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
+ addUserKnob {41 alpha l mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T Grade1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+ addUserKnob {41 mix T Grade1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -634
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -582
+ }
+set Ne7034c00 [stack 0]
+ Dot {
+  name Dot2
+  xpos 654
+  ypos -582
+ }
+ Input {
+  inputs 0
+  name InputMask
+  xpos 730
+  ypos -466
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input parent 1]]"}}
+  name Switch1
+  xpos 620
+  ypos -466
+ }
+set N4443a900 [stack 0]
+ Premult {
+  alpha none
+  name MaskChannelChoose
+  xpos 620
+  ypos -440
+ }
+ Dot {
+  name Dot3
+  xpos 654
+  ypos -366
+ }
+push $N4443a900
+push $Ne7034c00
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 510
+  ypos -514
+ }
+ Grade {
+  inputs 1+1
+  channels {none none none rgba.blue}
+  black {{parent.lift}}
+  white {{parent.gain}}
+  gamma {{parent.gamma}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  name Grade1
+  xpos 510
+  ypos -472
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 510
+  ypos -418
+ }
+ Saturation {
+  inputs 1+1
+  channels {{{parent.Colorspace1.channels}}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  mix {{parent.Grade1.mix}}
+  name Saturation1
+  xpos 510
+  ypos -370
+ }
+ Grade {
+  white 2
+  maskChannelInput {{{parent.Grade1.maskChannelMask}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  name Grade2
+  xpos 510
+  ypos -333
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -271
+ }
+end_group
+Grade {
+ white 0.1
+ gamma {1.32344842 1.6717242 2.019999981 1.559999943}
+ maskChannelInput depth3split.Far
+ name Grade6
+ selected true
+ xpos 400
+ ypos -21856
+}
+ColorCorrect {
+ gamma 0.75
+ gain 5
+ maskChannelInput depth3split.Close
+ name ColorCorrect37
+ selected true
+ xpos 400
+ ypos -21791
+}
+ColorCorrect {
+ name ColorCorrect2
+ selected true
+ xpos 400
+ ypos -21730
+}
+Premult {
+ name Premult28
+ selected true
+ xpos 400
+ ypos -21704
+}
+Group {
+ name Depth3Fog1
+ tile_color 0xff8200ff
+ label "\[knob_default this.mix 1]"
+ selected true
+ xpos 400
+ ypos -21658
+ addUserKnob {20 Depth3Fog}
+ addUserKnob {26 Range_div l Range}
+ addUserKnob {6 preview +STARTLINE}
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {41 alpha l "premultiply by" T Premult1.alpha}
+ addUserKnob {41 gamma_1 l "far gamma" T Far_Gamma.gamma}
+ addUserKnob {41 gamma_2 l "middle gamma" T Middle_Gamma.gamma}
+ addUserKnob {41 gamma_3 l "close gamma" T Close_Gamma.gamma}
+ addUserKnob {26 Color}
+ addUserKnob {41 channels T Grade1.channels}
+ addUserKnob {41 black l lift T Grade1.black}
+ addUserKnob {41 white l gain T Grade1.white}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T MaskMixMerge.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T MaskMixMerge.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T MaskMixMerge.fringe}
+ addUserKnob {41 mix T MaskMixMerge.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -874
+ }
+ Dot {
+  name Dot2
+  xpos 214
+  ypos -798
+ }
+set N3db1ac00 [stack 0]
+ Dot {
+  name Dot3
+  xpos 544
+  ypos -798
+ }
+set N3db1a800 [stack 0]
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 510
+  ypos -784
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 510
+  ypos -719
+ }
+set N3db1a000 [stack 0]
+push 0
+push $N3db1a000
+ Keyer {
+  input depth
+  operation "luminance key"
+  range {0.003507748544 0.00482768 0.00614761 0.00746754}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 510
+  ypos -575
+ }
+set N3db6dc00 [stack 0]
+ Dot {
+  name Dot4
+  xpos 544
+  ypos -510
+ }
+set N3db6d800 [stack 0]
+ Dot {
+  name Dot6
+  xpos 654
+  ypos -510
+ }
+ Keyer {
+  input depth
+  operation "luminance key"
+  range {{"2 * parent.Close.range.A - parent.Close.range.B"} {parent.Close.range.A} 1 1}
+  name Close_Cut
+  label "\[value input]"
+  xpos 620
+  ypos -407
+ }
+push $N3db6d800
+ Keyer {
+  input {{{parent.Middle.input}}}
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 510
+  ypos -479
+ }
+ ChannelMerge {
+  inputs 2
+  operation in
+  name ChannelMerge1
+  xpos 510
+  ypos -407
+ }
+push $N3db6dc00
+ Merge2 {
+  inputs 3+1
+  operation plus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge2
+  xpos 400
+  ypos -400
+ }
+ Grade {
+  channels alpha
+  gamma 0.206
+  name Close_Gamma
+  xpos 290
+  ypos -400
+ }
+set N3db6c000 [stack 0]
+push $N3db6dc00
+push $N3db1a000
+ Merge2 {
+  inputs 2
+  operation plus
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  name Merge1
+  xpos 400
+  ypos -568
+ }
+ Grade {
+  channels alpha
+  gamma 0.8
+  name Middle_Gamma
+  xpos 290
+  ypos -568
+ }
+set N3dba7800 [stack 0]
+push $N3db1a000
+ Grade {
+  channels alpha
+  gamma 0.33
+  name Far_Gamma
+  xpos 290
+  ypos -712
+ }
+set N3dba7400 [stack 0]
+push $N3db1ac00
+ Dot {
+  name Dot5
+  xpos 104
+  ypos -798
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.red
+  name Copy1
+  xpos 70
+  ypos -640
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.green
+  name Copy2
+  xpos 70
+  ypos -472
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.blue
+  name Copy3
+  xpos 70
+  ypos -304
+ }
+ Dot {
+  name Dot1
+  xpos 104
+  ypos 18
+ }
+push $N3db1a800
+ Dot {
+  name Dot40
+  xpos 874
+  ypos -798
+ }
+ Dot {
+  name Dot41
+  xpos 874
+  ypos -150
+ }
+set N3ec29800 [stack 0]
+ Input {
+  inputs 0
+  name InputMask
+  label "\n\n"
+  xpos 950
+  ypos -82
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input \[node parent] 1]]"}}
+  name Switch3
+  xpos 840
+  ypos -82
+ }
+ Premult {
+  channels none
+  name MaskChannelChoose
+  selected true
+  xpos 730
+  ypos -88
+ }
+push $N3db6c000
+push $N3dba7800
+push $N3dba7400
+push $N3db1ac00
+ Grade {
+  inputs 1+1
+  black {0.03166666254 0.04966665804 0.07666666806 0}
+  gamma 0.76
+  name Grade1
+  xpos 180
+  ypos -706
+ }
+ set C3ec28c00 [stack 0]
+clone $C3ec28c00 {
+  inputs 1+1
+  xpos 180
+  ypos -562
+  selected false
+ }
+clone $C3ec28c00 {
+  inputs 1+1
+  xpos 180
+  ypos -394
+  selected false
+ }
+push $N3ec29800
+ Merge2 {
+  inputs 2+1
+  maskChannelMask {{{parent.Premult2.alpha}}}
+  mix 0.07
+  name MaskMixMerge
+  xpos 180
+  ypos -82
+ }
+ Premult {
+  channels {{{parent.Grade1.channels}}}
+  name Premult1
+  xpos 180
+  ypos -34
+ }
+ Switch {
+  inputs 2
+  which {{parent.preview}}
+  name SwitchPreview
+  xpos 180
+  ypos 14
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos 62
+ }
+end_group

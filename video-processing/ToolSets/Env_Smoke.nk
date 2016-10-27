@@ -3,11 +3,11 @@ BackdropNode {
  inputs 0
  name BackdropNode10
  tile_color 0xa9b2c6ff
- label "Smoke_FG v1.4"
+ label "Smoke_FG v2.0"
  note_font_size 42
  selected true
  xpos 74
- ypos -6518
+ ypos -8059
  bdwidth 1172
  bdheight 1420
  z_order 1
@@ -16,11 +16,11 @@ BackdropNode {
  inputs 0
  name BackdropNode6
  tile_color 0xa9b2c6ff
- label "Smoke_BG v1.4"
+ label "Smoke_BG v2.0"
  note_font_size 42
  selected true
  xpos 82
- ypos -8168
+ ypos -9709
  bdwidth 1376
  bdheight 1407
  z_order 1
@@ -30,45 +30,45 @@ Dot {
  name Dot48
  selected true
  xpos -6
- ypos -7590
+ ypos -9131
 }
-set Ne79b7400 [stack 0]
+set N8ebcd800 [stack 0]
 Dot {
  name Dot44
  selected true
  xpos 214
- ypos -7590
+ ypos -9131
 }
 Dot {
- name Dot25
+ name Dot27
  selected true
  xpos 214
- ypos -7062
+ ypos -8603
 }
-set Ne79b6c00 [stack 0]
+set Nae0ad400 [stack 0]
 Dot {
  name Dot56
  selected true
  xpos 324
- ypos -7062
+ ypos -8603
 }
-set Ne79b6800 [stack 0]
+set Nbe9b0c00 [stack 0]
 add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels2
  selected true
  xpos 290
- ypos -6976
+ ypos -8517
 }
-push $Ne79b6800
+push $Nbe9b0c00
 Dot {
  name Dot101
  selected true
  xpos 434
- ypos -7062
+ ypos -8603
 }
-set Ne79b6000 [stack 0]
+set N807f6000 [stack 0]
 Ramp {
  output none
  premult all
@@ -78,7 +78,7 @@ Ramp {
  label Mask
  selected true
  xpos 400
- ypos -7031
+ ypos -8572
 }
 add_layer {CH_B CH_B.red CH_B.green CH_B.blue CH_B.alpha}
 AddChannels {
@@ -86,14 +86,14 @@ AddChannels {
  name AddChannels1
  selected true
  xpos 400
- ypos -6976
+ ypos -8517
 }
-push $Ne79b6000
+push $N807f6000
 Dot {
  name Dot100
  selected true
  xpos 544
- ypos -7062
+ ypos -8603
 }
 Keyer {
  input depth
@@ -103,7 +103,7 @@ Keyer {
  label "\[value input]"
  selected true
  xpos 510
- ypos -7007
+ ypos -8548
 }
 Ramp {
  inputs 0
@@ -112,21 +112,21 @@ Ramp {
  name Ramp12
  selected true
  xpos 730
- ypos -7018
+ ypos -8559
 }
-push 0
 Dot {
+ inputs 0
  name Dot64
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 764
- ypos -7134
+ ypos -8675
  hide_input true
 }
-set Ndc95b400 [stack 0]
-push $Ndc95b400
+set Na8089c00 [stack 0]
+push $Na8089c00
 push 0
-clone nodeb09df400|Read|17632 Read {
+clone nodea0fee000|Read|6608 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Yan/02/Yan_02.####.tga
  format "1600 1536 0 0 1600 1536 1 "
@@ -137,16 +137,16 @@ clone nodeb09df400|Read|17632 Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 1060
- ypos -7875
+ ypos -9416
 }
-set Cb09df400 [stack 0]
+set Ca0fee000 [stack 0]
 OFlow2 {
  input.last 150
  timingOutputSpeed 0.25
  name OFlow2
  selected true
  xpos 1060
- ypos -7762
+ ypos -9303
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -155,47 +155,47 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 1060
- ypos -7696
+ ypos -9237
 }
 Unpremult {
  name Unpremult14
  selected true
  xpos 1060
- ypos -7642
+ ypos -9183
 }
-clone nodea5577400|ColorCorrect|17632 ColorCorrect {
+clone nodea94f9c00|ColorCorrect|6608 ColorCorrect {
  saturation 0.105
  gain {2.102529287 1.407528996 0.7525292635 4}
  name ColorCorrect8
  selected true
  xpos 1060
- ypos -7618
+ ypos -9159
 }
-set Ca5577400 [stack 0]
+set Ca94f9c00 [stack 0]
 Premult {
  name Premult17
  selected true
  xpos 1060
- ypos -7594
+ ypos -9135
 }
 Glow2 {
  name Glow15
  selected true
  xpos 1060
- ypos -7570
+ ypos -9111
 }
-Dot {
- name Dot26
- selected true
- xpos 1094
- ypos -7542
-}
-set N9ecb7800 [stack 0]
 Dot {
  name Dot29
  selected true
+ xpos 1094
+ ypos -9083
+}
+set Na945bc00 [stack 0]
+Dot {
+ name Dot30
+ selected true
  xpos 1204
- ypos -7542
+ ypos -9083
 }
 TimeOffset {
  time_offset -62
@@ -203,13 +203,13 @@ TimeOffset {
  name TimeOffset36
  selected true
  xpos 1170
- ypos -7498
+ ypos -9039
 }
 Multiply {
  name Multiply7
  selected true
  xpos 1170
- ypos -7288
+ ypos -8829
 }
 Card2 {
  translate {0.9000000954 0.3000000119 -10.10000038}
@@ -229,16 +229,16 @@ Card2 {
  name Card7
  selected true
  xpos 1170
- ypos -7234
+ ypos -8775
  disable true
 }
-push $N9ecb7800
+push $Na945bc00
 Multiply {
  value 0.6
  name Multiply12
  selected true
  xpos 1060
- ypos -7456
+ ypos -8997
 }
 Ramp {
  output none
@@ -249,7 +249,7 @@ Ramp {
  name Ramp4
  selected true
  xpos 1060
- ypos -7408
+ ypos -8949
 }
 Card2 {
  translate {-6.659999371 0.0455000475 1.607999921}
@@ -269,10 +269,10 @@ Card2 {
  name Card13
  selected true
  xpos 1060
- ypos -7354
+ ypos -8895
  disable true
 }
-clone node98bc6c00|Read|17632 Read {
+clone nodea3cf1400|Read|6608 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Yan/01/Yan_01.%04d.tga
  format "1280 720 0 0 1280 720 1 HD_720"
@@ -284,16 +284,16 @@ clone node98bc6c00|Read|17632 Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 620
- ypos -8067
+ ypos -9608
 }
-set C98bc6c00 [stack 0]
+set Ca3cf1400 [stack 0]
 OFlow2 {
  input.last 150
  timingOutputSpeed 0.25
  name OFlow1
  selected true
  xpos 620
- ypos -7954
+ ypos -9495
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -302,66 +302,66 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 620
- ypos -7912
+ ypos -9453
 }
 Unpremult {
  name Unpremult1
  selected true
  xpos 620
- ypos -7858
+ ypos -9399
 }
-clone $Ca5577400 {
+clone $Ca94f9c00 {
  xpos 620
- ypos -7834
+ ypos -9375
  selected true
 }
 Premult {
  name Premult6
  selected true
  xpos 620
- ypos -7810
+ ypos -9351
 }
 Glow2 {
  name Glow10
  selected true
  xpos 620
- ypos -7762
+ ypos -9303
 }
-Dot {
- name Dot30
- selected true
- xpos 654
- ypos -7710
-}
-set Nae09dc00 [stack 0]
 Dot {
  name Dot34
  selected true
- xpos 764
- ypos -7710
+ xpos 654
+ ypos -9251
 }
-set Nabe8ec00 [stack 0]
+set Nbc8a0c00 [stack 0]
 Dot {
- name Dot70
+ name Dot35
+ selected true
+ xpos 764
+ ypos -9251
+}
+set Nc2b82c00 [stack 0]
+Dot {
+ name Dot37
  selected true
  xpos 874
- ypos -7710
+ ypos -9251
 }
-set N9fcc1800 [stack 0]
+set N9e4b5c00 [stack 0]
 TimeOffset {
  time_offset -62
  time ""
  name TimeOffset38
  selected true
  xpos 950
- ypos -7666
+ ypos -9207
 }
 Multiply {
  value 0.3
  name Multiply11
  selected true
  xpos 950
- ypos -7408
+ ypos -8949
 }
 Card2 {
  translate {2.850945234 -0.04324732348 -24.66247749}
@@ -381,23 +381,23 @@ Card2 {
  name Card12
  selected true
  xpos 950
- ypos -7354
+ ypos -8895
 }
-push $N9fcc1800
+push $N9e4b5c00
 TimeOffset {
  time_offset -85
  time ""
  name TimeOffset39
  selected true
  xpos 840
- ypos -7666
+ ypos -9207
 }
 Multiply {
  value 0.2
  name Multiply9
  selected true
  xpos 840
- ypos -7456
+ ypos -8997
 }
 Card2 {
  translate {-29.45242691 7.479990005 -20.21191216}
@@ -417,23 +417,23 @@ Card2 {
  name Card11
  selected true
  xpos 840
- ypos -7402
+ ypos -8943
 }
-push $Nabe8ec00
+push $Nc2b82c00
 TimeOffset {
  time_offset -304
  time ""
  name TimeOffset1
  selected true
  xpos 730
- ypos -7666
+ ypos -9207
 }
 Multiply {
  value 0.1
  name Multiply3
  selected true
  xpos 730
- ypos -7528
+ ypos -9069
 }
 Card2 {
  translate {-26.11909294 11.26379585 -8.599274635}
@@ -453,15 +453,15 @@ Card2 {
  name Card9
  selected true
  xpos 730
- ypos -7474
+ ypos -9015
 }
-push $Nae09dc00
+push $Nbc8a0c00
 Multiply {
  value 0.2
  name Multiply4
  selected true
  xpos 620
- ypos -7648
+ ypos -9189
 }
 Card2 {
  translate {8.500000954 3.049999714 -20.89999771}
@@ -481,7 +481,7 @@ Card2 {
  name Card8
  selected true
  xpos 620
- ypos -7594
+ ypos -9135
 }
 Scene {
  inputs 8
@@ -489,7 +489,7 @@ Scene {
  name Scene3
  selected true
  xpos 630
- ypos -7230
+ ypos -8771
 }
 push 0
 ScanlineRender {
@@ -499,7 +499,7 @@ ScanlineRender {
  name ScanlineRender3
  selected true
  xpos 620
- ypos -7138
+ ypos -8679
  cached true
 }
 Multiply {
@@ -507,7 +507,7 @@ Multiply {
  name Multiply20
  selected true
  xpos 620
- ypos -7096
+ ypos -8637
 }
 ColorCorrect {
  inputs 1+1
@@ -516,7 +516,7 @@ ColorCorrect {
  name ColorCorrect6
  selected true
  xpos 620
- ypos -7018
+ ypos -8559
 }
 Radial {
  output none
@@ -527,13 +527,13 @@ Radial {
  name Radial1
  selected true
  xpos 620
- ypos -7000
+ ypos -8541
 }
 Dot {
  name Dot43
  selected true
  xpos 654
- ypos -6918
+ ypos -8459
 }
 Multiply {
  inputs 1+1
@@ -542,7 +542,7 @@ Multiply {
  name Multiply5
  selected true
  xpos 510
- ypos -6928
+ ypos -8469
 }
 Multiply {
  inputs 1+1
@@ -551,7 +551,7 @@ Multiply {
  name Multiply8
  selected true
  xpos 400
- ypos -6928
+ ypos -8469
 }
 Multiply {
  inputs 1+1
@@ -560,78 +560,78 @@ Multiply {
  name Multiply10
  selected true
  xpos 290
- ypos -6928
+ ypos -8469
 }
-push $Ne79b6c00
+push $Nae0ad400
 Merge2 {
  inputs 2
  name Merge4
  selected true
  xpos 180
- ypos -6922
+ ypos -8463
 }
 Dot {
- name Dot35
+ name Dot38
  selected true
  xpos 214
- ypos -6798
+ ypos -8339
 }
-push $Ne79b7400
+push $N8ebcd800
 Switch {
  inputs 2
  which 1
  name Switch3
  selected true
  xpos -40
- ypos -6802
+ ypos -8343
 }
 Dot {
  name Dot41
  selected true
  xpos -6
- ypos -6006
+ ypos -7547
 }
-set Nc23a7800 [stack 0]
+set Nbc769000 [stack 0]
 Dot {
  name Dot42
  selected true
  xpos 214
- ypos -6006
+ ypos -7547
 }
 Dot {
  name Dot49
  selected true
  xpos 214
- ypos -5550
+ ypos -7091
 }
-set Nfbe4f400 [stack 0]
+set Nec841000 [stack 0]
 Dot {
- name Dot24
+ name Dot39
  selected true
  xpos 324
- ypos -5550
+ ypos -7091
 }
-set Nc4c15000 [stack 0]
+set Nec840000 [stack 0]
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels3
  selected true
  xpos 290
- ypos -5512
+ ypos -7053
 }
-push $Nc4c15000
+push $Nec840000
 Dot {
  name Dot103
  selected true
  xpos 434
- ypos -5550
+ ypos -7091
 }
 AddChannels {
  channels {none none none CH_B.alpha}
  name AddChannels7
  selected true
  xpos 400
- ypos -5512
+ ypos -7053
 }
 Ramp {
  inputs 0
@@ -640,24 +640,24 @@ Ramp {
  name Ramp13
  selected true
  xpos 620
- ypos -5434
+ ypos -6975
 }
-push 0
 Dot {
+ inputs 0
  name Dot94
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 654
- ypos -5526
+ ypos -7067
  hide_input true
 }
-set Ne79b7800 [stack 0]
-push $Ne79b7800
+set Nc3034000 [stack 0]
+push $Nc3034000
 push 0
-clone $Cb09df400 {
+clone $Ca0fee000 {
  inputs 0
  xpos 620
- ypos -6315
+ ypos -7856
  selected true
 }
 OFlow2 {
@@ -666,7 +666,7 @@ OFlow2 {
  name OFlow3
  selected true
  xpos 620
- ypos -6178
+ ypos -7719
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -675,50 +675,50 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 620
- ypos -6136
+ ypos -7677
 }
 Unpremult {
  name Unpremult26
  selected true
  xpos 620
- ypos -6082
+ ypos -7623
 }
-clone $Ca5577400 {
+clone $Ca94f9c00 {
  xpos 620
- ypos -6058
+ ypos -7599
  selected true
 }
 Premult {
  name Premult29
  selected true
  xpos 620
- ypos -6010
+ ypos -7551
 }
 Glow2 {
  name Glow18
  selected true
  xpos 620
- ypos -5986
+ ypos -7527
 }
 Dot {
- name Dot72
+ name Dot40
  selected true
  xpos 654
- ypos -5934
+ ypos -7475
 }
-set N562c8400 [stack 0]
+set N9c924000 [stack 0]
 Dot {
  name Dot95
  selected true
  xpos 764
- ypos -5934
+ ypos -7475
 }
-set Nb17bb400 [stack 0]
+set Na5d96000 [stack 0]
 Dot {
  name Dot96
  selected true
  xpos 874
- ypos -5934
+ ypos -7475
 }
 TimeOffset {
  time_offset -62
@@ -726,14 +726,14 @@ TimeOffset {
  name TimeOffset4
  selected true
  xpos 840
- ypos -5914
+ ypos -7455
 }
 Multiply {
  value 0.18
  name Multiply14
  selected true
  xpos 840
- ypos -5656
+ ypos -7197
 }
 Card2 {
  translate {6.300001144 -4.300000191 -16.60000038}
@@ -753,23 +753,23 @@ Card2 {
  name Card19
  selected true
  xpos 840
- ypos -5602
+ ypos -7143
 }
-push $Nb17bb400
+push $Na5d96000
 TimeOffset {
  time_offset -304
  time ""
  name TimeOffset5
  selected true
  xpos 730
- ypos -5914
+ ypos -7455
 }
 Multiply {
  value 0.2
  name Multiply15
  selected true
  xpos 730
- ypos -5824
+ ypos -7365
 }
 Ramp {
  output none
@@ -777,10 +777,10 @@ Ramp {
  p0 {130 656}
  p1 {98 1174}
  type smooth0
- name Ramp9
+ name Ramp1
  selected true
  xpos 730
- ypos -5776
+ ypos -7317
 }
 Card2 {
  translate {6.299998283 -7.000000954 -20.79999733}
@@ -800,16 +800,16 @@ Card2 {
  name Card20
  selected true
  xpos 730
- ypos -5722
+ ypos -7263
 }
 push 0
-push $N562c8400
+push $N9c924000
 Multiply {
  value 0.2
  name Multiply17
  selected true
  xpos 620
- ypos -5824
+ ypos -7365
 }
 Card2 {
  translate {2.250001192 -1.800000072 -21.39999771}
@@ -829,13 +829,13 @@ Card2 {
  name Card22
  selected true
  xpos 620
- ypos -5770
+ ypos -7311
 }
 push 0
-clone $C98bc6c00 {
+clone $Ca3cf1400 {
  inputs 0
  xpos 510
- ypos -6387
+ ypos -7928
  selected true
 }
 OFlow2 {
@@ -844,7 +844,7 @@ OFlow2 {
  name OFlow4
  selected true
  xpos 510
- ypos -6274
+ ypos -7815
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -853,37 +853,37 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 510
- ypos -6232
+ ypos -7773
 }
 Unpremult {
  name Unpremult28
  selected true
  xpos 510
- ypos -6178
+ ypos -7719
 }
-clone $Ca5577400 {
+clone $Ca94f9c00 {
  xpos 510
- ypos -6154
+ ypos -7695
  selected true
 }
 Premult {
  name Premult31
  selected true
  xpos 510
- ypos -6130
+ ypos -7671
 }
 Glow2 {
  name Glow20
  selected true
  xpos 510
- ypos -6082
+ ypos -7623
 }
 Multiply {
  value 0.13
  name Multiply19
  selected true
  xpos 510
- ypos -6040
+ ypos -7581
 }
 Card2 {
  translate {-2.555256128 0.4009236395 -29.61656952}
@@ -903,7 +903,7 @@ Card2 {
  name Card24
  selected true
  xpos 510
- ypos -5986
+ ypos -7527
 }
 Scene {
  inputs 8
@@ -911,7 +911,7 @@ Scene {
  name Scene6
  selected true
  xpos 520
- ypos -5622
+ ypos -7163
 }
 push 0
 ScanlineRender {
@@ -921,7 +921,7 @@ ScanlineRender {
  name ScanlineRender6
  selected true
  xpos 510
- ypos -5530
+ ypos -7071
 }
 Ramp {
  output none
@@ -932,7 +932,7 @@ Ramp {
  label Mask
  selected true
  xpos 510
- ypos -5495
+ ypos -7036
  disable true
 }
 ColorCorrect {
@@ -941,20 +941,20 @@ ColorCorrect {
  name ColorCorrect26
  selected true
  xpos 510
- ypos -5434
+ ypos -6975
 }
 Multiply {
  value 0.2
  name Multiply16
  selected true
  xpos 510
- ypos -5392
+ ypos -6933
 }
 Dot {
  name Dot45
  selected true
  xpos 544
- ypos -5334
+ ypos -6875
 }
 Multiply {
  inputs 1+1
@@ -963,7 +963,7 @@ Multiply {
  name Multiply29
  selected true
  xpos 400
- ypos -5344
+ ypos -6885
 }
 Multiply {
  inputs 1+1
@@ -972,35 +972,28 @@ Multiply {
  name Multiply27
  selected true
  xpos 290
- ypos -5344
+ ypos -6885
 }
-push $Nfbe4f400
+push $Nec841000
 Merge2 {
  inputs 2
  name Merge13
  selected true
  xpos 180
- ypos -5338
+ ypos -6879
 }
 Dot {
- name Dot73
+ name Dot46
  selected true
  xpos 214
- ypos -5214
+ ypos -6755
 }
-push $Nc23a7800
+push $Nbc769000
 Switch {
  inputs 2
  which 1
  name Switch14
  selected true
  xpos -40
- ypos -5218
-}
-Dot {
- inputs 0
- name Dot71
- selected true
- xpos 984
- ypos -7710
+ ypos -6759
 }

@@ -1,15 +1,15 @@
 set cut_paste_input [stack 0]
-    push $cut_paste_input
+push $cut_paste_input
 Group {
  name NormalLight2
  tile_color 0x417c3eff
  selected true
- xpos 293
- ypos -2077
+ xpos 400
+ ypos -12781
  addUserKnob {20 NormalLight}
  addUserKnob {6 preview +STARTLINE}
+ preview true
  addUserKnob {41 pos l Position T Mask3D_RS1.pos}
- addUserKnob {41 pos_panelDropped l "panel dropped state" T Mask3D_RS1.pos_panelDropped}
  addUserKnob {41 rad l Radius T Mask3D_RS1.rad}
  addUserKnob {41 fall l "Falloff Exponent" T Mask3D_RS1.fall}
  addUserKnob {41 gain l Hardness T Mask3D_RS1.gain}
@@ -38,14 +38,14 @@ Group {
   xpos 544
   ypos -702
  }
-set N96a64800 [stack 0]
+set N95e96c00 [stack 0]
  Dot {
   name Dot13
   xpos 544
   ypos -630
  }
-set N96a65800 [stack 0]
-push $N96a65800
+set N83f29c00 [stack 0]
+push $N83f29c00
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
  Shuffle {
   in BumpNormals
@@ -57,19 +57,18 @@ add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNo
   inputs 2
   name Mask3D_RS1
   tile_color 0x417c3eff
-  selected true
   xpos 620
   ypos -514
   addUserKnob {20 User}
   addUserKnob {18 pos l Position t "Select the colour that corresponds to the position you want."}
-  pos {-0.389747 0.022163 -0.299}
+  pos {1 0.5 0.5}
   addUserKnob {6 pos_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {13 rad l Radius}
-  rad {4.6 3.2 12.6}
+  rad {2 3 3}
   addUserKnob {7 fall l "Falloff Exponent" R 1 10}
-  fall 8.05
+  fall 10
   addUserKnob {7 gain l Hardness}
-  gain 0.545
+  gain 0.5
  }
   Input {
    inputs 0
@@ -169,14 +168,14 @@ add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNo
    xpos 95
    ypos 762
   }
-set Nd659c400 [stack 0]
+set N952f9800 [stack 0]
   Output {
    name Output1
    selected true
    xpos 95
    ypos 839
   }
-push $Nd659c400
+push $N952f9800
   Viewer {
    name Viewer1
    selected true
@@ -199,13 +198,13 @@ push $Nd659c400
   xpos 654
   ypos -366
  }
-set N3843800 [stack 0]
+set N55b13c00 [stack 0]
  Dot {
   name Dot1
   xpos 654
   ypos -246
  }
-push $N96a64800
+push $N95e96c00
  Dot {
   name Dot43
   xpos 874
@@ -216,7 +215,7 @@ push $N96a64800
   xpos 874
   ypos -390
  }
-set N8492e400 [stack 0]
+set Nac228c00 [stack 0]
  Input {
   inputs 0
   name InputMask
@@ -239,8 +238,8 @@ set N8492e400 [stack 0]
   xpos 730
   ypos -328
  }
-push $N3843800
-push $N96a65800
+push $N55b13c00
+push $N83f29c00
  Grade {
   inputs 1+1
   gamma {2.200000286 2.900000334 3.600000381 2.900000095}
@@ -250,7 +249,7 @@ push $N96a65800
   xpos 510
   ypos -376
  }
-push $N8492e400
+push $Nac228c00
  Merge2 {
   inputs 2+1
   maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
@@ -269,5 +268,12 @@ push $N8492e400
   name Output1
   xpos 510
   ypos -202
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote1
+  label v1.0
+  xpos 634
+  ypos -776
  }
 end_group

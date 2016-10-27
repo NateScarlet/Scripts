@@ -3,11 +3,11 @@ BackdropNode {
  inputs 0
  name BackdropNode4
  tile_color 0x9fbcc6ff
- label "Write v1.1"
+ label "Write v1.2"
  note_font_size 42
  selected true
  xpos -182
- ypos 395
+ ypos 339
  bdwidth 365
  bdheight 431
 }
@@ -17,15 +17,15 @@ NoOp {
  label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
  selected true
  xpos -40
- ypos 481
+ ypos 425
 }
 Dot {
  name Dot2
  selected true
  xpos -6
- ypos 533
+ ypos 477
 }
-set N5b336400 [stack 0]
+set N71ff7c00 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -51,7 +51,7 @@ Write {
  name Write_MOV
  selected true
  xpos -150
- ypos 588
+ ypos 532
 }
 Read {
  inputs 0
@@ -66,10 +66,10 @@ Read {
  label "第 \[value first] 帧"
  selected true
  xpos 70
- ypos 613
+ ypos 557
  disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
 }
-push $N5b336400
+push $N71ff7c00
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -83,18 +83,18 @@ Write {
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  afterRender "nuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value())"
  name Write_JPG
- label "\[knob_default which 1]"
+ label "\[knob_default which 1]\n\[\nknob root.onScriptSave \{\nnuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value());\nnuke.scriptSave\n\}\n]"
  selected true
  xpos -40
- ypos 643
+ ypos 587
 }
 Dot {
  name Dot3
  selected true
  xpos -6
- ypos 677
+ ypos 621
 }
-set N67cdb800 [stack 0]
+set N4ce8b800 [stack 0]
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
@@ -102,14 +102,14 @@ Expression {
  label SaturationToRGB
  selected true
  xpos -150
- ypos 715
+ ypos 659
 }
-push $N67cdb800
+push $N4ce8b800
 Group {
  name HueToRGB1
  selected true
  xpos -40
- ypos 769
+ ypos 713
 }
  Input {
   inputs 0
