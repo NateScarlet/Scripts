@@ -1,79 +1,136 @@
 set cut_paste_input [stack 0]
+version 10.0 v4
 push $cut_paste_input
 Dot {
- name Dot41
- selected true
- xpos -6
- ypos -4806
+name Dot41
+selected true
+xpos 214
+ypos -1781
 }
-set N32eaf800 [stack 0]
+set N81deec00 [stack 0]
 Dot {
- name Dot42
- selected true
- xpos 104
- ypos -4806
+name Dot42
+selected true
+xpos 324
+ypos -1781
 }
-add_layer {Card3D Card3D.red Card3D.green Card3D.blue Card3D.alpha}
+add_layer {explosion explosion.red explosion.green explosion.blue explosion.alpha}
+add_layer {Distort Distort.u Distort.v Distort.blur}
+Shuffle {
+in explosion
+blue alpha
+out Distort
+name Shuffle3
+selected true
+xpos 290
+ypos -1761
+}
 FilterErode {
- channels Card3D
- size -39
- filter triangle
- name FilterErode1
- selected true
- xpos 70
- ypos -4792
+channels {Distort.u Distort.v -Distort.blur}
+size -100
+filter gaussian
+name FilterErode2
+selected true
+xpos 290
+ypos -1720
 }
 Noise {
- output Card3D
- opacity 0.135
- type turbulence
- size 1980
- octaves 141
- gain 1
- gamma 1
- center {960 540}
- name Noise1
- selected true
- xpos 70
- ypos -4744
+output {-Distort.u Distort.v -Distort.blur}
+replace true
+maskChannelInput Distort.u
+type turbulence
+size 10000
+zoffset {{x/1000}}
+octaves 141
+lacunarity 10
+gain 1
+gamma 0.235
+center {960 540}
+name Noise1
+selected true
+xpos 290
+ypos -1672
+}
+Noise {
+output {Distort.u -Distort.v -Distort.blur}
+replace true
+maskChannelInput Distort.u
+type turbulence
+size 10000
+zoffset {{x/1000+199}}
+octaves 141
+lacunarity 10
+gain 1
+gamma 0.235
+center {960 540}
+name Noise2
+selected true
+xpos 290
+ypos -1624
 }
 Blur {
- channels Card3D
- size 6.6
- name Blur2
- selected true
- xpos 70
- ypos -4696
-}
-Grade {
- channels Card3D
- add -0.5
- black_clamp false
- name Grade8
- selected true
- xpos 70
- ypos -4648
-}
-IDistort {
- uv Card3D
- blur Card3D.alpha
- blur_scale 3
- name IDistort1
- selected true
- xpos 70
- ypos -4600
+channels {Distort.u Distort.v -Distort.blur}
+size 20
+name Blur4
+selected true
+xpos 290
+ypos -1576
 }
 Dot {
- name Dot43
- selected true
- xpos 104
- ypos -4542
+name Dot33
+selected true
+xpos 324
+ypos -1542
 }
-push $N32eaf800
+set N9148dc00 [stack 0]
+Keyer {
+input {Distort.u Distort.v -Distort.blur}
+operation "luminance key"
+range {0.003945607434 0.1327302341 1 1}
+name Keyer4
+selected true
+xpos 400
+ypos -1552
+}
+Dot {
+name Dot34
+selected true
+xpos 434
+ypos -1494
+}
+push $N9148dc00
+Grade {
+inputs 1+1
+channels {Distort.u Distort.v -Distort.blur}
+add -0.5
+black_clamp false
+name Grade8
+selected true
+xpos 290
+ypos -1504
+}
+IDistort {
+uv Distort
+uv_scale 20
+blur Distort.blur
+blur_scale 3
+name IDistort1
+selected true
+xpos 290
+ypos -1432
+}
+Dot {
+name Dot43
+selected true
+xpos 324
+ypos -1374
+}
+push $N81deec00
 Merge2 {
- inputs 2
- name Merge6
- selected true
- xpos -40
- ypos -4546
+inputs 2
+operation copy
+name Merge10
+selected true
+xpos 180
+ypos -1378
 }
