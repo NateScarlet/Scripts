@@ -4,13 +4,55 @@ BackdropNode {
  inputs 0
  name BackdropNode4
  tile_color 0x9fbcc6ff
- label "Write v2.0"
+ label "Write v2.1"
  note_font_size 42
  selected true
- xpos -238
- ypos -397
+ xpos -182
+ ypos 348
  bdwidth 365
  bdheight 431
+}
+push $cut_paste_input
+NoOp {
+ name setRootFormat_HD1080_fps25_
+ label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
+ selected true
+ xpos -40
+ ypos 434
+}
+Dot {
+ name Dot2
+ selected true
+ xpos -6
+ ypos 486
+}
+set N68765c00 [stack 0]
+Write {
+ file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+ proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
+ colorspace sRGB
+ file_type mov
+ meta_codec apch
+ mov32_codec "rle "
+ mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+ mov64_codec apch
+ mov64_fps {{root.fps}}
+ mov64_advanced 1
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ mov64_gop_size 12
+ mov64_b_frames 0
+ checkHashOnRead false
+ version 3
+ in_colorspace linear
+ out_colorspace linear
+ beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+ name Write_MOV
+ selected true
+ xpos -148
+ ypos 540
 }
 Read {
  inputs 0
@@ -19,30 +61,14 @@ Read {
  last {{first}}
  origset true
  version 11
- in_colorspace linear
- out_colorspace linear
  name ReadWrite_JPG
  label "第 \[value first] 帧"
  selected true
- xpos 14
- ypos -179
+ xpos 70
+ ypos 566
  disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
 }
-push $cut_paste_input
-NoOp {
- name setRootFormat_HD1080_fps25_
- label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
- selected true
- xpos -96
- ypos -311
-}
-Dot {
- name Dot2
- selected true
- xpos -62
- ypos -259
-}
-set N50139400 [stack 0]
+push $N68765c00
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -52,37 +78,36 @@ Write {
  last {{first}}
  use_limit true
  checkHashOnRead false
- version 37
+ version 38
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
- afterRender "nuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value())"
  name Write_JPG
  label "\[knob_default which 1]\n\[\nknob root.onScriptSave \{\nnuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value());\nnuke.scriptSave\n\}\n]"
  selected true
- xpos -96
- ypos -149
+ xpos -40
+ ypos 596
 }
 Dot {
  name Dot3
  selected true
- xpos -62
- ypos -115
+ xpos -6
+ ypos 630
 }
-set N50138400 [stack 0]
+set N68765400 [stack 0]
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
  name Expression1
  label SaturationToRGB
  selected true
- xpos -206
- ypos -77
+ xpos -150
+ ypos 668
 }
-push $N50138400
+push $N68765400
 Group {
  name HueToRGB1
  selected true
- xpos -96
- ypos -23
+ xpos -40
+ ypos 722
 }
  Input {
   inputs 0
@@ -119,30 +144,3 @@ Group {
   ypos 113
  }
 end_group
-push $N50139400
-Write {
- file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
- colorspace sRGB
- file_type mov
- meta_codec apch
- mov32_codec "rle "
- mov32_fps 25
- mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
- mov64_codec apch
- mov64_fps {{root.fps}}
- mov64_advanced 1
- mov64_bitrate 20000
- mov64_bitrate_tolerance 40000000
- mov64_quality_min 2
- mov64_quality_max 31
- mov64_gop_size 12
- mov64_b_frames 0
- checkHashOnRead false
- version 3
- beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
- name Write_MOV
- selected true
- xpos -204
- ypos -205
-}
