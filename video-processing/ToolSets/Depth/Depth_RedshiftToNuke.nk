@@ -1,0 +1,12 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Expression {
+ channel0 depth
+ expr0 (z==0)?0:1/(z*10000)
+ name Expression3
+ label Depth:RedshiftToNuke
+ selected true
+ xpos 283
+ ypos -12985
+}

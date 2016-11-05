@@ -4,13 +4,27 @@ BackdropNode {
  inputs 0
  name BackdropNode4
  tile_color 0x9fbcc6ff
- label "Write v2.1"
+ label "Write v2.2\n"
  note_font_size 42
  selected true
  xpos -182
- ypos 348
+ ypos 312
  bdwidth 365
  bdheight 431
+}
+Read {
+ inputs 0
+ file "\[value Write_JPG.file]"
+ first {{parent.Write_JPG.last}}
+ last {{first}}
+ origset true
+ version 12
+ name ReadWrite_JPG
+ label "第 \[value first] 帧\n\[input Viewer1 3 this]"
+ selected true
+ xpos 71
+ ypos 530
+ disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
 }
 push $cut_paste_input
 NoOp {
@@ -18,15 +32,15 @@ NoOp {
  label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
  selected true
  xpos -40
- ypos 434
+ ypos 398
 }
 Dot {
  name Dot2
  selected true
  xpos -6
- ypos 486
+ ypos 450
 }
-set N68765c00 [stack 0]
+set N3e0ae000 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -52,23 +66,12 @@ Write {
  name Write_MOV
  selected true
  xpos -148
- ypos 540
+ ypos 504
+ addUserKnob {20 caravr l CaraVR}
+ addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+ addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
-Read {
- inputs 0
- file "\[value Write_JPG.file]"
- first {{parent.Write_JPG.last}}
- last {{first}}
- origset true
- version 11
- name ReadWrite_JPG
- label "第 \[value first] 帧"
- selected true
- xpos 70
- ypos 566
- disable {{"1-\[file exists \[eval \{value Write_JPG.file\}]]"}}
-}
-push $N68765c00
+push $N3e0ae000
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -78,36 +81,40 @@ Write {
  last {{first}}
  use_limit true
  checkHashOnRead false
- version 38
+ version 39
  beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_JPG
- label "\[knob_default which 1]\n\[\nknob root.onScriptSave \{\nnuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value());\nnuke.scriptSave\n\}\n]"
+ label "\[knob_default which 1]\n\[\nknob root.onScriptSave \{\nnuke.frame(nuke.toNode(\"ReadWrite_JPG\")\[\"first\"].value());\nnuke.scriptSave\n\}\n]\n\[input Viewer1 1 this]"
  selected true
  xpos -40
- ypos 596
+ ypos 556
+ addUserKnob {20 caravr l CaraVR}
+ addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+ addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
 Dot {
  name Dot3
  selected true
  xpos -6
- ypos 630
+ ypos 594
 }
-set N68765400 [stack 0]
+set Na1d23800 [stack 0]
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
  name Expression1
- label SaturationToRGB
+ label "SaturationToRGB\n\[input Viewer1 2 this]"
  selected true
  xpos -150
- ypos 668
+ ypos 632
 }
-push $N68765400
+push $Na1d23800
 Group {
  name HueToRGB1
+ label "\[input Viewer1 4 this]"
  selected true
  xpos -40
- ypos 722
+ ypos 686
 }
  Input {
   inputs 0

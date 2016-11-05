@@ -8,7 +8,7 @@ BackdropNode {
  note_font_size 42
  selected true
  xpos 74
- ypos -7919
+ ypos -8301
  bdwidth 1172
  bdheight 1420
  z_order 1
@@ -17,11 +17,11 @@ BackdropNode {
  inputs 0
  name BackdropNode6
  tile_color 0xa9b2c6ff
- label "Smoke_BG v2.3\n"
+ label "Smoke_BG v2.4\n\n"
  note_font_size 42
  selected true
  xpos 82
- ypos -9569
+ ypos -9951
  bdwidth 1376
  bdheight 1407
  z_order 1
@@ -31,79 +31,87 @@ Dot {
  name Dot48
  selected true
  xpos -6
- ypos -8991
+ ypos -9373
 }
-set N5f30a800 [stack 0]
+set Nf724cc00 [stack 0]
 Dot {
  name Dot44
  selected true
  xpos 214
- ypos -8991
+ ypos -9373
 }
 Dot {
  name Dot20
  selected true
  xpos 214
- ypos -8463
+ ypos -8845
 }
-set Na6c76000 [stack 0]
+set N12e2f000 [stack 0]
 Dot {
  name Dot56
  selected true
  xpos 324
- ypos -8463
+ ypos -8845
 }
-set Na6c76400 [stack 0]
+set Nf724c400 [stack 0]
 add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels2
  selected true
  xpos 290
- ypos -8435
+ ypos -8817
 }
-push $Na6c76400
+push $Nf724c400
 Dot {
  name Dot101
  selected true
  xpos 434
- ypos -8463
+ ypos -8845
 }
-set Nbcd07800 [stack 0]
+set N15061000 [stack 0]
 add_layer {CH_B CH_B.red CH_B.green CH_B.blue CH_B.alpha}
 AddChannels {
  channels {none none none CH_B.alpha}
  name AddChannels1
  selected true
  xpos 400
- ypos -8438
+ ypos -8820
 }
-push $Nbcd07800
+push $N15061000
 Dot {
  name Dot100
  selected true
  xpos 544
- ypos -8463
+ ypos -8845
 }
 Keyer {
  input depth
  operation "luminance key"
  range {0.00113387 0.002525188758 1 1}
- name Keyer2
+ name Keyer1
  label "\[value input]"
  selected true
  xpos 510
- ypos -8408
+ ypos -8816
+}
+Blur {
+ channels alpha
+ size 10
+ name Blur4
+ selected true
+ xpos 510
+ ypos -8764
 }
 Ramp {
  inputs 0
  opacity 0.25
  p0 {906 524}
  p1 {920 1166}
- name Ramp12
+ name Ramp1
  selected true
  xpos 730
- ypos -8419
+ ypos -8801
 }
 push 0
 Dot {
@@ -111,11 +119,11 @@ Dot {
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 764
- ypos -8535
+ ypos -8917
  hide_input true
 }
-set Nd3469800 [stack 0]
-push $Nd3469800
+set N11cfa800 [stack 0]
+push $N11cfa800
 push 0
 push 0
 Read {
@@ -131,7 +139,7 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 1280
- ypos -9108
+ ypos -9490
 }
 OFlow2 {
  input.last 150
@@ -139,7 +147,7 @@ OFlow2 {
  name OFlow11
  selected true
  xpos 1280
- ypos -8995
+ ypos -9377
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -148,32 +156,32 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 1280
- ypos -8953
+ ypos -9335
 }
 Unpremult {
  name Unpremult11
  selected true
  xpos 1280
- ypos -8899
+ ypos -9281
 }
 ColorCorrect {
  gain {2.340862513 1.380862236 0.5408625603 4}
  name ColorCorrect32
  selected true
  xpos 1280
- ypos -8875
+ ypos -9257
 }
 Premult {
  name Premult5
  selected true
  xpos 1280
- ypos -8827
+ ypos -9209
 }
 Glow2 {
  name Glow13
  selected true
  xpos 1280
- ypos -8803
+ ypos -9185
  disable true
 }
 Multiply {
@@ -181,13 +189,13 @@ Multiply {
  name Multiply56
  selected true
  xpos 1280
- ypos -8785
+ ypos -9167
 }
 Dot {
  name Dot196
  selected true
  xpos 1314
- ypos -8703
+ ypos -9085
 }
 Card2 {
  selectable false
@@ -205,21 +213,21 @@ Card2 {
  name Card82
  selected true
  xpos 1280
- ypos -8635
+ ypos -9017
 }
 TransformGeo {
  inputs 3
- translate {-2.929999828 0.7300000191 -24.85000038}
+ translate {-5.489999771 1.779999971 -2.039999962}
  uniform_scale 8
  name TransformGeo2
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 1280
- ypos -8593
+ ypos -8975
 }
 push 0
 push 0
-clone node531b8000|Read|14836 Read {
+clone node1146a5c00|Read|18080 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Yan/02/Yan_02.####.tga
  format "1600 1536 0 0 1600 1536 1 "
@@ -230,16 +238,16 @@ clone node531b8000|Read|14836 Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 1060
- ypos -9396
+ ypos -9778
 }
-set C531b8000 [stack 0]
+set C146a5c00 [stack 0]
 OFlow2 {
  input.last 150
  timingOutputSpeed 1.2
  name OFlow2
  selected true
  xpos 1060
- ypos -9283
+ ypos -9665
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -248,22 +256,22 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 1060
- ypos -9217
+ ypos -9599
 }
 ColorCorrect {
  contrast 1.04
  gamma 0.95
  gain 2.34
- name ColorCorrect5
+ name ColorCorrect3
  selected true
  xpos 1060
- ypos -9187
+ ypos -9569
 }
 Unpremult {
  name Unpremult14
  selected true
  xpos 1060
- ypos -9139
+ ypos -9521
 }
 ColorCorrect {
  saturation 0.105
@@ -271,33 +279,33 @@ ColorCorrect {
  name ColorCorrect8
  selected true
  xpos 1060
- ypos -9115
+ ypos -9497
 }
 Premult {
  name Premult17
  selected true
  xpos 1060
- ypos -9043
+ ypos -9425
 }
 Glow2 {
  name Glow15
  selected true
  xpos 1060
- ypos -9019
+ ypos -9401
  disable true
 }
 Dot {
- name Dot29
+ name Dot1
  selected true
  xpos 1094
- ypos -8943
+ ypos -9325
 }
-set N53880400 [stack 0]
+set N15899000 [stack 0]
 Dot {
- name Dot25
+ name Dot6
  selected true
  xpos 1204
- ypos -8943
+ ypos -9325
 }
 TimeOffset {
  time_offset -62
@@ -305,14 +313,14 @@ TimeOffset {
  name TimeOffset36
  selected true
  xpos 1170
- ypos -8899
+ ypos -9281
 }
 Multiply {
  value 0.2
  name Multiply7
  selected true
  xpos 1170
- ypos -8738
+ ypos -9120
 }
 Card2 {
  selectable false
@@ -330,26 +338,26 @@ Card2 {
  name Card7
  selected true
  xpos 1170
- ypos -8684
+ ypos -9066
 }
 TransformGeo {
  inputs 3
- translate {-1.819999933 -1.090000153 -29.64999771}
+ translate {-7.459999561 0.8200000525 -2.059999943}
  uniform_scale 10
  name TransformGeo6
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 1170
- ypos -8641
+ ypos -9023
 }
 push 0
 push 0
-push $N53880400
+push $N15899000
 Multiply {
  name Multiply12
  selected true
  xpos 1060
- ypos -8881
+ ypos -9263
 }
 Ramp {
  output none
@@ -360,7 +368,7 @@ Ramp {
  name Ramp4
  selected true
  xpos 1060
- ypos -8833
+ ypos -9215
 }
 Card2 {
  selectable false
@@ -378,21 +386,21 @@ Card2 {
  name Card13
  selected true
  xpos 1060
- ypos -8755
+ ypos -9137
 }
 TransformGeo {
  inputs 3
- translate {0.6600000262 -0.3450000286 -24.70500183}
+ translate {-5.540000439 0.9700001478 0.02000001259}
  uniform_scale 6
  name TransformGeo1
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 1060
- ypos -8689
+ ypos -9071
 }
 push 0
 push 0
-clone node5d8fa000|Read|14836 Read {
+clone node111cfb800|Read|18080 Read {
  inputs 0
  file Z:/SNJYW/Comp/sucai/Yan/01/Yan_01.%04d.tga
  format "1280 720 0 0 1280 720 1 HD_720"
@@ -404,16 +412,16 @@ clone node5d8fa000|Read|14836 Read {
  label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
  selected true
  xpos 620
- ypos -9468
+ ypos -9850
 }
-set C5d8fa000 [stack 0]
+set C11cfb800 [stack 0]
 OFlow2 {
  input.last 150
  timingOutputSpeed 0.6
  name OFlow1
  selected true
  xpos 620
- ypos -9355
+ ypos -9737
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -422,55 +430,55 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 620
- ypos -9313
+ ypos -9695
 }
 Unpremult {
  name Unpremult2
  selected true
  xpos 620
- ypos -9259
+ ypos -9641
 }
-clone node5d6bd400|ColorCorrect|14836 ColorCorrect {
+clone node111cfac00|ColorCorrect|18080 ColorCorrect {
  saturation 0.105
  gain {2.102529287 1.407528996 0.7525292635 4}
  name ColorCorrect12
  selected true
  xpos 620
- ypos -9235
+ ypos -9617
 }
-set C5d6bd400 [stack 0]
+set C11cfac00 [stack 0]
 Premult {
  name Premult6
  selected true
  xpos 620
- ypos -9187
+ ypos -9569
 }
-Dot {
- name Dot14
- selected true
- xpos 654
- ypos -9111
-}
-set N5d6bcc00 [stack 0]
-Dot {
- name Dot41
- selected true
- xpos 764
- ypos -9111
-}
-set N5d6bc800 [stack 0]
 Dot {
  name Dot42
  selected true
- xpos 874
- ypos -9111
+ xpos 654
+ ypos -9493
 }
-set N5d6bc400 [stack 0]
+set N146a4000 [stack 0]
 Dot {
  name Dot43
  selected true
+ xpos 764
+ ypos -9493
+}
+set N146a4800 [stack 0]
+Dot {
+ name Dot45
+ selected true
+ xpos 874
+ ypos -9493
+}
+set N13400000 [stack 0]
+Dot {
+ name Dot49
+ selected true
  xpos 984
- ypos -9111
+ ypos -9493
 }
 TimeOffset {
  time_offset -62
@@ -478,14 +486,14 @@ TimeOffset {
  name TimeOffset38
  selected true
  xpos 950
- ypos -9067
+ ypos -9449
 }
 Multiply {
  value 0.7
  name Multiply11
  selected true
  xpos 950
- ypos -8809
+ ypos -9191
 }
 Card2 {
  selectable false
@@ -503,17 +511,17 @@ Card2 {
  name Card12
  selected true
  xpos 950
- ypos -8754
+ ypos -9136
 }
 TransformGeo {
  inputs 3
- translate {-2.299999952 -0.1800000668 -26.24999809}
+ translate {-5.280000687 -0.5 -0.1599999964}
  uniform_scale 10
  name TransformGeo5
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 950
- ypos -8713
+ ypos -9095
 }
 push 0
 push 0
@@ -521,26 +529,26 @@ Ramp {
  inputs 0
  p0 {1151 373}
  p1 {498 307}
- name Ramp1
+ name Ramp3
  selected true
  xpos 950
- ypos -8899
+ ypos -9281
 }
-push $N5d6bc400
+push $N13400000
 TimeOffset {
  time_offset -85
  time ""
  name TimeOffset39
  selected true
  xpos 840
- ypos -9067
+ ypos -9449
 }
 Multiply {
  value 0.6
  name Multiply9
  selected true
  xpos 840
- ypos -8953
+ ypos -9335
 }
 Multiply {
  inputs 1+1
@@ -548,7 +556,7 @@ Multiply {
  name Multiply37
  selected true
  xpos 840
- ypos -8905
+ ypos -9287
 }
 Card2 {
  selectable false
@@ -566,35 +574,35 @@ Card2 {
  name Card11
  selected true
  xpos 840
- ypos -8802
+ ypos -9184
 }
 TransformGeo {
  inputs 3
- translate {-0.9250000715 -0.3600000143 -25.31999969}
+ translate {-5.230000019 0.3400000334 1.460000038}
  uniform_scale 8
  name TransformGeo3
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 840
- ypos -8762
+ ypos -9144
 }
 push 0
 push 0
-push $N5d6bc800
+push $N146a4800
 TimeOffset {
- time_offset -304
+ time_offset -26
  time ""
- name TimeOffset15
+ name TimeOffset1
  selected true
  xpos 730
- ypos -9067
+ ypos -9449
 }
 Multiply {
  value 0.2
  name Multiply3
  selected true
  xpos 730
- ypos -8929
+ ypos -9311
 }
 Card2 {
  selectable false
@@ -612,33 +620,33 @@ Card2 {
  name Card9
  selected true
  xpos 730
- ypos -8875
+ ypos -9257
 }
 TransformGeo {
  inputs 3
- translate {-2.279998541 -0.4599998593 -26.21999741}
+ translate {-5.360000134 -2.359999657 8.600000381}
  uniform_scale 20
  name TransformGeo7
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 730
- ypos -8833
+ ypos -9215
 }
 push 0
 push 0
-push $N5d6bcc00
+push $N146a4000
 Multiply {
- value 0.5
+ value 0.25
  name Multiply2
  selected true
  xpos 620
- ypos -9073
+ ypos -9455
 }
 Glow2 {
  name Glow10
  selected true
  xpos 620
- ypos -9043
+ ypos -9425
 }
 Card2 {
  selectable false
@@ -656,17 +664,17 @@ Card2 {
  name Card8
  selected true
  xpos 620
- ypos -8995
+ ypos -9377
 }
 TransformGeo {
  inputs 3
- translate {1.11500001 -1.669999719 -24.60400009}
+ translate {-2.950000048 0.25 2.25}
  uniform_scale 10
  name TransformGeo4
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 620
- ypos -8953
+ ypos -9335
 }
 Scene {
  inputs 8
@@ -674,7 +682,7 @@ Scene {
  name Scene3
  selected true
  xpos 630
- ypos -8631
+ ypos -9013
 }
 push 0
 ScanlineRender {
@@ -684,22 +692,22 @@ ScanlineRender {
  name ScanlineRender3
  selected true
  xpos 620
- ypos -8539
+ ypos -8921
  cached true
 }
 Multiply {
- value 5
+ value 2.5
  name Multiply20
  selected true
  xpos 620
- ypos -8498
+ ypos -8880
 }
 ColorCorrect {
  gain {1.675000072 1.356750011 1.038500071 1}
- name ColorCorrect7
+ name ColorCorrect9
  selected true
  xpos 620
- ypos -8443
+ ypos -8825
 }
 ColorCorrect {
  inputs 1+1
@@ -708,7 +716,7 @@ ColorCorrect {
  name ColorCorrect26
  selected true
  xpos 620
- ypos -8419
+ ypos -8801
 }
 Radial {
  output none
@@ -719,23 +727,23 @@ Radial {
  name Radial2
  selected true
  xpos 620
- ypos -8377
+ ypos -8759
  disable true
 }
 Dot {
- name Dot45
+ name Dot50
  selected true
  xpos 654
- ypos -8319
+ ypos -8701
 }
 Multiply {
  inputs 1+1
- value 0.2
+ value 0.1
  invert_mask true
- name Multiply1
+ name Multiply4
  selected true
  xpos 510
- ypos -8329
+ ypos -8711
 }
 Multiply {
  inputs 1+1
@@ -744,7 +752,7 @@ Multiply {
  name Multiply10
  selected true
  xpos 400
- ypos -8329
+ ypos -8711
 }
 Multiply {
  inputs 1+1
@@ -753,78 +761,78 @@ Multiply {
  name Multiply14
  selected true
  xpos 290
- ypos -8329
+ ypos -8711
 }
-push $Na6c76000
+push $N12e2f000
 Merge2 {
  inputs 2
  name Merge4
  selected true
  xpos 180
- ypos -8323
+ ypos -8710
 }
 Dot {
- name Dot49
+ name Dot71
  selected true
  xpos 214
- ypos -8199
+ ypos -8581
 }
-push $N5f30a800
+push $Nf724cc00
 Switch {
  inputs 2
  which 1
  name Switch3
  selected true
  xpos -40
- ypos -8203
+ ypos -8585
 }
-Dot {
- name Dot50
- selected true
- xpos -6
- ypos -7407
-}
-set N74c1d000 [stack 0]
-Dot {
- name Dot70
- selected true
- xpos 214
- ypos -7407
-}
-Dot {
- name Dot71
- selected true
- xpos 214
- ypos -6951
-}
-set N74c1c800 [stack 0]
 Dot {
  name Dot72
  selected true
- xpos 324
- ypos -6951
+ xpos -6
+ ypos -7789
 }
-set N74c1c400 [stack 0]
+set Ne763800 [stack 0]
+Dot {
+ name Dot73
+ selected true
+ xpos 214
+ ypos -7789
+}
+Dot {
+ name Dot92
+ selected true
+ xpos 214
+ ypos -7333
+}
+set Ne763000 [stack 0]
+Dot {
+ name Dot93
+ selected true
+ xpos 324
+ ypos -7333
+}
+set N1333a000 [stack 0]
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels4
  selected true
  xpos 290
- ypos -6913
+ ypos -7295
 }
-push $N74c1c400
+push $N1333a000
 Dot {
- name Dot21
+ name Dot94
  selected true
  xpos 434
- ypos -6951
+ ypos -7333
 }
 AddChannels {
  channels {none none none CH_B.alpha}
  name AddChannels7
  selected true
  xpos 400
- ypos -6913
+ ypos -7295
 }
 Ramp {
  inputs 0
@@ -833,26 +841,26 @@ Ramp {
  name Ramp13
  selected true
  xpos 620
- ypos -6835
+ ypos -7217
 }
 push 0
 Dot {
- name Dot73
+ name Dot95
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]"
  selected true
  xpos 654
- ypos -6927
+ ypos -7309
  hide_input true
 }
-set N72669000 [stack 0]
-push $N72669000
+set Nf337c00 [stack 0]
+push $Nf337c00
 push 0
 push 0
 push 0
-clone $C531b8000 {
+clone $C146a5c00 {
  inputs 0
  xpos 620
- ypos -7716
+ ypos -8098
  selected true
 }
 OFlow2 {
@@ -861,76 +869,76 @@ OFlow2 {
  name OFlow3
  selected true
  xpos 620
- ypos -7579
+ ypos -7961
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
  time ""
- name TimeOffset16
+ name TimeOffset3
  label "Offset:\[value time_offset]"
  selected true
  xpos 620
- ypos -7537
+ ypos -7919
 }
 Unpremult {
  name Unpremult26
  selected true
  xpos 620
- ypos -7483
+ ypos -7865
 }
-clone $C5d6bd400 {
+clone $C11cfac00 {
  xpos 620
- ypos -7459
+ ypos -7841
  selected true
 }
 Premult {
  name Premult29
  selected true
  xpos 620
- ypos -7411
+ ypos -7793
 }
 Glow2 {
  name Glow18
  selected true
  xpos 620
- ypos -7387
+ ypos -7769
  disable true
 }
 Dot {
- name Dot95
- selected true
- xpos 654
- ypos -7335
-}
-set N653fb400 [stack 0]
-Dot {
  name Dot96
  selected true
- xpos 764
- ypos -7335
+ xpos 654
+ ypos -7717
 }
-set N653fb000 [stack 0]
+set Nf7188c00 [stack 0]
+Dot {
+ name Dot102
+ selected true
+ xpos 764
+ ypos -7717
+}
+set Nf7188800 [stack 0]
 Dot {
  name Dot113
  selected true
  xpos 874
- ypos -7335
+ ypos -7717
 }
-set N653fac00 [stack 0]
+set Nf7188400 [stack 0]
 TimeOffset {
  time_offset -62
  time ""
- name TimeOffset17
+ name TimeOffset4
  selected true
  xpos 840
- ypos -7315
+ ypos -7697
 }
 Multiply {
  value 0.18
  name Multiply15
  selected true
  xpos 840
- ypos -7129
+ ypos -7511
 }
 Card2 {
  selectable false
@@ -948,7 +956,7 @@ Card2 {
  name Card70
  selected true
  xpos 840
- ypos -7075
+ ypos -7457
 }
 TransformGeo {
  inputs 3
@@ -958,25 +966,25 @@ TransformGeo {
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 840
- ypos -7057
+ ypos -7439
 }
 push 0
 push 0
-push $N653fb000
+push $Nf7188800
 TimeOffset {
  time_offset -304
  time ""
- name TimeOffset18
+ name TimeOffset5
  selected true
  xpos 730
- ypos -7315
+ ypos -7697
 }
 Multiply {
  value 0.2
  name Multiply16
  selected true
  xpos 730
- ypos -7225
+ ypos -7607
 }
 Ramp {
  output none
@@ -984,10 +992,10 @@ Ramp {
  p0 {130 656}
  p1 {98 1174}
  type smooth0
- name Ramp2
+ name Ramp5
  selected true
  xpos 730
- ypos -7177
+ ypos -7559
 }
 Card2 {
  selectable false
@@ -1005,7 +1013,7 @@ Card2 {
  name Card20
  selected true
  xpos 730
- ypos -7123
+ ypos -7505
 }
 TransformGeo {
  inputs 3
@@ -1015,18 +1023,18 @@ TransformGeo {
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 730
- ypos -7105
+ ypos -7487
 }
 push 0
 push 0
 push 0
-push $N653fb400
+push $Nf7188c00
 Multiply {
  value 0.2
  name Multiply17
  selected true
  xpos 620
- ypos -7225
+ ypos -7607
 }
 Card2 {
  selectable false
@@ -1044,7 +1052,7 @@ Card2 {
  name Card22
  selected true
  xpos 620
- ypos -7172
+ ypos -7554
 }
 TransformGeo {
  inputs 3
@@ -1054,31 +1062,31 @@ TransformGeo {
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 620
- ypos -7153
+ ypos -7535
 }
 push 0
 push 0
-push $N653fac00
+push $Nf7188400
 Dot {
  name Dot114
  selected true
  xpos 984
- ypos -7335
+ ypos -7717
 }
 TimeOffset {
  time_offset -42
  time ""
- name TimeOffset19
+ name TimeOffset20
  selected true
  xpos 950
- ypos -7315
+ ypos -7697
 }
 Multiply {
  value 0.18
  name Multiply19
  selected true
  xpos 950
- ypos -7105
+ ypos -7487
 }
 Card2 {
  selectable false
@@ -1096,7 +1104,7 @@ Card2 {
  name Card19
  selected true
  xpos 950
- ypos -7051
+ ypos -7433
 }
 TransformGeo {
  inputs 3
@@ -1106,14 +1114,14 @@ TransformGeo {
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 950
- ypos -7009
+ ypos -7391
 }
 push 0
 push 0
-clone $C5d8fa000 {
+clone $C11cfb800 {
  inputs 0
  xpos 510
- ypos -7788
+ ypos -8170
  selected true
 }
 OFlow2 {
@@ -1122,7 +1130,7 @@ OFlow2 {
  name OFlow4
  selected true
  xpos 510
- ypos -7675
+ ypos -8057
 }
 TimeOffset {
  time_offset {{"\[value root.first_frame]"}}
@@ -1131,38 +1139,38 @@ TimeOffset {
  label "Offset:\[value time_offset]"
  selected true
  xpos 510
- ypos -7633
+ ypos -8015
 }
 Unpremult {
  name Unpremult28
  selected true
  xpos 510
- ypos -7579
+ ypos -7961
 }
-clone $C5d6bd400 {
+clone $C11cfac00 {
  xpos 510
- ypos -7555
+ ypos -7937
  selected true
 }
 Premult {
  name Premult31
  selected true
  xpos 510
- ypos -7531
+ ypos -7913
 }
 Glow2 {
  name Glow20
  selected true
  xpos 510
- ypos -7483
+ ypos -7865
  disable true
 }
 Multiply {
  value 0.1
- name Multiply4
+ name Multiply6
  selected true
  xpos 510
- ypos -7441
+ ypos -7823
 }
 Card2 {
  selectable false
@@ -1180,7 +1188,7 @@ Card2 {
  name Card24
  selected true
  xpos 510
- ypos -7387
+ ypos -7769
 }
 TransformGeo {
  inputs 3
@@ -1190,7 +1198,7 @@ TransformGeo {
  label "\[input this 2 Camera_3DEnv_1]"
  selected true
  xpos 510
- ypos -7325
+ ypos -7707
 }
 Scene {
  inputs 8
@@ -1198,7 +1206,7 @@ Scene {
  name Scene6
  selected true
  xpos 520
- ypos -7023
+ ypos -7405
 }
 push 0
 ScanlineRender {
@@ -1208,18 +1216,18 @@ ScanlineRender {
  name ScanlineRender6
  selected true
  xpos 510
- ypos -6931
+ ypos -7313
 }
 Ramp {
  output none
  premult all
  p0 {964 778}
  p1 {956 -82}
- name Ramp3
+ name Ramp6
  label Mask
  selected true
  xpos 510
- ypos -6896
+ ypos -7278
  disable true
 }
 ColorCorrect {
@@ -1228,59 +1236,59 @@ ColorCorrect {
  name ColorCorrect28
  selected true
  xpos 510
- ypos -6835
+ ypos -7217
 }
 Multiply {
  value 0.911
- name Multiply24
+ name Multiply8
  selected true
  xpos 510
- ypos -6793
+ ypos -7175
 }
 Dot {
  name Dot115
  selected true
  xpos 544
- ypos -6735
+ ypos -7117
 }
 Multiply {
  inputs 1+1
  value 0.5
  maskChannelMask CH_B.alpha
- name Multiply29
+ name Multiply21
  selected true
  xpos 400
- ypos -6745
+ ypos -7127
 }
 Multiply {
  inputs 1+1
  value 0.54
  maskChannelMask CH_A.alpha
- name Multiply27
+ name Multiply30
  selected true
  xpos 290
- ypos -6745
+ ypos -7127
 }
-push $N74c1c800
+push $Ne763000
 Merge2 {
  inputs 2
  name Merge13
  selected true
  xpos 180
- ypos -6739
+ ypos -7121
 }
 Dot {
  name Dot116
  selected true
  xpos 214
- ypos -6615
+ ypos -6997
 }
-push $N74c1d000
+push $Ne763800
 Switch {
  inputs 2
  which 1
  name Switch14
  selected true
  xpos -40
- ypos -6619
+ ypos -7001
 }

@@ -1,0 +1,16 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push 0
+push 0
+push $cut_paste_input
+TransformGeo {
+inputs 3
+name TransformGeo8
+label "\[input this 2 Camera1]"
+selected true
+xpos 1170
+ypos -3824
+disable true
+addUserKnob {20 User}
+addUserKnob {32 inputToThis T "knob this.translate \[value input.translate]\nknob input.translate 0\nknob this.rotate \[value input.rotate]\nknob input.rotate 0\nknob this.scaling \[value input.scaling]\nknob input.scaling 1\nknob this.uniform_scale \[value input.uniform_scale]\nknob input.uniform_scale 1\nknob input.translate 0\nknob this.skew \[value input.skew]\nknob input.skew 0\nknob this.pivot \[value input.pivot]\nknob input.pivot 1\nknob input.selectable 0\nknob this.disable 0" +STARTLINE}
+}
