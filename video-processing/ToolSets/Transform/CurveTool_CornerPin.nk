@@ -1,0 +1,96 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Grade {
+ channels rgba
+ whitepoint 0.1
+ name Grade9
+ selected true
+ xpos 543
+ ypos -11093
+}
+CurveTool {
+ operation "Max Luma Pixel"
+ channels {rgba.red -rgba.green -rgba.blue none}
+ ROI {0 0 1920 1080}
+ autocropdata {480 270 1440 810}
+ intensitydata {{curve}}
+ maxlumapixdata {{curve} {curve}}
+ maxlumapixvalue {{curve} {curve} {curve}}
+ minlumapixdata {{curve} {curve}}
+ minlumapixvalue {{curve} {curve} {curve}}
+ name CurveTool_R_1
+ selected true
+ xpos 543
+ ypos -11045
+}
+CurveTool {
+ operation "Max Luma Pixel"
+ channels {-rgba.red rgba.green -rgba.blue none}
+ ROI {0 0 1920 1080}
+ autocropdata {480 270 1440 810}
+ intensitydata {{curve}}
+ maxlumapixdata {{curve} {curve}}
+ maxlumapixvalue {{curve} {curve} {curve}}
+ minlumapixdata {{curve} {curve}}
+ minlumapixvalue {{curve} {curve} {curve}}
+ name CurveTool_G_1
+ selected true
+ xpos 543
+ ypos -10973
+}
+CurveTool {
+ operation "Max Luma Pixel"
+ channels {-rgba.red -rgba.green rgba.blue none}
+ ROI {0 0 1920 1080}
+ autocropdata {480 270 1440 810}
+ intensitydata {{curve}}
+ maxlumapixdata {{curve} {curve}}
+ maxlumapixvalue {{curve} {curve} {curve}}
+ minlumapixdata {{curve} {curve}}
+ minlumapixvalue {{curve} {curve} {curve}}
+ name CurveTool_B_1
+ selected true
+ xpos 543
+ ypos -10925
+}
+CurveTool {
+ operation "Max Luma Pixel"
+ channels alpha
+ ROI {0 0 1920 1080}
+ autocropdata {480 270 1440 810}
+ intensitydata {{curve}}
+ maxlumapixdata {{curve} {curve}}
+ maxlumapixvalue {{curve} {curve} {curve}}
+ minlumapixdata {{curve} {curve}}
+ minlumapixvalue {{curve} {curve} {curve}}
+ name CurveTool_A_1
+ selected true
+ xpos 543
+ ypos -10883
+}
+push 0
+Switch {
+ inputs 2
+ which 1
+ name Switch7
+ selected true
+ xpos 400
+ ypos -10872
+ disable {{1}}
+}
+CornerPin2D {
+ to1 {{parent.CurveTool_R_1.maxlumapixdata} {parent.CurveTool_R_1.maxlumapixdata}}
+ to2 {{parent.CurveTool_G_1.maxlumapixdata} {parent.CurveTool_G_1.maxlumapixdata}}
+ to3 {{parent.CurveTool_B_1.maxlumapixdata} {parent.CurveTool_B_1.maxlumapixdata}}
+ to4 {{parent.CurveTool_A_1.maxlumapixdata} {parent.CurveTool_A_1.maxlumapixdata}}
+ invert false
+ from1 {0 0}
+ from2 {2000 0}
+ from3 {2000 2829}
+ from4 {0 2829}
+ name CornerPin2D1
+ selected true
+ xpos 400
+ ypos -10834
+}

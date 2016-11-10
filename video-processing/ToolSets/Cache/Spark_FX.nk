@@ -1,0 +1,97 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode13
+ tile_color 0x8e8e3800
+ label "Spark_FX v0.1"
+ note_font_size 42
+ selected true
+ xpos 24
+ ypos -1714
+ bdwidth 392
+ bdheight 548
+}
+push $cut_paste_input
+Dot {
+ name Dot117
+ selected true
+ xpos 104
+ ypos -1422
+}
+Dot {
+ name Dot129
+ selected true
+ xpos 104
+ ypos -1350
+}
+set Ne0baa400 [stack 0]
+Read {
+ inputs 0
+ file Z:/SNJYW/FX/Final/EP02/SNJYW_EP02_03_sc068/cam068_huoxing/cam068_huoxing.%04d.iff
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ first 625
+ last 707
+ origfirst 625
+ origlast 707
+ origset true
+ name Read11
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ selected true
+ xpos 180
+ ypos -1635
+}
+ColorCorrect {
+ saturation 0.5
+ gain {1.824999928 1.065999985 0.1749999821 1}
+ name ColorCorrect7
+ selected true
+ xpos 180
+ ypos -1522
+}
+Glow2 {
+ size 10
+ name Glow6
+ selected true
+ xpos 180
+ ypos -1498
+}
+Multiply {
+ value 0.5
+ name Multiply31
+ selected true
+ xpos 180
+ ypos -1456
+}
+Defocus {
+ defocus 5
+ name Defocus3
+ selected true
+ xpos 180
+ ypos -1408
+ cached true
+}
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+Multiply {
+ inputs 1+1
+ value 0
+ maskChannelMask depth3split.Close
+ name Multiply32
+ selected true
+ xpos 180
+ ypos -1360
+}
+Dot {
+ name Dot106
+ selected true
+ xpos 214
+ ypos -1278
+}
+push $Ne0baa400
+Merge2 {
+ inputs 2
+ name Merge8
+ selected true
+ xpos 70
+ ypos -1282
+}
