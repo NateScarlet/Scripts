@@ -1,203 +1,197 @@
 set cut_paste_input [stack 0]
+version 10.0 v4
 BackdropNode {
- inputs 0
- name BackdropNode7
- tile_color 0x388e8e00
- label "MP_Sphere v1.0"
- note_font_size 42
- selected true
- xpos -180
- ypos -24266
- bdwidth 595
- bdheight 1262
- z_order 1
+inputs 0
+name BackdropNode7
+tile_color 0x388e8e00
+label "MP_Sphere v1.1"
+note_font_size 42
+selected true
+xpos 359
+ypos -9347
+bdwidth 595
+bdheight 1262
+z_order 1
 }
 push $cut_paste_input
-clone node40722400|Camera|12508 Camera {
- translate {{CameraTracker1.camTranslate} {CameraTracker1.camTranslate} {CameraTracker1.camTranslate}}
- rotate {{CameraTracker1.camRotate} {CameraTracker1.camRotate} {CameraTracker1.camRotate}}
- focal {{CameraTracker1.focalLength}}
- haperture {{CameraTracker1.aperture.x}}
- vaperture {{CameraTracker1.aperture.y}}
- win_translate {{CameraTracker1.windowTranslate} {CameraTracker1.windowTranslate}}
- win_scale {{CameraTracker1.windowScale} {CameraTracker1.windowScale}}
- name Camera2
- selected true
- xpos 87
- ypos -23425
-}
-set N530ee400 [stack 0]
 Dot {
- name Dot24
- selected true
- xpos 111
- ypos -23185
+name Dot25
+label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]\n"
+selected true
+xpos 650
+ypos -8482
+hide_input true
 }
-push $N530ee400
+set N5af71400 [stack 0]
+Dot {
+name Dot24
+selected true
+xpos 650
+ypos -8266
+}
+push $N5af71400
 Read {
- inputs 0
- file Z:/SNJYW/MP/EP01/YeKong/YeKong_Tree.tga
- localizationPolicy on
- format "16384 4816 0 0 16384 4816 1 "
- origset true
- name Read10
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 187
- ypos -23902
+inputs 0
+file Z:/SNJYW/MP/EP01/YeKong/YeKong_All.tga
+localizationPolicy on
+format "16384 4816 0 0 16384 4816 1 "
+origset true
+name Read11
+label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+selected true
+xpos 616
+ypos -9102
+}
+Grade {
+white 0.38
+name Grade5
+selected true
+xpos 616
+ypos -8989
+}
+ColorCorrect {
+saturation 0.8
+gain {0.8613333702 0.9973333478 1.141333342 1}
+name ColorCorrect14
+selected true
+xpos 616
+ypos -8965
+}
+Blur {
+channels alpha
+size 200
+filter quadratic
+name Blur3
+selected true
+xpos 616
+ypos -8923
 }
 Premult {
- name Premult5
- selected true
- xpos 187
- ypos -23765
-}
-push 0
-Switch {
- inputs 2
- which 1
- name Switch4
- selected true
- xpos 187
- ypos -23741
-}
-push 0
-Read {
- inputs 0
- file Z:/SNJYW/MP/EP01/YeKong/YeKong_All.tga
- localizationPolicy on
- format "16384 4816 0 0 16384 4816 1 "
- origset true
- name Read3
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 77
- ypos -23974
-}
-Premult {
- name Premult7
- selected true
- xpos 77
- ypos -23861
-}
-Read {
- inputs 0
- file Z:/SNJYW/MP/EP01/YeKong/YeKong_Sky.tga
- localizationPolicy on
- format "16384 4816 0 0 16384 4816 1 "
- origset true
- name Read5
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos -33
- ypos -24070
-}
-Shuffle {
- alpha white
- name Shuffle4
- selected true
- xpos -33
- ypos -23957
-}
-Merge2 {
- inputs 3+1
- name Merge8
- selected true
- xpos -33
- ypos -23741
-}
-Reformat {
- type scale
- scale {1 2}
- resize none
- center false
- name Reformat1
- selected true
- xpos -33
- ypos -23693
+name Premult3
+selected true
+xpos 616
+ypos -8876
 }
 Transform {
- translate {0 {input.height/2}}
- name Transform1
- selected true
- xpos -33
- ypos -23645
+translate {-4150 -1225}
+scale 0.481
+center {8192 2408}
+name Transform4
+selected true
+xpos 616
+ypos -8852
+}
+Read {
+inputs 0
+file Z:/SNJYW/MP/EP01/YeKong/YeKong_Sky.psd
+localizationPolicy on
+format "8000 2352 0 0 8000 2352 1 "
+origset true
+name Read12
+label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+selected true
+xpos 506
+ypos -9061
+}
+Merge2 {
+inputs 2
+name Merge9
+selected true
+xpos 506
+ypos -8852
+}
+Reformat {
+type scale
+scale {1 2}
+resize none
+center false
+name Reformat2
+selected true
+xpos 506
+ypos -8774
+}
+Transform {
+translate {0 {input.height/2}}
+name Transform3
+selected true
+xpos 506
+ypos -8726
 }
 Sphere {
- translate {0 -24 0}
- rotate {0 131 0}
- uniform_scale 100
- name Sphere1
- selected true
- xpos -33
- ypos -23573
+translate {0 -24 0}
+rotate {0 131 0}
+uniform_scale 100
+name Sphere2
+selected true
+xpos 506
+ypos -8654
 }
-push $N530ee400
+push $N5af71400
 Scene {
- inputs 2
- name Scene2
- selected true
- xpos -23
- ypos -23497
+inputs 2
+name Scene3
+selected true
+xpos 516
+ypos -8578
 }
 push 0
 ScanlineRender {
- inputs 3
- conservative_shader_sampling false
- motion_vectors_type distance
- name ScanlineRender2
- selected true
- xpos -33
- ypos -23405
+inputs 3
+conservative_shader_sampling false
+motion_vectors_type distance
+name ScanlineRender3
+selected true
+xpos 506
+ypos -8486
 }
 Expression {
- channel0 depth
- expr0 (z==0)?10000:1/z
- name Expression2
- selected true
- xpos -33
- ypos -23309
+channel0 depth
+expr0 (z==0)?10000:1/z
+name Expression1
+selected true
+xpos 506
+ypos -8390
 }
 ColorCorrect {
- saturation 0.27
- contrast 1.02
- gain {0.7050001025 1.080000043 1.455000162 1.080000043}
- shadows.gamma 1.28
- lookup {shadow {curve 1 s0 x0.02874372713 0 s0}
-   midtone {1-shadow-highlight}
-   highlight {curve x0.1596873701 0 s0 x0.3193747401 1 s0}}
- name ColorCorrect6
- selected true
- xpos -33
- ypos -23285
+saturation 0.27
+contrast 1.02
+gain {0.7050001025 1.080000043 1.455000162 1.080000043}
+shadows.gamma 1.28
+lookup {shadow {curve 1 s0 x0.02874372713 0 s0}
+  midtone {1-shadow-highlight}
+  highlight {curve x0.1596873701 0 s0 x0.3193747401 1 s0}}
+name ColorCorrect13
+selected true
+xpos 506
+ypos -8366
 }
 Defocus {
- defocus 14.4
- name Defocus2
- selected true
- xpos -33
- ypos -23243
+defocus 14.4
+name Defocus4
+selected true
+xpos 506
+ypos -8324
 }
 MotionBlur3D {
- inputs 2
- name MotionBlur3D1
- selected true
- xpos -33
- ypos -23189
+inputs 2
+name MotionBlur3D2
+selected true
+xpos 506
+ypos -8270
 }
 VectorBlur2 {
- uv motion
- scale 10
- name VectorBlur2_1
- selected true
- xpos -33
- ypos -23147
+uv motion
+scale 10
+name VectorBlur2_2
+selected true
+xpos 506
+ypos -8228
 }
 add_layer {MP MP.red MP.green MP.blue MP.alpha}
 Shuffle {
- out MP
- name Shuffle7
- selected true
- xpos -33
- ypos -23093
+out MP
+name Shuffle7
+selected true
+xpos 506
+ypos -8174
 }
