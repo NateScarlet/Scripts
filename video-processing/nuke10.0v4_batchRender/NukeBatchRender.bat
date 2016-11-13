@@ -1,19 +1,20 @@
 @ECHO off
 SET NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe"
 SET serverZ=\\192.168.1.4\f
-SET /P isLocalRender="本地渲染?(Y/N)"
+CHOICE /T 15 /D n /M "本地渲染"
+IF "%ERRORLEVEL%" EQU "1" SET isLocalRender=Y
 MKDIR "%~dp0RenderLog" 2>nul
 IF /I "%isLocalRender%" EQU "Y" (
-    ECHO 将进行本地化渲染y
+    ECHO 将进行本地化渲染
     NET USE Z: /DELETE 2>nul
     SUBST Z: "D:\Cache\Nuke\localize\Z_"
 )
 SET renderTime=%date:~2,2%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%
 SETLOCAL enabledelayedexpansion
 FOR %%i in ("%~dp0\*.nk") do (
-    IF /I "%isLocalRender%" EQU "Y" "%~dp0localiseFootage.bat" %%~i
+    @IF /I "%isLocalRender%" EQU "Y" "%~dp0localiseFootage.bat" %%~i
 	SET startTime=!time:~0,8!
-    IF /I "%~1" NEQ "-PROXY" (
+    @IF /I "%~1" NEQ "-PROXY" (
         ECHO.
         ECHO 全尺寸渲染 %%~nxi 
         ECHO.
