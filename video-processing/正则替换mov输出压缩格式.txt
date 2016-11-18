@@ -1,0 +1,3 @@
+( ?)file_type mov\n ?meta_codec .*\n ?meta_encoder .*\n ?mov32_codec .*\n ?mov32_pixel_format .*\n ?mov64_codec .*$
+
+\1file_type mov\n\1meta_codec apch\n\1mov32_codec "rle "\n\1mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}\n\1mov64_codec apch

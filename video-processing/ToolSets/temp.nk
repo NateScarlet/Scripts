@@ -1,0 +1,66 @@
+set cut_paste_input [stack 0]
+Read {
+ inputs 0
+ file //192.168.1.4/f/SNJYW/Render/EP02/05/EP02_05_sc338/EP02_07_sc338_CH_A/EP02_07_sc338_CH_A.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ first 59
+ last 125
+ origfirst 59
+ origlast 125
+ origset true
+ name Read1
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ selected true
+ xpos -260
+ ypos -363
+}
+Dilate {
+ channels depth
+ size -2
+ name Dilate1
+ selected true
+ xpos -260
+ ypos -232
+}
+clone node3006f800|ZDefocus2|9036 ZDefocus2 {
+ math depth
+ center 0.007680811919
+ focal_point {544 497}
+ size 10
+ max_size {{size}}
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus2
+ selected true
+ xpos -260
+ ypos -184
+ cached true
+}
+set C3006f800 [stack 0]
+Read {
+ inputs 0
+ file //192.168.1.4/f/SNJYW/Render/EP02/05/EP02_05_sc338/EP02_07_sc338_BG_A/EP02_07_sc338_BG_A.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ first 59
+ last 125
+ origfirst 59
+ origlast 125
+ origset true
+ name Read2
+ label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ selected true
+ xpos -370
+ ypos -363
+}
+clone $C3006f800 {
+ xpos -370
+ ypos -256
+ selected true
+}
+Merge2 {
+ inputs 2
+ name Merge1
+ selected true
+ xpos -370
+ ypos -178
+}

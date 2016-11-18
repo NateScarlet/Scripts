@@ -1,655 +1,301 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
- inputs 0
- name BackdropNode6
- tile_color 0x8e8e3800
- label "Firework v1.1\n"
- note_font_size 42
- selected true
- xpos 132
- ypos -3597
- bdwidth 1497
- bdheight 1817
+inputs 0
+name BackdropNode5
+tile_color 0x8e8e3800
+label "Firework v2.0"
+note_font_size 42
+selected true
+xpos 120
+ypos -4516
+bdwidth 1741
+bdheight 3032
+}
+Read {
+inputs 0
+file Z:/SNJYW/Render/EP02/03/Ep02_03_sc057/EP02_03_sc057_BG_A/SNJYW_EP02_03_sc057_BG.%04d.exr
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 145
+origlast 145
+origset true
+name Read5
+label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+selected true
+xpos 400
+ypos -2067
+}
+ColorCorrect {
+saturation 0
+gain {{parent.CurveTool4.intensitydata*10} {parent.CurveTool4.intensitydata*10} {parent.CurveTool4.intensitydata*10} {parent.CurveTool4.intensitydata*10}}
+name ColorCorrect10
+selected true
+xpos 400
+ypos -1930
+}
+ColorCorrect {
+saturation 2
+gamma 0.8
+gain 1.5
+name ColorCorrect11
+selected true
+xpos 400
+ypos -1906
+}
+Glow2 {
+name Glow3
+selected true
+xpos 400
+ypos -1882
+}
+Ramp {
+output none
+premult all
+p0 {{curve x101 1000} {curve x15 0 x101 600}}
+p1 {{curve x101 1000} {curve x15 300 x101 1000}}
+name Ramp5
+label Mask
+selected true
+xpos 400
+ypos -1847
+}
+Multiply {
+value 2
+name Multiply7
+selected true
+xpos 400
+ypos -1816
+}
+Dot {
+name Dot7
+selected true
+xpos 434
+ypos -1758
+}
+Read {
+inputs 0
+file Z:/SNJYW/Render/EP02/03/Ep02_03_sc057/EP02_03_sc057_BG_FX1/EP02_03_sc057_BG.%04d.exr
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 145
+origlast 145
+origset true
+name Read3
+label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+selected true
+xpos 400
+ypos -2499
+}
+SoftClip {
+conversion "logarithmic compress"
+softclip_min 0
+name SoftClip3
+selected true
+xpos 400
+ypos -2386
+}
+ColorCorrect {
+saturation 0
+gain {{parent.CurveTool3.intensitydata*10} {parent.CurveTool3.intensitydata*10} {parent.CurveTool3.intensitydata*10} {parent.CurveTool3.intensitydata}}
+name ColorCorrect7
+selected true
+xpos 400
+ypos -2338
+}
+ColorCorrect {
+saturation 2
+gamma 0.8
+gain 1.5
+name ColorCorrect8
+selected true
+xpos 400
+ypos -2314
+}
+Ramp {
+output none
+premult all
+p0 {600 600}
+p1 {1400 600}
+name Ramp4
+label Mask
+selected true
+xpos 400
+ypos -2279
+}
+Ramp {
+output none
+premult all
+p0 {{curve x92 1598 x113 1574 x123 1568 x137 1548} {curve x92 -262 x113 -60 x123 14 x137 124}}
+p1 {{curve x92 1566 x113 1534 x123 1534 x137 1514 x143 1508} {curve x92 162 x113 446 x123 450 x137 568 x143 582}}
+name Ramp6
+label Mask
+selected true
+xpos 400
+ypos -2207
+}
+EdgeBlur {
+name EdgeBlur2
+selected true
+xpos 400
+ypos -2152
+}
+Dot {
+name Dot22
+selected true
+xpos 434
+ypos -2094
+}
+Read {
+inputs 0
+file Z:/SNJYW/Render/EP02/03/Ep02_03_sc057/EP02_03_sc057_BG_FX/EP02_03_sc057_BG.%04d.exr
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 145
+origlast 145
+origset true
+name Read2
+label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+selected true
+xpos 400
+ypos -2811
+}
+SoftClip {
+conversion "logarithmic compress"
+softclip_min 0
+name SoftClip4
+selected true
+xpos 400
+ypos -2722
+}
+ColorCorrect {
+saturation 0
+gain {{parent.CurveTool2.intensitydata*10} {parent.CurveTool2.intensitydata*10} {parent.CurveTool2.intensitydata*10} {parent.CurveTool2.intensitydata}}
+name ColorCorrect6
+selected true
+xpos 400
+ypos -2698
+}
+ColorCorrect {
+saturation 2
+gamma 0.8
+gain 1.5
+name ColorCorrect9
+selected true
+xpos 400
+ypos -2674
+}
+Ramp {
+output none
+premult all
+p0 {1400 600}
+p1 {600 600}
+name Ramp3
+label Mask
+selected true
+xpos 400
+ypos -2639
+}
+EdgeBlur {
+name EdgeBlur1
+selected true
+xpos 400
+ypos -2584
 }
 push $cut_paste_input
 Dot {
- name Dot15
- selected true
- xpos -6
- ypos -3558
+name Dot16
+selected true
+xpos 214
+ypos -4422
 }
-set N27926000 [stack 0]
+add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Rooftop BG_A.StoneLight BG_A.Water_depth}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow}
+AddChannels {
+channels {BG_A.red BG_A.green BG_A.blue BG_A.alpha}
+channels2 CH_A
+name AddChannels2
+selected true
+xpos 180
+ypos -3208
+}
 Dot {
- name Dot22
- selected true
- xpos 214
- ypos -3558
+name Dot26
+selected true
+xpos 214
+ypos -3126
 }
+set N2f744000 [stack 0]
 Dot {
- name Dot23
- selected true
- xpos 214
- ypos -2334
+name Dot29
+selected true
+xpos 214
+ypos -3078
 }
-set N2796f800 [stack 0]
-Dot {
- name Dot29
- selected true
- xpos 214
- ypos -2286
-}
-set N8f4e5400 [stack 0]
-push $N2796f800
+set N2f76bc00 [stack 0]
+push $N2f744000
 push 0
 Dot {
- name Dot24
- label "Camera1\n\[input this 0 Camera1]"
- selected true
- xpos 434
- ypos -2550
- hide_input true
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/3/yanhua03.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read4
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 290
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x} {height/2-center.y}}
- center {1002 778}
- name Transform1
- label ToCenter
- selected true
- xpos 290
- ypos -3184
-}
-Retime {
- input.first 65
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 165
- output.first_lock true
- output.last 257
- speed 2
- time ""
- name Retime9
- selected true
- xpos 290
- ypos -3106
-}
-Card2 {
- translate {0.2499999404 18.57999992 -15.90000248}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card10
- selected true
- xpos 290
- ypos -3082
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/1/yanhua01.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read16
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 400
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x71 142.5 x100 142} {height/2-center.y x71 -217.5 x100 -155}}
- center {818 699}
- name Transform3
- label ToCenter
- selected true
- xpos 400
- ypos -3184
-}
-Retime {
- input.first 69
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 180
- output.first_lock true
- output.last 270
- speed 2
- time ""
- name Retime8
- selected true
- xpos 400
- ypos -3106
-}
-Card2 {
- translate {0.5499992371 6.320000172 -17.49999809}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card8
- selected true
- xpos 400
- ypos -3082
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/4/yanhua04.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read7
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 510
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 -17} {height/2-center.y x100 -310}}
- center {980 850}
- name Transform4
- label ToCenter
- selected true
- xpos 510
- ypos -3184
-}
-Retime {
- input.first 80
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 170
- output.first_lock true
- output.last 212
- speed 4
- time ""
- name Retime7
- selected true
- xpos 510
- ypos -3106
-}
-Multiply {
- value {{curve x208 1 x216 0}}
- name Multiply6
- selected true
- xpos 510
- ypos -3064
-}
-Card2 {
- translate {1.249999881 3.70668602 -17.20000267}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card7
- selected true
- xpos 510
- ypos -3010
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/2/yanhua02.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read36
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 620
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 140} {height/2-center.y x100 -213}}
- center {817 753}
- name Transform5
- label ToCenter
- selected true
- xpos 620
- ypos -3184
-}
-Retime {
- input.first 75
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 150
- output.first_lock true
- output.last 237
- speed 2
- time ""
- name Retime3
- selected true
- xpos 620
- ypos -3106
-}
-Card2 {
- translate {-5.29999876 3.119999886 -17.90000153}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card6
- selected true
- xpos 620
- ypos -3058
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/7/yanhua07.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read41
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 730
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 145} {height/2-center.y x100 -216}}
- center {810 755}
- name Transform6
- label ToCenter
- selected true
- xpos 730
- ypos -3184
-}
-Retime {
- input.first 75
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 100
- output.first_lock true
- output.last 187
- speed 2
- time ""
- name Retime2
- selected true
- xpos 730
- ypos -3106
-}
-ColorCorrect {
- saturation 0.5
- gain {1 0.3454999924 0.2300000191 1}
- name ColorCorrect7
- selected true
- xpos 730
- ypos -3082
-}
-Card2 {
- translate {0.8999994993 5.619995117 -17.60000038}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card5
- selected true
- xpos 730
- ypos -3058
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/6/yanhua06.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read40
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 840
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 73} {height/2-center.y x100 -188}}
- center {885 723}
- name Transform7
- label ToCenter
- selected true
- xpos 840
- ypos -3184
-}
-Retime {
- input.first 51
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 100
- output.first_lock true
- output.last 199
- speed 2
- before black
- time ""
- name Retime12
- selected true
- xpos 840
- ypos -3106
-}
-Multiply {
- value {{curve x130 1 s0 x154 0}}
- name Multiply4
- selected true
- xpos 840
- ypos -3064
-}
-Card2 {
- translate {-2.019999981 -0.3599998951 -17.19999886}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card13
- selected true
- xpos 840
- ypos -3010
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/5/yanhua05.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read39
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 950
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 203} {height/2-center.y x100 -251}}
- center {755 790}
- name Transform8
- label ToCenter
- selected true
- xpos 950
- ypos -3184
-}
-Retime {
- input.first 65
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 72
- output.first_lock true
- output.last 133
- speed 3
- time ""
- name Retime6
- selected true
- xpos 950
- ypos -3106
-}
-Multiply {
- value {{curve x120 1 x150 0}}
- name Multiply25
- selected true
- xpos 950
- ypos -3088
-}
-Card2 {
- translate {-6.299999714 0.1200000048 -19.59999847}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card4
- selected true
- xpos 950
- ypos -3010
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/3/yanhua03.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read38
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 1060
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 -39} {height/2-center.y x100 -240}}
- center {1002 776}
- name Transform9
- label ToCenter
- selected true
- xpos 1060
- ypos -3184
-}
-Retime {
- input.first 65
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 57
- output.first_lock true
- output.last 149
- speed 2
- time ""
- name Retime4
- selected true
- xpos 1060
- ypos -3106
-}
-Multiply {
- value {{curve x100 1 x130 0}}
- name Multiply26
- selected true
- xpos 1060
- ypos -3088
-}
-Card2 {
- translate {1.797123075 1.780519128 -21.80025673}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card3
- selected true
- xpos 1060
- ypos -3058
-}
-Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/4/yanhua04.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read37
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 1170
- ypos -3291
-}
-Transform {
- translate {{width/2-center.x x100 -17} {height/2-center.y x100 -308}}
- center {975 848}
- name Transform10
- label ToCenter
- selected true
- xpos 1170
- ypos -3184
-}
-Retime {
- input.first 80
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 18
- output.first_lock true
- output.last 60
- speed 4
- time ""
- name Retime5
- selected true
- xpos 1170
- ypos -3106
-}
-Multiply {
- value {{curve x52 1 x60 0}}
- name Multiply3
- selected true
- xpos 1170
- ypos -3088
-}
-Card2 {
- translate {0.6000003219 3.060000181 -20.99999809}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
-
-1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
-1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
-1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
-1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
-1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
-1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
-1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
-1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
-1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card2
- selected true
- xpos 1170
- ypos -3058
+name Dot14
+label Camera
+selected true
+xpos 544
+ypos -3534
+hide_input true
 }
 push 0
+push 0
 Read {
- inputs 0
- file Z:/SNJYW/Comp/sucai/yanhua/1/yanhua01.%04d.tiff
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- last 250
- origlast 250
- origset true
- name Read6
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
- selected true
- xpos 1280
- ypos -3291
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_10.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read18
+selected true
+xpos 1500
+ypos -4414
 }
-Transform {
- translate {{width/2-center.x x100 138} {height/2-center.y x100 -226}}
- center {820 765}
- name Transform11
- label ToCenter
- selected true
- xpos 1280
- ypos -3184
+Keyer {
+operation "max keyer"
+name Keyer4
+selected true
+xpos 1500
+ypos -4312
 }
-Retime {
- input.first 69
- input.first_lock true
- input.last 250
- input.last_lock true
- output.first 3
- output.first_lock true
- output.last 93
- speed 2
- time ""
- name Retime1
- selected true
- xpos 1280
- ypos -3106
+clone node2f76a400|Ramp|3712 Ramp {
+output none
+premult all
+p0 {988 {p1.y-500}}
+p1 {986 {curve x12 500 x20 0}}
+name Ramp7
+label Mask
+selected true
+xpos 1500
+ypos -4271
+}
+set C2f76a400 [stack 0]
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset11
+label "Offset:\[value time_offset]"
+selected true
+xpos 1500
+ypos -4216
+}
+TimeOffset {
+time_offset 86
+time ""
+name TimeOffset22
+label "Offset:\[value time_offset]"
+selected true
+xpos 1500
+ypos -4168
 }
 Card2 {
- translate {-5.900000095 3.380000114 -21.60000038}
- rotate {{parent.Camera1.rotate} {parent.Camera1.rotate} {parent.Camera1.rotate}}
- uniform_scale 20
- control_points {3 3 3 6 
+selectable false
+control_points {3 3 3 6 
 
 1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
 1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
@@ -660,184 +306,937 @@ Card2 {
 1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
 1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
 1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
- name Card1
- selected true
- xpos 1280
- ypos -3082
+name Card11
+selected true
+xpos 1500
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.289999962 0.3339999914 -0.2980000079}
+name TransformGeo10
+selected true
+xpos 1500
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_09.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read17
+selected true
+xpos 1390
+ypos -4390
+}
+clone $C2f76a400 {
+xpos 1390
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset10
+label "Offset:\[value time_offset]"
+selected true
+xpos 1390
+ypos -4216
+}
+TimeOffset {
+time_offset 54
+time ""
+name TimeOffset21
+label "Offset:\[value time_offset]"
+selected true
+xpos 1390
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card10
+selected true
+xpos 1390
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.190000057 0.4359999895 0.8090000153}
+name TransformGeo9
+selected true
+xpos 1390
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_07.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read16
+selected true
+xpos 1286
+ypos -4373
+}
+clone $C2f76a400 {
+xpos 1280
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset9
+label "Offset:\[value time_offset]"
+selected true
+xpos 1280
+ypos -4216
+}
+TimeOffset {
+time_offset 46
+time ""
+name TimeOffset20
+label "Offset:\[value time_offset]"
+selected true
+xpos 1280
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card9
+selected true
+xpos 1280
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.315000057 0.6740000248 -0.05700000003}
+name TransformGeo8
+selected true
+xpos 1280
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_05.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read15
+selected true
+xpos 1170
+ypos -4366
+}
+clone $C2f76a400 {
+xpos 1170
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset8
+label "Offset:\[value time_offset]"
+selected true
+xpos 1170
+ypos -4216
+}
+TimeOffset {
+time_offset 22
+time ""
+name TimeOffset19
+label "Offset:\[value time_offset]"
+selected true
+xpos 1170
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card8
+selected true
+xpos 1170
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.879999995 0.6899999976 0.8460000157}
+name TransformGeo7
+selected true
+xpos 1170
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_03.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+on_error "nearest frame"
+version 4
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read14
+selected true
+xpos 1060
+ypos -4414
+}
+Grade {
+channels alpha
+blackpoint 0.05
+name Grade4
+selected true
+xpos 1060
+ypos -4312
+}
+clone $C2f76a400 {
+xpos 1060
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset7
+label "Offset:\[value time_offset]"
+selected true
+xpos 1060
+ypos -4216
+}
+TimeOffset {
+time_offset 6
+time ""
+name TimeOffset18
+label "Offset:\[value time_offset]"
+selected true
+xpos 1060
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card7
+selected true
+xpos 1060
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.350000024 0.8569999933 0.02600000054}
+name TransformGeo6
+selected true
+xpos 1060
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_02.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read13
+selected true
+xpos 950
+ypos -4366
+}
+clone $C2f76a400 {
+xpos 950
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset6
+label "Offset:\[value time_offset]"
+selected true
+xpos 950
+ypos -4216
+}
+TimeOffset {
+time_offset -16
+time ""
+name TimeOffset17
+label "Offset:\[value time_offset]"
+selected true
+xpos 950
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card6
+selected true
+xpos 950
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.450000048 0 0.4460000098}
+name TransformGeo5
+selected true
+xpos 950
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/yanhua_01.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+on_error checkerboard
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read12
+selected true
+xpos 840
+ypos -4414
+}
+Keyer {
+operation "max keyer"
+name Keyer5
+selected true
+xpos 840
+ypos -4312
+}
+clone $C2f76a400 {
+xpos 840
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset5
+label "Offset:\[value time_offset]"
+selected true
+xpos 840
+ypos -4216
+}
+TimeOffset {
+time_offset -27
+time ""
+name TimeOffset16
+label "Offset:\[value time_offset]"
+selected true
+xpos 840
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card5
+selected true
+xpos 840
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.110000014 0.7559999824 0.2880000174}
+name TransformGeo4
+selected true
+xpos 840
+ypos -4067
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/firework_12.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read11
+selected true
+xpos 724
+ypos -4375
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset4
+label "Offset:\[value time_offset]"
+selected true
+xpos 730
+ypos -4216
+}
+TimeOffset {
+time_offset -30
+time ""
+name TimeOffset15
+label "Offset:\[value time_offset]"
+selected true
+xpos 730
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card4
+selected true
+xpos 730
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {0.8939999938 0.7639999986 0.6159999967}
+name TransformGeo3
+selected true
+xpos 730
+ypos -4068
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/firework_08.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read6
+selected true
+xpos 510
+ypos -4390
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset2
+label "Offset:\[value time_offset]"
+selected true
+xpos 510
+ypos -4216
+}
+TimeOffset {
+time_offset 68
+time ""
+name TimeOffset13
+label "Offset:\[value time_offset]"
+selected true
+xpos 510
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card2
+selected true
+xpos 510
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.269999981 0.601000011 0.3350000083}
+name TransformGeo1
+selected true
+xpos 510
+ypos -4066
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/firework_11.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read7
+selected true
+xpos 620
+ypos -4414
+}
+Keyer {
+operation "max keyer"
+name Keyer2
+selected true
+xpos 620
+ypos -4312
+}
+clone $C2f76a400 {
+xpos 620
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset3
+label "Offset:\[value time_offset]"
+selected true
+xpos 620
+ypos -4216
+}
+TimeOffset {
+time_offset -30
+time ""
+name TimeOffset14
+label "Offset:\[value time_offset]"
+selected true
+xpos 620
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card3
+selected true
+xpos 620
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.169999957 0.5690000057 -0.2189999968}
+name TransformGeo2
+selected true
+xpos 620
+ypos -4069
+hide_input true
+}
+push 0
+push 0
+Read {
+inputs 0
+file Z:/SNJYW/FX/VFX_Library/yanhua/firework_07.mov
+format "1920 1080 0 0 1920 1080 1 HD_1080"
+last 125
+origlast 125
+origset true
+colorspace Gamma1.8
+auto_alpha true
+mov32_codec {{0} "Apple PNG (appl - png )"}
+mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+name Read4
+selected true
+xpos 400
+ypos -4414
+}
+Keyer {
+operation "max keyer"
+name Keyer3
+selected true
+xpos 400
+ypos -4312
+}
+clone $C2f76a400 {
+xpos 400
+ypos -4271
+selected true
+}
+TimeOffset {
+time_offset {{"\[value root.first_frame]"}}
+time ""
+name TimeOffset1
+label "Offset:\[value time_offset]"
+selected true
+xpos 400
+ypos -4216
+}
+TimeOffset {
+time_offset -59
+time ""
+name TimeOffset12
+label "Offset:\[value time_offset]"
+selected true
+xpos 400
+ypos -4168
+}
+Card2 {
+selectable false
+control_points {3 3 3 6 
+
+1 {-0.5 -0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0 0 0} 
+1 {0 -0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {0.5 0 0} 
+1 {0.5 -0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666865 0} 0 {0 0 0} 0 {1 0 0} 
+1 {-0.5 0 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0 0.5 0} 
+1 {0 0 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {0.5 0.5 0} 
+1 {0.5 0 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0.1666666716 0} 0 {0 -0.1666666716 0} 0 {1 0.5 0} 
+1 {-0.5 0.5 0} 0 {0.1666666865 0 0} 0 {0 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0 1 0} 
+1 {0 0.5 0} 0 {0.1666666716 0 0} 0 {-0.1666666716 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {0.5 1 0} 
+1 {0.5 0.5 0} 0 {0 0 0} 0 {-0.1666666865 0 0} 0 {0 0 0} 0 {0 -0.1666666865 0} 0 {1 1 0} }
+name Card1
+selected true
+xpos 400
+ypos -4114
+}
+TransformGeo {
+inputs 3
+translate {1.039999962 0.9029999971 0.01199999452}
+name TransformGeo16
+selected true
+xpos 400
+ypos -4066
+hide_input true
 }
 Scene {
- inputs 11
- name Scene1
- selected true
- xpos 300
- ypos -2694
+inputs 11
+name Scene1
+selected true
+xpos 410
+ypos -3654
 }
 push 0
 ScanlineRender {
- inputs 3
- conservative_shader_sampling false
- motion_vectors_type distance
- name ScanlineRender1
- selected true
- xpos 290
- ypos -2554
+inputs 3
+conservative_shader_sampling false
+projection_mode perspective
+motion_vectors_type distance
+name ScanlineRender1
+selected true
+xpos 397
+ypos -3538
+cached true
 }
 CurveTool {
- ROI {0 0 1920 1080}
- autocropdata {480 270 1440 810}
- intensitydata {{curve x1 0 0 9.376321707e-005 0.0004813486586 0.001065129649 0.001825953816 0.002739423256 0.00382371144 0.005015705259 0.00629989782 0.007675774045 0.008994948168 0.01026492637 0.01147737176 0.01252673941 0.01333313778 0.008720184282 0.009152000195 0.009758532702 0.01050173481 0.01132834115 0.01219732177 0.01304446103 0.01372189529 0.01403934739 0.01426388379 0.0143165763 0.01442056116 0.01449091403 0.01458650799 0.01457591593 0.01468834747 0.01475455568 0.01479745103 0.01492874434 0.01505974891 0.01509088088 0.01504312637 0.01486094025 0.01462507015 0.01437238605 0.01418040871 0.01379608573 0.01334688583 0.01297313265 0.01250022992 0.01199884196 0.01119487679 0.01039927487 0.00965996697 0.008797877731 0.00788913911 0.006966494431 0.006198118682 0.005499592108 0.004909667155 0.004499263229 0.004457429125 0.004536674654 0.004852933296 0.00517383249 0.005463552901 0.00577757747 0.006099644393 0.006438788816 0.006829878499 0.007246336346 0.007702744037 0.00818754852 0.008699172029 0.009268266579 0.009933041904 0.01098688452 0.01208797032 0.01319979745 0.0143234905 0.01542692 0.01654109012 0.01763586909 0.01874676035 0.01982082495 0.02090269842 0.02195867366 0.02298639179 0.02396199313 0.02493126151 0.02583645931 0.02670998788 0.02755409752 0.02831928109 0.02904854898 0.02970400255 0.03025333165 0.03072719473 0.03108971461 0.03130368478 0.03144472019 0.03151379333 0.03152257419 0.03140032672 0.03878807988 0.03770981303 0.03697295092 0.03643182409 0.03629622476 0.03635546605 0.03634938553 0.03628890573 0.03625420442 0.03600414658 0.03540175787 0.03444483994 0.03340943643 0.03201978611 0.03050491693 0.02904048221 0.02783338653 0.02671371198 0.02578257906 0.02499491145 0.02433945333 0.0237242269 0.02331459056 0.02292875437 0.02272305647 0.02264013488 0.02266577975 0.022783282 0.02288830028 0.02298697208 0.02369840018 0.0242356177 0.02473379019 0.02494770781 0.02515086819 0.02515199385 0.0250950936 0.02482311329 0.02434115735 0.02391919872 0.02318170489 0.0223709084 0.02139071982 0.02026492365 0.01863487962} {curve x1 0 0 6.645780334e-005 0.0003798858975 0.0009027054476 0.001608441097 0.002471015648 0.003490913687 0.004520308084 0.005464387572 0.006349058083 0.006967570333 0.007397878727 0.007709269237 0.007985208832 0.008220175996 0.005258934181 0.005476687512 0.005896266019 0.006458046437 0.007134155835 0.007833015534 0.008365579449 0.008667389208 0.008691979991 0.008711190233 0.008641591212 0.008648660454 0.00866761076 0.008697807542 0.008652250085 0.008714797715 0.008753827995 0.008760473038 0.008858494613 0.008949629837 0.008955649751 0.008865032356 0.008710728329 0.008511323692 0.008310471285 0.008162453409 0.007887853095 0.007573567615 0.007328699733 0.007037508481 0.006724790901 0.006217520424 0.005723503641 0.005286212075 0.004776561775 0.004259940768 0.003740552568 0.003329546408 0.002947260167 0.002630319129 0.002398590899 0.002392251296 0.002494109615 0.00279153986 0.003107891025 0.003416450208 0.003739921078 0.00406340861 0.004380281844 0.004704494306 0.005030863018 0.005349099939 0.00566544743 0.006000638318 0.006362766336 0.006757912397 0.00726841635 0.007869716279 0.008546831223 0.009214939189 0.009870066062 0.01053361153 0.01114352469 0.01176214539 0.01233207422 0.01284913203 0.01332328553 0.01374144523 0.01409642126 0.01440761554 0.01466179463 0.01488169758 0.01507576314 0.01521990491 0.01534534608 0.01542316545 0.01550815776 0.01560909536 0.01567516419 0.01570234372 0.01572124426 0.01572322205 0.01571793417 0.01562331747 0.01937813097 0.01882022887 0.01837644347 0.01806476863 0.01796771529 0.01797151146 0.01789961859 0.01777072232 0.01762626027 0.01743502462 0.01720019691 0.01691008806 0.01671198547 0.0163936784 0.01608240763 0.01582452532 0.01565733881 0.01550539129 0.01541371528 0.01532312294 0.01535066032 0.01531716388 0.01539542804 0.01550707776 0.01567384003 0.01587152702 0.01614688655 0.01643407398 0.01669614039 0.01703545741 0.01764506514 0.01814605394 0.01854919477 0.01874945427 0.01890133115 0.0189579435 0.01887207147 0.01864469091 0.0182693851 0.01784760159 0.0171893963 0.01648394579 0.01563743463 0.01465575424 0.01316922912} {curve x1 0 0 3.805108327e-005 0.0002804573703 0.0007350861225 0.001364803154 0.002072929144 0.002797890398 0.003426310963 0.00396955323 0.004488620889 0.004808453255 0.004907493001 0.004776261394 0.004620974725 0.004437810979 0.002652127468 0.002680089758 0.002928782796 0.003372149996 0.00399113732 0.004707757143 0.005471359165 0.006250874168 0.00692056115 0.007516508914 0.007915618191 0.008232337307 0.008466067633 0.008617701811 0.008658965798 0.008704179443 0.008700960531 0.008652451347 0.008635985414 0.008577682419 0.008498731177 0.008361678187 0.008173403367 0.00798668538 0.007808120711 0.007649310601 0.0073146573 0.0069370495 0.006553287476 0.006162613279 0.005756204841 0.005361953738 0.00490571975 0.004513119806 0.004114555908 0.003658363095 0.002962099201 0.002395720027 0.00187726487 0.001428114102 0.001087846954 0.001002054231 0.001082176122 0.001327199876 0.001652151602 0.002020491448 0.002423447392 0.002870370744 0.00333910055 0.003828421758 0.004326660829 0.004839552117 0.005376682971 0.005920525262 0.006477980505 0.007078954528 0.007795148606 0.008572513947 0.009372560192 0.01015855014 0.01091156708 0.01165402672 0.0123542989 0.01302205836 0.01358799506 0.01406573171 0.01446656673 0.01480965738 0.01508454063 0.01533086841 0.01555064441 0.01573773265 0.01590624813 0.01602168992 0.01613131044 0.01617889308 0.01622092346 0.01627550309 0.01629749853 0.01628637207 0.01627591099 0.01623762018 0.01621667596 0.01613207361 0.02841294187 0.02743114877 0.02654226272 0.02573951241 0.02514804942 0.02464629656 0.02410786883 0.023550113 0.0230394687 0.02242842888 0.02178929236 0.02105286425 0.02036879631 0.01957083568 0.01868820248 0.01781431633 0.01699220454 0.0162368785 0.01556395911 0.01490774704 0.01431153306 0.01376780058 0.01334342129 0.01297805188 0.01268396658 0.01245295411 0.01234730262 0.0122552068 0.01221342016 0.01219839252 0.01260226196 0.01296551412 0.01327572242 0.01340069267 0.01355446094 0.01362696311 0.01358724477 0.01345349538 0.01318778827 0.01291431733 0.01242655289 0.01196795275 0.01139309991 0.01069807087 0.009635935326} {curve x1 0}}
- name CurveTool1
- selected true
- xpos 290
- ypos -2530
+ROI {0 0 1920 1080}
+autocropdata {480 270 1440 810}
+intensitydata {{curve x1 0 0 9.376321707e-005 0.0004813486586 0.001065129649 0.001825953816 0.002739423256 0.00382371144 0.005015705259 0.006299897929 0.007682098793 0.009000630129 0.0102698657 0.01148182895 0.01253089571 0.01333734234 0.01399563015 0.01504864956 0.01734778075 0.02057915148 0.02443292084 0.02866441343 0.03273633965 0.03556902389 0.0367277648 0.03701950871 0.03666238532 0.03626914019 0.03580149748 0.03551089194 0.0349336368 0.0347427406 0.03446722977 0.03406799077 0.03409225382 0.03400813874 0.0337848924 0.03357118435 0.03325818103 0.03311762747 0.03328575093 0.03364855883 0.0334962118 0.03344607956 0.03343085128 0.03319505917 0.03260834779 0.03139920109 0.02974417517 0.02809592848 0.02622781688 0.02407231517 0.02174539994 0.01992353649 0.0181551946 0.01670666819 0.01550236606 0.01475219564 0.0140127249 0.01357294972 0.01305604858 0.01243696893 0.01184935953 0.01105568787 0.01052065498 0.009933593398 0.009394321462 0.009017115404 0.008743297135 0.008381660358 0.00809788769 0.007857199866 0.007914836574 0.007831327837 0.007663868619 0.007633108905 0.007230666998 0.0071389651 0.00733223842 0.007948275556 0.008925026575 0.01008117624 0.01167989619 0.01320531443 0.01494000826 0.01663341776 0.0182867177 0.02012421022 0.0218009464 0.0237242309 0.02554429385 0.02722863246 0.02918132254 0.03094846671 0.03248111775 0.03396623098 0.03521866905 0.03629430642 0.03729089204 0.03821150105 0.03910337285 0.03989653714 0.04075628064 0.04162194864 0.04242674411 0.0432925113 0.0439762172 0.04469276379 0.04532398683 0.04589787507 0.04634931176 0.04669557127 0.04695390497 0.04713785765 0.04730100817 0.04743379331 0.04759127758 0.04781529936 0.04797522486 0.04819669995 0.04822089575 0.04832369682 0.04841567646 0.04847464072 0.04841654478 0.04846991043 0.04852898788 0.04858725534 0.04858070509 0.04865174964 0.04878805858 0.04881653664 0.04874357711 0.04856015065 0.04816992927 0.04744123822 0.04628484376 0.04492129076 0.04352025576 0.04209635371 0.04036432064 0.03875437182 0.03688935149 0.03500410005 0.03267147122} {curve x1 0 0 6.645780334e-005 0.0003798858975 0.0009027054476 0.001608441097 0.002471015648 0.003490913687 0.004520308084 0.005464387582 0.006350985191 0.006969310645 0.0073994001 0.007710646907 0.007986502306 0.008221475128 0.00843760972 0.009109590377 0.01103276626 0.01389237 0.01738112655 0.02103075019 0.02379509161 0.02490087358 0.0246483962 0.02419417633 0.02352711125 0.02302761035 0.02252390669 0.02219684322 0.02170580201 0.02154326522 0.02133706342 0.02101352296 0.02110144187 0.02106354758 0.02089258547 0.0206361168 0.02027963533 0.01992919943 0.01977764709 0.01970225232 0.01916243672 0.01867511752 0.01814381177 0.01751987422 0.01661986538 0.01543394011 0.01407985796 0.01293273911 0.01175752218 0.01052383786 0.009148996112 0.008083751206 0.007087162802 0.006262370307 0.005608355733 0.005197984766 0.004820905135 0.004639485463 0.004400328257 0.004109301991 0.003823420154 0.003475851064 0.003202140934 0.002908841998 0.002645608615 0.002450732181 0.002281939102 0.002107489823 0.001971086549 0.001870415365 0.001854321566 0.001829308371 0.001794421882 0.001791530262 0.001690369419 0.001675617185 0.001909988964 0.002472778201 0.003355262866 0.004388621437 0.005616940961 0.006881218637 0.00823187986 0.009584699893 0.01091510426 0.012271426 0.01354925298 0.01482134941 0.01606369113 0.01727775411 0.01846446486 0.01941772481 0.02003189015 0.020623073 0.02102942165 0.02132688498 0.02163108034 0.02180970344 0.02200165324 0.02223663655 0.02251941662 0.02283003661 0.02327066379 0.02373068793 0.02415583933 0.02454814447 0.02491702605 0.02531105704 0.02568525654 0.02602882709 0.02629163791 0.02653506073 0.02678984642 0.02706193554 0.02736594162 0.0276929332 0.02803262273 0.02840194468 0.02860629815 0.02887051669 0.02920714799 0.0294997939 0.02968924006 0.02997118936 0.03026177172 0.03053300949 0.0307909958 0.03112207555 0.03143332558 0.03167998596 0.03181092908 0.03178500688 0.03163507925 0.03139004333 0.03088156419 0.0301816477 0.02942056412 0.0285900339 0.02753293437 0.02656963547 0.02539882913 0.02414158865 0.02241335869} {curve x1 0 0 3.805108327e-005 0.0002804573703 0.0007350861225 0.001364803154 0.002072929144 0.002797890398 0.003426310963 0.003969553273 0.004491548732 0.004811279308 0.004910199056 0.004778955649 0.004623678578 0.004440552456 0.004258622876 0.004731504017 0.006518085571 0.009343887585 0.01305175705 0.0173390278 0.02192120013 0.02647676704 0.03046171425 0.033846638 0.03628769336 0.03805848514 0.03927887594 0.040069325 0.04032813581 0.04043631608 0.04031060265 0.03994929511 0.03972330783 0.0392341716 0.0387153564 0.03812634356 0.03728706522 0.03649677072 0.03585087982 0.03514028738 0.03361755913 0.03203216617 0.03024907312 0.02852934606 0.02646015127 0.02462878208 0.02227586829 0.02041487965 0.01854713457 0.01638603742 0.01315443899 0.01060113496 0.008229555108 0.006180034683 0.004642093007 0.003688286887 0.003201996184 0.002958174483 0.002849720347 0.002727526565 0.00261606413 0.002477734393 0.002383658356 0.002275347196 0.002183618335 0.002124540063 0.002089604361 0.002035929708 0.002000780724 0.001966884966 0.001961289295 0.001942320768 0.001910736742 0.001868300099 0.001730716787 0.001655670365 0.001870747148 0.002306519181 0.003023866374 0.00390612191 0.004988843518 0.006151268861 0.007466448248 0.008842839617 0.01024994675 0.01169369414 0.01311642129 0.014620899 0.01611113676 0.01760486484 0.01913630244 0.02065512151 0.02188613332 0.02298445501 0.02393701002 0.02473828619 0.02547872804 0.02614361096 0.02678230939 0.02739646047 0.02805370956 0.02868320552 0.02939603109 0.03002445938 0.03064688236 0.03119055177 0.03169582571 0.03216440596 0.03255778937 0.03289647703 0.03311558039 0.03329399728 0.03352467664 0.03370049702 0.03384036819 0.03402498007 0.03415552563 0.0343623303 0.03431295733 0.0344224482 0.03450736675 0.03452506174 0.03440172497 0.03438787932 0.03439392791 0.03436089681 0.03437378316 0.03436273195 0.03432630078 0.03428636866 0.03418652772 0.03395800997 0.03367276537 0.03321060853 0.03240134358 0.03152418468 0.03053859707 0.02956082294 0.02833954545 0.02726898784 0.02605545509 0.02481226513 0.02328935091} {curve x1 0}}
+name CurveTool1
+selected true
+xpos 400
+ypos -3490
+}
+CurveTool {
+ROI {11 10 816 1146}
+autocropdata {480 270 1440 810}
+intensitydata {{curve x1 0 0 0 0 0 0 0 0 0 0 1.22346901e-005 1.367866261e-005 1.189087091e-005 1.073015239e-005 1.000581997e-005 1.012199014e-005 1.123735513e-005 0.001206824078 0.00557527749 0.01231082369 0.02065653234 0.02999484507 0.03896656806 0.04470882991 0.04681811191 0.04654623257 0.04504220964 0.04318788295 0.04118649031 0.03968588269 0.03780504397 0.03649543529 0.03518508379 0.03357445507 0.03290423835 0.03192198259 0.03094369184 0.03043217805 0.03006452813 0.03039331924 0.03163071558 0.03301729743 0.03355710413 0.03466438462 0.03552663741 0.03657034373 0.03712246315 0.03737774396 0.03627491466 0.03531930298 0.03410059899 0.03216230639 0.02950485616 0.02766199611 0.02561792012 0.02403160837 0.0225547861 0.0217940579 0.02118903572 0.02074578807 0.02057723037 0.02049016269 0.02044808098 0.01991227026 0.0198674402 0.01966691575 0.01935648542 0.0192262364 0.01933457281 0.01905466983 0.01886611864 0.01859683435 0.01852876689 0.01832703162 0.01800553102 0.01797238859 0.01706450617 0.01693549314 0.01615743506 0.01566395339 0.01518718357 0.01457248575 0.01439571275 0.01376405848 0.01331133273 0.01264560561 0.01173102591 0.01126639288 0.01029248071 0.009970624999 0.009468661775 0.008552855704 0.00847068917 0.008020085909 0.007376261171 0.006995435241 0.00654543789 0.006064580757 0.005602829659 0.005288819242 0.005046103569 0.005016976216 0.005186605139 0.005670330666 0.006034013607 0.006958737308 0.007604702597 0.00871445911 0.009820308824 0.01102088513 0.01226928005 0.01335614491 0.0146530138 0.01589646363 0.01722289061 0.01860198138 0.02019051743 0.02186839319 0.02354173734 0.02517512293 0.0270150435 0.02873420086 0.03061581197 0.0324884354 0.03442536595 0.03637345087 0.03843257269 0.04040345701 0.04229858414 0.04442868239 0.04641751596 0.04813733744 0.04963771741 0.0506078846 0.05133451206 0.05174284841 0.05179050138 0.05140216002 0.05069704393 0.04972105684 0.04823413025 0.04641312062 0.04420167192 0.04160969949 0.03789724004} {curve x1 0 0 0 0 0 0 0 0 0 0 3.829097301e-006 4.18959852e-006 3.662529368e-006 3.316580794e-006 3.113889589e-006 3.127508156e-006 3.452817181e-006 0.001074619386 0.00520299104 0.01167669111 0.01960991564 0.02794784011 0.03428423364 0.03629015638 0.03532321539 0.03367878868 0.03181601544 0.03011539185 0.02828931942 0.02704596982 0.02563817808 0.02472234775 0.02381257098 0.02265619484 0.0223980754 0.02179570336 0.02114929404 0.0207528366 0.02031131828 0.02008112034 0.02045684257 0.02072916375 0.02009526993 0.01980910543 0.01908898035 0.01855477098 0.01755775479 0.01664370358 0.01504004915 0.01400605738 0.0130326859 0.01182298092 0.01004289072 0.008743857315 0.00747712722 0.006460598334 0.005631488333 0.005207865999 0.004955803257 0.004799004784 0.004771793638 0.004769210197 0.004774376312 0.004642433483 0.004641751421 0.004609920338 0.004535778344 0.004515199299 0.004560959281 0.004492930592 0.00445137882 0.004388026877 0.004379466053 0.004337173992 0.004262863126 0.00426114469 0.004024496603 0.00400159686 0.00380923036 0.00369001817 0.003569181152 0.003420664857 0.003374891724 0.003225224074 0.003114210782 0.002955669847 0.002735158846 0.002622370432 0.002393523784 0.002320572764 0.002208167372 0.002000047991 0.001982305227 0.001881843248 0.001729948793 0.001645282261 0.001539585769 0.001427012797 0.001316944468 0.001250891497 0.001206766015 0.001453752566 0.001865973039 0.002443928007 0.003167510081 0.004188886286 0.005196337213 0.006373482896 0.007604452586 0.008885673112 0.01016987506 0.0113844826 0.01272822562 0.01396324756 0.01529586329 0.01668487372 0.01818001061 0.01968616334 0.02118449174 0.02256458649 0.02413553395 0.02554638055 0.02711127689 0.0286960578 0.03029097282 0.03185394975 0.03352357706 0.03511795531 0.03661477581 0.03834689018 0.03983880498 0.04111814985 0.04211646744 0.04269599483 0.04309942554 0.04331830976 0.04312860209 0.0426318044 0.04183627344 0.0408353775 0.03931952019 0.03764380248 0.03564422994 0.0333214955 0.0298262157} {curve x1 0 0 0 0 0 0 0 0 0 0 5.745609467e-006 6.803393012e-006 6.51451275e-006 6.486104978e-006 6.50921314e-006 6.599786795e-006 6.722086547e-006 0.001427554495 0.006001333516 0.01300793082 0.02197105291 0.0323415622 0.0434574844 0.05436086989 0.06399393669 0.07201590016 0.07794769948 0.08209171476 0.08486818413 0.08666851047 0.08727302864 0.0873521667 0.08694028969 0.08595550942 0.08528867792 0.08396606232 0.08265429745 0.08139861625 0.07959131858 0.0779903408 0.07680001822 0.07525511385 0.07192429157 0.06848524087 0.06444500496 0.06068988616 0.05613714622 0.05236163539 0.0472164487 0.04330187615 0.03943919809 0.03480528568 0.02751566037 0.02179458637 0.01649363581 0.01189594275 0.008504081086 0.006430127093 0.005532475483 0.005115959704 0.005097576364 0.00508124193 0.005070489897 0.004985657157 0.004972415429 0.004932590473 0.004877628238 0.004858318177 0.004877358757 0.004816227252 0.004777877458 0.004721626904 0.00471151444 0.004667664579 0.004592609042 0.004491019893 0.004160503278 0.003981086019 0.003690705728 0.003472822781 0.003278252993 0.003059033523 0.002937496662 0.002760111593 0.002624624981 0.002450536123 0.002245908376 0.002123754657 0.001916179328 0.001842653387 0.001734335127 0.001559841157 0.001527669715 0.001436881549 0.00131332614 0.001237564295 0.001152898655 0.00106265577 0.0009782652031 0.0009220062435 0.0008879673032 0.001069005721 0.001387425235 0.001833464667 0.002400806964 0.003200545434 0.003990351456 0.004888718607 0.005809082969 0.006679940689 0.007577994553 0.008382559404 0.009277680442 0.01008554474 0.01104700901 0.01202134048 0.01296506158 0.01400268338 0.01501673825 0.01593505888 0.01683863101 0.01776261302 0.01878780427 0.01982117384 0.02085429046 0.02186064202 0.02305196305 0.02416653206 0.0253356226 0.02656034874 0.02758810412 0.02853529203 0.02933208863 0.02973670748 0.03016231214 0.03043280818 0.03037496444 0.03015191216 0.02965791879 0.02908619521 0.02804300928 0.0270161569 0.02570457585 0.02409825042 0.02163674378} {curve x1 0}}
+name CurveTool2
+selected true
+xpos 400
+ypos -3466
+}
+CurveTool {
+ROI {1139.5 0 1944.5 1136}
+autocropdata {480 270 1440 810}
+intensitydata {{curve x1 0 0 0.0002305062443 0.001183341132 0.002618500547 0.004488900546 0.006734561654 0.009400161286 0.01233054302 0.01548758491 0.0188700207 0.0221130608 0.02523515829 0.02821581791 0.03079556935 0.03277800838 0.03439519535 0.03576300779 0.03695415766 0.0380198707 0.03897140481 0.03983789526 0.0406864662 0.04178638178 0.04248104567 0.04347590439 0.04413384422 0.04506070815 0.04595485576 0.04677283453 0.04727440442 0.04814246184 0.04880326236 0.04946653007 0.050210594 0.05100687247 0.0514570635 0.0514540372 0.05105999299 0.05037870109 0.04952840169 0.04900436578 0.04807859479 0.046824611 0.04590665349 0.04426116698 0.04225498689 0.03902174754 0.03607924776 0.03300307734 0.02965506016 0.02633536081 0.02332865446 0.02073171257 0.01847182627 0.01653070767 0.01507817761 0.01401081366 0.01281074884 0.01218224972 0.01108363561 0.009650610736 0.008249012866 0.006845023441 0.005575485554 0.004337033947 0.003328302111 0.002533992247 0.001750209429 0.001146999404 0.0006419223004 0.0003252079226 0.000536410768 0.000537123251 0.0004537556592 0.000411980972 0.0003497399994 0.0002560475787 0.001525730188 0.00354412427 0.00643222665 0.009902210418 0.01401300038 0.01840810479 0.02313497022 0.02797785682 0.0329762634 0.0379680073 0.04308461871 0.04814147027 0.05312848654 0.05820445014 0.06308882502 0.06789329734 0.07231860561 0.07635847702 0.07989698032 0.08303234085 0.08595382907 0.08853766204 0.09097773271 0.09295588198 0.09489270273 0.0965169799 0.09808217401 0.09914879092 0.1000609107 0.1005834266 0.1008871509 0.1009536502 0.1006627469 0.1002754088 0.0994667588 0.09854030133 0.09744414784 0.09616827409 0.0947196993 0.09335464547 0.09186729893 0.09053036865 0.08853522023 0.08681701109 0.08492171103 0.08294377933 0.08064990571 0.07858280965 0.07643268956 0.07441095999 0.07229773221 0.07017261884 0.06835443005 0.0665969004 0.06476759243 0.06324319727 0.06148601301 0.05931506523 0.05657218914 0.05392482404 0.05146101375 0.04919605119 0.04665742479 0.04468288173 0.04252919599 0.04068641103 0.03891239817} {curve x1 0 0 0.0001633789788 0.0009339064318 0.002219199052 0.003954170174 0.006074711965 0.008582015722 0.0111126652 0.01343357764 0.01560843984 0.01712898212 0.01818684655 0.01895236483 0.01963073106 0.02020837121 0.02073938141 0.02129750936 0.02180958385 0.02222874347 0.02270415798 0.02316177209 0.02348695562 0.02415697498 0.02452371459 0.02508633212 0.02534866624 0.02585735292 0.02648381423 0.02694945701 0.02717990509 0.02771555996 0.02813768755 0.02852317516 0.02900290181 0.02952487689 0.0297646901 0.02953904776 0.0291135508 0.02848711876 0.02773086222 0.02726742212 0.02658767016 0.02568187833 0.02511110502 0.02412275241 0.02292832167 0.02094627512 0.01925504711 0.01749088337 0.01559573907 0.01379819981 0.01223611042 0.0109438813 0.009787448731 0.00879785495 0.008036709789 0.00746045648 0.006790851889 0.006504972596 0.005944819347 0.005232002424 0.00452391876 0.003804197712 0.003132008884 0.002443472144 0.001872055469 0.001413988872 0.0009523007593 0.0005929069238 0.0003000070207 0.0001172124428 8.638985348e-005 6.808581179e-005 5.820654971e-005 5.285267154e-005 4.582192687e-005 3.294012777e-005 0.0008055585737 0.002310849963 0.004603735587 0.007295793305 0.01036222055 0.01362314247 0.01705695526 0.0205446098 0.02404044093 0.02748998221 0.03086507003 0.03406687152 0.03723581467 0.0404329795 0.04336849209 0.04581456395 0.04747953176 0.0490193474 0.05012624445 0.05097247985 0.05183270479 0.05233928075 0.05285622409 0.05318167289 0.05345589944 0.05362929389 0.05396270877 0.05397921926 0.05393331199 0.05363934943 0.05322709699 0.05282481424 0.05236860469 0.0519069414 0.05112566636 0.05041257674 0.04961726684 0.04876500697 0.04786435888 0.04702725313 0.04625109007 0.04564352242 0.04445583707 0.04355222311 0.04267610825 0.0416605397 0.04040851691 0.03938552069 0.03825757785 0.03718247829 0.03619961602 0.03516715589 0.03432102831 0.03356137446 0.03276094106 0.03204368425 0.03120116018 0.03032318504 0.02928114302 0.02824776314 0.02734168068 0.02640953504 0.02542648456 0.02478240814 0.02398660768 0.0233178979 0.02272475543} {curve x1 0 0 9.35442764e-005 0.0006894726645 0.001807125935 0.0033552139 0.005096061403 0.006878296497 0.008423197245 0.009758696802 0.01103476582 0.01182103745 0.01206451544 0.01174189741 0.01136014273 0.01090985542 0.01046247727 0.01017406775 0.00989549677 0.009687371461 0.009649733249 0.009599283257 0.00951261015 0.00957757012 0.009536957957 0.009666492342 0.009610079674 0.009731560056 0.009896460792 0.01000122213 0.01002015364 0.01020528791 0.01031683873 0.01043424894 0.01055964384 0.01070779445 0.01077190202 0.01060616482 0.01038848126 0.01008052795 0.00970821916 0.009538942943 0.009196877305 0.008811278913 0.008553579217 0.008160500001 0.007722813555 0.007076098864 0.00654591976 0.005968396913 0.00532127019 0.00474054439 0.00424008943 0.003805361702 0.003388358069 0.003044944318 0.002727810755 0.002500879354 0.002222058057 0.002047990132 0.001800140738 0.001516421669 0.00125338373 0.0009999457535 0.0007821927467 0.0005565907205 0.0003872123787 0.0002616943054 0.0001563648676 8.683845388e-005 3.959093353e-005 1.370433298e-005 1.027471853e-005 8.42160888e-006 7.421527303e-006 6.837270305e-006 6.123240369e-006 4.848516273e-006 0.0008301227139 0.002123917901 0.004086126638 0.006478915762 0.009264775891 0.01230361003 0.01567518656 0.01923666588 0.02290484232 0.02657887334 0.03028845986 0.03406213149 0.03783632523 0.04168667726 0.0454843961 0.04931095213 0.05246342753 0.05524089299 0.05766910026 0.05973109967 0.06163756569 0.06332953751 0.06493429345 0.06625838076 0.06754689524 0.06863368661 0.06977966523 0.07041649191 0.07106166282 0.0714046951 0.07162205362 0.07180019809 0.07176101246 0.07167878245 0.07122003377 0.07075867622 0.07024698689 0.06954228692 0.0687592966 0.06801566903 0.06718922479 0.06661723671 0.06545844529 0.06463325881 0.06365718668 0.06249372087 0.06101771319 0.05982253407 0.05847832046 0.05713867929 0.05586827322 0.05451510484 0.0532739871 0.0521541076 0.05099475315 0.04996204656 0.0487811205 0.0473814932 0.04555431577 0.0438222132 0.04210780057 0.04044188408 0.03864985933 0.03715869247 0.03561320378 0.03428840206 0.03315921126} {curve x1 0}}
+name CurveTool3
+selected true
+xpos 400
+ypos -3442
+}
+CurveTool {
+ROI {44 488 1944.5 1136}
+autocropdata {480 270 1440 810}
+intensitydata {{curve x1 0 0 0.0001750664573 0.0008987320082 0.001988716685 0.003409260856 0.005114810897 0.007139298718 0.009364885058 0.0117626168 0.01433153225 0.0167945785 0.01916577043 0.02142954216 0.02338882941 0.02489446575 0.02612269796 0.02808772848 0.03237961507 0.03841294689 0.04560851421 0.05350979729 0.06111315585 0.06640253048 0.06856606011 0.06911957188 0.06845279112 0.06771855814 0.06684541224 0.06630279748 0.06522494845 0.06486848062 0.06435397925 0.06360850406 0.06365383774 0.063496818 0.06308004857 0.0626811046 0.06209672381 0.061834319 0.0621482334 0.06282563856 0.06254118955 0.06244758704 0.06241915413 0.06197890377 0.06088344773 0.05862583503 0.05553571576 0.05245825406 0.04897027989 0.04494571611 0.04060110402 0.03719948034 0.03389778741 0.03119322593 0.02894465857 0.02754400615 0.02616333122 0.02534222158 0.02437710909 0.02322121785 0.02212408511 0.02064221097 0.01964324448 0.01854713456 0.01754025329 0.01683596722 0.01632471775 0.01564950127 0.01511966583 0.01467027463 0.01477788884 0.01462196865 0.01430930348 0.01425187164 0.0135004674 0.01332924965 0.01369011265 0.01484032317 0.01666402703 0.0188226883 0.02180767801 0.02465580519 0.02789467341 0.03105645913 0.03414335582 0.03757416072 0.04070481367 0.04429578969 0.04769401748 0.05083875301 0.05448442418 0.05778344807 0.0606445945 0.06341600496 0.06575281617 0.06775941974 0.06961891365 0.07133437973 0.07299712755 0.07447714709 0.0760782465 0.07769382203 0.07919234663 0.08080799111 0.08208097883 0.08341387336 0.08458342732 0.08565591757 0.08649402711 0.08714366159 0.08762278279 0.08795828524 0.0882627911 0.08850807577 0.08879593515 0.08921393558 0.089499191 0.08990361099 0.08993337446 0.09007948116 0.09018261009 0.09019632412 0.08997507289 0.08993053807 0.08989938985 0.08983032139 0.08965887055 0.08963364221 0.08975454024 0.08967243053 0.08939524561 0.08891830504 0.0880584364 0.08652439278 0.08423125178 0.08161987117 0.07895591758 0.07627396753 0.07301577132 0.07001985079 0.06656856911 0.06310418429 0.05891358377} {curve x1 0 0 0.000124084183 0.0007092896375 0.001685452458 0.003003140179 0.004613663747 0.006517927935 0.008439922891 0.01020262533 0.01185440453 0.01300923637 0.01381267047 0.01439407153 0.01490928175 0.01534799183 0.01575128709 0.01700564203 0.02059617288 0.02593538325 0.03244931587 0.03926374896 0.0444252855 0.04649000682 0.04601862351 0.045173242 0.04392775915 0.04299513479 0.04205466055 0.04144398353 0.04052712601 0.04022362449 0.03983856541 0.03923444826 0.03939862491 0.03932789214 0.03900871916 0.03852990756 0.03786433538 0.03721004711 0.03692708747 0.03678631793 0.03577842158 0.03486854191 0.0338765344 0.03271157292 0.03103115532 0.02881689965 0.0262886762 0.02414687646 0.02195261445 0.01964918727 0.01708220331 0.01509327143 0.01323252895 0.01169254872 0.01047143006 0.009705221368 0.009001171346 0.008662440442 0.008215907078 0.007672528352 0.007138754855 0.006489804326 0.005978756771 0.005431134716 0.004939648425 0.004575792235 0.004260636598 0.003934920203 0.00368023997 0.003492275563 0.003462226631 0.003415524188 0.003350387193 0.003344988214 0.003156109559 0.003128565481 0.003566163917 0.004616954631 0.006264652616 0.00819404913 0.01048745964 0.01284800806 0.01536984426 0.0178957112 0.02037972557 0.02291213061 0.0252979771 0.02767312401 0.02999271553 0.03225950746 0.03447522972 0.03625507313 0.03740178879 0.03850559356 0.03926429214 0.03981968959 0.04038765649 0.04072116587 0.04107955772 0.04151829795 0.04204627932 0.04262624046 0.04344879857 0.04430764696 0.0451007836 0.04583131661 0.04651533724 0.04725116703 0.04794763161 0.04859069665 0.04908005235 0.04952937666 0.05000550692 0.05051140705 0.05107568531 0.051686045 0.05231214765 0.05299523668 0.05335776748 0.05380817211 0.05436970096 0.05482692448 0.0550732972 0.05546320727 0.05586559224 0.05620861831 0.05653105764 0.05700184754 0.05746102638 0.0578001225 0.05791369223 0.05774995217 0.05735676452 0.05674878812 0.05569406674 0.05435076882 0.05290824341 0.05135038448 0.04936405854 0.047585005 0.04543594188 0.04315149695 0.04009281997} {curve x1 0 0 7.104564616e-005 0.0005236454099 0.001372488352 0.002548240777 0.003870391532 0.005223975618 0.006397307393 0.007411601721 0.008380759339 0.008977922288 0.009162840618 0.008917816468 0.008627878815 0.00828589153 0.007946113717 0.008828876841 0.01216461849 0.01744095921 0.02436405792 0.03236904357 0.04092462368 0.04943043455 0.05687076703 0.06319546997 0.06775319915 0.07105946629 0.07333807095 0.07481392119 0.07529713641 0.07549910384 0.07526436015 0.07458974366 0.07416780844 0.07325454591 0.07228587482 0.07118614573 0.06961912724 0.0681435663 0.06693761863 0.06561086331 0.06276775865 0.05980765192 0.05647841693 0.05326749336 0.04940407429 0.04598470232 0.04159154801 0.03811687321 0.03462958337 0.03059457227 0.02456081504 0.01979350964 0.01536550369 0.01153881886 0.00866730902 0.006886445868 0.005978486464 0.005523244007 0.005320747953 0.005092598439 0.004884485554 0.004626208397 0.004450557872 0.00424832877 0.004077060684 0.003966754915 0.003901526036 0.00380130943 0.003735682329 0.003672395141 0.003661947396 0.003626531025 0.003567560101 0.003488326123 0.003231442626 0.003091322528 0.003492895038 0.004306530367 0.005645898145 0.007293168321 0.009314731169 0.01148510984 0.01394069747 0.01651057475 0.0191378018 0.02183344033 0.02448983172 0.02729885529 0.03008127966 0.03287017187 0.03572941402 0.03856496042 0.0408630948 0.04291286626 0.04469042049 0.0461854312 0.04756725131 0.04880674607 0.04999811174 0.05114431757 0.05236958447 0.05354457428 0.0548735833 0.05604634557 0.05720642713 0.0582174709 0.05915323779 0.06002888727 0.06075986071 0.06139438534 0.06180181673 0.06212782455 0.06255861226 0.062884673 0.06314068788 0.06348555582 0.06371900285 0.06409898958 0.06399827836 0.06417455893 0.06429746346 0.06427917063 0.06399735331 0.06389755115 0.06384154044 0.06369731945 0.0636275572 0.06353922719 0.06339134387 0.06324768639 0.06297724716 0.06248146952 0.06186143453 0.0609247547 0.05936482294 0.05769667826 0.05583384618 0.05398564273 0.05169089485 0.04971871352 0.04745677641 0.04517834522 0.0424352166} {curve x1 0}}
+name CurveTool4
+selected true
+xpos 400
+ypos -3418
 }
 Glow2 {
- tolerance 0.5
- mix 0.15
- name Glow2
- selected true
- xpos 290
- ypos -2506
+tolerance 0.5
+mix 0.15
+name Glow1
+selected true
+xpos 400
+ypos -3370
 }
 Defocus {
- defocus 3
- name Defocus3
- selected true
- xpos 290
- ypos -2464
+defocus 3
+name Defocus3
+selected true
+xpos 400
+ypos -3328
 }
 SoftClip {
- conversion "logarithmic compress"
- name SoftClip1
- selected true
- xpos 290
- ypos -2434
+conversion "logarithmic compress"
+softclip_min 0
+name SoftClip1
+selected true
+xpos 400
+ypos -3276
 }
 add_layer {Firework Firework.red Firework.green Firework.blue Firework.alpha}
 Shuffle {
- out Firework
- name Shuffle3
- selected true
- xpos 290
- ypos -2386
+out Firework
+name Shuffle2
+selected true
+xpos 400
+ypos -3226
 }
-add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha BG_A.Light_Yellow BG_A.Close BG_A.Far BG_A.middle BG_A.ZDefocus BG_A.Rooftop BG_A.StoneLight BG_A.Water_depth}
 Multiply {
- inputs 1+1
- value 0
- maskChannelMask BG_A.alpha
- name Multiply5
- selected true
- xpos 290
- ypos -2344
+inputs 1+1
+value 0
+maskChannelMask BG_A.alpha
+name Multiply14
+selected true
+xpos 400
+ypos -3136
 }
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow}
 Multiply {
- inputs 1+1
- value 0
- maskChannelMask CH_A.alpha
- name Multiply8
- selected true
- xpos 290
- ypos -2296
+inputs 1+1
+value 0
+maskChannelMask CH_A.alpha
+name Multiply15
+selected true
+xpos 400
+ypos -3088
 }
 Dot {
- name Dot25
- selected true
- xpos 324
- ypos -2238
+name Dot17
+selected true
+xpos 434
+ypos -3054
 }
-set N2ae7d400 [stack 0]
-push $N8f4e5400
+set N31b72000 [stack 0]
+push $N2f76bc00
 Merge2 {
- inputs 2
- name Merge4
- selected true
- xpos 180
- ypos -2242
+inputs 2
+name Merge1
+selected true
+xpos 180
+ypos -3058
 }
 Dot {
- name Dot26
- selected true
- xpos 214
- ypos -2094
+name Dot19
+selected true
+xpos 214
+ypos -2910
 }
-set N2ae7cc00 [stack 0]
-push $N2ae7d400
+set N31bb1800 [stack 0]
+push $N31b72000
 Blur {
- size 100
- name Blur2
- selected true
- xpos 290
- ypos -2152
+size 100
+name Blur1
+selected true
+xpos 400
+ypos -2968
 }
 Multiply {
- inputs 1+1
- maskChannelMask BG_A.alpha
- invert_mask true
- name Multiply7
- selected true
- xpos 290
- ypos -2104
+inputs 1+1
+maskChannelMask BG_A.alpha
+invert_mask true
+name Multiply5
+selected true
+xpos 400
+ypos -2920
 }
 Dot {
- name Dot27
- selected true
- xpos 324
- ypos -2022
+name Dot20
+selected true
+xpos 434
+ypos -2838
 }
-push $N2ae7cc00
+push $N31bb1800
 Merge2 {
- inputs 2
- mix 0.18
- name Merge5
- selected true
- xpos 180
- ypos -2026
+inputs 2
+mix 0.18
+name Merge3
+selected true
+xpos 180
+ypos -2842
+}
+Merge2 {
+inputs 2
+operation plus
+mix 0.12
+name Merge5
+label "LightAffect\nLeft"
+selected true
+xpos 180
+ypos -2591
+}
+Merge2 {
+inputs 2
+operation plus
+mix 0.06
+name Merge6
+label "LightAffect\nRight"
+selected true
+xpos 180
+ypos -2111
+}
+Merge2 {
+inputs 2
+operation plus
+name Merge7
+label "LightAffect\nTop"
+selected true
+xpos 180
+ypos -1775
 }
 Dot {
- name Dot28
- selected true
- xpos 214
- ypos -1950
+name Dot21
+selected true
+xpos 214
+ypos -1614
 }
-set N2aeb7800 [stack 0]
-add_layer {MP MP.red MP.green MP.blue MP.alpha}
+set N31beb800 [stack 0]
 Premult {
- channels alpha
- alpha MP.alpha
- invert true
- name Premult2
- selected true
- xpos 290
- ypos -1960
+channels alpha
+alpha BG_A.alpha
+name Premult1
+selected true
+xpos 290
+ypos -1624
 }
 Ramp {
- output none
- premult all
- p1 {100 437}
- name Ramp2
- selected true
- xpos 290
- ypos -1888
+output none
+premult all
+p1 {100 437}
+name Ramp2
+selected true
+xpos 290
+ypos -1552
 }
-push $N2aeb7800
+push $N31beb800
 EXPTool {
- inputs 1+1
- red {{(parent.CurveTool1.intensitydata.r+parent.CurveTool1.intensitydata.g+parent.CurveTool1.intensitydata.b)/3*4}}
- green {{red}}
- blue {{red}}
- name Exposure1
- selected true
- xpos 180
- ypos -1882
-}
-push $N27926000
-Switch {
- inputs 2
- which 1
- name Switch3
- selected true
- xpos -40
- ypos -1882
+inputs 1+1
+red {{(parent.CurveTool1.intensitydata.r+parent.CurveTool1.intensitydata.g+parent.CurveTool1.intensitydata.b)/3*4}}
+green {{red}}
+blue {{red}}
+name Exposure1
+selected true
+xpos 180
+ypos -1546
 }

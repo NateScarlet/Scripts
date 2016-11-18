@@ -1,0 +1,99 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+add_layer {HeavenlyBook HeavenlyBook.alpha}
+ColorCorrect {
+saturation 0.8
+gamma {1 0.39410007 0.1700000167 1}
+gain {1 0.4940000176 0.07999998331 1}
+offset {0.007000000216 0.002063599881 0.0009799998952 0.5}
+maskChannelInput HeavenlyBook.alpha
+name ColorCorrect25
+selected true
+xpos 400
+ypos -28696
+}
+Dot {
+name Dot190
+selected true
+xpos 434
+ypos -28662
+}
+set N1aca0000 [stack 0]
+Dot {
+name Dot191
+selected true
+xpos 544
+ypos -28662
+}
+Radial {
+replace true
+area {641.0466353 326.4585782 1278.953365 753.5414218}
+name Radial2
+selected true
+xpos 510
+ypos -28642
+}
+Radial {
+output {none none none mask.a}
+replace true
+opacity 0.5
+area {850.084387 427.3988576 1097.305004 637.2144646}
+name Radial4
+selected true
+xpos 510
+ypos -28600
+}
+TransformMasked {
+channels {rgba.alpha none none mask.a}
+translate {{(parent.CurveTool_R_2.maxlumapixdata+parent.CurveTool_G_2.maxlumapixdata+parent.CurveTool_B_2.maxlumapixdata+parent.CurveTool_A_2.maxlumapixdata)/4-width/2} {(parent.CurveTool_R_2.maxlumapixdata+parent.CurveTool_G_2.maxlumapixdata+parent.CurveTool_B_2.maxlumapixdata+parent.CurveTool_A_2.maxlumapixdata)/4-height/2}}
+center {960 540}
+name Transform12
+selected true
+xpos 510
+ypos -28576
+}
+Premult {
+channels all
+alpha HeavenlyBook.alpha
+name Premult25
+selected true
+xpos 510
+ypos -28528
+}
+Dot {
+name Dot189
+selected true
+xpos 544
+ypos -28494
+}
+set N1ace0800 [stack 0]
+Dot {
+name Dot177
+selected true
+xpos 544
+ypos -28398
+}
+push $N1ace0800
+push $N1aca0000
+ColorCorrect {
+inputs 1+1
+saturation 0.1
+gain {1.93599999 1.975000024 0.02500002086 1}
+name ColorCorrect27
+selected true
+xpos 400
+ypos -28498
+}
+ColorCorrect {
+inputs 1+1
+saturation 0.5
+gamma 0.8
+offset {0.5500000119 0.2970000207 0 0.5500000119}
+maskChannelMask mask.a
+mix {{curve x38 0.05 s0 x41 1 s0}}
+name ColorCorrect23
+selected true
+xpos 400
+ypos -28402
+}
