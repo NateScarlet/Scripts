@@ -1,8 +1,8 @@
 @ECHO OFF
 SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
-ECHO NUKE路径: %Nuke%
+ECHO 渲染时使用的NUKE路径: %Nuke%
 SET "serverZ=\\192.168.1.4\f"
-ECHO Z盘网络路径: %serverZ%
+ECHO 本地缓存时使用的Z盘网络路径: %serverZ%
 ECHO.
 ECHO 提示 - 可以编辑此批处理文件来设置路径
 ECHO.
@@ -22,10 +22,9 @@ IF /I "%isLocalRender%" EQU "TRUE" (
         ECHO 将不使用本地缓存渲染
         PAUSE
         SET "isLocalRender=FALSE"
-        GOTO:渲染
+        GOTO:Render
     )
     ECHO 提示 - 将进行本地化渲染
-    CALL "%~dp0all_localiseFootage.bat" "%serverZ%"
     IF EXIST "Z:\" (
         SUBST Z: /D >nul || NET USE Z: /DELETE 2>nul
         IF ERRORLEVEL 1 (        
@@ -36,6 +35,7 @@ IF /I "%isLocalRender%" EQU "TRUE" (
         )
     )
     SUBST Z: "%NUKE_TEMP_DIR%\localize\Z_"
+    CALL "%~dp0all_localiseFootage.bat" "%serverZ%"
 )
 SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
 :Render

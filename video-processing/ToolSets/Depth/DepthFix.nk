@@ -1,17 +1,22 @@
 set cut_paste_input [stack 0]
+version 10.0 v4
 push $cut_paste_input
 Group {
- name DepthFix2
+ name DepthFix3
  tile_color 0x823a7dff
  selected true
- xpos 620
- ypos -9779
+ xpos 290
+ ypos -1886
  addUserKnob {20 User}
- addUserKnob {41 go l Go! T CurveTool1.go}
- addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
- addUserKnob {41 multiple T Expression2.multiple}
- addUserKnob {41 unpremult l "(un)premult by" T Expression2.unpremult}
+ addUserKnob {41 alpha l premultiply T Premult1.alpha}
 }
+ StickyNote {
+  inputs 0
+  name StickyNote1
+  label v2.0
+  xpos 730
+  ypos -586
+ }
  Input {
   inputs 0
   name Input1
@@ -19,60 +24,38 @@ Group {
   ypos -634
  }
  Dot {
-  name Dot2
+  name Dot3
   xpos 544
-  ypos -558
+  ypos -510
  }
-set Ne9d9c400 [stack 0]
+set Nc4c1c00 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -558
- }
- Expression {
-  channel0 depth
-  expr0 (a==1)?z:0
-  name Expression1
-  xpos 620
-  ypos -484
+  ypos -510
  }
  Dilate {
   channels depth
   size -2
   name Dilate1
   xpos 620
-  ypos -458
+  ypos -472
  }
- CurveTool {
-  operation "Max Luma Pixel"
-  channels depth
-  ROI {0 0 {width} {height}}
-  autocropdata {480 270 1440 810}
-  maxlumapixdata {{curve} {curve}}
-  maxlumapixvalue {{curve} {curve} 0}
-  minlumapixdata {{curve} {curve}}
-  minlumapixvalue {{curve} {curve} 0}
-  name CurveTool1
-  xpos 620
-  ypos -376
- }
-push $Ne9d9c400
- Expression {
-  temp_name0 minDepth
-  temp_expr0 mD*multiple
+push $Nc4c1c00
+ MergeExpression {
+  inputs 2
   channel0 depth
-  expr0 min(minDepth,z)
-  unpremult rgba.alpha
-  name Expression2
-  label minDepth
+  expr0 (a<1)?Az:Bz
+  name MergeExpression1
+  xpos 510
+  ypos -466
+ }
+ Premult {
+  channels depth
+  name Premult1
   selected true
   xpos 510
-  ypos -383
-  addUserKnob {20 User}
-  addUserKnob {7 multiple R 0 2}
-  multiple 1
-  addUserKnob {7 mD}
-  mD {{parent.CurveTool1.maxlumapixvalue.r}}
+  ypos -424
  }
  Output {
   name Output1

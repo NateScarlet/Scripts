@@ -53,6 +53,12 @@ IF EXIST "%~dp0LocaliseLog.txt" (
 TYPE "%~dp0LocaliseLog.txt" 2>nul
 ECHO.
 IF EXIST "%~dp0LocaliseLog.txt" (
-    PAUSE
+    CHOICE /T 15 /D n /M "手动进行检查?"
+    IF "%ERRORLEVEL%" EQU "1" (
+        EXPLORER "%~dp0LocaliseLog.txt"
+        EXPLORER "!footagePath!"
+        EXPLORER "!cacheDir!"
+        PAUSE
+    )
 )
 DEL "%~dp0LocaliseLog.txt" 2>nul
