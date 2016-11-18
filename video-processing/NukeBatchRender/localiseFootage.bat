@@ -1,10 +1,10 @@
 @ECHO OFF
-IF %1=="" (
-    ECHO 把nk文件拖到此文件上打开来使用
-    PAUSE&GOTO:EOF    
+IF NOT EXIST "%~1" (
+    ECHO 提示 - 必须把nk文件拖到此文件上打开来使用
+    PAUSE&GOTO:EOF
 )
 SET "serverDir=%~2"
-IF %2=="" (
+IF NOT EXIST "%~2" (
     SET "serverDir=\\192.168.1.7\z"
     REM 默认服务器地址
 )
@@ -45,12 +45,14 @@ FOR /F "delims=" %%m IN ('FINDSTR /R /C:"^ *file Z:" "%~1"') do (
     )
 )
 ECHO.
-ECHO 素材下载完毕
+ECHO %~1 素材缓存完毕
 ECHO.
 IF EXIST "%~dp0LocaliseLog.txt" (
     ECHO -----错误日志----
 )
 TYPE "%~dp0LocaliseLog.txt" 2>nul
 ECHO.
+IF EXIST "%~dp0LocaliseLog.txt" (
+    PAUSE
+)
 DEL "%~dp0LocaliseLog.txt" 2>nul
-PAUSE
