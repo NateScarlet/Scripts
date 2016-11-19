@@ -1,1 +1,0 @@
-START /LOW NukeBatchRender.bat
