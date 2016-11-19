@@ -22,7 +22,7 @@ ECHO.
 ECHO 工程:%project% 集:%ep% 场:%sc% 镜头:%shot%
 ECHO.
 ECHO 将服务器素材下载到本地...
-FOR /F "delims=" %%m IN ('FINDSTR /R /C:"^ *file Z:" "%~1"') do (
+FOR /F "delims=" %%m IN ('FINDSTR /R /C:"^ *file "^""*Z:" "%~1"') do (
     FOR /F "tokens=* delims= " %%i IN ("%%~m") DO (SET "footagePath=%%~i")
     SET "footagePath=!footagePath:~5!"
     FOR /F "delims=" %%n IN ("!footagePath!") DO (
