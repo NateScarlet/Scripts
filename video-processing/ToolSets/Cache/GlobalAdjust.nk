@@ -2,233 +2,50 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
  inputs 0
- name BackdropNode11
+ name BackdropNode3
  tile_color 0x950695ff
- label "GlobalAdjust v0.1\n"
+ label "GlobalAdjust v0.2"
  selected true
- xpos -145
- ypos -1263
+ xpos 295
+ ypos -1067
  bdwidth 510
  bdheight 992
 }
 Radial {
  inputs 0
  invert true
- area {-1746.254675 -806.751809 2462.254675 1406.751809}
+ area {-961.7326299 -416.4468587 2561.73263 1592.446859}
  softness 0.65
- name Radial2
+ name Radial1
  selected true
- xpos 70
- ypos -345
-}
-Constant {
- inputs 0
- channels depth
- color 0.01124
- name Constant1
- selected true
- xpos 70
- ypos -1124
-}
-Roto {
- output alpha
- curves {{{v x3f99999a}
-  {f 0}
-  {n
-   {layer Root
-    {f 2097664}
-    {t x44700000 x44070000}
-    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
-    {curvegroup Bezier1 512 bezier
-     {{cc
-       {f 8192}
-       {px
-        {1 x42080000 x42840000}
-        {{xc3060000
-       {x 2
-        {xc3060000 -}}}
-      {xc30b0000
-       {x 2
-        {xc30b0000 -}}}}
-        {{x449f31f3
-       {x44a2bca0 0 1 x406caab0 1}
-       {x44b1874b x406caab0 1 0 1}}
-      {x43dd2537
-       {x43e3cfe2 0 1 xbf12aaa0 1}
-       {x43daa538 xbf12aaa0 1 0 1}}}
-        {{x43060000
-       {x 2
-        {x43060000 -}}}
-      {x430b0000
-       {x 2
-        {x430b0000 -}}}}
-        {{xc08ea800
-       {x 2
-        {xc08ea800 -}}}
-      {x42c1f5c8
-       {x 2
-        {x42c1f5c8 -}}}}
-        {{x44cc1555
-       {x44cfa002 0 1 x406caab0 1}
-       {x44de6aad x406caab0 1 0 1}}
-      {x43c1d557
-       {x43c88002 0 1 xbf12aaa0 1}
-       {x43bf5558 xbf12aaa0 1 0 1}}}
-        {{x407ff800
-       {x 2
-        {x407ff800 -}}}
-      {xc2ae0000
-       {x 2
-        {xc2ae0000 -}}}}
-        {{x42780000
-       {x 2
-        {x42780000 -}}}
-      {xc1400000
-       {x 2
-        {xc1400000 -}}}}
-        {{x44aa30c1
-       {x44adbb6e 0 1 x406caab0 1}
-       {x44bc8619 x406caab0 1 0 1}}
-      {x432e1865
-       {x433b6dbb 0 1 xbf12aaa0 1}
-       {x43291867 xbf12aaa0 1 0 1}}}
-        {{xc2780000
-       {x 2
-        {xc2780000 -}}}
-      {x41400000
-       {x 2
-        {x41400000 -}}}}}}
-      {cc
-       {f 8192}
-       {px
-        {1 x42080000 x42840000}
-        {{xc3060000
-       {x 2
-        {xc3060000 -}}}
-      {xc30b0000
-       {x 2
-        {xc30b0000 -}}}}
-        {{xc274c3e0
-       {x 2
-        {xc274c3e0 -}}}
-      {x426bfce0
-       {x 2
-        {x426bfce0 -}}}}
-        {{x43060000
-       {x 2
-        {x43060000 -}}}
-      {x430b0000
-       {x 2
-        {x430b0000 -}}}}
-        {{xc06cd400
-       {x 2
-        {xc06cd400 -}}}
-      {x42c20630
-       {x 2
-        {x42c20630 -}}}}
-        {{x42cccf20
-       {x 2
-        {x42cccf20 -}}}
-      {x4103f800
-       {x 2
-        {x4103f800 -}}}}
-        {{x40661400
-       {x 2
-        {x40661400 -}}}
-      {xc2bc7f00
-       {x 2
-        {xc2bc7f00 -}}}}
-        {{x42780000
-       {x 2
-        {x42780000 -}}}
-      {xc1400000
-       {x 2
-        {xc1400000 -}}}}
-        {{xc18135c0
-       {x 2
-        {xc18135c0 -}}}
-      {xc3084efc
-       {x 2
-        {xc3084efc -}}}}
-        {{xc2780000
-       {x 2
-        {xc2780000 -}}}
-      {x41400000
-       {x 2
-        {x41400000 -}}}}}}}
-     {tx x41980000 x44ef1555 x44209555}
-     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x41980000 ltm x41980000 tt x40800000}}}}}}
- toolbox {selectAll {
-  { selectAll str 1 ssx 1 ssy 1 sf 1 }
-  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
-  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
-} }
- toolbar_brush_hardness 0.200000003
- toolbar_source_transform_scale {1 1}
- toolbar_source_transform_center {960 540}
- colorOverlay {0 0 0 0}
- lifetime_type "all frames"
- lifetime_start 19
- lifetime_end 19
- motionblur_shutter_offset_type centred
- source_black_outside true
- name Roto1
- selected true
- xpos 70
- ypos -1028
-}
-set N3b19800 [stack 0]
-push $N3b19800
-Dot {
- inputs 0
- name Dot144
- label "BG_A\n\[input this 0 BG_A]"
- selected true
- xpos 104
- ypos -1138
- hide_input true
+ xpos 510
+ ypos -149
 }
 push $cut_paste_input
+Dot {
+ name Dot9
+ label "BG_A\n\[input this 0 BG_A]"
+ selected true
+ xpos 544
+ ypos -937
+ hide_input true
+}
+push 0
 Switch {
  inputs 2
  which 1
- name Switch11
+ name Switch3
  selected true
- xpos -40
- ypos -1142
- disable true
-}
-Merge2 {
- inputs 2+1
- operation min
- Achannels depth
- Bchannels depth
- output depth
- name Merge11
- selected true
- xpos -40
- ypos -1028
+ xpos 400
+ ypos -941
  disable true
 }
 Group {
- name Depth3Split1
+ name Depth3Split_Global_1
  tile_color 0xff00ff
  selected true
- xpos -40
- ypos -974
+ xpos 400
+ ypos -876
  addUserKnob {20 Depth3Split}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
@@ -284,7 +101,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   input depth
   output depth3split.Middle
   operation "luminance key"
-  range {0.00208607 0.00346537 0.00484467 0.006223971751}
+  range {0.00067982 0.00122965 0.00177948 0.00232931}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
@@ -306,7 +123,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   output depth3split.Focus
   invert true
   operation "luminance key"
-  range {0 0 0.00228607 0.00709062}
+  range {0 0 0.00067982 0.00352965}
   name Focus
   xpos 180
   ypos -328
@@ -342,118 +159,122 @@ Grade {
  white 0.1
  gamma {1.445862174 1.555862069 1.665862203 1.559999943}
  maskChannelInput depth3split.Far
- name Grade1
+ name Grade2
  selected true
- xpos -40
- ypos -932
+ xpos 400
+ ypos -731
+ disable true
 }
 Dot {
- name Dot5
+ name Dot14
  selected true
- xpos -6
- ypos -898
+ xpos 434
+ ypos -697
 }
-set N32d48c00 [stack 0]
+set N342bc800 [stack 0]
 Dot {
- name Dot7
+ name Dot15
  selected true
- xpos -6
- ypos -802
+ xpos 434
+ ypos -601
 }
-set N32d48800 [stack 0]
+set N342bc400 [stack 0]
 Keyer {
  operation "luminance key"
  range {0 1.5 10 10}
- name Keyer1
+ name Keyer2
  selected true
- xpos 70
- ypos -812
+ xpos 510
+ ypos -611
 }
-push $N32d48c00
+push $N342bc800
 Dot {
- name Dot6
+ name Dot16
  selected true
- xpos 214
- ypos -898
+ xpos 654
+ ypos -697
 }
 Premult {
  channels alpha
  alpha depth3split.Close
- name Premult1
+ name Premult4
  selected true
- xpos 180
- ypos -860
+ xpos 620
+ ypos -659
 }
 Merge2 {
  inputs 2
  operation stencil
- name Merge1
+ name Merge3
  selected true
- xpos 180
- ypos -806
+ xpos 620
+ ypos -605
 }
 Dot {
- name Dot8
+ name Dot17
  selected true
- xpos 214
- ypos -730
+ xpos 654
+ ypos -529
 }
-push $N32d48800
+push $N342bc400
 ColorCorrect {
  inputs 1+1
  gamma 0.75
  gain 5
- name ColorCorrect37
+ name ColorCorrect5
  selected true
- xpos -40
- ypos -734
+ xpos 400
+ ypos -533
+ disable true
 }
 SoftClip {
  conversion "logarithmic compress"
- name SoftClip5
+ name SoftClip6
  selected true
- xpos -40
- ypos -681
-}
-ZDefocus2 {
- z_channel depth3split.Focus
- math direct
- max_size {{size}}
- legacy_resize_mode false
- show_legacy_resize_mode false
- name ZDefocus1
- selected true
- xpos -40
- ypos -639
- cached true
-}
-EdgeBlur {
- controlchannel depth3split.Close
- size {{parent.ZDefocus1.size}}
- name EdgeBlur4
- selected true
- xpos -40
- ypos -519
- disable true
+ xpos 400
+ ypos -485
 }
 Glow2 {
  size 50
  maskChannelInput depth3split.Close
  invert_mask true
  mix 0.2
- name Glow1
+ name Glow3
  selected true
- xpos -40
- ypos -423
+ xpos 400
+ ypos -460
+}
+ZDefocus2 {
+ z_channel depth3split.Focus
+ math direct
+ size 11
+ max_size {{size}}
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus2
+ selected true
+ xpos 400
+ ypos -402
+ cached true
+ disable true
+}
+EdgeBlur {
+ controlchannel depth3split.Close
+ size {{parent.ZDefocus2.size}}
+ name EdgeBlur3
+ selected true
+ xpos 400
+ ypos -318
+ disable true
 }
 Grade {
  inputs 1+1
- white 0.001
- gamma 2
- mix {{curve x30 0 s0 x100 0.6 s0}}
- name Grade4
+ white 0.01
+ gamma {1.605000019 1.867150187 2.140000105 2}
+ mix 0.6
+ name Grade3
  label Vignette
  selected true
- xpos -40
- ypos -351
+ xpos 400
+ ypos -155
 }

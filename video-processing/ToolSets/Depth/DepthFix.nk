@@ -5,28 +5,27 @@ Group {
  name DepthFix3
  tile_color 0x823a7dff
  selected true
- xpos 730
- ypos -3238
+ xpos 290
+ ypos -1858
  addUserKnob {20 User}
- addUserKnob {26 text1 l v2.1}
+ addUserKnob {26 text1 l v2.2}
  addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
  addUserKnob {4 math l "math conversion" M {none "RedShift -> Nuke" "Nuke -> RedShift" "" ""}}
 }
  Input {
   inputs 0
   name Input1
-  xpos 510
-  ypos -826
+  xpos 507
+  ypos -898
  }
  Dot {
   name Dot6
-  xpos 544
-  ypos -774
+  xpos 541
+  ypos -846
  }
-set N624c1400 [stack 0]
+set N247dbc00 [stack 0]
  Dot {
   name Dot5
-  selected true
   xpos 764
   ypos -774
  }
@@ -36,40 +35,41 @@ set N624c1400 [stack 0]
   xpos 764
   ypos -462
  }
-push $N624c1400
+push $N247dbc00
  Dot {
   name Dot3
-  xpos 544
-  ypos -654
+  xpos 541
+  ypos -726
  }
-set N86a05400 [stack 0]
+set N247db000 [stack 0]
  Dot {
   name Dot1
-  xpos 654
-  ypos -654
+  xpos 651
+  ypos -726
  }
  Dilate {
   channels depth
-  size -2
+  size {{-width/10}}
   name Dilate1
-  xpos 620
-  ypos -616
+  selected true
+  xpos 617
+  ypos -700
  }
-push $N86a05400
+push $N247db000
  MergeExpression {
   inputs 2
   channel0 depth
   expr0 (a<1)?Az:Bz
   name MergeExpression1
-  xpos 510
-  ypos -610
+  xpos 508
+  ypos -601
  }
  Expression {
   channel0 depth
   expr0 (a==0)?1:z
   name Expression1
-  xpos 510
-  ypos -586
+  xpos 508
+  ypos -534
  }
  Dot {
   name Dot2
@@ -90,13 +90,13 @@ push $N86a05400
   xpos 544
   ypos -294
  }
-set N6f4dd800 [stack 0]
+set N2581d000 [stack 0]
  Dot {
   name Dot10
   xpos 654
   ypos -294
  }
-set N75f52c00 [stack 0]
+set N2581cc00 [stack 0]
  Dot {
   name Dot15
   xpos 764
@@ -116,14 +116,14 @@ set N75f52c00 [stack 0]
   xpos 764
   ypos -198
  }
-push $N75f52c00
+push $N2581cc00
  Expression {
   channel0 depth
   expr0 (z==0)?0:1/(z*10000)
   name Expression2
   label Depth:RedshiftToNuke
   xpos 620
-  ypos -256
+  ypos -255
  }
  Dot {
   name Dot8
@@ -131,7 +131,7 @@ push $N75f52c00
   xpos 654
   ypos -198
  }
-push $N6f4dd800
+push $N2581d000
  Dot {
   name Dot7
   label none
