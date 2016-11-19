@@ -2,17 +2,17 @@
 TITLE Nuke批渲染v1.0
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
-IF 
-CHOICE 
+IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
+CHOICE /T 15 /D n /M "渲染完成后休眠"
 ECHO.
 IF "%ERRORLEVEL%" EQU "1" (
     ECHO 保持此窗口开启以实现渲染完毕自动休眠
     TITLE 休眠 - 渲染完成后
-    START 
+    START /WAIT "Nuke渲染" %0 -noHiberOption
     ECHO.
-    CHOICE 
+    CHOICE /T 15 /D n /M "15秒后休眠"
     IF ERRORLEVEL 2 EXIT
-    SHUTDOWN 
+    SHUTDOWN /h
 )
 :StartUp
 REM
@@ -30,12 +30,12 @@ ECHO 提示 - 可以编辑此批处理文件头部来设置路径
 ECHO.
 :SettingCheck
 REM 检查路径设置
-FOR 
-FOR 
+FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
+FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
 IF NOT EXIST !NUKE! (
     ECHO 错误 - 文件内设置的路径不正确
     ECHO 请手动设置Nuke路径^(从资源管理器将Nuke.exe拖进来即可^)
-    SET 
+    SET /P "inputTemp=Nuke程序路径:"
     IF "!inputTemp!" NEQ "" (
         SET "NUKE=!inputTemp!"
         SET "inputTemp="
@@ -45,7 +45,7 @@ IF NOT EXIST !NUKE! (
 IF NOT EXIST "!serverZ!" (
     ECHO 错误 - 文件服务器离线或不存在
     ECHO 请手动设置服务器网络路径(从资源管理器将文件夹拖进来即可^)
-    SET 
+    SET /P "inputTemp=服务器网络路径:"
     IF "!inputTemp!" NEQ "" (
         SET "serverZ=!inputTemp!"
         SET "inputTemp="
@@ -53,20 +53,20 @@ IF NOT EXIST "!serverZ!" (
     GOTO SettingCheck
 )
 REM 设置选项
-CHOICE 
+CHOICE /T 15 /D n /M "素材缓存到本地后从缓存渲染"
 IF "%ERRORLEVEL%" EQU "1" SET "isLocalRender=TRUE"
-IF 
+IF /I "%~1" EQU "-PROXY" (
     SET "isProxyRender=TRUE"
 ) ELSE (
     ECHO.
     ECHO 输出尺寸:
-    CHOICE 
+    CHOICE /T 15 /C pf /D f /M "代理(P)/全尺寸(F)"
     IF "!ERRORLEVEL!" EQU "1" SET "isProxyRender=TRUE"
     IF "!ERRORLEVEL!" EQU "2" SET "isProxyRender=FALSE"
 )
 ECHO.
 ECHO 渲染进程优先级:
-CHOICE 
+CHOICE /T 15 /C ln /D n /M "低(L)/普通(N)"
 IF "%ERRORLEVEL%" EQU "1" SET "isLowPriority=TRUE"
 IF "%ERRORLEVEL%" EQU "2" SET "isLowPriority=FALSE"
 REM 为渲染日志作准备
@@ -75,7 +75,7 @@ IF NOT EXIST "%~dp0RenderLog" (
     MKDIR "%~dp0RenderLog"
 )
 REM 断开Z盘映射并重新映射Z盘到缓存文件夹
-IF 
+IF /I "%isLocalRender%" EQU "TRUE" (
     IF NOT EXIST "%NUKE_TEMP_DIR%" (
         ECHO 错误 - 需要设置环境变量%NUKE_TEMP_DIR%^(末尾不要反斜杠^)
         ECHO 将不使用本地缓存渲染
@@ -86,7 +86,7 @@ IF
     ECHO.
     ECHO 提示 - 将进行本地化渲染
     IF EXIST "Z:\" (
-        SUBST Z: 
+        SUBST Z: /D >nul || NET USE Z: /DELETE 2>nul
         IF ERRORLEVEL 1 (        
             ECHO 错误 - 无法断开Z盘
             ECHO 将不使用本地缓存渲染
@@ -121,12 +121,12 @@ IF NOT EXIST "%~dp0\*.nk" (
 )
 FOR %%i in ("%~dp0\*.nk") do (
 	SET "startTime=!time:~0,8!"
-	IF 
+	IF /I "%isProxyRender%" EQU "TRUE" (
 	    REM 代理渲染
 	    ECHO.
         ECHO 代理模式渲染 %%~nxi
         ECHO.
-        IF  
+        IF  /I "%isLowPriority%" EQU "TRUE" (
             ECHO --低优先级
             ECHO.
             %NUKE% -x -p --cont --priority low "%%~i" 2>>%RenderLog%
@@ -140,7 +140,7 @@ FOR %%i in ("%~dp0\*.nk") do (
         ECHO.
         ECHO 全尺寸渲染 %%~nxi 
         ECHO.
-        IF  
+        IF  /I "%isLowPriority%" EQU "TRUE" (
             ECHO --低优先级
             ECHO.
             %NUKE% -x -f --cont --priority low "%%~i" 2>>%RenderLog%
@@ -157,12 +157,12 @@ FOR %%i in ("%~dp0\*.nk") do (
 )
 ECHO [!time:~0,8!] 渲染完成
 REM 重新映射回Z盘
-IF 
-    SUBST 
-    NET USE Z: "%serverZ%" 
+IF /I "%isLocalRender%" EQU "TRUE" (
+    SUBST /D Z:
+    NET USE Z: "%serverZ%" /PERSISTENT:YES
 )
 REM 清理2个月前的日志
-FOR 
+FOR /F "demils=" %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
     DEL %%i
 )
 EXPLORER %RenderLog%
