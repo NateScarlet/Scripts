@@ -5,61 +5,150 @@ Group {
  name DepthFix3
  tile_color 0x823a7dff
  selected true
- xpos 290
- ypos -1886
+ xpos 730
+ ypos -3238
  addUserKnob {20 User}
- addUserKnob {41 alpha l premultiply T Premult1.alpha}
+ addUserKnob {26 text1 l v2.1}
+ addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
+ addUserKnob {4 math l "math conversion" M {none "RedShift -> Nuke" "Nuke -> RedShift" "" ""}}
 }
- StickyNote {
-  inputs 0
-  name StickyNote1
-  label v2.0
-  xpos 730
-  ypos -586
- }
  Input {
   inputs 0
   name Input1
   xpos 510
-  ypos -634
+  ypos -826
  }
+ Dot {
+  name Dot6
+  xpos 544
+  ypos -774
+ }
+set N624c1400 [stack 0]
+ Dot {
+  name Dot5
+  selected true
+  xpos 764
+  ypos -774
+ }
+ Dot {
+  name Dot4
+  label Nuke
+  xpos 764
+  ypos -462
+ }
+push $N624c1400
  Dot {
   name Dot3
   xpos 544
-  ypos -510
+  ypos -654
  }
-set Nc4c1c00 [stack 0]
+set N86a05400 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -510
+  ypos -654
  }
  Dilate {
   channels depth
   size -2
   name Dilate1
   xpos 620
-  ypos -472
+  ypos -616
  }
-push $Nc4c1c00
+push $N86a05400
  MergeExpression {
   inputs 2
   channel0 depth
   expr0 (a<1)?Az:Bz
   name MergeExpression1
   xpos 510
-  ypos -466
+  ypos -610
  }
- Premult {
-  channels depth
-  name Premult1
-  selected true
+ Expression {
+  channel0 depth
+  expr0 (a==0)?1:z
+  name Expression1
   xpos 510
-  ypos -424
+  ypos -586
+ }
+ Dot {
+  name Dot2
+  label RedShift
+  xpos 544
+  ypos -462
+ }
+ Switch {
+  inputs 2
+  which {{parent.for}}
+  name Switch1
+  label Renderer
+  xpos 510
+  ypos -352
+ }
+ Dot {
+  name Dot9
+  xpos 544
+  ypos -294
+ }
+set N6f4dd800 [stack 0]
+ Dot {
+  name Dot10
+  xpos 654
+  ypos -294
+ }
+set N75f52c00 [stack 0]
+ Dot {
+  name Dot15
+  xpos 764
+  ypos -294
+ }
+ Expression {
+  channel0 depth
+  expr0 (z==0)?99999:1/z*0.0001
+  name Expression3
+  label Depth:NukeToRedshift
+  xpos 730
+  ypos -256
+ }
+ Dot {
+  name Dot12
+  label NukeToRedShift
+  xpos 764
+  ypos -198
+ }
+push $N75f52c00
+ Expression {
+  channel0 depth
+  expr0 (z==0)?0:1/(z*10000)
+  name Expression2
+  label Depth:RedshiftToNuke
+  xpos 620
+  ypos -256
+ }
+ Dot {
+  name Dot8
+  label RedShiftToNuke
+  xpos 654
+  ypos -198
+ }
+push $N6f4dd800
+ Dot {
+  name Dot7
+  label none
+  xpos 544
+  ypos -198
+ }
+ Switch {
+  inputs 3
+  which {{parent.math}}
+  name Switch2
+  label math
+  xpos 510
+  ypos -136
  }
  Output {
   name Output1
   xpos 510
-  ypos -250
+  ypos -10
  }
 end_group

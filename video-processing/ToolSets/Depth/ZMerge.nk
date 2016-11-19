@@ -1,0 +1,54 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot18
+ selected true
+ xpos 654
+ ypos -2934
+}
+set N4c48f800 [stack 0]
+push 0
+Dot {
+ name Dot10
+ selected true
+ xpos 764
+ ypos -2886
+}
+set N269d3c00 [stack 0]
+Unpremult {
+ channels depth
+ name Unpremult3
+ selected true
+ xpos 730
+ ypos -2848
+}
+ChannelMerge {
+ inputs 2
+ A depth.Z
+ operation min
+ B depth.Z
+ output depth.Z
+ name ChannelMerge1
+ selected true
+ xpos 730
+ ypos -2807
+}
+push $N269d3c00
+push $N4c48f800
+ZMerge {
+ inputs 2
+ name ZMerge3
+ selected true
+ xpos 620
+ ypos -2890
+}
+Copy {
+ inputs 2
+ from0 depth.Z
+ to0 depth.Z
+ name Copy1
+ selected true
+ xpos 620
+ ypos -2800
+}
