@@ -1,0 +1,1 @@
+START POWERSHELL "%~dp0NukeBatchRender.bat"

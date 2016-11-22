@@ -1,12 +1,31 @@
 @ECHO OFF
+REM æœ¬åœ°åŒ–ç´ æv1.1
+SET "serverZ=%~1"
 IF NOT EXIST "%~1" (
-    ECHO ÌáÊ¾ - ±ØÐë°ÑnkÎÄ¼þÍÏµ½´ËÎÄ¼þÉÏ´ò¿ªÀ´Ê¹ÓÃ
+    SET "serverZ=\\192.168.1.4\f"
+)
+FOR %%i in ("%~dp0\*.nk") do (
+	ECHO.
+	ECHO %%~ni
+	ECHO.
+	CALL:LocaliseFootage "%%~i" "%serverZ%"
+)
+ECHO ----------------
+ECHO å…¨éƒ¨ç´ æç¼“å­˜å®Œæ¯•
+ECHO ----------------
+IF NOT EXIST "%~1" (
+    PAUSE
+)
+GOTO:EOF
+:LocaliseFootage
+IF NOT EXIST "%~1" (
+    ECHO æç¤º - å¿…é¡»æŠŠnkæ–‡ä»¶æ‹–åˆ°æ­¤æ–‡ä»¶ä¸Šæ‰“å¼€æ¥ä½¿ç”¨
     PAUSE&GOTO:EOF
 )
 SET "serverDir=%~2"
 IF NOT EXIST "%~2" (
     SET "serverDir=\\192.168.1.7\z"
-    REM Ä¬ÈÏ·þÎñÆ÷µØÖ·
+    REM é»˜è®¤æœåŠ¡å™¨åœ°å€
 )
 SET "localDir=%NUKE_TEMP_DIR%\localize\Z_"
 SET "agrv1=%~n1%"
@@ -19,9 +38,9 @@ FOR /F "delims=_|. tokens=1-4" %%i in ("%agrv1%") do (
 
 )
 ECHO. 
-ECHO ¹¤³Ì:%project% ¼¯:%ep% ³¡:%sc% ¾µÍ·:%shot%
+ECHO å·¥ç¨‹:%project% é›†:%ep% åœº:%sc% é•œå¤´:%shot%
 ECHO.
-ECHO ½«·þÎñÆ÷ËØ²ÄÏÂÔØµ½±¾µØ...
+ECHO å°†æœåŠ¡å™¨ç´ æä¸‹è½½åˆ°æœ¬åœ°...
 FOR /F "delims=" %%m IN ('FINDSTR /R /C:"^ *file "^""*Z:" "%~1"') do (
     FOR /F "tokens=* delims= " %%i IN ("%%~m") DO (SET "footagePath=%%~i")
     SET "footagePath=!footagePath:~5!"
@@ -40,20 +59,20 @@ FOR /F "delims=" %%m IN ('FINDSTR /R /C:"^ *file "^""*Z:" "%~1"') do (
     ECHO "!footagePath!" -^> "!cacheDir!"
     XCOPY /Y /D /V /I "!footagePath!" "!cacheDir!"
     IF ERRORLEVEL 4 (
-        ECHO ÕÒ²»µ½ÎÄ¼þ - "!footagePath!" >> "%~dp0LocaliseLog.txt"
+        ECHO æ‰¾ä¸åˆ°æ–‡ä»¶ - "!footagePath!" >> "%~dp0LocaliseLog.txt"
         ECHO. >> "%~dp0LocaliseLog.txt"
     )
 )
 ECHO.
-ECHO %~1 ËØ²Ä»º´æÍê±Ï
+ECHO %~1 ç´ æç¼“å­˜å®Œæ¯•
 ECHO.
 IF EXIST "%~dp0LocaliseLog.txt" (
-    ECHO -----´íÎóÈÕÖ¾----
+    ECHO -----é”™è¯¯æ—¥å¿—----
 )
 TYPE "%~dp0LocaliseLog.txt" 2>nul
 ECHO.
 IF EXIST "%~dp0LocaliseLog.txt" (
-    CHOICE /T 15 /D n /M "ÊÖ¶¯½øÐÐ¼ì²é?"
+    CHOICE /T 15 /D n /M "æ‰‹åŠ¨è¿›è¡Œæ£€æŸ¥?"
     IF "%ERRORLEVEL%" EQU "1" (
         EXPLORER "%~dp0LocaliseLog.txt"
         EXPLORER "!footagePath!"
@@ -62,3 +81,4 @@ IF EXIST "%~dp0LocaliseLog.txt" (
     )
 )
 DEL "%~dp0LocaliseLog.txt" 2>nul
+GOTO:EOF

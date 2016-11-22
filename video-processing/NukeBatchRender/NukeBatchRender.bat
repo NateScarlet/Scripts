@@ -1,41 +1,41 @@
 @ECHO OFF
-TITLE NukeÅúäÖÈ¾v1.0
+TITLE Nukeæ‰¹æ¸²æŸ“v1.1
 SETLOCAL EnableDelayedExpansion
-REM Íê³ÉºóĞİÃßÑ¡Ïî
+REM å®Œæˆåä¼‘çœ é€‰é¡¹
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
-CHOICE /T 15 /D n /M "äÖÈ¾Íê³ÉºóĞİÃß"
+CHOICE /T 15 /D n /M "æ¸²æŸ“å®Œæˆåä¼‘çœ "
 ECHO.
 IF "%ERRORLEVEL%" EQU "1" (
-    ECHO ±£³Ö´Ë´°¿Ú¿ªÆôÒÔÊµÏÖäÖÈ¾Íê±Ï×Ô¶¯ĞİÃß
-    TITLE ĞİÃß - äÖÈ¾Íê³Éºó
-    START /WAIT "NukeäÖÈ¾" %0 -noHiberOption
+    ECHO ä¿æŒæ­¤çª—å£å¼€å¯ä»¥å®ç°æ¸²æŸ“å®Œæ¯•è‡ªåŠ¨ä¼‘çœ 
+    TITLE ä¼‘çœ  - æ¸²æŸ“å®Œæˆå
+    START /WAIT POWERSHELL "%~0" -noHiberOption
     ECHO.
-    CHOICE /T 15 /D n /M "15ÃëºóĞİÃß"
-    IF ERRORLEVEL 2 EXIT
+    CHOICE /T 15 /D y /M "15ç§’åä¼‘çœ "
+    IF ERRORLEVEL 2 EXIT    
     SHUTDOWN /h
 )
 :StartUp
 REM
-REM ÔÚÏÂ·½ÉèÖÃÂ·¾¶±äÁ¿
+REM åœ¨ä¸‹æ–¹è®¾ç½®è·¯å¾„å˜é‡
 REM
 SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
 SET "serverZ=\\192.168.1.4\f"
 REM
-REM ÔÚÉÏ·½ÉèÖÃÂ·¾¶±äÁ¿
+REM åœ¨ä¸Šæ–¹è®¾ç½®è·¯å¾„å˜é‡
 REM
-ECHO äÖÈ¾Ê±Ê¹ÓÃµÄNUKEÂ·¾¶: %NUKE%
-ECHO ±¾µØ»º´æÊ±Ê¹ÓÃµÄZÅÌÍøÂçÂ·¾¶: %serverZ%
+ECHO æ¸²æŸ“æ—¶ä½¿ç”¨çš„NUKEè·¯å¾„: %NUKE%
+ECHO æœ¬åœ°ç¼“å­˜æ—¶ä½¿ç”¨çš„Zç›˜ç½‘ç»œè·¯å¾„: %serverZ%
 ECHO.
-ECHO ÌáÊ¾ - ¿ÉÒÔ±à¼­´ËÅú´¦ÀíÎÄ¼şÍ·²¿À´ÉèÖÃÂ·¾¶
+ECHO æç¤º - å¯ä»¥ç¼–è¾‘æ­¤æ‰¹å¤„ç†æ–‡ä»¶å¤´éƒ¨æ¥è®¾ç½®è·¯å¾„
 ECHO.
 :SettingCheck
-REM ¼ì²éÂ·¾¶ÉèÖÃ
+REM æ£€æŸ¥è·¯å¾„è®¾ç½®
 FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
 FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
 IF NOT EXIST !NUKE! (
-    ECHO ´íÎó - ÎÄ¼şÄÚÉèÖÃµÄÂ·¾¶²»ÕıÈ·
-    ECHO ÇëÊÖ¶¯ÉèÖÃNukeÂ·¾¶^(´Ó×ÊÔ´¹ÜÀíÆ÷½«Nuke.exeÍÏ½øÀ´¼´¿É^)
-    SET /P "inputTemp=Nuke³ÌĞòÂ·¾¶:"
+    ECHO é”™è¯¯ - æ–‡ä»¶å†…è®¾ç½®çš„è·¯å¾„ä¸æ­£ç¡®
+    ECHO è¯·æ‰‹åŠ¨è®¾ç½®Nukeè·¯å¾„^(ä»èµ„æºç®¡ç†å™¨å°†Nuke.exeæ‹–è¿›æ¥å³å¯^)
+    SET /P "inputTemp=Nukeç¨‹åºè·¯å¾„:"
     IF "!inputTemp!" NEQ "" (
         SET "NUKE=!inputTemp!"
         SET "inputTemp="
@@ -43,105 +43,100 @@ IF NOT EXIST !NUKE! (
     GOTO SettingCheck
 )
 IF NOT EXIST "!serverZ!" (
-    ECHO ´íÎó - ÎÄ¼ş·şÎñÆ÷ÀëÏß»ò²»´æÔÚ
-    ECHO ÇëÊÖ¶¯ÉèÖÃ·şÎñÆ÷ÍøÂçÂ·¾¶(´Ó×ÊÔ´¹ÜÀíÆ÷½«ÎÄ¼ş¼ĞÍÏ½øÀ´¼´¿É^)
-    SET /P "inputTemp=·şÎñÆ÷ÍøÂçÂ·¾¶:"
+    ECHO é”™è¯¯ - æ–‡ä»¶æœåŠ¡å™¨ç¦»çº¿æˆ–ä¸å­˜åœ¨
+    ECHO è¯·æ‰‹åŠ¨è®¾ç½®æœåŠ¡å™¨ç½‘ç»œè·¯å¾„(ä»èµ„æºç®¡ç†å™¨å°†æ–‡ä»¶å¤¹æ‹–è¿›æ¥å³å¯^)
+    SET /P "inputTemp=æœåŠ¡å™¨ç½‘ç»œè·¯å¾„:"
     IF "!inputTemp!" NEQ "" (
         SET "serverZ=!inputTemp!"
         SET "inputTemp="
     )
     GOTO SettingCheck
 )
-REM ÉèÖÃÑ¡Ïî
-CHOICE /T 15 /D n /M "ËØ²Ä»º´æµ½±¾µØºó´Ó»º´æäÖÈ¾"
+REM è®¾ç½®é€‰é¡¹
+CHOICE /T 15 /D n /M "ç´ æç¼“å­˜åˆ°æœ¬åœ°åä»ç¼“å­˜æ¸²æŸ“"
 IF "%ERRORLEVEL%" EQU "1" SET "isLocalRender=TRUE"
 IF /I "%~1" EQU "-PROXY" (
     SET "isProxyRender=TRUE"
 ) ELSE (
     ECHO.
-    ECHO Êä³ö³ß´ç:
-    CHOICE /T 15 /C pf /D f /M "´úÀí(P)/È«³ß´ç(F)"
+    ECHO è¾“å‡ºå°ºå¯¸:
+    CHOICE /T 15 /C pf /D f /M "ä»£ç†(P)/å…¨å°ºå¯¸(F)"
     IF "!ERRORLEVEL!" EQU "1" SET "isProxyRender=TRUE"
     IF "!ERRORLEVEL!" EQU "2" SET "isProxyRender=FALSE"
 )
 ECHO.
-ECHO äÖÈ¾½ø³ÌÓÅÏÈ¼¶:
-CHOICE /T 15 /C ln /D n /M "µÍ(L)/ÆÕÍ¨(N)"
+ECHO æ¸²æŸ“è¿›ç¨‹ä¼˜å…ˆçº§:
+CHOICE /T 15 /C ln /D n /M "ä½(L)/æ™®é€š(N)"
 IF "%ERRORLEVEL%" EQU "1" SET "isLowPriority=TRUE"
 IF "%ERRORLEVEL%" EQU "2" SET "isLowPriority=FALSE"
-REM ÎªäÖÈ¾ÈÕÖ¾×÷×¼±¸
-SET "renderTime=%date:~2,2%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%"
+REM ä¸ºæ¸²æŸ“æ—¥å¿—ä½œå‡†å¤‡
+SET "renderTime=%date:~5,2%%date:~8,2%%date:~11,2%_%time:~0,2%%time:~3,2%"
 IF NOT EXIST "%~dp0RenderLog" (
     MKDIR "%~dp0RenderLog"
 )
-REM ¶Ï¿ªZÅÌÓ³Éä²¢ÖØĞÂÓ³ÉäZÅÌµ½»º´æÎÄ¼ş¼Ğ
+REM æ–­å¼€Zç›˜æ˜ å°„å¹¶é‡æ–°æ˜ å°„Zç›˜åˆ°ç¼“å­˜æ–‡ä»¶å¤¹
 IF /I "%isLocalRender%" EQU "TRUE" (
     IF NOT EXIST "%NUKE_TEMP_DIR%" (
-        ECHO ´íÎó - ĞèÒªÉèÖÃ»·¾³±äÁ¿%NUKE_TEMP_DIR%^(Ä©Î²²»Òª·´Ğ±¸Ü^)
-        ECHO ½«²»Ê¹ÓÃ±¾µØ»º´æäÖÈ¾
+        ECHO é”™è¯¯ - éœ€è¦è®¾ç½®ç¯å¢ƒå˜é‡%NUKE_TEMP_DIR%^(æœ«å°¾ä¸è¦åæ–œæ ^)
+        ECHO å°†ä¸ä½¿ç”¨æœ¬åœ°ç¼“å­˜æ¸²æŸ“
         PAUSE
         SET "isLocalRender=FALSE"
         GOTO:Render
     )
     ECHO.
-    ECHO ÌáÊ¾ - ½«½øĞĞ±¾µØ»¯äÖÈ¾
+    ECHO æç¤º - å°†è¿›è¡Œæœ¬åœ°åŒ–æ¸²æŸ“
+    IF NOT EXIST "%~dp0localiseFootage.bat" (
+        ECHO æ‰¾ä¸åˆ°æ–‡ä»¶ - localiseFootage.bat
+        ECHO å°†ä¸ä½¿ç”¨æœ¬åœ°ç¼“å­˜æ¸²æŸ“
+        PAUSE
+        SET "isLocalRender=FALSE"
+        GOTO:Render
+    )
     IF EXIST "Z:\" (
         SUBST Z: /D >nul || NET USE Z: /DELETE 2>nul
         IF ERRORLEVEL 1 (        
-            ECHO ´íÎó - ÎŞ·¨¶Ï¿ªZÅÌ
-            ECHO ½«²»Ê¹ÓÃ±¾µØ»º´æäÖÈ¾
+            ECHO é”™è¯¯ - æ— æ³•æ–­å¼€Zç›˜
+            ECHO å°†ä¸ä½¿ç”¨æœ¬åœ°ç¼“å­˜æ¸²æŸ“
             SET "isLocalRender=FALSE"
             GOTO:Render
         )
     )
     SUBST Z: "%NUKE_TEMP_DIR%\localize\Z_"
-    REM µ÷ÓÃall_localiseFootage.batÀ´»º´æËØ²Ä
-    IF NOT EXIST "%~dp0all_localiseFootage.bat" (
-        ECHO ÕÒ²»µ½ÎÄ¼ş - all_localiseFootage.bat
-        ECHO ½«²»Ê¹ÓÃ±¾µØ»º´æäÖÈ¾
-        PAUSE
-        SET "isLocalRender=FALSE"
-        GOTO:Render
-    )
-    IF NOT EXIST "%~dp0localiseFootage.bat" (
-        ECHO ÕÒ²»µ½ÎÄ¼ş - localiseFootage.bat
-        ECHO ½«²»Ê¹ÓÃ±¾µØ»º´æäÖÈ¾
-        PAUSE
-        SET "isLocalRender=FALSE"
-        GOTO:Render
-    )
-    CALL "%~dp0all_localiseFootage.bat" "%serverZ%"
+    REM è°ƒç”¨LocaliseFootage.batæ¥ç¼“å­˜ç´ æ
+    CALL "%~dp0LocaliseFootage.bat" "%serverZ%"
 )
 SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
 :Render
-REM äÖÈ¾
+REM æ¸²æŸ“
 IF NOT EXIST "%~dp0\*.nk" (
-    ECHO ´íÎó - Åú´¦ÀíËùÔÚÎÄ¼ş¼Ğ²»´æÔÚnkÎÄ¼ş
+    ECHO é”™è¯¯ - æ‰¹å¤„ç†æ‰€åœ¨æ–‡ä»¶å¤¹ä¸å­˜åœ¨nkæ–‡ä»¶
     PAUSE&GOTO:EOF
 )
 FOR %%i in ("%~dp0\*.nk") do (
 	SET "startTime=!time:~0,8!"
-	IF /I "%isProxyRender%" EQU "TRUE" (
-	    REM ´úÀíäÖÈ¾
+	SET "triedTimes=0"
+    :SingleRender
+   	IF /I "%isProxyRender%" EQU "TRUE" (
+	    REM ä»£ç†æ¸²æŸ“
 	    ECHO.
-        ECHO ´úÀíÄ£Ê½äÖÈ¾ %%~nxi
+        ECHO ä»£ç†æ¨¡å¼æ¸²æŸ“ %%~nxi
         ECHO.
         IF  /I "%isLowPriority%" EQU "TRUE" (
-            ECHO --µÍÓÅÏÈ¼¶
+            ECHO --ä½ä¼˜å…ˆçº§
             ECHO.
             %NUKE% -x -p --cont --priority low "%%~i" 2>>%RenderLog%
         ) ELSE (
             %NUKE% -x -p --cont "%%~i" 2>>%RenderLog%
         )
         SET "finishTime=!time:~0,8!"
-        ECHO !date! !startTime! !finishTime!	%%~ni^(´úÀíÄ£Ê½^) >>%RenderLog%
+        ECHO !date! !startTime! !finishTime!	%%~ni^(ä»£ç†æ¨¡å¼^) >>%RenderLog%
 	) ELSE (
-	    REM È«³ß´çäÖÈ¾
+	    REM å…¨å°ºå¯¸æ¸²æŸ“
         ECHO.
-        ECHO È«³ß´çäÖÈ¾ %%~nxi 
+        ECHO å…¨å°ºå¯¸æ¸²æŸ“ %%~nxi 
         ECHO.
         IF  /I "%isLowPriority%" EQU "TRUE" (
-            ECHO --µÍÓÅÏÈ¼¶
+            ECHO --ä½ä¼˜å…ˆçº§
             ECHO.
             %NUKE% -x -f --cont --priority low "%%~i" 2>>%RenderLog%
         ) ELSE (
@@ -155,15 +150,24 @@ FOR %%i in ("%~dp0\*.nk") do (
         MOVE "%%~i" "%~dp0ArchivedRenderFiles\%rendertime%\"
 	)
 )
-ECHO [!time:~0,8!] äÖÈ¾Íê³É
-REM ÖØĞÂÓ³Éä»ØZÅÌ
+ECHO [!time:~0,8!] æ¸²æŸ“å®Œæˆ
+REM é‡æ–°æ˜ å°„å›Zç›˜
 IF /I "%isLocalRender%" EQU "TRUE" (
     SUBST /D Z:
     NET USE Z: "%serverZ%" /PERSISTENT:YES
 )
-REM ÇåÀí2¸öÔÂÇ°µÄÈÕÖ¾
+REM æ¸…ç†2ä¸ªæœˆå‰çš„æ—¥å¿—
 FOR /F "demils=" %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
     DEL %%i
 )
 EXPLORER %RenderLog%
-EXIT
+GOTO:EOF
+REM
+:RetryRender
+IF ERRORLEVEL 1 (
+    IF "!renderTimes!" LEQ "3" (
+        SET /A renderTimes+=1
+        GOTO:SingleRender
+    )
+)
+GOTO:EOF
