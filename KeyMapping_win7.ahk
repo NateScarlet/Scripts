@@ -15,7 +15,9 @@ $#2::
 IfWinNotExist, ahk_exe NxNManagerClient.exe
 {
 	Run, NxN
-	WinWait, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe,
+	WinWait, NXN alienbrain ahk_exe NxNManagerClient.exe, , 3
+	Send, {SPACE}
+	WinWait, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3
 	WinMaximize
 }
 IfWinExist, ahk_class QWidget ahk_exe Nuke10.0.exe, , Hiero
