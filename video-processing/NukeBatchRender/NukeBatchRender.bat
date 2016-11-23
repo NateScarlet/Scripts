@@ -1,4 +1,5 @@
 @ECHO OFF
+CHCP 65001 > nul
 TITLE Nuke批渲染v1.1
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
