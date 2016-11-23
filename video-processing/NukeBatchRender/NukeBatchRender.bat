@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.1
+TITLE Nuke批渲染v1.2
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -9,7 +9,7 @@ ECHO.
 IF "%ERRORLEVEL%" EQU "1" (
     ECHO 保持此窗口开启以实现渲染完毕自动休眠
     TITLE 休眠 - 渲染完成后
-    START /WAIT POWERSHELL "%~0" -noHiberOption
+    START /WAIT POWERSHELL "& '%~0'" -noHiberOption
     ECHO.
     CHOICE /T 15 /D y /M "15秒后休眠"
     IF ERRORLEVEL 2 EXIT    

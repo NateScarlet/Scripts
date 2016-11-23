@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode5
  tile_color 0x7e8f9cff
- label "LightFog v0.3"
+ label "LightFog v0.4"
  note_font_size 42
  selected true
- xpos 989
- ypos 703
+ xpos 936
+ ypos 239
  bdwidth 549
  bdheight 866
 }
@@ -16,11 +16,11 @@ Ramp {
  inputs 0
  p0 {228 328}
  p1 {100 1306}
- name Ramp1
+ name Ramp6
  note_font 微软雅黑
  selected true
  xpos 1280
- ypos 1141
+ ypos 685
 }
 push $cut_paste_input
 Dot {
@@ -28,39 +28,39 @@ Dot {
  note_font 微软雅黑
  selected true
  xpos 874
- ypos 810
+ ypos 354
 }
-set N72dda400 [stack 0]
+set Nad9ad400 [stack 0]
 Dot {
  name Dot23
  note_font 微软雅黑
  selected true
  xpos 1094
- ypos 810
+ ypos 354
 }
 Dot {
- name Dot19
+ name Dot3
  note_font 微软雅黑
  selected true
  xpos 1094
- ypos 1050
+ ypos 594
 }
-set N8a55d400 [stack 0]
+set N9547d800 [stack 0]
 Dot {
  name Dot15
  note_font 微软雅黑
  selected true
  xpos 1204
- ypos 1050
+ ypos 594
 }
-add_layer {CH_A CH_A.alpha CH_A.SSS CH_A.red CH_A.green CH_A.blue CH_A.CH_Right CH_A.Shadow}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow CH_A.SSS}
 Shuffle {
  in CH_A
  name Shuffle1
  note_font 微软雅黑
  selected true
  xpos 1170
- ypos 1093
+ ypos 637
 }
 Multiply {
  inputs 1+1
@@ -69,43 +69,43 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos 1170
- ypos 1133
+ ypos 677
 }
 Read {
  inputs 0
- file Z:/SNJYW/Render/EP01/04/EP01_04_sc088/EP01_04_sc088_Fog_A.tif
+ file Z:/SNJYW/Render/EP01/04/EP01_04_sc132/EP01_04_sc132_Fog_A.tif
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 0
- last 0
- colorspace sRGB
- auto_alpha true
- name Read3
+ origset true
+ name Read1
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
  selected true
  xpos 1390
- ypos 962
+ ypos 449
 }
 Blur {
  size 26
  name Blur4
  selected true
  xpos 1390
- ypos 1064
+ ypos 584
 }
 Grade {
  channels rgba
+ blackpoint 0.07
  whitepoint 0.37
  name Grade8
  note_font 微软雅黑
  selected true
  xpos 1390
- ypos 1117
+ ypos 661
 }
 Dot {
  name Dot33
  note_font 微软雅黑
  selected true
  xpos 1424
- ypos 1218
+ ypos 762
 }
 Group {
  inputs 2
@@ -113,7 +113,7 @@ Group {
  tile_color 0x4c81a8ff
  selected true
  xpos 1170
- ypos 1214
+ ypos 758
  addUserKnob {20 FogStencil}
  addUserKnob {26 text1 l v1.0}
  addUserKnob {41 translate T GodRays1.translate}
@@ -139,13 +139,13 @@ Group {
   xpos 324
   ypos -222
  }
-set Naa5ac00 [stack 0]
+set Nd98b5400 [stack 0]
  Dot {
   name Dot5
   xpos 434
   ypos -222
  }
-set Naa5bc00 [stack 0]
+set Nd98b5000 [stack 0]
  Dot {
   name Dot1
   xpos 544
@@ -156,7 +156,7 @@ set Naa5bc00 [stack 0]
   xpos 544
   ypos 66
  }
-push $Naa5bc00
+push $Nd98b5000
  GodRays {
   channels alpha
   translate {70 -206}
@@ -169,7 +169,7 @@ push $Naa5bc00
   xpos 400
   ypos -112
  }
- set Cab6d5800 [stack 0]
+ set Cd98b4400 [stack 0]
  Multiply {
   inputs 1+1
   channels alpha
@@ -178,7 +178,7 @@ push $Naa5bc00
   xpos 400
   ypos 56
  }
-push $Naa5ac00
+push $Nd98b5400
  Invert {
   channels alpha
   name Invert1
@@ -192,7 +192,7 @@ push $Naa5ac00
   xpos 290
   ypos -154
  }
-clone $Cab6d5800 {
+clone $Cd98b4400 {
   xpos 285
   ypos -115
   selected true
@@ -252,40 +252,41 @@ Ramp {
  p0 {570 -110}
  p1 {136 1116}
  type smooth0
- name Ramp5
+ name Ramp7
  label Mask
  selected true
  xpos 1170
- ypos 1321
+ ypos 841
 }
 Dot {
  name Dot21
  selected true
  xpos 1204
- ypos 1410
+ ypos 930
 }
-push $N8a55d400
+push $N9547d800
 Grade {
  inputs 1+1
  black {0.1134375036 0.1063939929 0.100833334 0.05999999866}
+ white 1.6
  gamma {0.7980000377 1.304919958 1.899999976 1}
  maskChannelMask rgba.blue
- mix 0.24
+ mix 0.9
  name Grade9
  label Fog
  selected true
  xpos 1060
- ypos 1400
+ ypos 920
 }
 PostageStamp {
  name PostageStamp3
  selected true
  xpos 1060
- ypos 1431
+ ypos 975
  cached true
  postage_stamp true
 }
-push $N72dda400
+push $Nad9ad400
 Switch {
  inputs 2
  which 1
@@ -294,5 +295,5 @@ Switch {
  note_font 微软雅黑
  selected true
  xpos 840
- ypos 1445
+ ypos 989
 }

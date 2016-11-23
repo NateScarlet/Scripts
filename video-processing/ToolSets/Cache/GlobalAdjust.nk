@@ -2,52 +2,58 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
  inputs 0
- name BackdropNode3
+ name BackdropNode4
  tile_color 0x950695ff
- label "GlobalAdjust v0.3"
+ label "GlobalAdjust v0.5"
  selected true
- xpos 277
- ypos 1411
- bdwidth 547
- bdheight 1066
+ xpos 605
+ ypos 1395
+ bdwidth 553
+ bdheight 1276
 }
 Radial {
  inputs 0
  invert true
  area {-961.7326299 -416.4468587 2561.73263 1592.446859}
  softness 0.65
- name Radial3
+ name Radial4
  selected true
- xpos 510
- ypos 2414
+ xpos 840
+ ypos 2504
 }
-push $cut_paste_input
+push 0
 Dot {
  name Dot30
  label "BG_A\n\[input this 0 BG_A]"
  note_font 微软雅黑
  selected true
- xpos 544
- ypos 1506
+ xpos 874
+ ypos 1548
  hide_input true
 }
-push 0
+push $cut_paste_input
+Dot {
+ name Dot8
+ selected true
+ xpos 764
+ ypos 1472
+}
 Switch {
  inputs 2
  which 1
  name Switch3
  note_font 微软雅黑
  selected true
- xpos 400
- ypos 1501
+ xpos 730
+ ypos 1543
  disable true
 }
 Group {
  name Depth3Split_Global_1
  tile_color 0xff00ff
  selected true
- xpos 400
- ypos 1574
+ xpos 730
+ ypos 1592
  addUserKnob {20 Depth3Split}
  addUserKnob {26 text1 l v1.0}
  addUserKnob {6 preview +STARTLINE}
@@ -104,7 +110,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   input depth
   output depth3split.Middle
   operation "luminance key"
-  range {0.00047 0.0006231033333 0.0007762066667 0.00144865}
+  range {0.00048 0.00095955 0.0014391 0.00191865}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   selected true
@@ -127,7 +133,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   output depth3split.Focus
   invert true
   operation "luminance key"
-  range {0 0 0.00058 0.00152931}
+  range {0 0 0.00048 0.00191865}
   name Focus
   xpos 180
   ypos -328
@@ -165,88 +171,87 @@ Grade {
  maskChannelInput depth3split.Far
  name Grade10
  selected true
- xpos 400
- ypos 1688
+ xpos 730
+ ypos 1730
  disable true
 }
 Dot {
- name Dot24
- selected true
- xpos 434
- ypos 1722
-}
-set N370be800 [stack 0]
-Dot {
  name Dot25
  selected true
- xpos 434
- ypos 1818
+ xpos 764
+ ypos 1764
 }
-set N370be400 [stack 0]
+set N59b5c00 [stack 0]
+Dot {
+ name Dot26
+ selected true
+ xpos 764
+ ypos 1860
+}
+set N59b5800 [stack 0]
 Keyer {
  operation "luminance key"
  range {0 1.5 10 10}
  name Keyer2
  selected true
- xpos 510
- ypos 1808
+ xpos 840
+ ypos 1850
 }
-push $N370be800
+push $N59b5c00
 Dot {
- name Dot26
+ name Dot27
  selected true
- xpos 654
- ypos 1722
+ xpos 984
+ ypos 1764
 }
 Premult {
  channels alpha
  alpha depth3split.Close
  name Premult5
  selected true
- xpos 620
- ypos 1760
+ xpos 950
+ ypos 1802
 }
 Merge2 {
  inputs 2
  operation stencil
  name Merge5
  selected true
- xpos 620
- ypos 1814
+ xpos 950
+ ypos 1856
 }
 Dot {
- name Dot27
+ name Dot28
  selected true
- xpos 654
- ypos 1890
+ xpos 984
+ ypos 1932
 }
-push $N370be400
+push $N59b5800
 ColorCorrect {
  inputs 1+1
  gamma 0.75
  gain 5
- name ColorCorrect5
+ name ColorCorrect6
  selected true
- xpos 400
- ypos 1886
+ xpos 730
+ ypos 1928
  disable true
 }
 SoftClip {
  conversion "logarithmic compress"
  name SoftClip7
  selected true
- xpos 400
- ypos 1934
+ xpos 730
+ ypos 1976
 }
 Glow2 {
  size 50
- maskChannelInput depth3split.Close
- invert_mask true
+ maskChannelInput depth3split.Focus
  mix 0.2
- name Glow3
+ name Glow4
  selected true
- xpos 400
- ypos 1976
+ xpos 730
+ ypos 2018
 }
 ZDefocus2 {
  z_channel depth3split.Focus
@@ -257,8 +262,8 @@ ZDefocus2 {
  show_legacy_resize_mode false
  name ZDefocus3
  selected true
- xpos 400
- ypos 2024
+ xpos 730
+ ypos 2066
  cached true
  disable true
 }
@@ -267,42 +272,53 @@ EdgeBlur {
  size {{parent.ZDefocus3.size}}
  name EdgeBlur3
  selected true
- xpos 400
- ypos 2096
+ xpos 730
+ ypos 2090
  disable true
 }
-Dot {
- name Dot28
- note_font 微软雅黑
+EdgeBlur {
+ controlchannel depth3split.Close
+ size {{parent.ZDefocus2.size}}
+ name EdgeBlur4
  selected true
- xpos 434
- ypos 2154
+ xpos 730
+ ypos 2138
+ disable true
 }
-set N3712f400 [stack 0]
 Dot {
  name Dot29
  note_font 微软雅黑
  selected true
- xpos 544
- ypos 2154
+ xpos 764
+ ypos 2196
 }
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow CH_A.SSS}
-Ramp {
- output CH_A
- replace true
- name Ramp6
+set Nde3c0400 [stack 0]
+Dot {
+ name Dot34
  note_font 微软雅黑
  selected true
- xpos 510
- ypos 2189
+ xpos 874
+ ypos 2196
 }
+Ramp {
+ output alpha
+ replace true
+ p0 {1296 526}
+ p1 {1980 682}
+ name Ramp8
+ note_font 微软雅黑
+ selected true
+ xpos 840
+ ypos 2231
+}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow CH_A.SSS}
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels1
  note_font 微软雅黑
  selected true
- xpos 510
- ypos 2237
+ xpos 840
+ ypos 2279
 }
 Multiply {
  channels alpha
@@ -311,18 +327,18 @@ Multiply {
  name Multiply2
  note_font 微软雅黑
  selected true
- xpos 510
- ypos 2285
+ xpos 840
+ ypos 2327
 }
-push $N3712f400
+push $Nde3c0400
 Grade {
  inputs 1+1
+ gamma {1.25 0.9787499905 0.8625000119 1}
  name Grade11
  note_font 微软雅黑
  selected true
- xpos 400
- ypos 2293
- disable true
+ xpos 730
+ ypos 2335
 }
 OFXcom.revisionfx.rsmb_v3 {
  menuTrackFrame "Previous Frame"
@@ -336,9 +352,19 @@ OFXcom.revisionfx.rsmb_v3 {
  CustomData_DoNotEdit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
  name RSMB2
  selected true
- xpos 400
- ypos 2366
+ xpos 730
+ ypos 2408
  disable true
+}
+CameraShake3 {
+ name CameraShake3_1
+ label "\[value amplitude] px at \[value frequency]"
+ note_font 微软雅黑
+ selected true
+ xpos 730
+ ypos 2447
+ disable true
+ cs_center {{"\[value input.width 0]/2"} {"\[value input.height 0]/2"}}
 }
 Grade {
  inputs 1+1
@@ -348,6 +374,13 @@ Grade {
  name Grade12
  label Vignette
  selected true
- xpos 400
- ypos 2408
+ xpos 730
+ ypos 2498
+}
+SoftClip {
+ conversion "logarithmic compress"
+ name SoftClip8
+ selected true
+ xpos 730
+ ypos 2528
 }
