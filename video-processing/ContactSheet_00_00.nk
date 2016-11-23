@@ -1,4 +1,5 @@
 #! C:/Program Files/Nuke10.0v4/nuke-10.0.4.dll -nx
+version 10.0 v4
 #write_info Write1 file:"[file rootname [value root.name]].png" format:"57 32 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1" fps:"0" colorspace:"sRGB" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
 define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 <layout version="1.0">
