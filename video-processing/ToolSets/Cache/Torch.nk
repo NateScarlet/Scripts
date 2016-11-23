@@ -1,0 +1,387 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode7
+ tile_color 0x388e8e00
+ label "Torch v0.1"
+ note_font_size 42
+ selected true
+ xpos 979
+ ypos -8454
+ bdwidth 574
+ bdheight 1058
+}
+push $cut_paste_input
+Dot {
+ name Dot46
+ note_font 微软雅黑
+ selected true
+ xpos 874
+ ypos -8238
+}
+set N85013800 [stack 0]
+Dot {
+ inputs 0
+ name Dot35
+ label "BG_A\n\[input this 0 BG_A]"
+ note_font 微软雅黑
+ selected true
+ xpos 1314
+ ypos -8214
+ hide_input true
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP01/01new/SNJYW_EP01_01_sc018/EP01_01_sc18_BG_huo/EP01_01_sc18_BG_huo.%04d.iff
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 39
+ origlast 39
+ origset true
+ name Read7
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -8383
+}
+ColorCorrect {
+ saturation 0.8
+ gain {0.9455999732 1 0.3199999928 1}
+ name ColorCorrect6
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -8267
+}
+Copy {
+ inputs 2
+ from0 depth.Z
+ to0 depth.Z
+ name Copy4
+ selected true
+ xpos 1170
+ ypos -8224
+}
+Group {
+ name Depth3Split5
+ tile_color 0xff00ff
+ selected true
+ xpos 1170
+ ypos -8170
+ addUserKnob {20 Depth3Split}
+ addUserKnob {6 preview +STARTLINE}
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {26 Focus_div l Focus}
+ addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
+ addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {41 range_1 l range T Focus.range}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 size l "blur size" T Blur1.size}
+ addUserKnob {41 filter l "blur filter" T Blur1.filter}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -586
+ }
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  out depth3split
+  name Shuffle
+  xpos 180
+  ypos -562
+ }
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 180
+  ypos -520
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Far
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 180
+  ypos -479
+ }
+ Keyer {
+  input depth
+  output depth3split.Middle
+  operation "luminance key"
+  range {{parent.parent.Depth3Split_Global_1.Middle.range.A} {parent.parent.Depth3Split_Global_1.Middle.range.B} {parent.parent.Depth3Split_Global_1.Middle.range.C} {parent.parent.Depth3Split_Global_1.Middle.range.D}}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 180
+  ypos -431
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Close
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 180
+  ypos -383
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Focus
+  invert true
+  operation "luminance key"
+  range {{parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range}}
+  name Focus
+  xpos 180
+  ypos -328
+ }
+ Grade {
+  channels {none none none depth3split.Focus}
+  name Grade1
+  xpos 180
+  ypos -280
+ }
+ Blur {
+  channels {none none none depth3split.Focus}
+  name Blur1
+  xpos 180
+  ypos -232
+ }
+ Shuffle {
+  in depth3split
+  red blue
+  blue red
+  name Shuffle1
+  xpos 180
+  ypos -178
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos -58
+ }
+end_group
+ZDefocus2 {
+ z_channel depth3split.Focus
+ math direct
+ size 11
+ max_size {{size}}
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus1
+ selected true
+ xpos 1170
+ ypos -8128
+ cached true
+}
+Dot {
+ name Dot36
+ note_font 微软雅黑
+ selected true
+ xpos 1204
+ ypos -8046
+}
+set Nac748800 [stack 0]
+Dot {
+ name Dot37
+ note_font 微软雅黑
+ selected true
+ xpos 1314
+ ypos -8046
+}
+add_layer {Distort Distort.u Distort.v Distort.blur}
+Shuffle {
+ blue alpha
+ out Distort
+ name Shuffle6
+ selected true
+ xpos 1280
+ ypos -7906
+}
+FilterErode {
+ channels {Distort.u Distort.v -Distort.blur}
+ size -20
+ filter gaussian
+ name FilterErode1
+ selected true
+ xpos 1280
+ ypos -7816
+}
+Noise {
+ output {-Distort.u Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise3
+ selected true
+ xpos 1280
+ ypos -7768
+}
+Noise {
+ output {Distort.u -Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000+199}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise4
+ selected true
+ xpos 1280
+ ypos -7720
+}
+Blur {
+ channels {Distort.u Distort.v -Distort.blur}
+ size 20
+ name Blur1
+ selected true
+ xpos 1280
+ ypos -7672
+}
+Dot {
+ name Dot38
+ selected true
+ xpos 1314
+ ypos -7614
+}
+set Nad236c00 [stack 0]
+Keyer {
+ input {Distort.u Distort.v -Distort.blur}
+ operation "luminance key"
+ range {0.003945607434 0.1327302341 1 1}
+ name Keyer6
+ selected true
+ xpos 1390
+ ypos -7624
+}
+Dot {
+ name Dot39
+ selected true
+ xpos 1424
+ ypos -7566
+}
+push $Nad236c00
+Grade {
+ inputs 1+1
+ channels {Distort.u Distort.v -Distort.blur}
+ add -0.5
+ black_clamp false
+ name Grade5
+ selected true
+ xpos 1280
+ ypos -7576
+}
+push $Nac748800
+Blur {
+ size 80
+ name Blur2
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -8011
+}
+Keyer {
+ operation "min keyer"
+ name Keyer7
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -7971
+}
+push $Nac748800
+push $N85013800
+Dot {
+ name Dot40
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos -8238
+}
+Merge2 {
+ inputs 2
+ name Merge9
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -8051
+}
+Merge2 {
+ inputs 2
+ name Merge11
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -7955
+}
+Merge2 {
+ inputs 2
+ operation copy
+ Achannels Distort
+ Bchannels {{{Achannels}}}
+ output {{{Achannels}}}
+ name Merge12
+ selected true
+ xpos 1060
+ ypos -7576
+}
+IDistort {
+ uv Distort
+ blur Distort.blur
+ blur_scale 3
+ name IDistort2
+ selected true
+ xpos 1060
+ ypos -7528
+}
+Dot {
+ name Dot44
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos -7470
+}
+Switch {
+ inputs 2
+ which 1
+ name Switch7
+ note_font 微软雅黑
+ selected true
+ xpos 840
+ ypos -7475
+}
+Dot {
+ name Dot45
+ note_font 微软雅黑
+ selected true
+ xpos 874
+ ypos -7446
+}
