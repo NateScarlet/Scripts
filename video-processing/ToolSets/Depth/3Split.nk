@@ -2,11 +2,11 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name Depth3Split2
+ name Depth3Split_2
  tile_color 0xff00ff
  selected true
- xpos 72
- ypos -699
+ xpos 1182
+ ypos -1809
  addUserKnob {20 Depth3Split}
  addUserKnob {26 text1 l v1.0}
  addUserKnob {6 preview +STARTLINE}
