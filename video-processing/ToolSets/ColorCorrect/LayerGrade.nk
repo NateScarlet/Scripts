@@ -3,173 +3,116 @@ version 10.0 v4
 push $cut_paste_input
 add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
 Group {
- name LayerGrade6
+ name LayerGrade1
  tile_color 0x7aa9ffff
- label "\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]"
+ label "\[python \{os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2]\}]\n预设锁定v1.0 :\[python \{nuke.applyUserPreset('', os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2], nuke.thisNode())\}]\n\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]"
  selected true
- xpos 180
- ypos -2960
+ xpos 1613
+ ypos -516
  addUserKnob {20 LayerGrade}
  addUserKnob {26 text1 l v1.0}
- addUserKnob {6 preview l "view range" +STARTLINE}
+ addUserKnob {26 dev1 l "Layer Affect"}
  addUserKnob {41 in l layer T Shuffle1.in}
- addUserKnob {7 layer_mix l "layer color affect"}
- layer_mix 1
  addUserKnob {41 size l erode T Dilate1.size}
  addUserKnob {41 size_1 l "blur size" T Blur1.size}
- addUserKnob {41 whitepoint T Grade3.whitepoint}
- addUserKnob {26 div1 l "Depth Falloff"}
- addUserKnob {41 whitepoint_1 l farpoint T Grade2.whitepoint}
- addUserKnob {41 mix T Multiply1.mix}
+ addUserKnob {7 layer_mix l mix}
+ layer_mix 1
  addUserKnob {26 dev2 l Grade}
  addUserKnob {41 channels T GradeR1.channels}
  addUserKnob {18 saturation R 0 4}
- saturation 1
+ saturation 0.8
  addUserKnob {6 saturation_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  addUserKnob {18 lift}
  lift {0 0 0}
  addUserKnob {6 lift_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  addUserKnob {18 gain R 0 4}
- gain 1
+ gain {1.25999999 1.120895982 0.3905999959}
  addUserKnob {6 gain_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  addUserKnob {18 gamma R 0 2}
- gamma {1.714808822 1.202397585 0.9827932119}
+ gamma {1.629999995 1.289999843 0.9800000191}
  addUserKnob {6 gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
- addUserKnob {41 mix_1 l mix T Merge1.mix}
+ addUserKnob {41 mix T Merge1.mix}
+ addUserKnob {20 tab2 l 预设锁定}
+ addUserKnob {22 lock l 加锁 T "presetName = os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2]\nnuke.saveUserPreset(nuke.thisNode(), presetName)" +STARTLINE}
+ addUserKnob {22 unlock l 解锁 T "presetName = os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2]\nnuke.deleteUserPreset(nuke.thisNode().Class(), presetName)" +STARTLINE}
 }
  Input {
   inputs 0
   name Input
   xpos -40
-  ypos -418
+  ypos -185
  }
-set N322c2400 [stack 0]
+set N535ac400 [stack 0]
  Dot {
   name Dot1
   xpos 104
-  ypos -414
+  ypos -181
  }
-set N322c2000 [stack 0]
- Dot {
-  name Dot7
-  xpos 214
-  ypos -414
- }
- Premult {
-  channels alpha
-  alpha depth.Z
-  name Premult1
-  xpos 180
-  ypos -352
- }
- Grade {
-  channels {none none none rgba.alpha}
-  whitepoint 0.075
-  name Grade2
-  xpos 180
-  ypos -304
- }
- Dot {
-  name Dot8
-  xpos 214
-  ypos -222
- }
-push $N322c2000
  Shuffle {
   in SSS
   name Shuffle1
   xpos 70
-  ypos -298
- }
- Multiply {
-  inputs 1+1
-  channels rgba
-  value 0
-  mix 0
-  name Multiply1
-  xpos 70
-  ypos -226
-  disable {{"\[string is digit \[input parent 0]]"}}
+  ypos -161
  }
  Dilate {
   channels rgba
   name Dilate1
   xpos 70
-  ypos -191
+  ypos -130
  }
  Blur {
   name Blur1
   xpos 70
-  ypos -149
+  ypos -88
  }
  Grade {
   whitepoint 0.01
   mix {{1-parent.layer_mix}}
   name Grade1
   xpos 70
-  ypos -95
- }
- Grade {
-  name Grade3
-  xpos 70
-  ypos -52
- }
- SoftClip {
-  conversion "logarithmic compress"
-  softclip_min 0
-  name SoftClip1
-  selected true
-  xpos 70
-  ypos -26
+  ypos -34
  }
  Dot {
   name Dot4
   xpos 104
   ypos 18
  }
-set N77ab400 [stack 0]
+set N535fac00 [stack 0]
  Dot {
   name Dot5
   xpos 104
   ypos 66
  }
-set N66253c00 [stack 0]
+set N535fa800 [stack 0]
  Dot {
   name Dot6
   xpos 104
   ypos 114
  }
-set N66253800 [stack 0]
+set N535fa400 [stack 0]
  Dot {
   name Dot12
   xpos 104
   ypos 162
  }
-set N66253400 [stack 0]
+set N535fa000 [stack 0]
  Dot {
   name Dot14
   xpos 104
   ypos 210
  }
-set N66253000 [stack 0]
+set N5584fc00 [stack 0]
  Dot {
   name Dot13
   xpos 104
   ypos 258
  }
-set N66252c00 [stack 0]
- Dot {
-  name Dot9
-  xpos 104
-  ypos 354
- }
-push $N66252c00
-push $N66253000
-push $N66253400
-push $N66253800
-push $N66253c00
-push $N77ab400
-push $N322c2400
+push $N5584fc00
+push $N535fa000
+push $N535fa400
+push $N535fa800
+push $N535fac00
+push $N535ac400
  Saturation {
   inputs 1+1
   channels {rgba.red -rgba.green -rgba.blue -rgba.alpha}
@@ -205,6 +148,7 @@ push $N322c2400
   maskChannelMask rgba.red
   name GradeR1
   label "\[knob parent.Merge1.Achannels \[value channels]]\n\[knob parent.Merge1.Bchannels \[value channels]]\n\[knob parent.Merge1.output \[value channels]]"
+  selected true
   xpos -40
   ypos 158
  }
@@ -230,11 +174,11 @@ push $N322c2400
   xpos -40
   ypos 254
  }
-push $N322c2400
+push $N535ac400
  Dot {
   name Dot2
   xpos -116
-  ypos -414
+  ypos -181
  }
  Dot {
   name Dot3
@@ -250,14 +194,6 @@ push $N322c2400
   name Merge1
   xpos -40
   ypos 302
- }
- Merge2 {
-  inputs 2
-  operation copy
-  name Merge2
-  xpos -40
-  ypos 350
-  disable {{1-parent.preview}}
  }
  Output {
   name Output1
