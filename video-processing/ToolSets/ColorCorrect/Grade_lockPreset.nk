@@ -1,0 +1,17 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Grade {
+ name Grade3
+ label "\[value presetName]\n预设锁定v1.1 :\[python \{nuke.applyUserPreset('', nuke.thisNode()\['presetName'].value(), nuke.thisNode())\}]"
+ selected true
+ xpos 2438
+ ypos 806
+ addUserKnob {20 tab1 l 预设锁定}
+ addUserKnob {1 customPresetName l 名称}
+ customPresetName test
+ addUserKnob {22 lock l 加锁 T "n = nuke.thisNode();\npresetName = os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2];\ncustomPresetName = n\['customPresetName'].value();\nif customPresetName:\n    presetName = presetName+'/'+customPresetName;\nnuke.saveUserPreset(n, presetName);\nn\['presetName'].setValue(presetName);" +STARTLINE}
+ addUserKnob {1 presetName l INVISIBLE -STARTLINE +INVISIBLE}
+ presetName SNJYW/EP01_04/test
+ addUserKnob {22 unlock l 解锁 T "n=nuke.thisNode();\npresetName = os.path.basename(nuke.scriptName()).split('_')\[0]+'/'+str.upper(nuke.scriptName().split('_')\[1])+'_'+nuke.scriptName().split('_')\[2];\ncustomPresetName = n\['customPresetName'].value();\nif customPresetName:\n    presetName = presetName+'/'+customPresetName;\nnuke.deleteUserPreset(n.Class(), presetName);" +STARTLINE}
+}
