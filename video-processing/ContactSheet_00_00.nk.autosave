@@ -1,6 +1,6 @@
 #! C:/Program Files/Nuke10.0v4/nuke-10.0.4.dll -nx
-version 10.0 v4
 #write_info Write1 file:"[file rootname [value root.name]].png" format:"57 32 1" chans:":rgba.red:rgba.green:rgba.blue:" framerange:"1 1" fps:"0" colorspace:"sRGB" datatype:"8 bit" transfer:"unknown" views:"main" colorManagement:"Nuke"
+version 10.0 v4
 define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 <layout version="1.0">
     <window x="0" y="124" w="1920" h="1076" screen="0">
@@ -12,7 +12,7 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
             <split size="1860" stretch="1"/>
             <splitter orientation="2">
                 <split size="1015"/>
-                <dock id="" activePageId="Viewer.1">
+                <dock id="" activePageId="uk.co.thefoundry.scripteditor.1">
                     <page id="Viewer.1"/>
                     <page id="uk.co.thefoundry.scripteditor.1"/>
                 </dock>
@@ -28,7 +28,7 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
                     <page id="Error Console.1"/>
                 </dock>
                 <split size="883"/>
-                <dock id="" activePageId="DAG.1" focus="true">
+                <dock id="" activePageId="DAG.1">
                     <page id="DAG.1"/>
                     <page id="Curve Editor.1"/>
                     <page id="DopeSheet.1"/>
@@ -44,7 +44,7 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 }
 Root {
  inputs 0
- name E:/SNJYW/ContactSheet_00_00.nk
+ name D:/Users/zhouxuan.WLF/CloudSync/Scripts/video-processing/ContactSheet_00_00.nk
  project_directory "\[python \{nuke.script_directory()\}]"
  last_frame 1
  lock_range true
@@ -53,7 +53,7 @@ Root {
  proxy_type scale
  proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
  colorManagement Nuke
- onScriptLoad "def image(index):\n    list = os.listdir(nuke.script_directory()+r'\\images');\n    if index < len(list):\n        return 'images/'+list\[index];\n    else:\n        return ;"
+ onScriptLoad "def image(index):\n    list = os.listdir(nuke.script_directory()+r'\\images');\n    if index < len(list):\n        return 'images/'+list\[index];\n    else:\n        nuke.thisNode()\[\"disable\"].setValue(1)\n        return ;"
  onScriptSave nuke.delete(nuke.toNode('Viewer1'))
  addUserKnob {20 User}
  addUserKnob {7 ad}
@@ -94,14 +94,14 @@ Transform {
  xpos 32740
  ypos -15849
 }
-set C4b58800 [stack 0]
+set C3c08800 [stack 0]
 Reformat {
  format "1920 1160 0 0 1920 1160 1 bbb"
  name Reformat1
  xpos 32740
  ypos -15823
 }
-set C4b58400 [stack 0]
+set C3c08400 [stack 0]
 Text2 {
  font_size_toolbar 100
  font_width_toolbar 100
@@ -127,7 +127,7 @@ Text2 {
  xpos 32740
  ypos -15785
 }
-set C4bb6800 [stack 0]
+set C3c09000 [stack 0]
 Dot {
  name Dot401
  label "\[input ContactSheet1 400 this]"
@@ -142,17 +142,17 @@ Read {
  xpos 32630
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32630
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32630
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32630
  ypos -15785
  selected false
@@ -171,17 +171,17 @@ Read {
  xpos 32520
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32520
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32520
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32520
  ypos -15785
  selected false
@@ -200,17 +200,17 @@ Read {
  xpos 32410
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32410
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32410
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32410
  ypos -15785
  selected false
@@ -229,17 +229,17 @@ Read {
  xpos 32300
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32300
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32300
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32300
  ypos -15785
  selected false
@@ -258,17 +258,17 @@ Read {
  xpos 32190
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32190
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32190
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32190
  ypos -15785
  selected false
@@ -287,17 +287,17 @@ Read {
  xpos 32080
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 32080
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 32080
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 32080
  ypos -15785
  selected false
@@ -316,17 +316,17 @@ Read {
  xpos 31970
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31970
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31970
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31970
  ypos -15785
  selected false
@@ -345,17 +345,17 @@ Read {
  xpos 31860
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31860
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31860
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31860
  ypos -15785
  selected false
@@ -374,17 +374,17 @@ Read {
  xpos 31750
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31750
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31750
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31750
  ypos -15785
  selected false
@@ -403,17 +403,17 @@ Read {
  xpos 31640
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31640
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31640
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31640
  ypos -15785
  selected false
@@ -432,17 +432,17 @@ Read {
  xpos 31530
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31530
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31530
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31530
  ypos -15785
  selected false
@@ -461,17 +461,17 @@ Read {
  xpos 31420
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31420
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31420
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31420
  ypos -15785
  selected false
@@ -490,17 +490,17 @@ Read {
  xpos 31310
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31310
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31310
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31310
  ypos -15785
  selected false
@@ -519,17 +519,17 @@ Read {
  xpos 31200
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31200
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31200
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31200
  ypos -15785
  selected false
@@ -548,17 +548,17 @@ Read {
  xpos 31090
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 31090
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 31090
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 31090
  ypos -15785
  selected false
@@ -577,17 +577,17 @@ Read {
  xpos 30980
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30980
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30980
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30980
  ypos -15785
  selected false
@@ -606,17 +606,17 @@ Read {
  xpos 30870
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30870
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30870
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30870
  ypos -15785
  selected false
@@ -635,17 +635,17 @@ Read {
  xpos 30760
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30760
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30760
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30760
  ypos -15785
  selected false
@@ -664,17 +664,17 @@ Read {
  xpos 30650
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30650
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30650
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30650
  ypos -15785
  selected false
@@ -693,17 +693,17 @@ Read {
  xpos 30540
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30540
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30540
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30540
  ypos -15785
  selected false
@@ -722,17 +722,17 @@ Read {
  xpos 30430
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30430
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30430
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30430
  ypos -15785
  selected false
@@ -751,17 +751,17 @@ Read {
  xpos 30320
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30320
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30320
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30320
  ypos -15785
  selected false
@@ -780,17 +780,17 @@ Read {
  xpos 30210
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30210
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30210
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30210
  ypos -15785
  selected false
@@ -809,17 +809,17 @@ Read {
  xpos 30100
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 30100
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 30100
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 30100
  ypos -15785
  selected false
@@ -838,17 +838,17 @@ Read {
  xpos 29990
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29990
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29990
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29990
  ypos -15785
  selected false
@@ -867,17 +867,17 @@ Read {
  xpos 29880
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29880
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29880
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29880
  ypos -15785
  selected false
@@ -896,17 +896,17 @@ Read {
  xpos 29770
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29770
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29770
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29770
  ypos -15785
  selected false
@@ -925,17 +925,17 @@ Read {
  xpos 29660
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29660
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29660
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29660
  ypos -15785
  selected false
@@ -954,17 +954,17 @@ Read {
  xpos 29550
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29550
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29550
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29550
  ypos -15785
  selected false
@@ -983,17 +983,17 @@ Read {
  xpos 29440
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29440
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29440
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29440
  ypos -15785
  selected false
@@ -1012,17 +1012,17 @@ Read {
  xpos 29330
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29330
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29330
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29330
  ypos -15785
  selected false
@@ -1041,17 +1041,17 @@ Read {
  xpos 29220
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29220
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29220
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29220
  ypos -15785
  selected false
@@ -1070,17 +1070,17 @@ Read {
  xpos 29110
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29110
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29110
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29110
  ypos -15785
  selected false
@@ -1099,17 +1099,17 @@ Read {
  xpos 29000
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 29000
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 29000
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 29000
  ypos -15785
  selected false
@@ -1128,17 +1128,17 @@ Read {
  xpos 28890
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28890
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28890
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28890
  ypos -15785
  selected false
@@ -1157,17 +1157,17 @@ Read {
  xpos 28780
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28780
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28780
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28780
  ypos -15785
  selected false
@@ -1186,17 +1186,17 @@ Read {
  xpos 28670
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28670
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28670
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28670
  ypos -15785
  selected false
@@ -1215,17 +1215,17 @@ Read {
  xpos 28560
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28560
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28560
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28560
  ypos -15785
  selected false
@@ -1244,17 +1244,17 @@ Read {
  xpos 28450
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28450
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28450
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28450
  ypos -15785
  selected false
@@ -1273,17 +1273,17 @@ Read {
  xpos 28340
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28340
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28340
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28340
  ypos -15785
  selected false
@@ -1302,17 +1302,17 @@ Read {
  xpos 28230
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28230
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28230
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28230
  ypos -15785
  selected false
@@ -1331,17 +1331,17 @@ Read {
  xpos 28120
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28120
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28120
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28120
  ypos -15785
  selected false
@@ -1360,17 +1360,17 @@ Read {
  xpos 28010
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 28010
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 28010
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 28010
  ypos -15785
  selected false
@@ -1389,17 +1389,17 @@ Read {
  xpos 27900
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27900
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27900
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27900
  ypos -15785
  selected false
@@ -1418,17 +1418,17 @@ Read {
  xpos 27790
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27790
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27790
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27790
  ypos -15785
  selected false
@@ -1447,17 +1447,17 @@ Read {
  xpos 27680
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27680
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27680
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27680
  ypos -15785
  selected false
@@ -1476,17 +1476,17 @@ Read {
  xpos 27570
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27570
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27570
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27570
  ypos -15785
  selected false
@@ -1505,17 +1505,17 @@ Read {
  xpos 27460
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27460
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27460
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27460
  ypos -15785
  selected false
@@ -1534,17 +1534,17 @@ Read {
  xpos 27350
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27350
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27350
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27350
  ypos -15785
  selected false
@@ -1563,17 +1563,17 @@ Read {
  xpos 27240
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27240
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27240
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27240
  ypos -15785
  selected false
@@ -1592,17 +1592,17 @@ Read {
  xpos 27130
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27130
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27130
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27130
  ypos -15785
  selected false
@@ -1621,17 +1621,17 @@ Read {
  xpos 27020
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 27020
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 27020
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 27020
  ypos -15785
  selected false
@@ -1650,17 +1650,17 @@ Read {
  xpos 26910
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26910
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26910
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26910
  ypos -15785
  selected false
@@ -1679,17 +1679,17 @@ Read {
  xpos 26800
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26800
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26800
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26800
  ypos -15785
  selected false
@@ -1708,17 +1708,17 @@ Read {
  xpos 26690
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26690
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26690
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26690
  ypos -15785
  selected false
@@ -1737,17 +1737,17 @@ Read {
  xpos 26580
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26580
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26580
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26580
  ypos -15785
  selected false
@@ -1766,17 +1766,17 @@ Read {
  xpos 26470
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26470
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26470
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26470
  ypos -15785
  selected false
@@ -1795,17 +1795,17 @@ Read {
  xpos 26360
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26360
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26360
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26360
  ypos -15785
  selected false
@@ -1824,17 +1824,17 @@ Read {
  xpos 26250
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26250
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26250
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26250
  ypos -15785
  selected false
@@ -1853,17 +1853,17 @@ Read {
  xpos 26140
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26140
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26140
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26140
  ypos -15785
  selected false
@@ -1882,17 +1882,17 @@ Read {
  xpos 26030
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 26030
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 26030
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 26030
  ypos -15785
  selected false
@@ -1911,17 +1911,17 @@ Read {
  xpos 25920
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25920
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25920
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25920
  ypos -15785
  selected false
@@ -1940,17 +1940,17 @@ Read {
  xpos 25810
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25810
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25810
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25810
  ypos -15785
  selected false
@@ -1969,17 +1969,17 @@ Read {
  xpos 25700
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25700
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25700
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25700
  ypos -15785
  selected false
@@ -1998,17 +1998,17 @@ Read {
  xpos 25590
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25590
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25590
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25590
  ypos -15785
  selected false
@@ -2027,17 +2027,17 @@ Read {
  xpos 25480
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25480
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25480
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25480
  ypos -15785
  selected false
@@ -2056,17 +2056,17 @@ Read {
  xpos 25370
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25370
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25370
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25370
  ypos -15785
  selected false
@@ -2085,17 +2085,17 @@ Read {
  xpos 25260
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25260
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25260
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25260
  ypos -15785
  selected false
@@ -2114,17 +2114,17 @@ Read {
  xpos 25150
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25150
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25150
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25150
  ypos -15785
  selected false
@@ -2143,17 +2143,17 @@ Read {
  xpos 25040
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 25040
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 25040
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 25040
  ypos -15785
  selected false
@@ -2172,17 +2172,17 @@ Read {
  xpos 24930
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24930
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24930
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24930
  ypos -15785
  selected false
@@ -2201,17 +2201,17 @@ Read {
  xpos 24820
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24820
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24820
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24820
  ypos -15785
  selected false
@@ -2230,17 +2230,17 @@ Read {
  xpos 24710
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24710
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24710
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24710
  ypos -15785
  selected false
@@ -2259,17 +2259,17 @@ Read {
  xpos 24600
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24600
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24600
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24600
  ypos -15785
  selected false
@@ -2288,17 +2288,17 @@ Read {
  xpos 24490
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24490
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24490
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24490
  ypos -15785
  selected false
@@ -2317,17 +2317,17 @@ Read {
  xpos 24380
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24380
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24380
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24380
  ypos -15785
  selected false
@@ -2346,17 +2346,17 @@ Read {
  xpos 24270
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24270
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24270
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24270
  ypos -15785
  selected false
@@ -2375,17 +2375,17 @@ Read {
  xpos 24160
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24160
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24160
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24160
  ypos -15785
  selected false
@@ -2404,17 +2404,17 @@ Read {
  xpos 24050
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 24050
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 24050
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 24050
  ypos -15785
  selected false
@@ -2433,17 +2433,17 @@ Read {
  xpos 23940
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23940
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23940
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23940
  ypos -15785
  selected false
@@ -2462,17 +2462,17 @@ Read {
  xpos 23830
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23830
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23830
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23830
  ypos -15785
  selected false
@@ -2491,17 +2491,17 @@ Read {
  xpos 23720
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23720
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23720
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23720
  ypos -15785
  selected false
@@ -2520,17 +2520,17 @@ Read {
  xpos 23610
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23610
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23610
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23610
  ypos -15785
  selected false
@@ -2549,17 +2549,17 @@ Read {
  xpos 23500
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23500
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23500
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23500
  ypos -15785
  selected false
@@ -2578,17 +2578,17 @@ Read {
  xpos 23390
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23390
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23390
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23390
  ypos -15785
  selected false
@@ -2607,17 +2607,17 @@ Read {
  xpos 23280
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23280
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23280
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23280
  ypos -15785
  selected false
@@ -2636,17 +2636,17 @@ Read {
  xpos 23170
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23170
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23170
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23170
  ypos -15785
  selected false
@@ -2665,17 +2665,17 @@ Read {
  xpos 23060
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 23060
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 23060
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 23060
  ypos -15785
  selected false
@@ -2694,17 +2694,17 @@ Read {
  xpos 22950
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22950
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22950
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22950
  ypos -15785
  selected false
@@ -2723,17 +2723,17 @@ Read {
  xpos 22840
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22840
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22840
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22840
  ypos -15785
  selected false
@@ -2752,17 +2752,17 @@ Read {
  xpos 22730
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22730
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22730
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22730
  ypos -15785
  selected false
@@ -2781,17 +2781,17 @@ Read {
  xpos 22620
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22620
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22620
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22620
  ypos -15785
  selected false
@@ -2810,17 +2810,17 @@ Read {
  xpos 22510
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22510
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22510
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22510
  ypos -15785
  selected false
@@ -2839,17 +2839,17 @@ Read {
  xpos 22400
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22400
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22400
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22400
  ypos -15785
  selected false
@@ -2868,17 +2868,17 @@ Read {
  xpos 22290
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22290
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22290
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22290
  ypos -15785
  selected false
@@ -2897,17 +2897,17 @@ Read {
  xpos 22180
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22180
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22180
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22180
  ypos -15785
  selected false
@@ -2926,17 +2926,17 @@ Read {
  xpos 22070
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 22070
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 22070
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 22070
  ypos -15785
  selected false
@@ -2955,17 +2955,17 @@ Read {
  xpos 21960
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21960
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21960
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21960
  ypos -15785
  selected false
@@ -2984,17 +2984,17 @@ Read {
  xpos 21850
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21850
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21850
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21850
  ypos -15785
  selected false
@@ -3013,17 +3013,17 @@ Read {
  xpos 21740
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21740
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21740
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21740
  ypos -15785
  selected false
@@ -3042,17 +3042,17 @@ Read {
  xpos 21630
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21630
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21630
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21630
  ypos -15785
  selected false
@@ -3071,17 +3071,17 @@ Read {
  xpos 21520
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21520
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21520
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21520
  ypos -15785
  selected false
@@ -3100,17 +3100,17 @@ Read {
  xpos 21410
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21410
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21410
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21410
  ypos -15785
  selected false
@@ -3129,17 +3129,17 @@ Read {
  xpos 21300
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21300
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21300
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21300
  ypos -15785
  selected false
@@ -3158,17 +3158,17 @@ Read {
  xpos 21190
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21190
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21190
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21190
  ypos -15785
  selected false
@@ -3187,17 +3187,17 @@ Read {
  xpos 21080
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 21080
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 21080
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 21080
  ypos -15785
  selected false
@@ -3216,17 +3216,17 @@ Read {
  xpos 20970
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20970
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20970
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20970
  ypos -15785
  selected false
@@ -3245,17 +3245,17 @@ Read {
  xpos 20860
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20860
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20860
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20860
  ypos -15785
  selected false
@@ -3274,17 +3274,17 @@ Read {
  xpos 20750
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20750
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20750
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20750
  ypos -15785
  selected false
@@ -3303,17 +3303,17 @@ Read {
  xpos 20640
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20640
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20640
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20640
  ypos -15785
  selected false
@@ -3332,17 +3332,17 @@ Read {
  xpos 20530
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20530
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20530
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20530
  ypos -15785
  selected false
@@ -3361,17 +3361,17 @@ Read {
  xpos 20420
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20420
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20420
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20420
  ypos -15785
  selected false
@@ -3390,17 +3390,17 @@ Read {
  xpos 20310
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20310
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20310
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20310
  ypos -15785
  selected false
@@ -3419,17 +3419,17 @@ Read {
  xpos 20200
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20200
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20200
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20200
  ypos -15785
  selected false
@@ -3448,17 +3448,17 @@ Read {
  xpos 20090
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 20090
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 20090
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 20090
  ypos -15785
  selected false
@@ -3477,17 +3477,17 @@ Read {
  xpos 19980
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19980
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19980
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19980
  ypos -15785
  selected false
@@ -3506,17 +3506,17 @@ Read {
  xpos 19870
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19870
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19870
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19870
  ypos -15785
  selected false
@@ -3535,17 +3535,17 @@ Read {
  xpos 19760
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19760
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19760
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19760
  ypos -15785
  selected false
@@ -3564,17 +3564,17 @@ Read {
  xpos 19650
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19650
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19650
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19650
  ypos -15785
  selected false
@@ -3593,17 +3593,17 @@ Read {
  xpos 19540
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19540
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19540
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19540
  ypos -15785
  selected false
@@ -3622,17 +3622,17 @@ Read {
  xpos 19430
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19430
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19430
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19430
  ypos -15785
  selected false
@@ -3651,17 +3651,17 @@ Read {
  xpos 19320
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19320
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19320
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19320
  ypos -15785
  selected false
@@ -3680,17 +3680,17 @@ Read {
  xpos 19210
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19210
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19210
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19210
  ypos -15785
  selected false
@@ -3709,17 +3709,17 @@ Read {
  xpos 19100
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 19100
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 19100
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 19100
  ypos -15785
  selected false
@@ -3738,17 +3738,17 @@ Read {
  xpos 18990
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18990
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18990
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18990
  ypos -15785
  selected false
@@ -3767,17 +3767,17 @@ Read {
  xpos 18880
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18880
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18880
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18880
  ypos -15785
  selected false
@@ -3796,17 +3796,17 @@ Read {
  xpos 18770
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18770
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18770
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18770
  ypos -15785
  selected false
@@ -3825,17 +3825,17 @@ Read {
  xpos 18660
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18660
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18660
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18660
  ypos -15785
  selected false
@@ -3854,17 +3854,17 @@ Read {
  xpos 18550
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18550
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18550
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18550
  ypos -15785
  selected false
@@ -3883,17 +3883,17 @@ Read {
  xpos 18440
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18440
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18440
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18440
  ypos -15785
  selected false
@@ -3912,17 +3912,17 @@ Read {
  xpos 18330
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18330
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18330
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18330
  ypos -15785
  selected false
@@ -3941,17 +3941,17 @@ Read {
  xpos 18220
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18220
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18220
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18220
  ypos -15785
  selected false
@@ -3970,17 +3970,17 @@ Read {
  xpos 18110
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18110
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18110
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18110
  ypos -15785
  selected false
@@ -3999,17 +3999,17 @@ Read {
  xpos 18000
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 18000
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 18000
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 18000
  ypos -15785
  selected false
@@ -4028,17 +4028,17 @@ Read {
  xpos 17890
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17890
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17890
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17890
  ypos -15785
  selected false
@@ -4057,17 +4057,17 @@ Read {
  xpos 17780
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17780
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17780
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17780
  ypos -15785
  selected false
@@ -4086,17 +4086,17 @@ Read {
  xpos 17670
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17670
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17670
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17670
  ypos -15785
  selected false
@@ -4115,17 +4115,17 @@ Read {
  xpos 17560
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17560
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17560
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17560
  ypos -15785
  selected false
@@ -4144,17 +4144,17 @@ Read {
  xpos 17450
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17450
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17450
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17450
  ypos -15785
  selected false
@@ -4173,17 +4173,17 @@ Read {
  xpos 17340
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17340
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17340
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17340
  ypos -15785
  selected false
@@ -4202,17 +4202,17 @@ Read {
  xpos 17230
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17230
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17230
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17230
  ypos -15785
  selected false
@@ -4231,17 +4231,17 @@ Read {
  xpos 17120
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17120
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17120
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17120
  ypos -15785
  selected false
@@ -4260,17 +4260,17 @@ Read {
  xpos 17010
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 17010
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 17010
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 17010
  ypos -15785
  selected false
@@ -4289,17 +4289,17 @@ Read {
  xpos 16900
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16900
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16900
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16900
  ypos -15785
  selected false
@@ -4318,17 +4318,17 @@ Read {
  xpos 16790
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16790
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16790
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16790
  ypos -15785
  selected false
@@ -4347,17 +4347,17 @@ Read {
  xpos 16680
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16680
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16680
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16680
  ypos -15785
  selected false
@@ -4376,17 +4376,17 @@ Read {
  xpos 16570
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16570
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16570
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16570
  ypos -15785
  selected false
@@ -4405,17 +4405,17 @@ Read {
  xpos 16460
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16460
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16460
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16460
  ypos -15785
  selected false
@@ -4434,17 +4434,17 @@ Read {
  xpos 16350
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16350
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16350
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16350
  ypos -15785
  selected false
@@ -4463,17 +4463,17 @@ Read {
  xpos 16240
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16240
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16240
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16240
  ypos -15785
  selected false
@@ -4492,17 +4492,17 @@ Read {
  xpos 16130
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16130
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16130
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16130
  ypos -15785
  selected false
@@ -4521,17 +4521,17 @@ Read {
  xpos 16020
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 16020
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 16020
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 16020
  ypos -15785
  selected false
@@ -4550,17 +4550,17 @@ Read {
  xpos 15910
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15910
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15910
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15910
  ypos -15785
  selected false
@@ -4579,17 +4579,17 @@ Read {
  xpos 15800
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15800
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15800
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15800
  ypos -15785
  selected false
@@ -4608,17 +4608,17 @@ Read {
  xpos 15690
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15690
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15690
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15690
  ypos -15785
  selected false
@@ -4634,20 +4634,20 @@ Read {
  file "\[python \{image(244)\}]"
  origset true
  name ReadImage244_1
- xpos 15580
- ypos -15921
+ xpos 15583
+ ypos -15935
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15580
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15580
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15580
  ypos -15785
  selected false
@@ -4663,20 +4663,21 @@ Read {
  file "\[python \{image(243)\}]"
  origset true
  name ReadImage243_1
+ selected true
  xpos 15470
- ypos -15921
+ ypos -15932
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15470
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15470
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15470
  ypos -15785
  selected false
@@ -4695,17 +4696,17 @@ Read {
  xpos 15360
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15360
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15360
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15360
  ypos -15785
  selected false
@@ -4724,17 +4725,17 @@ Read {
  xpos 15250
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15250
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15250
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15250
  ypos -15785
  selected false
@@ -4753,17 +4754,17 @@ Read {
  xpos 15140
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15140
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15140
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15140
  ypos -15785
  selected false
@@ -4782,17 +4783,17 @@ Read {
  xpos 15030
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 15030
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 15030
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 15030
  ypos -15785
  selected false
@@ -4811,17 +4812,17 @@ Read {
  xpos 14920
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14920
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14920
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14920
  ypos -15785
  selected false
@@ -4840,17 +4841,17 @@ Read {
  xpos 14810
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14810
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14810
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14810
  ypos -15785
  selected false
@@ -4869,17 +4870,17 @@ Read {
  xpos 14700
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14700
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14700
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14700
  ypos -15785
  selected false
@@ -4898,17 +4899,17 @@ Read {
  xpos 14590
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14590
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14590
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14590
  ypos -15785
  selected false
@@ -4927,17 +4928,17 @@ Read {
  xpos 14480
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14480
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14480
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14480
  ypos -15785
  selected false
@@ -4956,17 +4957,17 @@ Read {
  xpos 14370
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14370
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14370
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14370
  ypos -15785
  selected false
@@ -4985,17 +4986,17 @@ Read {
  xpos 14260
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14260
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14260
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14260
  ypos -15785
  selected false
@@ -5014,17 +5015,17 @@ Read {
  xpos 14150
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14150
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14150
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14150
  ypos -15785
  selected false
@@ -5043,17 +5044,17 @@ Read {
  xpos 14040
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 14040
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 14040
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 14040
  ypos -15785
  selected false
@@ -5072,17 +5073,17 @@ Read {
  xpos 13930
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13930
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13930
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13930
  ypos -15785
  selected false
@@ -5101,17 +5102,17 @@ Read {
  xpos 13820
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13820
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13820
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13820
  ypos -15785
  selected false
@@ -5130,17 +5131,17 @@ Read {
  xpos 13710
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13710
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13710
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13710
  ypos -15785
  selected false
@@ -5159,17 +5160,17 @@ Read {
  xpos 13600
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13600
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13600
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13600
  ypos -15785
  selected false
@@ -5188,17 +5189,17 @@ Read {
  xpos 13490
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13490
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13490
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13490
  ypos -15785
  selected false
@@ -5217,17 +5218,17 @@ Read {
  xpos 13380
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13380
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13380
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13380
  ypos -15785
  selected false
@@ -5246,17 +5247,17 @@ Read {
  xpos 13270
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13270
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13270
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13270
  ypos -15785
  selected false
@@ -5275,17 +5276,17 @@ Read {
  xpos 13160
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13160
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13160
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13160
  ypos -15785
  selected false
@@ -5304,17 +5305,17 @@ Read {
  xpos 13050
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 13050
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 13050
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 13050
  ypos -15785
  selected false
@@ -5333,17 +5334,17 @@ Read {
  xpos 12940
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12940
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12940
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12940
  ypos -15785
  selected false
@@ -5362,17 +5363,17 @@ Read {
  xpos 12830
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12830
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12830
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12830
  ypos -15785
  selected false
@@ -5391,17 +5392,17 @@ Read {
  xpos 12720
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12720
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12720
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12720
  ypos -15785
  selected false
@@ -5420,17 +5421,17 @@ Read {
  xpos 12610
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12610
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12610
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12610
  ypos -15785
  selected false
@@ -5449,17 +5450,17 @@ Read {
  xpos 12500
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12500
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12500
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12500
  ypos -15785
  selected false
@@ -5478,17 +5479,17 @@ Read {
  xpos 12390
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12390
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12390
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12390
  ypos -15785
  selected false
@@ -5507,17 +5508,17 @@ Read {
  xpos 12280
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12280
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12280
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12280
  ypos -15785
  selected false
@@ -5536,17 +5537,17 @@ Read {
  xpos 12170
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12170
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12170
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12170
  ypos -15785
  selected false
@@ -5565,17 +5566,17 @@ Read {
  xpos 12060
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 12060
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 12060
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 12060
  ypos -15785
  selected false
@@ -5594,17 +5595,17 @@ Read {
  xpos 11950
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11950
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11950
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11950
  ypos -15785
  selected false
@@ -5623,17 +5624,17 @@ Read {
  xpos 11840
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11840
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11840
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11840
  ypos -15785
  selected false
@@ -5652,17 +5653,17 @@ Read {
  xpos 11730
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11730
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11730
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11730
  ypos -15785
  selected false
@@ -5681,17 +5682,17 @@ Read {
  xpos 11620
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11620
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11620
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11620
  ypos -15785
  selected false
@@ -5710,17 +5711,17 @@ Read {
  xpos 11510
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11510
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11510
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11510
  ypos -15785
  selected false
@@ -5739,17 +5740,17 @@ Read {
  xpos 11400
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11400
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11400
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11400
  ypos -15785
  selected false
@@ -5768,17 +5769,17 @@ Read {
  xpos 11290
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11290
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11290
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11290
  ypos -15785
  selected false
@@ -5797,17 +5798,17 @@ Read {
  xpos 11180
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11180
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11180
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11180
  ypos -15785
  selected false
@@ -5826,17 +5827,17 @@ Read {
  xpos 11070
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 11070
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 11070
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 11070
  ypos -15785
  selected false
@@ -5855,17 +5856,17 @@ Read {
  xpos 10960
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10960
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10960
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10960
  ypos -15785
  selected false
@@ -5884,17 +5885,17 @@ Read {
  xpos 10850
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10850
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10850
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10850
  ypos -15785
  selected false
@@ -5913,17 +5914,17 @@ Read {
  xpos 10740
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10740
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10740
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10740
  ypos -15785
  selected false
@@ -5942,17 +5943,17 @@ Read {
  xpos 10630
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10630
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10630
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10630
  ypos -15785
  selected false
@@ -5971,17 +5972,17 @@ Read {
  xpos 10520
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10520
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10520
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10520
  ypos -15785
  selected false
@@ -6000,17 +6001,17 @@ Read {
  xpos 10410
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10410
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10410
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10410
  ypos -15785
  selected false
@@ -6029,17 +6030,17 @@ Read {
  xpos 10300
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10300
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10300
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10300
  ypos -15785
  selected false
@@ -6058,17 +6059,17 @@ Read {
  xpos 10190
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10190
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10190
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10190
  ypos -15785
  selected false
@@ -6087,17 +6088,17 @@ Read {
  xpos 10080
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 10080
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 10080
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 10080
  ypos -15785
  selected false
@@ -6116,17 +6117,17 @@ Read {
  xpos 9970
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9970
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9970
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9970
  ypos -15785
  selected false
@@ -6145,17 +6146,17 @@ Read {
  xpos 9860
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9860
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9860
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9860
  ypos -15785
  selected false
@@ -6174,17 +6175,17 @@ Read {
  xpos 9750
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9750
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9750
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9750
  ypos -15785
  selected false
@@ -6203,17 +6204,17 @@ Read {
  xpos 9640
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9640
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9640
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9640
  ypos -15785
  selected false
@@ -6232,17 +6233,17 @@ Read {
  xpos 9530
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9530
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9530
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9530
  ypos -15785
  selected false
@@ -6261,17 +6262,17 @@ Read {
  xpos 9420
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9420
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9420
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9420
  ypos -15785
  selected false
@@ -6290,17 +6291,17 @@ Read {
  xpos 9310
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9310
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9310
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9310
  ypos -15785
  selected false
@@ -6319,17 +6320,17 @@ Read {
  xpos 9200
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9200
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9200
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9200
  ypos -15785
  selected false
@@ -6348,17 +6349,17 @@ Read {
  xpos 9090
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 9090
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 9090
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 9090
  ypos -15785
  selected false
@@ -6377,17 +6378,17 @@ Read {
  xpos 8980
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8980
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8980
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8980
  ypos -15785
  selected false
@@ -6406,17 +6407,17 @@ Read {
  xpos 8870
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8870
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8870
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8870
  ypos -15785
  selected false
@@ -6435,17 +6436,17 @@ Read {
  xpos 8760
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8760
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8760
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8760
  ypos -15785
  selected false
@@ -6464,17 +6465,17 @@ Read {
  xpos 8650
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8650
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8650
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8650
  ypos -15785
  selected false
@@ -6493,17 +6494,17 @@ Read {
  xpos 8540
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8540
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8540
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8540
  ypos -15785
  selected false
@@ -6522,17 +6523,17 @@ Read {
  xpos 8430
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8430
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8430
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8430
  ypos -15785
  selected false
@@ -6551,17 +6552,17 @@ Read {
  xpos 8320
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8320
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8320
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8320
  ypos -15785
  selected false
@@ -6580,17 +6581,17 @@ Read {
  xpos 8210
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8210
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8210
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8210
  ypos -15785
  selected false
@@ -6609,17 +6610,17 @@ Read {
  xpos 8100
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 8100
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 8100
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 8100
  ypos -15785
  selected false
@@ -6638,17 +6639,17 @@ Read {
  xpos 7990
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7990
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7990
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7990
  ypos -15785
  selected false
@@ -6667,17 +6668,17 @@ Read {
  xpos 7880
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7880
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7880
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7880
  ypos -15785
  selected false
@@ -6696,17 +6697,17 @@ Read {
  xpos 7770
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7770
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7770
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7770
  ypos -15785
  selected false
@@ -6725,17 +6726,17 @@ Read {
  xpos 7660
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7660
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7660
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7660
  ypos -15785
  selected false
@@ -6754,17 +6755,17 @@ Read {
  xpos 7550
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7550
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7550
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7550
  ypos -15785
  selected false
@@ -6783,17 +6784,17 @@ Read {
  xpos 7440
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7440
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7440
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7440
  ypos -15785
  selected false
@@ -6812,17 +6813,17 @@ Read {
  xpos 7330
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7330
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7330
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7330
  ypos -15785
  selected false
@@ -6841,17 +6842,17 @@ Read {
  xpos 7220
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7220
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7220
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7220
  ypos -15785
  selected false
@@ -6870,17 +6871,17 @@ Read {
  xpos 7110
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7110
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7110
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7110
  ypos -15785
  selected false
@@ -6899,17 +6900,17 @@ Read {
  xpos 7000
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 7000
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 7000
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 7000
  ypos -15785
  selected false
@@ -6928,17 +6929,17 @@ Read {
  xpos 6890
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6890
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6890
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6890
  ypos -15785
  selected false
@@ -6957,17 +6958,17 @@ Read {
  xpos 6780
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6780
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6780
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6780
  ypos -15785
  selected false
@@ -6986,17 +6987,17 @@ Read {
  xpos 6670
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6670
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6670
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6670
  ypos -15785
  selected false
@@ -7015,17 +7016,17 @@ Read {
  xpos 6560
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6560
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6560
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6560
  ypos -15785
  selected false
@@ -7044,17 +7045,17 @@ Read {
  xpos 6450
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6450
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6450
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6450
  ypos -15785
  selected false
@@ -7073,17 +7074,17 @@ Read {
  xpos 6340
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6340
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6340
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6340
  ypos -15785
  selected false
@@ -7102,17 +7103,17 @@ Read {
  xpos 6230
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6230
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6230
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6230
  ypos -15785
  selected false
@@ -7131,17 +7132,17 @@ Read {
  xpos 6120
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6120
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6120
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6120
  ypos -15785
  selected false
@@ -7160,17 +7161,17 @@ Read {
  xpos 6010
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 6010
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 6010
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 6010
  ypos -15785
  selected false
@@ -7189,17 +7190,17 @@ Read {
  xpos 5900
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5900
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5900
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5900
  ypos -15785
  selected false
@@ -7218,17 +7219,17 @@ Read {
  xpos 5790
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5790
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5790
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5790
  ypos -15785
  selected false
@@ -7247,17 +7248,17 @@ Read {
  xpos 5680
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5680
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5680
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5680
  ypos -15785
  selected false
@@ -7276,17 +7277,17 @@ Read {
  xpos 5570
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5570
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5570
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5570
  ypos -15785
  selected false
@@ -7305,17 +7306,17 @@ Read {
  xpos 5460
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5460
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5460
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5460
  ypos -15785
  selected false
@@ -7334,17 +7335,17 @@ Read {
  xpos 5350
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5350
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5350
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5350
  ypos -15785
  selected false
@@ -7363,17 +7364,17 @@ Read {
  xpos 5240
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5240
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5240
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5240
  ypos -15785
  selected false
@@ -7392,17 +7393,17 @@ Read {
  xpos 5130
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5130
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5130
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5130
  ypos -15785
  selected false
@@ -7421,17 +7422,17 @@ Read {
  xpos 5020
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 5020
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 5020
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 5020
  ypos -15785
  selected false
@@ -7450,17 +7451,17 @@ Read {
  xpos 4910
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4910
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4910
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4910
  ypos -15785
  selected false
@@ -7479,17 +7480,17 @@ Read {
  xpos 4800
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4800
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4800
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4800
  ypos -15785
  selected false
@@ -7508,17 +7509,17 @@ Read {
  xpos 4690
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4690
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4690
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4690
  ypos -15785
  selected false
@@ -7537,17 +7538,17 @@ Read {
  xpos 4580
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4580
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4580
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4580
  ypos -15785
  selected false
@@ -7566,17 +7567,17 @@ Read {
  xpos 4470
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4470
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4470
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4470
  ypos -15785
  selected false
@@ -7595,17 +7596,17 @@ Read {
  xpos 4360
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4360
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4360
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4360
  ypos -15785
  selected false
@@ -7624,17 +7625,17 @@ Read {
  xpos 4250
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4250
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4250
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4250
  ypos -15785
  selected false
@@ -7653,17 +7654,17 @@ Read {
  xpos 4140
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4140
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4140
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4140
  ypos -15785
  selected false
@@ -7682,17 +7683,17 @@ Read {
  xpos 4030
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 4030
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 4030
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 4030
  ypos -15785
  selected false
@@ -7711,17 +7712,17 @@ Read {
  xpos 3920
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3920
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3920
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3920
  ypos -15785
  selected false
@@ -7740,17 +7741,17 @@ Read {
  xpos 3810
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3810
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3810
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3810
  ypos -15785
  selected false
@@ -7769,17 +7770,17 @@ Read {
  xpos 3700
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3700
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3700
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3700
  ypos -15785
  selected false
@@ -7798,17 +7799,17 @@ Read {
  xpos 3590
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3590
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3590
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3590
  ypos -15785
  selected false
@@ -7827,17 +7828,17 @@ Read {
  xpos 3480
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3480
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3480
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3480
  ypos -15785
  selected false
@@ -7856,17 +7857,17 @@ Read {
  xpos 3370
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3370
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3370
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3370
  ypos -15785
  selected false
@@ -7885,17 +7886,17 @@ Read {
  xpos 3260
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3260
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3260
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3260
  ypos -15785
  selected false
@@ -7914,17 +7915,17 @@ Read {
  xpos 3150
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3150
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3150
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3150
  ypos -15785
  selected false
@@ -7943,17 +7944,17 @@ Read {
  xpos 3040
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 3040
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 3040
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 3040
  ypos -15785
  selected false
@@ -7972,17 +7973,17 @@ Read {
  xpos 2930
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2930
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2930
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2930
  ypos -15785
  selected false
@@ -8001,17 +8002,17 @@ Read {
  xpos 2820
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2820
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2820
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2820
  ypos -15785
  selected false
@@ -8030,17 +8031,17 @@ Read {
  xpos 2710
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2710
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2710
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2710
  ypos -15785
  selected false
@@ -8059,17 +8060,17 @@ Read {
  xpos 2600
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2600
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2600
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2600
  ypos -15785
  selected false
@@ -8088,17 +8089,17 @@ Read {
  xpos 2490
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2490
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2490
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2490
  ypos -15785
  selected false
@@ -8117,17 +8118,17 @@ Read {
  xpos 2380
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2380
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2380
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2380
  ypos -15785
  selected false
@@ -8146,17 +8147,17 @@ Read {
  xpos 2270
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2270
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2270
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2270
  ypos -15785
  selected false
@@ -8175,17 +8176,17 @@ Read {
  xpos 2160
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2160
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2160
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2160
  ypos -15785
  selected false
@@ -8204,17 +8205,17 @@ Read {
  xpos 2050
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 2050
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 2050
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 2050
  ypos -15785
  selected false
@@ -8233,17 +8234,17 @@ Read {
  xpos 1940
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1940
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1940
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1940
  ypos -15785
  selected false
@@ -8262,17 +8263,17 @@ Read {
  xpos 1830
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1830
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1830
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1830
  ypos -15785
  selected false
@@ -8291,17 +8292,17 @@ Read {
  xpos 1720
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1720
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1720
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1720
  ypos -15785
  selected false
@@ -8320,17 +8321,17 @@ Read {
  xpos 1610
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1610
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1610
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1610
  ypos -15785
  selected false
@@ -8349,17 +8350,17 @@ Read {
  xpos 1500
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1500
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1500
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1500
  ypos -15785
  selected false
@@ -8378,17 +8379,17 @@ Read {
  xpos 1390
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1390
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1390
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1390
  ypos -15785
  selected false
@@ -8407,17 +8408,17 @@ Read {
  xpos 1280
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1280
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1280
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1280
  ypos -15785
  selected false
@@ -8436,17 +8437,17 @@ Read {
  xpos 1170
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1170
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1170
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1170
  ypos -15785
  selected false
@@ -8465,17 +8466,17 @@ Read {
  xpos 1060
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 1060
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 1060
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 1060
  ypos -15785
  selected false
@@ -8494,17 +8495,17 @@ Read {
  xpos 950
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 950
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 950
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 950
  ypos -15785
  selected false
@@ -8523,17 +8524,17 @@ Read {
  xpos 840
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 840
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 840
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 840
  ypos -15785
  selected false
@@ -8552,17 +8553,17 @@ Read {
  xpos 730
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 730
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 730
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 730
  ypos -15785
  selected false
@@ -8581,17 +8582,17 @@ Read {
  xpos 620
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 620
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 620
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 620
  ypos -15785
  selected false
@@ -8610,17 +8611,17 @@ Read {
  xpos 510
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 510
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 510
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 510
  ypos -15785
  selected false
@@ -8639,17 +8640,17 @@ Read {
  xpos 400
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 400
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 400
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 400
  ypos -15785
  selected false
@@ -8668,17 +8669,17 @@ Read {
  xpos 290
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 290
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 290
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 290
  ypos -15785
  selected false
@@ -8697,17 +8698,17 @@ Read {
  xpos 180
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 180
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 180
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 180
  ypos -15785
  selected false
@@ -8726,17 +8727,17 @@ Read {
  xpos 70
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos 70
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos 70
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos 70
  ypos -15785
  selected false
@@ -8755,17 +8756,17 @@ Read {
  xpos -40
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -40
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -40
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -40
  ypos -15785
  selected false
@@ -8784,17 +8785,17 @@ Read {
  xpos -150
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -150
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -150
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -150
  ypos -15785
  selected false
@@ -8813,17 +8814,17 @@ Read {
  xpos -260
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -260
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -260
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -260
  ypos -15785
  selected false
@@ -8842,17 +8843,17 @@ Read {
  xpos -370
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -370
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -370
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -370
  ypos -15785
  selected false
@@ -8871,17 +8872,17 @@ Read {
  xpos -480
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -480
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -480
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -480
  ypos -15785
  selected false
@@ -8900,17 +8901,17 @@ Read {
  xpos -590
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -590
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -590
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -590
  ypos -15785
  selected false
@@ -8929,17 +8930,17 @@ Read {
  xpos -700
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -700
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -700
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -700
  ypos -15785
  selected false
@@ -8958,17 +8959,17 @@ Read {
  xpos -810
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -810
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -810
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -810
  ypos -15785
  selected false
@@ -8987,17 +8988,17 @@ Read {
  xpos -920
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -920
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -920
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -920
  ypos -15785
  selected false
@@ -9016,17 +9017,17 @@ Read {
  xpos -1030
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1030
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1030
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1030
  ypos -15785
  selected false
@@ -9045,17 +9046,17 @@ Read {
  xpos -1140
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1140
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1140
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1140
  ypos -15785
  selected false
@@ -9074,17 +9075,17 @@ Read {
  xpos -1250
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1250
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1250
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1250
  ypos -15785
  selected false
@@ -9103,17 +9104,17 @@ Read {
  xpos -1360
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1360
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1360
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1360
  ypos -15785
  selected false
@@ -9132,17 +9133,17 @@ Read {
  xpos -1470
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1470
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1470
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1470
  ypos -15785
  selected false
@@ -9161,17 +9162,17 @@ Read {
  xpos -1580
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1580
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1580
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1580
  ypos -15785
  selected false
@@ -9190,17 +9191,17 @@ Read {
  xpos -1690
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1690
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1690
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1690
  ypos -15785
  selected false
@@ -9219,17 +9220,17 @@ Read {
  xpos -1800
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1800
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1800
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1800
  ypos -15785
  selected false
@@ -9248,17 +9249,17 @@ Read {
  xpos -1910
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -1910
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -1910
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -1910
  ypos -15785
  selected false
@@ -9277,17 +9278,17 @@ Read {
  xpos -2020
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2020
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2020
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2020
  ypos -15785
  selected false
@@ -9306,17 +9307,17 @@ Read {
  xpos -2130
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2130
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2130
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2130
  ypos -15785
  selected false
@@ -9335,17 +9336,17 @@ Read {
  xpos -2240
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2240
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2240
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2240
  ypos -15785
  selected false
@@ -9364,17 +9365,17 @@ Read {
  xpos -2350
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2350
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2350
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2350
  ypos -15785
  selected false
@@ -9393,17 +9394,17 @@ Read {
  xpos -2460
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2460
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2460
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2460
  ypos -15785
  selected false
@@ -9422,17 +9423,17 @@ Read {
  xpos -2570
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2570
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2570
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2570
  ypos -15785
  selected false
@@ -9451,17 +9452,17 @@ Read {
  xpos -2680
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2680
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2680
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2680
  ypos -15785
  selected false
@@ -9480,17 +9481,17 @@ Read {
  xpos -2790
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2790
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2790
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2790
  ypos -15785
  selected false
@@ -9509,17 +9510,17 @@ Read {
  xpos -2900
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -2900
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -2900
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -2900
  ypos -15785
  selected false
@@ -9538,17 +9539,17 @@ Read {
  xpos -3010
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3010
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3010
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3010
  ypos -15785
  selected false
@@ -9567,17 +9568,17 @@ Read {
  xpos -3120
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3120
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3120
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3120
  ypos -15785
  selected false
@@ -9596,17 +9597,17 @@ Read {
  xpos -3230
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3230
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3230
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3230
  ypos -15785
  selected false
@@ -9625,17 +9626,17 @@ Read {
  xpos -3340
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3340
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3340
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3340
  ypos -15785
  selected false
@@ -9654,17 +9655,17 @@ Read {
  xpos -3450
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3450
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3450
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3450
  ypos -15785
  selected false
@@ -9683,17 +9684,17 @@ Read {
  xpos -3560
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3560
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3560
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3560
  ypos -15785
  selected false
@@ -9712,17 +9713,17 @@ Read {
  xpos -3670
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3670
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3670
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3670
  ypos -15785
  selected false
@@ -9741,17 +9742,17 @@ Read {
  xpos -3780
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3780
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3780
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3780
  ypos -15785
  selected false
@@ -9770,17 +9771,17 @@ Read {
  xpos -3890
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -3890
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -3890
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -3890
  ypos -15785
  selected false
@@ -9799,17 +9800,17 @@ Read {
  xpos -4000
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4000
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4000
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4000
  ypos -15785
  selected false
@@ -9828,17 +9829,17 @@ Read {
  xpos -4110
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4110
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4110
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4110
  ypos -15785
  selected false
@@ -9857,17 +9858,17 @@ Read {
  xpos -4220
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4220
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4220
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4220
  ypos -15785
  selected false
@@ -9886,17 +9887,17 @@ Read {
  xpos -4330
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4330
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4330
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4330
  ypos -15785
  selected false
@@ -9915,17 +9916,17 @@ Read {
  xpos -4440
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4440
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4440
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4440
  ypos -15785
  selected false
@@ -9944,17 +9945,17 @@ Read {
  xpos -4550
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4550
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4550
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4550
  ypos -15785
  selected false
@@ -9973,17 +9974,17 @@ Read {
  xpos -4660
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4660
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4660
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4660
  ypos -15785
  selected false
@@ -10002,17 +10003,17 @@ Read {
  xpos -4770
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4770
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4770
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4770
  ypos -15785
  selected false
@@ -10031,17 +10032,17 @@ Read {
  xpos -4880
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4880
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4880
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4880
  ypos -15785
  selected false
@@ -10060,17 +10061,17 @@ Read {
  xpos -4990
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -4990
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -4990
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -4990
  ypos -15785
  selected false
@@ -10089,17 +10090,17 @@ Read {
  xpos -5100
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5100
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5100
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5100
  ypos -15785
  selected false
@@ -10118,17 +10119,17 @@ Read {
  xpos -5210
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5210
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5210
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5210
  ypos -15785
  selected false
@@ -10147,17 +10148,17 @@ Read {
  xpos -5320
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5320
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5320
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5320
  ypos -15785
  selected false
@@ -10176,17 +10177,17 @@ Read {
  xpos -5430
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5430
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5430
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5430
  ypos -15785
  selected false
@@ -10205,17 +10206,17 @@ Read {
  xpos -5540
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5540
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5540
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5540
  ypos -15785
  selected false
@@ -10234,17 +10235,17 @@ Read {
  xpos -5650
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5650
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5650
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5650
  ypos -15785
  selected false
@@ -10263,17 +10264,17 @@ Read {
  xpos -5760
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5760
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5760
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5760
  ypos -15785
  selected false
@@ -10292,17 +10293,17 @@ Read {
  xpos -5870
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5870
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5870
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5870
  ypos -15785
  selected false
@@ -10321,17 +10322,17 @@ Read {
  xpos -5980
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -5980
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -5980
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -5980
  ypos -15785
  selected false
@@ -10350,17 +10351,17 @@ Read {
  xpos -6090
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6090
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6090
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6090
  ypos -15785
  selected false
@@ -10379,17 +10380,17 @@ Read {
  xpos -6200
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6200
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6200
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6200
  ypos -15785
  selected false
@@ -10408,17 +10409,17 @@ Read {
  xpos -6310
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6310
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6310
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6310
  ypos -15785
  selected false
@@ -10437,17 +10438,17 @@ Read {
  xpos -6420
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6420
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6420
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6420
  ypos -15785
  selected false
@@ -10466,17 +10467,17 @@ Read {
  xpos -6530
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6530
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6530
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6530
  ypos -15785
  selected false
@@ -10495,17 +10496,17 @@ Read {
  xpos -6640
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6640
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6640
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6640
  ypos -15785
  selected false
@@ -10524,17 +10525,17 @@ Read {
  xpos -6750
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6750
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6750
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6750
  ypos -15785
  selected false
@@ -10553,17 +10554,17 @@ Read {
  xpos -6860
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6860
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6860
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6860
  ypos -15785
  selected false
@@ -10582,17 +10583,17 @@ Read {
  xpos -6970
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -6970
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -6970
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -6970
  ypos -15785
  selected false
@@ -10611,17 +10612,17 @@ Read {
  xpos -7080
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7080
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7080
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7080
  ypos -15785
  selected false
@@ -10640,17 +10641,17 @@ Read {
  xpos -7190
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7190
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7190
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7190
  ypos -15785
  selected false
@@ -10669,17 +10670,17 @@ Read {
  xpos -7300
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7300
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7300
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7300
  ypos -15785
  selected false
@@ -10698,17 +10699,17 @@ Read {
  xpos -7410
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7410
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7410
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7410
  ypos -15785
  selected false
@@ -10727,17 +10728,17 @@ Read {
  xpos -7520
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7520
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7520
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7520
  ypos -15785
  selected false
@@ -10756,17 +10757,17 @@ Read {
  xpos -7630
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7630
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7630
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7630
  ypos -15785
  selected false
@@ -10785,17 +10786,17 @@ Read {
  xpos -7740
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7740
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7740
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7740
  ypos -15785
  selected false
@@ -10814,17 +10815,17 @@ Read {
  xpos -7850
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7850
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7850
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7850
  ypos -15785
  selected false
@@ -10843,17 +10844,17 @@ Read {
  xpos -7960
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -7960
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -7960
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -7960
  ypos -15785
  selected false
@@ -10872,17 +10873,17 @@ Read {
  xpos -8070
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8070
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8070
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8070
  ypos -15785
  selected false
@@ -10901,17 +10902,17 @@ Read {
  xpos -8180
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8180
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8180
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8180
  ypos -15785
  selected false
@@ -10930,17 +10931,17 @@ Read {
  xpos -8290
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8290
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8290
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8290
  ypos -15785
  selected false
@@ -10959,17 +10960,17 @@ Read {
  xpos -8400
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8400
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8400
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8400
  ypos -15785
  selected false
@@ -10988,17 +10989,17 @@ Read {
  xpos -8510
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8510
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8510
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8510
  ypos -15785
  selected false
@@ -11017,17 +11018,17 @@ Read {
  xpos -8620
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8620
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8620
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8620
  ypos -15785
  selected false
@@ -11046,17 +11047,17 @@ Read {
  xpos -8730
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8730
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8730
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8730
  ypos -15785
  selected false
@@ -11075,17 +11076,17 @@ Read {
  xpos -8840
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8840
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8840
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8840
  ypos -15785
  selected false
@@ -11104,17 +11105,17 @@ Read {
  xpos -8950
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -8950
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -8950
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -8950
  ypos -15785
  selected false
@@ -11133,17 +11134,17 @@ Read {
  xpos -9060
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9060
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9060
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9060
  ypos -15785
  selected false
@@ -11162,17 +11163,17 @@ Read {
  xpos -9170
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9170
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9170
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9170
  ypos -15785
  selected false
@@ -11191,17 +11192,17 @@ Read {
  xpos -9280
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9280
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9280
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9280
  ypos -15785
  selected false
@@ -11220,17 +11221,17 @@ Read {
  xpos -9390
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9390
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9390
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9390
  ypos -15785
  selected false
@@ -11249,17 +11250,17 @@ Read {
  xpos -9500
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9500
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9500
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9500
  ypos -15785
  selected false
@@ -11278,17 +11279,17 @@ Read {
  xpos -9610
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9610
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9610
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9610
  ypos -15785
  selected false
@@ -11307,17 +11308,17 @@ Read {
  xpos -9720
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9720
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9720
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9720
  ypos -15785
  selected false
@@ -11336,17 +11337,17 @@ Read {
  xpos -9830
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9830
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9830
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9830
  ypos -15785
  selected false
@@ -11365,17 +11366,17 @@ Read {
  xpos -9940
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -9940
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -9940
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -9940
  ypos -15785
  selected false
@@ -11394,17 +11395,17 @@ Read {
  xpos -10050
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10050
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10050
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10050
  ypos -15785
  selected false
@@ -11423,17 +11424,17 @@ Read {
  xpos -10160
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10160
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10160
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10160
  ypos -15785
  selected false
@@ -11452,17 +11453,17 @@ Read {
  xpos -10270
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10270
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10270
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10270
  ypos -15785
  selected false
@@ -11481,17 +11482,17 @@ Read {
  xpos -10380
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10380
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10380
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10380
  ypos -15785
  selected false
@@ -11510,17 +11511,17 @@ Read {
  xpos -10490
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10490
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10490
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10490
  ypos -15785
  selected false
@@ -11539,17 +11540,17 @@ Read {
  xpos -10600
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10600
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10600
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10600
  ypos -15785
  selected false
@@ -11568,17 +11569,17 @@ Read {
  xpos -10710
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10710
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10710
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10710
  ypos -15785
  selected false
@@ -11597,17 +11598,17 @@ Read {
  xpos -10820
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10820
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10820
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10820
  ypos -15785
  selected false
@@ -11626,17 +11627,17 @@ Read {
  xpos -10930
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -10930
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -10930
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -10930
  ypos -15785
  selected false
@@ -11655,17 +11656,17 @@ Read {
  xpos -11040
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -11040
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -11040
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -11040
  ypos -15785
  selected false
@@ -11684,17 +11685,17 @@ Read {
  xpos -11150
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -11150
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -11150
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -11150
  ypos -15785
  selected false
@@ -11713,17 +11714,17 @@ Read {
  xpos -11260
  ypos -15921
 }
-clone $C4b58800 {
+clone $C3c08800 {
  xpos -11260
  ypos -15849
  selected false
 }
-clone $C4b58400 {
+clone $C3c08400 {
  xpos -11260
  ypos -15823
  selected false
 }
-clone $C4bb6800 {
+clone $C3c09000 {
  xpos -11260
  ypos -15785
  selected false
@@ -11847,8 +11848,11 @@ Write {
  xpos 2820
  ypos 1013
  postage_stamp true
+ addUserKnob {20 caravr l CaraVR}
+ addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+ addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
-set N35957c00 [stack 0]
+set N3e333800 [stack 0]
 Group {
  name HueToRGB1
  xpos 2820
@@ -11889,7 +11893,7 @@ Group {
   ypos 113
  }
 end_group
-push $N35957c00
+push $N3e333800
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)

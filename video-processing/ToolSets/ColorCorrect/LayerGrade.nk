@@ -1,14 +1,16 @@
 set cut_paste_input [stack 0]
-    push $cut_paste_input
+version 10.0 v4
+push $cut_paste_input
 add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
 Group {
  name LayerGrade6
  tile_color 0x7aa9ffff
  label "\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]"
  selected true
- xpos 522
- ypos -5442
+ xpos 180
+ ypos -2960
  addUserKnob {20 LayerGrade}
+ addUserKnob {26 text1 l v1.0}
  addUserKnob {6 preview l "view range" +STARTLINE}
  addUserKnob {41 in l layer T Shuffle1.in}
  addUserKnob {7 layer_mix l "layer color affect"}
@@ -41,13 +43,13 @@ Group {
   xpos -40
   ypos -418
  }
-set Nff3ab000 [stack 0]
+set N322c2400 [stack 0]
  Dot {
   name Dot1
   xpos 104
   ypos -414
  }
-set Nff3aac00 [stack 0]
+set N322c2000 [stack 0]
  Dot {
   name Dot7
   xpos 214
@@ -72,7 +74,7 @@ set Nff3aac00 [stack 0]
   xpos 214
   ypos -222
  }
-push $Nff3aac00
+push $N322c2000
  Shuffle {
   in SSS
   name Shuffle1
@@ -125,49 +127,49 @@ push $Nff3aac00
   xpos 104
   ypos 18
  }
-set N88008400 [stack 0]
+set N77ab400 [stack 0]
  Dot {
   name Dot5
   xpos 104
   ypos 66
  }
-set N88008000 [stack 0]
+set N66253c00 [stack 0]
  Dot {
   name Dot6
   xpos 104
   ypos 114
  }
-set Nd61fdc00 [stack 0]
+set N66253800 [stack 0]
  Dot {
   name Dot12
   xpos 104
   ypos 162
  }
-set Nd61fd800 [stack 0]
+set N66253400 [stack 0]
  Dot {
   name Dot14
   xpos 104
   ypos 210
  }
-set Nd61fd400 [stack 0]
+set N66253000 [stack 0]
  Dot {
   name Dot13
   xpos 104
   ypos 258
  }
-set Nd61fd000 [stack 0]
+set N66252c00 [stack 0]
  Dot {
   name Dot9
   xpos 104
   ypos 354
  }
-push $Nd61fd000
-push $Nd61fd400
-push $Nd61fd800
-push $Nd61fdc00
-push $N88008000
-push $N88008400
-push $Nff3ab000
+push $N66252c00
+push $N66253000
+push $N66253400
+push $N66253800
+push $N66253c00
+push $N77ab400
+push $N322c2400
  Saturation {
   inputs 1+1
   channels {rgba.red -rgba.green -rgba.blue -rgba.alpha}
@@ -228,7 +230,7 @@ push $Nff3ab000
   xpos -40
   ypos 254
  }
-push $Nff3ab000
+push $N322c2400
  Dot {
   name Dot2
   xpos -116

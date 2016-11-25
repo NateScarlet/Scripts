@@ -1,0 +1,299 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode5
+ tile_color 0x7e8f9cff
+ label "LightFog v0.4"
+ note_font_size 42
+ selected true
+ xpos 936
+ ypos 239
+ bdwidth 549
+ bdheight 866
+}
+Ramp {
+ inputs 0
+ p0 {228 328}
+ p1 {100 1306}
+ name Ramp6
+ note_font 微软雅黑
+ selected true
+ xpos 1280
+ ypos 685
+}
+push $cut_paste_input
+Dot {
+ name Dot22
+ note_font 微软雅黑
+ selected true
+ xpos 874
+ ypos 354
+}
+set Nad9ad400 [stack 0]
+Dot {
+ name Dot23
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos 354
+}
+Dot {
+ name Dot3
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos 594
+}
+set N9547d800 [stack 0]
+Dot {
+ name Dot15
+ note_font 微软雅黑
+ selected true
+ xpos 1204
+ ypos 594
+}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow CH_A.SSS}
+Shuffle {
+ in CH_A
+ name Shuffle1
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos 637
+}
+Multiply {
+ inputs 1+1
+ value 0.8
+ name Multiply3
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos 677
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP01/04/EP01_04_sc132/EP01_04_sc132_Fog_A.tif
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ origset true
+ name Read1
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos 449
+}
+Blur {
+ size 26
+ name Blur4
+ selected true
+ xpos 1390
+ ypos 584
+}
+Grade {
+ channels rgba
+ blackpoint 0.07
+ whitepoint 0.37
+ name Grade8
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos 661
+}
+Dot {
+ name Dot33
+ note_font 微软雅黑
+ selected true
+ xpos 1424
+ ypos 762
+}
+Group {
+ inputs 2
+ name FogStencil
+ tile_color 0x4c81a8ff
+ selected true
+ xpos 1170
+ ypos 758
+ addUserKnob {20 FogStencil}
+ addUserKnob {26 text1 l v1.0}
+ addUserKnob {41 translate T GodRays1.translate}
+ addUserKnob {41 rotate T GodRays1.rotate}
+ addUserKnob {41 scale T GodRays1.scale}
+ addUserKnob {41 skew T GodRays1.skew}
+ addUserKnob {41 center T GodRays1.center}
+ addUserKnob {41 from_color l "from color" T GodRays1.from_color}
+ addUserKnob {41 to_color l "to color" T GodRays1.to_color}
+ addUserKnob {41 gamma T GodRays1.gamma}
+ addUserKnob {41 LightBlocking T Merge1.mix}
+ addUserKnob {41 mix T Merge2.mix}
+}
+ Input {
+  inputs 0
+  name Stencil
+  xpos 290
+  ypos -298
+  number 1
+ }
+ Dot {
+  name Dot8
+  xpos 324
+  ypos -222
+ }
+set Nd98b5400 [stack 0]
+ Dot {
+  name Dot5
+  xpos 434
+  ypos -222
+ }
+set Nd98b5000 [stack 0]
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -222
+ }
+ Dot {
+  name Dot7
+  xpos 544
+  ypos 66
+ }
+push $Nd98b5000
+ GodRays {
+  channels alpha
+  translate {70 -206}
+  scale 1.12
+  center {1038 1260}
+  to_color 0
+  steps 50
+  max true
+  name GodRays1
+  xpos 400
+  ypos -112
+ }
+ set Cd98b4400 [stack 0]
+ Multiply {
+  inputs 1+1
+  channels alpha
+  value 0
+  name Multiply1
+  xpos 400
+  ypos 56
+ }
+push $Nd98b5400
+ Invert {
+  channels alpha
+  name Invert1
+  xpos 290
+  ypos -192
+ }
+ Crop {
+  box {0 0 1920 1080}
+  name Crop1
+  note_font 微软雅黑
+  xpos 290
+  ypos -154
+ }
+clone $Cd98b4400 {
+  xpos 285
+  ypos -115
+  selected true
+ }
+ Invert {
+  channels alpha
+  name Invert2
+  xpos 290
+  ypos -64
+ }
+ Merge2 {
+  inputs 2
+  operation max
+  Achannels alpha
+  Bchannels alpha
+  output alpha
+  mix 0.815
+  name Merge1
+  xpos 290
+  ypos 56
+ }
+ Median {
+  channels alpha
+  size 1
+  ignore_top_line false
+  name Median1
+  xpos 290
+  ypos 104
+ }
+ Dot {
+  name Dot6
+  xpos 324
+  ypos 138
+ }
+ Input {
+  inputs 0
+  name Fog
+  xpos 180
+  ypos -298
+ }
+ Merge2 {
+  inputs 2
+  operation stencil
+  name Merge2
+  xpos 180
+  ypos 134
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos 230
+ }
+end_group
+Ramp {
+ output none
+ premult all
+ p0 {570 -110}
+ p1 {136 1116}
+ type smooth0
+ name Ramp7
+ label Mask
+ selected true
+ xpos 1170
+ ypos 841
+}
+Dot {
+ name Dot21
+ selected true
+ xpos 1204
+ ypos 930
+}
+push $N9547d800
+Grade {
+ inputs 1+1
+ black {0.1134375036 0.1063939929 0.100833334 0.05999999866}
+ white 1.6
+ gamma {0.7980000377 1.304919958 1.899999976 1}
+ maskChannelMask rgba.blue
+ mix 0.9
+ name Grade9
+ label Fog
+ selected true
+ xpos 1060
+ ypos 920
+}
+PostageStamp {
+ name PostageStamp3
+ selected true
+ xpos 1060
+ ypos 975
+ cached true
+ postage_stamp true
+}
+push $Nad9ad400
+Switch {
+ inputs 2
+ which 1
+ name Switch4
+ label LightFog
+ note_font 微软雅黑
+ selected true
+ xpos 840
+ ypos 989
+}

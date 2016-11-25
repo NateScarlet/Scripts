@@ -1,69 +1,109 @@
 set cut_paste_input [stack 0]
+version 10.0 v4
 BackdropNode {
  inputs 0
  name BackdropNode8
  tile_color 0x388e8e00
- label MP
+ label "MP_2D v0.1"
  note_font_size 42
  selected true
- xpos -812
- ypos -7838
+ xpos -324
+ ypos -6700
  bdwidth 649
  bdheight 759
  z_order 1
+}
+Ramp {
+ inputs 0
+ p0 {800 622}
+ p1 {500 1232}
+ type smooth0
+ name Ramp4
+ note_font 微软雅黑
+ selected true
+ xpos 70
+ ypos -6355
 }
 push $cut_paste_input
 Ramp {
  name Ramp1
  selected true
- xpos -308
- ypos -7516
+ xpos 180
+ ypos -6426
 }
 Read {
  inputs 0
- file Z:/SNJYW/MP/360NightMoonSky_v3.exr
- format "10000 2500 0 0 10000 2500 1 "
+ file Z:/SNJYW/MP/YeKong_Sky.psd
+ format "8000 2352 0 0 8000 2352 1 "
  origset true
- name Read2
+ name Read3
  selected true
- xpos -528
- ypos -7690
+ xpos -40
+ ypos -6600
 }
 Reformat {
  name Reformat2
  selected true
- xpos -528
- ypos -7588
+ xpos -40
+ ypos -6498
 }
 Transform {
- translate {-46 130}
+ translate {-1872 276}
  scale 3.762000084
  center {960 540}
  name Transform4
  selected true
- xpos -528
- ypos -7564
+ xpos -40
+ ypos -6474
 }
 HueShift {
  name HueShift1
  selected true
- xpos -528
- ypos -7540
+ xpos -40
+ ypos -6450
+ disable true
 }
 HueShift {
  inputs 1+1
  name HueShift2
  selected true
- xpos -528
- ypos -7516
+ xpos -40
+ ypos -6426
+ disable true
+}
+Grade {
+ white 0.3
+ gamma {1.305833459 1.313333154 1.340833426 1.24000001}
+ name Grade4
+ selected true
+ xpos -40
+ ypos -6402
+}
+Saturation {
+ saturation 0.7
+ name Saturation1
+ note_font 微软雅黑
+ selected true
+ xpos -40
+ ypos -6376
+}
+ColorCorrect {
+ inputs 1+1
+ gamma 1.1
+ gain 2.1
+ name ColorCorrect1
+ note_font 微软雅黑
+ selected true
+ xpos -40
+ ypos -6331
 }
 AddChannels {
  channels depth
  color 100
  name AddChannels3
  selected true
- xpos -528
- ypos -7227
+ xpos -40
+ ypos -6096
 }
 push 0
 Switch {
@@ -71,6 +111,6 @@ Switch {
  which 1
  name Switch6
  selected true
- xpos -528
- ypos -7030
+ xpos -40
+ ypos -5898
 }

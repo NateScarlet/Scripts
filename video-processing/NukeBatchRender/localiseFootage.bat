@@ -1,4 +1,5 @@
 @ECHO OFF
+CHCP 65001 > nul
 REM 本地化素材v1.1
 SET "serverZ=%~1"
 IF NOT EXIST "%~1" (
