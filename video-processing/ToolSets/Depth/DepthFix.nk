@@ -2,17 +2,17 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name DepthFix1
+ name DepthFix3
  tile_color 0x823a7dff
  label "\[knob_default \[class this].maxZ 1]\n"
  selected true
- xpos 1064
- ypos -1217
+ xpos 950
+ ypos -3343
  addUserKnob {20 tab1 l DepthFix}
  addUserKnob {26 text1 l v2.4}
  addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
  addUserKnob {7 size l "fix size" R 0 10}
- size 1
+ size 10
  addUserKnob {4 math l "math conversion" M {none "RedShift -> Nuke" "Nuke -> RedShift" "" ""}}
  addUserKnob {7 minZ l min}
  addUserKnob {7 maxZ l max}
@@ -29,7 +29,7 @@ Group {
   xpos 544
   ypos -846
  }
-set Ncea88800 [stack 0]
+set N370f2000 [stack 0]
  Dot {
   name Dot5
   xpos 764
@@ -41,13 +41,13 @@ set Ncea88800 [stack 0]
   xpos 764
   ypos -462
  }
-push $Ncea88800
+push $N370f2000
  Dot {
   name Dot3
   xpos 544
   ypos -726
  }
-set Nce3ad800 [stack 0]
+set N37121400 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -66,7 +66,7 @@ set Nce3ad800 [stack 0]
   xpos 654
   ypos -606
  }
-push $Nce3ad800
+push $N37121400
  MergeExpression {
   inputs 2
   channel0 depth
@@ -101,13 +101,13 @@ push $Nce3ad800
   xpos 544
   ypos -294
  }
-set Nb1b99400 [stack 0]
+set N37141000 [stack 0]
  Dot {
   name Dot10
   xpos 654
   ypos -294
  }
-set Nb1b99000 [stack 0]
+set N37140c00 [stack 0]
  Dot {
   name Dot15
   xpos 764
@@ -127,7 +127,7 @@ set Nb1b99000 [stack 0]
   xpos 764
   ypos -198
  }
-push $Nb1b99000
+push $N37140c00
  Expression {
   channel0 depth
   expr0 (z==0)?0:1/(z*10000)
@@ -142,7 +142,7 @@ push $Nb1b99000
   xpos 654
   ypos -198
  }
-push $Nb1b99400
+push $N37141000
  Dot {
   name Dot7
   label none

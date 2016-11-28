@@ -1,3 +1,0 @@
-import nuke
-def nodePresetsStartup():
-  nuke.setUserPreset("ColorCorrect", "SNJYW/EP01_04", {'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'saturation': '0.8', 'selected': 'true', 'gain': '0.9244995117 0.9579353929 1 1', 'label': "[python {os.path.basename(nuke.scriptName()).split('_')[0]+'/'+str.upper(nuke.scriptName().split('_')[1])+'_'+nuke.scriptName().split('_')[2]}]\n\xe9\xa2\x84\xe8\xae\xbe\xe9\x94\x81\xe5\xae\x9av1.0 :[python {nuke.applyUserPreset('', os.path.basename(nuke.scriptName()).split('_')[0]+'/'+str.upper(nuke.scriptName().split('_')[1])+'_'+nuke.scriptName().split('_')[2], nuke.thisNode())}]"})

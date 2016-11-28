@@ -2,16 +2,320 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
  inputs 0
- name BackdropNode5
+ name BackdropNode2
  tile_color 0x7e8f9cff
- label "LightFog v0.4"
+ label "LightFog v0.9"
  note_font_size 42
  selected true
- xpos 936
- ypos 239
- bdwidth 549
- bdheight 866
+ xpos 808
+ ypos -1342
+ bdwidth 584
+ bdheight 956
 }
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP01/04/EP01_04_sc082/EP01_04_sc082_Fog_A.0060.tif
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ origset true
+ name Read1
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1280
+ ypos -1303
+}
+Group {
+ name HardClip5
+ tile_color 0x79a8ffff
+ selected true
+ xpos 1280
+ ypos -1186
+ addUserKnob {20 HardClip}
+ addUserKnob {41 SampleChannels T CurveTool1.channels}
+ addUserKnob {41 channels_1 l GradeChannels T Grade1.channels}
+ addUserKnob {26 ""}
+ addUserKnob {41 go l Go! T CurveTool1.go}
+ addUserKnob {41 maxlumapixdata l "Maximum Luminence Pixel" T CurveTool1.maxlumapixdata}
+ addUserKnob {41 maxlumapixvalue l "Maximum Luminence Pixel value" T CurveTool1.maxlumapixvalue}
+ addUserKnob {41 minlumapixdata l "Minimum Luminence Pixel" T CurveTool1.minlumapixdata}
+ addUserKnob {41 minlumapixvalue l "Minimum Luminence Pixel value" T CurveTool1.minlumapixvalue}
+ addUserKnob {41 smooth T CurveTool1.smooth}
+ addUserKnob {41 subSmooth T CurveTool1.subSmooth}
+ addUserKnob {41 rgbMax_smoothed T CurveTool1.rgbMax_smoothed}
+ addUserKnob {41 rgbMin_smoothed T CurveTool1.rgbMin_smoothed}
+ addUserKnob {26 ""}
+ addUserKnob {6 switchMax l Max +STARTLINE}
+ switchMax true
+ addUserKnob {6 switchMin l Min -STARTLINE}
+ switchMin true
+ addUserKnob {41 gamma T ValueGamma1.gamma}
+ addUserKnob {41 saturation T ValueGamma1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
+ addUserKnob {7 mix}
+ mix 1
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 180
+  ypos -682
+ }
+ Dot {
+  name Dot1
+  xpos 214
+  ypos -582
+ }
+set N3baa400 [stack 0]
+ Dot {
+  name Dot2
+  xpos 324
+  ypos -582
+ }
+set N3baa000 [stack 0]
+ Dot {
+  name Dot4
+  xpos 434
+  ypos -582
+ }
+ Dot {
+  name Dot3
+  xpos 434
+  ypos -390
+ }
+push $N3baa400
+ Grade {
+  blackpoint {{(switchMin==1)?parent.CurveTool1.rgbMin_smoothed:0}}
+  whitepoint {{(switchMax==1)?parent.CurveTool1.rgbMax_smoothed:1}}
+  name Grade1
+  xpos 180
+  ypos -466
+ }
+ Group {
+  name ValueGamma1
+  help 只调整亮度不影响饱和度和色相
+  tile_color 0x79a8ffff
+  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
+  xpos 180
+  ypos -443
+  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+  addUserKnob {41 channels T Colorspace1.channels}
+  addUserKnob {7 lift}
+  addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+  gain 1
+  addUserKnob {7 gamma R 0 4}
+  gamma 1
+  addUserKnob {41 saturation T Saturation1.saturation}
+  addUserKnob {41 maskChannelInput l mask T Grade1.maskChannelInput}
+  addUserKnob {41 inject -STARTLINE T Grade1.inject}
+  addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+  addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+  addUserKnob {41 mix T Grade1.mix}
+ }
+  Input {
+   inputs 0
+   name Input
+   xpos 510
+   ypos -634
+  }
+  Dot {
+   name Dot1
+   xpos 544
+   ypos -582
+  }
+set N3bdf400 [stack 0]
+  Dot {
+   name Dot2
+   xpos 654
+   ypos -582
+  }
+  Input {
+   inputs 0
+   name InputMask
+   xpos 730
+   ypos -466
+   number 1
+  }
+  Switch {
+   inputs 2
+   which {{"\[string is digit \[input parent 1]]"}}
+   name Switch1
+   xpos 620
+   ypos -466
+  }
+set N3b62d80 [stack 0]
+  Dot {
+   name Dot3
+   xpos 654
+   ypos -366
+  }
+push $N3b62d80
+push $N3bdf400
+  Colorspace {
+   colorspace_out HSV
+   name Colorspace1
+   xpos 510
+   ypos -514
+  }
+  Grade {
+   inputs 1+1
+   channels {none none none rgba.blue}
+   black {{parent.lift}}
+   white {{parent.gain}}
+   gamma {{parent.gamma}}
+   name Grade1
+   xpos 510
+   ypos -472
+  }
+  Colorspace {
+   channels {{{parent.Colorspace1.channels}}}
+   colorspace_in HSV
+   name Colorspace2
+   xpos 510
+   ypos -418
+  }
+  Saturation {
+   inputs 1+1
+   channels {{{parent.Colorspace1.channels}}}
+   maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+   inject {{parent.Grade1.inject}}
+   invert_mask {{parent.Grade1.invert_mask}}
+   fringe {{parent.Grade1.fringe}}
+   mix {{parent.Grade1.mix}}
+   name Saturation1
+   selected true
+   xpos 510
+   ypos -370
+  }
+  Output {
+   name Output1
+   xpos 510
+   ypos -298
+  }
+ end_group
+ Grade {
+  name Grade2
+  selected true
+  xpos 180
+  ypos -417
+ }
+ Merge2 {
+  inputs 2
+  operation copy
+  mix {{1-parent.mix}}
+  name Merge1
+  xpos 180
+  ypos -394
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos -346
+ }
+push $N3baa000
+ CurveTool {
+  operation "Max Luma Pixel"
+  ROI {0 0 {width} {height}}
+  autocropdata {{parent.CurveTool1.ROI.x} {parent.CurveTool1.ROI.y} {parent.CurveTool1.ROI.r} {parent.CurveTool1.ROI.t}}
+  maxlumapixdata {{curve x1 958} {curve x1 30}}
+  maxlumapixvalue {{curve x1 0.01520851161} {curve x1 0.02217387967} {curve x1 0.03071344085}}
+  minlumapixdata {{curve x1 516} {curve x1 33}}
+  minlumapixvalue {{curve x1 0.005393452477} {curve x1 0.00699540833} {curve x1 0.009134056978}}
+  name CurveTool1
+  xpos 290
+  ypos -466
+  addUserKnob {20 User}
+  addUserKnob {7 rgbMax}
+  rgbMax {{"max(\n       maxlumapixvalue.r,\n       maxlumapixvalue.g,\n       maxlumapixvalue.b     \n)"}}
+  addUserKnob {7 rgbMin}
+  rgbMin {{"min(\n       minlumapixvalue.r,\n       minlumapixvalue.g,\n       minlumapixvalue.b     \n)"}}
+  addUserKnob {7 smooth R 0 100}
+  smooth {{(last_frame-first_frame)/2}}
+  addUserKnob {7 subSmooth -STARTLINE R 1 5}
+  subSmooth {{smooth/10}}
+  addUserKnob {7 rgbMax_smoothTemp}
+  rgbMax_smoothTemp {{(smooth!=0)?rgbMax.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMax}}
+  addUserKnob {7 rgbMin_smoothTemp}
+  rgbMin_smoothTemp {{(smooth!=0)?rgbMin.integrate(frame-smooth,frame+smooth)/(2*smooth):rgbMin}}
+  addUserKnob {7 rgbMax_smoothed}
+  rgbMax_smoothed {{"(subSmooth!=0)?\n    (\n    (smooth!=0)?\n        rgbMax_smoothTemp.integrate(frame-subSmooth,frame+subSmooth)/(2*subSmooth)\n        :rgbMax\n    )\n:rgbMax_smoothTemp"}}
+  addUserKnob {7 rgbMin_smoothed}
+  rgbMin_smoothed {{"(subSmooth!=0)?\n    (\n    (smooth!=0)?\n        rgbMin_smoothTemp.integrate(frame-subSmooth,frame+subSmooth)/(2*subSmooth)\n        :rgbMin\n    )\n:rgbMin_smoothTemp"}}
+ }
+end_group
+Keyer {
+ operation "luminance key"
+ name Keyer4
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1280
+ ypos -1107
+}
+Blur {
+ size 26
+ name Blur4
+ selected true
+ xpos 1280
+ ypos -1024
+}
+Grade {
+ white 0.39
+ name Grade6
+ note_font 微软雅黑
+ selected true
+ xpos 1280
+ ypos -947
+}
+Dot {
+ name Dot33
+ note_font 微软雅黑
+ selected true
+ xpos 1314
+ ypos -846
+}
+set N21631800 [stack 0]
+Radial {
+ output none
+ premult all
+ area {222 51.83663045 2262 1868.16337}
+ name Radial2
+ note_font 微软雅黑
+ selected true
+ xpos 1280
+ ypos -571
+}
+push 0
+Dot {
+ name Dot27
+ note_font 微软雅黑
+ selected true
+ xpos 764
+ ypos -1254
+}
+set N2d374000 [stack 0]
+Dot {
+ name Dot28
+ note_font 微软雅黑
+ selected true
+ xpos 984
+ ypos -1254
+}
+Dot {
+ name Dot29
+ note_font 微软雅黑
+ selected true
+ xpos 984
+ ypos -1014
+}
+set N2d3ad800 [stack 0]
+Dot {
+ name Dot44
+ note_font 微软雅黑
+ selected true
+ xpos 984
+ ypos -678
+}
+set N2d3ad400 [stack 0]
 Ramp {
  inputs 0
  p0 {228 328}
@@ -19,48 +323,25 @@ Ramp {
  name Ramp6
  note_font 微软雅黑
  selected true
- xpos 1280
- ypos 685
+ xpos 1170
+ ypos -923
 }
-push $cut_paste_input
+push $N2d3ad800
 Dot {
- name Dot22
- note_font 微软雅黑
- selected true
- xpos 874
- ypos 354
-}
-set Nad9ad400 [stack 0]
-Dot {
- name Dot23
+ name Dot30
  note_font 微软雅黑
  selected true
  xpos 1094
- ypos 354
+ ypos -1014
 }
-Dot {
- name Dot3
- note_font 微软雅黑
- selected true
- xpos 1094
- ypos 594
-}
-set N9547d800 [stack 0]
-Dot {
- name Dot15
- note_font 微软雅黑
- selected true
- xpos 1204
- ypos 594
-}
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha CH_A.CH_Right CH_A.Shadow CH_A.SSS}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front}
 Shuffle {
  in CH_A
- name Shuffle1
+ name Shuffle4
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos 637
+ xpos 1060
+ ypos -971
 }
 Multiply {
  inputs 1+1
@@ -68,52 +349,17 @@ Multiply {
  name Multiply3
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos 677
+ xpos 1060
+ ypos -931
 }
-Read {
- inputs 0
- file Z:/SNJYW/Render/EP01/04/EP01_04_sc132/EP01_04_sc132_Fog_A.tif
- format "1920 1080 0 0 1920 1080 1 HD_1080"
- origset true
- name Read1
- label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
- note_font 微软雅黑
- selected true
- xpos 1390
- ypos 449
-}
-Blur {
- size 26
- name Blur4
- selected true
- xpos 1390
- ypos 584
-}
-Grade {
- channels rgba
- blackpoint 0.07
- whitepoint 0.37
- name Grade8
- note_font 微软雅黑
- selected true
- xpos 1390
- ypos 661
-}
-Dot {
- name Dot33
- note_font 微软雅黑
- selected true
- xpos 1424
- ypos 762
-}
+push $N21631800
 Group {
  inputs 2
  name FogStencil
  tile_color 0x4c81a8ff
  selected true
- xpos 1170
- ypos 758
+ xpos 1060
+ ypos -850
  addUserKnob {20 FogStencil}
  addUserKnob {26 text1 l v1.0}
  addUserKnob {41 translate T GodRays1.translate}
@@ -139,13 +385,13 @@ Group {
   xpos 324
   ypos -222
  }
-set Nd98b5400 [stack 0]
+set N314adc00 [stack 0]
  Dot {
   name Dot5
   xpos 434
   ypos -222
  }
-set Nd98b5000 [stack 0]
+set N314ad800 [stack 0]
  Dot {
   name Dot1
   xpos 544
@@ -156,10 +402,10 @@ set Nd98b5000 [stack 0]
   xpos 544
   ypos 66
  }
-push $Nd98b5000
+push $N314ad800
  GodRays {
   channels alpha
-  translate {70 -206}
+  translate {-32 -108}
   scale 1.12
   center {1038 1260}
   to_color 0
@@ -169,7 +415,7 @@ push $Nd98b5000
   xpos 400
   ypos -112
  }
- set Cd98b4400 [stack 0]
+ set C314acc00 [stack 0]
  Multiply {
   inputs 1+1
   channels alpha
@@ -178,7 +424,7 @@ push $Nd98b5000
   xpos 400
   ypos 56
  }
-push $Nd98b5400
+push $N314adc00
  Invert {
   channels alpha
   name Invert1
@@ -192,7 +438,7 @@ push $Nd98b5400
   xpos 290
   ypos -154
  }
-clone $Cd98b4400 {
+clone $C314acc00 {
   xpos 285
   ypos -115
   selected true
@@ -209,7 +455,7 @@ clone $Cd98b4400 {
   Achannels alpha
   Bchannels alpha
   output alpha
-  mix 0.815
+  mix 0.24
   name Merge1
   xpos 290
   ypos 56
@@ -246,54 +492,80 @@ clone $Cd98b4400 {
   ypos 230
  }
 end_group
-Ramp {
+Radial {
  output none
  premult all
- p0 {570 -110}
- p1 {136 1116}
- type smooth0
- name Ramp7
- label Mask
+ area {-82 335.5112371 3390 3020.488763}
+ name Radial3
+ note_font 微软雅黑
  selected true
- xpos 1170
- ypos 841
+ xpos 1060
+ ypos -811
+}
+Blur {
+ channels rgba
+ size 10
+ name Blur1
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -731
+}
+Multiply {
+ inputs 1+1
+ value 0.2
+ maskChannelMask CH_A.alpha
+ name Multiply5
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -691
 }
 Dot {
- name Dot21
+ name Dot34
  selected true
- xpos 1204
- ypos 930
+ xpos 1094
+ ypos -630
 }
-push $N9547d800
+push $N2d3ad400
 Grade {
  inputs 1+1
  black {0.1134375036 0.1063939929 0.100833334 0.05999999866}
- white 1.6
- gamma {0.7980000377 1.304919958 1.899999976 1}
+ white 5
+ gamma {0.3361670077 1.51102829 2.585900068 1}
  maskChannelMask rgba.blue
- mix 0.9
- name Grade9
- label Fog
+ name Grade11
+ label "\[python \{str('SNJYW/EP01/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Fog')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP01/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Fog'), nuke.thisNode())\}]\n"
  selected true
- xpos 1060
- ypos 920
+ xpos 950
+ ypos -647
+}
+Grade {
+ inputs 1+1
+ white 1.5
+ gamma {1.100000024 1.200000048 1.300000072 1.200000048}
+ name Grade8
+ note_font 微软雅黑
+ selected true
+ xpos 950
+ ypos -563
 }
 PostageStamp {
- name PostageStamp3
+ name PostageStamp4
  selected true
- xpos 1060
- ypos 975
+ xpos 950
+ ypos -513
  cached true
  postage_stamp true
 }
-push $Nad9ad400
+push $N2d374000
 Switch {
  inputs 2
  which 1
- name Switch4
+ name Switch3
  label LightFog
  note_font 微软雅黑
  selected true
- xpos 840
- ypos 989
+ xpos 730
+ ypos -499
 }

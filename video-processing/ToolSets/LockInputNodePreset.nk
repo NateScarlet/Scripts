@@ -1,0 +1,15 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+NoOp {
+ name LockInputNodePreset2
+ note_font 微软雅黑
+ selected true
+ xpos 1843
+ ypos 885
+ addUserKnob {20 User l 锁定预设v1.4}
+ addUserKnob {26 text1 l 为输入节点}
+ addUserKnob {22 lock l 加锁 -STARTLINE T "n = nuke.thisNode();\nni = n.input(0);\nl = n\['label'].value();\ncpn = n\['customPresetName'].value().replace('_', '/');\nif nuke.root()\['name'].value():\n    pn = os.path.basename(nuke.scriptName());\n    if pn.count('_') >= 2:\n    \tlp = \"os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2]\";\n    else:\n    \tlp = '';\n    pn = pn.replace('_', '/');\n    pnS = os.path.dirname(pn);\n    pn = pn.split('/');\n    pn = '/'.join(pn\[:-2]);\n    if cpn:\n        lp = lp + \" + '/\" + cpn + \"'\";\n        pnS = pnS + '/' + cpn;\n    pnPy = \"str('\" + pn + \"/' + \" + lp + ')';\n    pnTcl = '\[python \{' + pnPy + '\}]'\nelse:\n    pnS = 'Temp';\n    pnPy = 'Temp';\n    pnTcl = 'Temp';\n    if cpn:\n        pnS = 'Temp/' + cpn;\n        pnPy = \"'Temp/\" + cpn + \"'\";\n        pnTcl = 'Temp/' + cpn;\nif not '预设锁定' in l:\n    ol = n\['label'].value();\n    s = pnTcl + \"\\n预设锁定 :\[python \{nuke.applyUserPreset('', \" + pnPy + \", nuke.thisNode().input(0))\}]\\n\" + ol;\n    nuke.saveUserPreset(ni, pnS);\n    n\['label'].setValue(s);\nelse:\n    nuke.message('节点已锁,请先解锁');"}
+ addUserKnob {22 unlock l 解锁 -STARTLINE T "n = nuke.thisNode();\nni = n.input(0);\nl = n\['label'].value();\no = l.split('\\n')\[2:]\no = '\\n'.join(o)\nif '预设锁定' in l:\n    presetName = nuke.tcl('return ' + l.split('\\n')\[0]);\n    nuke.deleteUserPreset(ni.Class(), presetName);\n    n\['label'].setValue(o)\nelse:\n    nuke.message('节点未被锁定')"}
+ addUserKnob {1 customPresetName l 自定义预设名}
+}
