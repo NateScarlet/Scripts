@@ -15,7 +15,7 @@ $#2::
 IfWinNotExist, ahk_exe NxNManagerClient.exe
 {
 	Run, NxN
-	WinClose, NXN alienbrain ahk_exe NxNManagerClient.exe, , 3, Manager Client
+	WinClose, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
 	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
 	WinMaximize
 }

@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.3
+TITLE Nuke批渲染v1.4
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -21,7 +21,7 @@ REM
 REM 在下方设置路径变量
 REM
 SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
-SET "serverZ=\\192.168.1.4\f"
+SET "serverZ=\\192.168.1.7\z"
 REM
 REM 在上方设置路径变量
 REM
@@ -105,7 +105,7 @@ IF /I "%isLocalRender%" EQU "TRUE" (
     )
     SUBST Z: "%NUKE_TEMP_DIR%\localize\Z_"
     REM 调用LocaliseFootage.bat来缓存素材
-    CALL "%~dp0LocaliseFootage.bat" "%serverZ%"
+    CALL "%~dp0LocaliseFootage.bat" "" "%serverZ%"
 )
 SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
 :Render

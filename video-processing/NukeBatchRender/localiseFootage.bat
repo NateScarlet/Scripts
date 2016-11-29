@@ -1,32 +1,28 @@
 @ECHO OFF
 CHCP 65001 > nul
-REM 本地化素材v1.1
-SET "serverZ=%~1"
-IF NOT EXIST "%~1" (
-    SET "serverZ=\\192.168.1.4\f"
-)
-FOR %%i in ("%~dp0\*.nk") do (
-	ECHO.
-	ECHO %%~ni
-	ECHO.
-	CALL:LocaliseFootage "%%~i" "%serverZ%"
-)
-ECHO ----------------
-ECHO 全部素材缓存完毕
-ECHO ----------------
-IF NOT EXIST "%~1" (
+REM 本地化素材v1.2
+REM
+REM 默认服务器地址
+SET "serverDefault=\\192.168.1.7\z"
+REM
+:BatchRuning
+IF "%~1"=="" (
+    FOR %%i in ("%~dp0\*.nk") do (
+    	ECHO.
+    	ECHO %%~ni
+    	ECHO.
+    	CALL:LocaliseFootage "%%~i" "%serverDefault%"
+    )
+    ECHO ----------------
+    ECHO 全部素材缓存完毕
+    ECHO ----------------
     PAUSE
+    GOTO:EOF
 )
-GOTO:EOF
 :LocaliseFootage
-IF NOT EXIST "%~1" (
-    ECHO 提示 - 必须把nk文件拖到此文件上打开来使用
-    PAUSE&GOTO:EOF
-)
 SET "serverDir=%~2"
-IF NOT EXIST "%~2" (
-    SET "serverDir=\\192.168.1.7\z"
-    REM 默认服务器地址
+IF "%~2"=="" (
+    SET "serverDir=%serverDefault%"
 )
 SET "localDir=%NUKE_TEMP_DIR%\localize\Z_"
 SET "agrv1=%~n1%"
@@ -82,4 +78,7 @@ IF EXIST "%~dp0LocaliseLog.txt" (
     )
 )
 DEL "%~dp0LocaliseLog.txt" 2>nul
+IF "%~2"=="" (
+    PAUSE
+)
 GOTO:EOF
