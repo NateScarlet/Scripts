@@ -51,7 +51,7 @@ VerificationIf()
    IfWinExist, 战网登录 ahk_exe Battle.net.exe
    {  
       WinGetPos, , , w, h, 战网登录
-      if (h=501 or h = 576)   
+      if (h=501 or h = 576 or h = 584)   
       {
          InputBox, code, 输入验证码, , , , 130
          offset := w - 363
