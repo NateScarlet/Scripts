@@ -17,13 +17,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 CoordMode, Mouse, Client
 
 ;~ 关闭已有BN进程
-Loop
-{
-   Process, Exist, Battle.net.exe
-   if (ErrorLevel = 0)
-      break
-   Process, Close, %ErrorLevel%
-}
+RunWait, TASKKILL /F /IM battle.net.exe
 
 ;~ 手动输入密码登录战网
 text := account1 "`n" region1
