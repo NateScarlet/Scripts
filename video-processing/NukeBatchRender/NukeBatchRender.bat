@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE NukeBatchRenderv1.4
+TITLE Nuke批渲染v1.5
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -13,7 +13,7 @@ IF "%ERRORLEVEL%" EQU "1" (
     ECHO.
     CHOICE /T 15 /D y /M "15秒后休眠"
     IF ERRORLEVEL 2 GOTO:EOF
-    REM SHUTDOWN /h
+    SHUTDOWN /h
     GOTO:EOF
 )
 :StartUp
@@ -36,7 +36,7 @@ FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
 FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
 IF NOT EXIST !NUKE! (
     ECHO 错误 - 文件内设置的路径不正确
-    ECHO 请手动设置Nuke路径^(从资源管理器将Nuke.exe拖进来即可^)
+    ECHO 请手动设置Nuke路径__从资源管理器将Nuke.exe拖进来即可
     SET /P "inputTemp=Nuke程序路径:"
     IF "!inputTemp!" NEQ "" (
         SET "NUKE=!inputTemp!"
@@ -44,17 +44,6 @@ IF NOT EXIST !NUKE! (
     )
     GOTO SettingCheck
 )
-IF NOT EXIST "!serverZ!" (
-    ECHO 错误 - 文件服务器离线或不存在
-    ECHO 请手动设置服务器网络路径(从资源管理器将文件夹拖进来即可^)
-    SET /P "inputTemp=服务器网络路径:"
-    IF "!inputTemp!" NEQ "" (
-        SET "serverZ=!inputTemp!"
-        SET "inputTemp="
-    )
-    GOTO SettingCheck
-)
-REM 设置选项
 CHOICE /T 15 /D n /M "素材缓存到本地后从缓存渲染"
 IF "%ERRORLEVEL%" EQU "1" SET "isLocalRender=TRUE"
 IF /I "%~1" EQU "-PROXY" (

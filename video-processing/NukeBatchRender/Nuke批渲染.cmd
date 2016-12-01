@@ -1,1 +1,0 @@
-START POWERSHELL.exe -NoProfile -Command "Add-PSSnapin;& '%~dp0NukeBatchRender.bat'"
