@@ -1,1 +1,1 @@
-START POWERSHELL -Command "& '%~dp0LocaliseFootage'"
+START POWERSHELL -NoProfile -Command "& '%~dp0LocaliseFootage'"

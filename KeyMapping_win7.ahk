@@ -15,13 +15,18 @@ $#2::
 IfWinNotExist, ahk_exe NxNManagerClient.exe
 {
 	Run, NxN
-	WinClose, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
+	WinWait, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
+	WinClose,
 	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
 	WinMaximize
 }
 IfWinExist, ahk_class QWidget ahk_exe Nuke10.0.exe, , Hiero
 {
 	WinActivate
+}
+else
+{
+	WinActivate, ahk_class ATL:0046DEB0 ahk_exe NxNManagerClient.exe
 }
 return
 
@@ -38,7 +43,16 @@ return
 
 
 $#e:: 
-Run, %Windir%\explorer.exe
+IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe
+{
+    Run, %Windir%\explorer.exe
+	Run, %Windir%\explorer.exe
+}
+else
+{
+	GroupAdd, G_EXLPORER, ahk_class CabinetWClass ahk_exe explorer.exe
+	GroupActivate, G_EXPLORER
+}
 return
 
 $^#e:: 

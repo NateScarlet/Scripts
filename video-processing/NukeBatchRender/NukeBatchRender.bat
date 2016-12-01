@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.4
+TITLE NukeBatchRenderv1.4
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -13,7 +13,7 @@ IF "%ERRORLEVEL%" EQU "1" (
     ECHO.
     CHOICE /T 15 /D y /M "15秒后休眠"
     IF ERRORLEVEL 2 GOTO:EOF
-    SHUTDOWN /h
+    REM SHUTDOWN /h
     GOTO:EOF
 )
 :StartUp
