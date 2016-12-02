@@ -1,0 +1,176 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode5
+ tile_color 0x8e8e3800
+ label IDistort
+ note_font_size 42
+ selected true
+ xpos 557
+ ypos -2315
+ bdwidth 427
+ bdheight 790
+}
+push $cut_paste_input
+Dot {
+ name Dot19
+ note_font 微软雅黑
+ selected true
+ xpos 434
+ ypos -2166
+}
+set N399ee800 [stack 0]
+Dot {
+ name Dot41
+ selected true
+ xpos 654
+ ypos -2166
+}
+set N399ee400 [stack 0]
+Dot {
+ name Dot42
+ selected true
+ xpos 764
+ ypos -2166
+}
+add_layer {IronBar IronBar.alpha}
+add_layer {Distort Distort.u Distort.v Distort.blur}
+Shuffle {
+ in IronBar
+ blue alpha
+ out Distort
+ name Shuffle3
+ selected true
+ xpos 730
+ ypos -2026
+}
+Radial {
+ output none
+ premult Distort
+ area {818 280 1938 1380}
+ name Radial2
+ note_font 微软雅黑
+ selected true
+ xpos 730
+ ypos -1987
+}
+FilterErode {
+ channels {Distort.u Distort.v -Distort.blur}
+ size -100
+ filter gaussian
+ name FilterErode2
+ selected true
+ xpos 730
+ ypos -1936
+}
+Noise {
+ output {-Distort.u Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise1
+ selected true
+ xpos 730
+ ypos -1888
+}
+Noise {
+ output {Distort.u -Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000+199}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise2
+ selected true
+ xpos 730
+ ypos -1840
+}
+Blur {
+ channels {Distort.u Distort.v -Distort.blur}
+ size 20
+ name Blur4
+ selected true
+ xpos 730
+ ypos -1792
+}
+Dot {
+ name Dot33
+ selected true
+ xpos 764
+ ypos -1758
+}
+set N39a24400 [stack 0]
+Keyer {
+ input {Distort.u Distort.v -Distort.blur}
+ operation "luminance key"
+ range {0.003945607434 0.1327302341 1 1}
+ name Keyer4
+ selected true
+ xpos 840
+ ypos -1768
+}
+Dot {
+ name Dot34
+ selected true
+ xpos 874
+ ypos -1710
+}
+push $N39a24400
+Grade {
+ inputs 1+1
+ channels {Distort.u Distort.v -Distort.blur}
+ add -0.5
+ black_clamp false
+ name Grade8
+ selected true
+ xpos 730
+ ypos -1720
+}
+IDistort {
+ uv Distort
+ uv_scale 8
+ blur Distort.blur
+ blur_scale 3
+ name IDistort1
+ selected true
+ xpos 730
+ ypos -1648
+}
+Dot {
+ name Dot43
+ selected true
+ xpos 764
+ ypos -1590
+}
+push $N399ee400
+Merge2 {
+ inputs 2
+ operation copy
+ name Merge10
+ selected true
+ xpos 620
+ ypos -1594
+}
+push $N399ee800
+Switch {
+ inputs 2
+ which 1
+ name Switch1
+ note_font 微软雅黑
+ selected true
+ xpos 400
+ ypos -1595
+}
