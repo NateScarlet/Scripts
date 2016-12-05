@@ -2,13 +2,13 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
  inputs 0
- name BackdropNode3
+ name BackdropNode4
  tile_color 0x9fbcc6ff
- label "Write v2.9"
+ label "Write v3.0"
  note_font_size 42
  selected true
- xpos -64
- ypos -238
+ xpos 258
+ ypos 27
  bdwidth 365
  bdheight 431
 }
@@ -17,17 +17,17 @@ NoOp {
  name setRootFormat_HD1080_fps25_1
  label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
  selected true
- xpos 78
- ypos -152
+ xpos 400
+ ypos 113
 }
 Dot {
- name Dot1
+ name Dot2
  note_font 微软雅黑
  selected true
- xpos 112
- ypos -100
+ xpos 434
+ ypos 165
 }
-set N3c50000 [stack 0]
+set N62898800 [stack 0]
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -39,33 +39,31 @@ Write {
  use_limit true
  checkHashOnRead false
  version 54
- in_colorspace linear
- out_colorspace linear
- beforeRender "# Turn off rsmb;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\nfile = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file);\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);"
+ beforeRender "# Turn off rsmb;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\nif not nuke.Root()\['project_directory'].value():\n    nuke.error('工程目录未设置');\n    nuke.cancel();\nfile = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file);\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);"
  afterRender "global rsmbList;\nfor i in rsmbList:\n    if 'rsmb' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];nuke.toNode(\"root\")\[\"lock_connections\"].setValue(1);\nnuke.thisNode()\['disable'].setValue(1);"
  name Write_JPG_1
- label "\[\nknob root.onScriptSave \{\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\n]\n\[\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    if w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]\n\[knob_default Switch.which 1]\n\[knob_default Read.label \{<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>\}]\n\[knob_default Keyer.label \{输入通道 :\[value input]\}]\n\[knob_default note_font 微软雅黑]\n\[input Viewer1 1 this]"
+ label "\[\nknob root.onScriptLoad \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.warning('工程目录未设置');\n\}\n]\n\[\nknob root.onScriptSave \{\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\n]\n\[\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    if w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]\n\[knob_default Switch.which 1]\n\[knob_default Read.label \{<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>\}]\n\[knob_default Keyer.label \{输入通道 :\[value input]\}]\n\[knob_default note_font 微软雅黑]\n\[input Viewer1 1 this]"
  selected true
- xpos 78
- ypos -21
+ xpos 400
+ ypos 241
  disable true
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
 Dot {
- name Dot4
+ name Dot3
  selected true
- xpos 112
- ypos 44
+ xpos 434
+ ypos 309
 }
-set N3c51800 [stack 0]
+set N794bb800 [stack 0]
 Group {
  name HueToRGB2
  label "\[input Viewer1 4 this]"
  selected true
- xpos 78
- ypos 136
+ xpos 400
+ ypos 401
 }
  Input {
   inputs 0
@@ -102,6 +100,16 @@ Group {
   ypos 113
  }
 end_group
+push $N794bb800
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression2
+ label "SaturationToRGB\n\[input Viewer1 2 this]"
+ selected true
+ xpos 290
+ ypos 347
+}
 Read {
  inputs 0
  file "\[value Write_JPG_1.file]"
@@ -109,26 +117,14 @@ Read {
  last {{first}}
  origset true
  version 27
- in_colorspace linear
- out_colorspace linear
  name ReadWrite_JPG_1
  label "第 \[value first] 帧\n\[input Viewer1 3 this]"
  selected true
- xpos 188
- ypos -44
+ xpos 508
+ ypos 222
  disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
 }
-push $N3c51800
-Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name Expression2
- label "SaturationToRGB\n\[input Viewer1 2 this]"
- selected true
- xpos -32
- ypos 82
-}
-push $N3c50000
+push $N62898800
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -148,11 +144,11 @@ Write {
  mov64_b_frames 0
  checkHashOnRead false
  version 11
- beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+ beforeRender "# Create output folder;\nif not nuke.Root()\['project_directory'].value():\n    nuke.error('工程目录未设置');\n    nuke.cancel();\nfile = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_MOV_1
  selected true
- xpos -32
- ypos -69
+ xpos 290
+ ypos 196
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}

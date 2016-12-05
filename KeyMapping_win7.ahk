@@ -1,3 +1,10 @@
+Loop {
+    IfWinExist, ahk_exe WerFault.exe,
+        WinClose,
+	IfWinExist, ahk_exe CrashReporterNuke.exe,
+		WinClose,
+}
+
 $#f:: Run Everything
 
 $#1:: 
