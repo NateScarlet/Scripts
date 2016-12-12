@@ -29,7 +29,8 @@ IfWinNotExist, ahk_exe NxNManagerClient.exe
 }
 IfWinExist, ahk_class QWidget ahk_exe Nuke10.0.exe, , Hiero
 {
-	WinActivate
+	GroupAdd, G_NUKE, ahk_class QWidget ahk_exe Nuke10.0.exe, , , Hiero
+	GroupActivate, G_NUKE
 }
 else
 {

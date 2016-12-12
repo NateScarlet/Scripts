@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.5
+TITLE Nuke批渲染v1.6
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -65,6 +65,13 @@ SET "renderTime=%date:~5,2%%date:~8,2%%date:~11,2%_%time:~0,2%%time:~3,2%"
 IF NOT EXIST "%~dp0RenderLog" (
     MKDIR "%~dp0RenderLog"
 )
+REM 将代理渲染完成的文件移出来
+IF /I "%isProxyRender%" NEQ "TRUE" (
+    IF EXIST "%~dp0PorxyRenderedFiles\" (
+        ECHO.
+        MOVE "%~dp0PorxyRenderedFiles\*.nk" "%~dp0"
+    )
+)
 REM 断开Z盘映射并重新映射Z盘到缓存文件夹
 IF /I "%isLocalRender%" EQU "TRUE" (
     IF NOT EXIST "%NUKE_TEMP_DIR%" (
@@ -96,6 +103,7 @@ IF /I "%isLocalRender%" EQU "TRUE" (
     REM 调用LocaliseFootage.bat来缓存素材
     CALL "%~dp0LocaliseFootage.bat" "" "%serverZ%"
 )
+
 SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
 :Render
 REM 渲染
@@ -121,6 +129,11 @@ FOR %%i in ("%~dp0\*.nk") do (
         )
         SET "finishTime=!time:~0,8!"
         ECHO !date! !startTime! !finishTime!	%%~ni^(代理模式^) >>%RenderLog%
+        IF NOT EXIST "%~dp0PorxyRenderedFiles\" (
+            MKDIR "%~dp0PorxyRenderedFiles\"
+        )
+        DEL "%~dp0PorxyRenderedFiles\%%~nxi"
+        MOVE /Y "%%~i" "%~dp0PorxyRenderedFiles\"
 	) ELSE (
 	    REM 全尺寸渲染
         ECHO.

@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode8
  tile_color 0x388e8e00
- label "MP_2D v0.1"
+ label "MP_2D v0.2"
  note_font_size 42
  selected true
- xpos -324
- ypos -6700
+ xpos 446
+ ypos -6548
  bdwidth 649
  bdheight 759
  z_order 1
@@ -21,54 +21,62 @@ Ramp {
  name Ramp4
  note_font 微软雅黑
  selected true
- xpos 70
- ypos -6355
+ xpos 840
+ ypos -6203
 }
 push $cut_paste_input
 Ramp {
  name Ramp1
  selected true
- xpos 180
- ypos -6426
+ xpos 950
+ ypos -6274
 }
 Read {
  inputs 0
- file Z:/SNJYW/MP/YeKong_Sky.psd
+ file Z:/SNJYW/MP/EP01/YeKong/YeKong_Sky_V3.tif
  format "8000 2352 0 0 8000 2352 1 "
  origset true
- name Read3
+ name Read6
  selected true
- xpos -40
- ypos -6600
+ xpos 729
+ ypos -6484
 }
 Reformat {
  name Reformat2
  selected true
- xpos -40
- ypos -6498
+ xpos 729
+ ypos -6382
 }
 Transform {
- translate {-1872 276}
+ translate {-1604 336}
  scale 3.762000084
  center {960 540}
  name Transform4
  selected true
- xpos -40
- ypos -6474
+ xpos 729
+ ypos -6358
+}
+Crop {
+ box {0 0 1920 1080}
+ name Crop1
+ note_font 微软雅黑
+ selected true
+ xpos 729
+ ypos -6331
 }
 HueShift {
  name HueShift1
  selected true
- xpos -40
- ypos -6450
+ xpos 730
+ ypos -6298
  disable true
 }
 HueShift {
  inputs 1+1
  name HueShift2
  selected true
- xpos -40
- ypos -6426
+ xpos 730
+ ypos -6274
  disable true
 }
 Grade {
@@ -76,16 +84,16 @@ Grade {
  gamma {1.305833459 1.313333154 1.340833426 1.24000001}
  name Grade4
  selected true
- xpos -40
- ypos -6402
+ xpos 730
+ ypos -6250
 }
 Saturation {
  saturation 0.7
  name Saturation1
  note_font 微软雅黑
  selected true
- xpos -40
- ypos -6376
+ xpos 730
+ ypos -6227
 }
 ColorCorrect {
  inputs 1+1
@@ -94,23 +102,14 @@ ColorCorrect {
  name ColorCorrect1
  note_font 微软雅黑
  selected true
- xpos -40
- ypos -6331
+ xpos 730
+ ypos -6179
 }
 AddChannels {
  channels depth
- color 100
+ color 1
  name AddChannels3
  selected true
- xpos -40
- ypos -6096
-}
-push 0
-Switch {
- inputs 2
- which 1
- name Switch6
- selected true
- xpos -40
- ypos -5898
+ xpos 730
+ ypos -5944
 }

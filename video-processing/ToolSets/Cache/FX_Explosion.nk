@@ -1,0 +1,1000 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode6
+ tile_color 0xe3aa70ff
+ label "FX_Explosion v0.2"
+ note_font_size 42
+ selected true
+ xpos 876
+ ypos -5557
+ bdwidth 1342
+ bdheight 4615
+}
+push $cut_paste_input
+Dot {
+ name Dot10
+ note_font 微软雅黑
+ selected true
+ xpos 771
+ ypos -6199
+}
+set N33ce1000 [stack 0]
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_02_01/Fire02__FumeFX Smoke%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read19
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1954
+ ypos -3351
+}
+clone node33ce0800|Grade|9880 Grade {
+ white {0.5 0.3908500075 0.2050000131 0.5}
+ name Grade18
+ note_font 微软雅黑
+ selected true
+ xpos 1954
+ ypos -3235
+}
+set C33ce0800 [stack 0]
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_02_01/Fire02__FumeFX Fire%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read18
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1832
+ ypos -3435
+}
+clone node33ce0000|Grade|9880 Grade {
+ blackpoint 0.15
+ name Grade2
+ note_font 微软雅黑
+ selected true
+ xpos 1832
+ ypos -3319
+ disable true
+}
+set C33ce0000 [stack 0]
+clone node33d23c00|ColorCorrect|9880 ColorCorrect {
+ saturation 0.5
+ gamma 0.47
+ gain {1.834999919 1.261499882 0.284999907 1}
+ highlights.saturation 0
+ highlights.gain 1.059999943
+ lookup {shadow {curve 1 s0 x0.07061240822 0 s0}
+   midtone {1-shadow-highlight}
+   highlight {curve x0.3922911882 0 s0 x0.7845823765 1 s0}}
+ mix 0.5
+ name ColorCorrect10
+ note_font 微软雅黑
+ selected true
+ xpos 1832
+ ypos -3291
+}
+set C33d23c00 [stack 0]
+Merge2 {
+ inputs 2
+ name Merge24
+ note_font 微软雅黑
+ selected true
+ xpos 1837
+ ypos -3243
+}
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_03/Fire03__FumeFX Smoke%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read10
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1634
+ ypos -3922
+}
+clone $C33ce0800 {
+ xpos 1634
+ ypos -3806
+ selected true
+}
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_03/Fire03__FumeFX Fire%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read9
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1507
+ ypos -4055
+}
+clone $C33ce0000 {
+ xpos 1507
+ ypos -3939
+ selected true
+}
+clone $C33d23c00 {
+ xpos 1507
+ ypos -3911
+ selected true
+}
+Merge2 {
+ inputs 2
+ mix 0.94
+ name Merge25
+ note_font 微软雅黑
+ selected true
+ xpos 1507
+ ypos -3840
+}
+push 0
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_04_01/Fire04__FumeFX Smoke%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read13
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1532
+ ypos -4298
+}
+clone $C33ce0800 {
+ xpos 1532
+ ypos -4182
+ selected true
+}
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_04_01/Fire04__FumeFX Fire%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read12
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -4347
+}
+clone $C33ce0000 {
+ xpos 1397
+ ypos -4231
+ selected true
+}
+clone $C33d23c00 {
+ xpos 1392
+ ypos -4198
+ selected true
+}
+Merge2 {
+ inputs 2
+ name Merge23
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -4108
+}
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_01_01/Fire01__FumeFX Smoke%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read16
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1765
+ ypos -3687
+}
+clone $C33ce0800 {
+ xpos 1765
+ ypos -3571
+ selected true
+}
+Read {
+ inputs 0
+ file "Z:/SNJYW/FX/Final/EP04/10/EP04_10_sc193/Fire_01_01/Fire01__FumeFX Fire%04d.tga"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read15
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1617
+ ypos -3743
+}
+clone $C33ce0000 {
+ xpos 1617
+ ypos -3627
+ selected true
+}
+clone $C33d23c00 {
+ xpos 1617
+ ypos -3599
+ selected true
+}
+Merge2 {
+ inputs 2
+ name Merge22
+ note_font 微软雅黑
+ selected true
+ xpos 1617
+ ypos -3531
+}
+Merge2 {
+ inputs 4+1
+ name Merge9
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -3243
+}
+Group {
+ name ValueGamma3
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "\[knob_default gain 1]\n\[knob_default gamma 1]"
+ selected true
+ xpos 1397
+ ypos -3215
+ addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 lift}
+ addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+ gain 0.9
+ addUserKnob {7 gamma R 0 4}
+ gamma 0.7
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
+ addUserKnob {41 alpha l mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T Grade1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+ addUserKnob {41 mix T Grade1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -634
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -582
+ }
+set N36f9e400 [stack 0]
+ Dot {
+  name Dot2
+  xpos 654
+  ypos -582
+ }
+ Input {
+  inputs 0
+  name InputMask
+  xpos 730
+  ypos -466
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input parent 1]]"}}
+  name Switch1
+  xpos 620
+  ypos -466
+ }
+set N36fe6400 [stack 0]
+ Premult {
+  alpha none
+  name MaskChannelChoose
+  xpos 620
+  ypos -440
+ }
+ Dot {
+  name Dot3
+  xpos 654
+  ypos -366
+ }
+push $N36fe6400
+push $N36f9e400
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 510
+  ypos -514
+ }
+ Grade {
+  inputs 1+1
+  channels {none none none rgba.blue}
+  black {{parent.lift}}
+  white {{parent.gain}}
+  gamma {{parent.gamma}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  name Grade1
+  xpos 510
+  ypos -472
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 510
+  ypos -418
+ }
+ Saturation {
+  inputs 1+1
+  channels {{{parent.Colorspace1.channels}}}
+  saturation 1.05
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  mix {{parent.Grade1.mix}}
+  name Saturation1
+  xpos 510
+  ypos -370
+ }
+ Grade {
+  white 4.3
+  maskChannelInput {{{parent.Grade1.maskChannelMask}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  name Grade2
+  xpos 510
+  ypos -333
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -271
+ }
+end_group
+OFXcom.revisionfx.rsmb_v3 {
+ menuTrackFrame "Previous Frame"
+ menuDisplay "Source Blurred"
+ MBAmount 0.5
+ MBSensitivity 70
+ valMBAmountFG1 0.5
+ valMBSensitivityFG1 70
+ menuFG1MatteChannel Alpha
+ valFG1InvMatteShrink 0
+ CustomData_DoNotEdit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ name RSMB1
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -2908
+}
+Dot {
+ name Dot1
+ note_font 微软雅黑
+ selected true
+ xpos 1431
+ ypos -2879
+}
+set N37027400 [stack 0]
+Dot {
+ name Dot4
+ note_font 微软雅黑
+ selected true
+ xpos 1541
+ ypos -2879
+}
+Keyer {
+ operation "luminance key"
+ range {0 0.2864132219 1 1}
+ name Keyer5
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1507
+ ypos -2852
+}
+Dot {
+ name Dot5
+ note_font 微软雅黑
+ selected true
+ xpos 1541
+ ypos -2783
+}
+push $N37027400
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 rgba.alpha
+ name Copy3
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -2796
+ disable true
+}
+Multiply {
+ name Multiply6
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -2580
+}
+Multiply {
+ value {{curve x25 1}}
+ name Multiply1
+ label ExplosionAnim
+ selected true
+ xpos 1397
+ ypos -2488
+}
+set C3705dc00 [stack 0]
+Dot {
+ name Dot15
+ note_font 微软雅黑
+ selected true
+ xpos 1431
+ ypos -2399
+}
+set N3705d800 [stack 0]
+Multiply {
+ value 2
+ name Multiply9
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -2064
+}
+Glow2 {
+ tint {1 0.4851999879 0.009999990463 1}
+ tolerance 0.5
+ saturation 0.5
+ size 200
+ name Glow1
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -1995
+}
+SoftClip {
+ conversion "preserve hue and brightness"
+ softclip_min 1
+ softclip_max 3.5
+ name SoftClip2
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -1967
+}
+SoftClip {
+ conversion "logarithmic compress"
+ name SoftClip4
+ selected true
+ xpos 1397
+ ypos -1939
+}
+Dot {
+ name Dot6
+ note_font 微软雅黑
+ selected true
+ xpos 1431
+ ypos -1871
+}
+set N3705c400 [stack 0]
+add_layer {explosion explosion.red explosion.green explosion.blue explosion.alpha}
+Shuffle {
+ out explosion
+ name Shuffle4
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -1804
+}
+Dot {
+ name Dot9
+ note_font 微软雅黑
+ selected true
+ xpos 1431
+ ypos -1751
+}
+push $N3705c400
+push $N3705d800
+Dot {
+ name Dot16
+ note_font 微软雅黑
+ selected true
+ xpos 1321
+ ypos -2399
+}
+FilterErode {
+ channels rgba
+ size -200
+ filter triangle
+ name FilterErode1
+ note_font 微软雅黑
+ selected true
+ xpos 1287
+ ypos -2356
+}
+Blur {
+ size 200
+ filter quadratic
+ name Blur1
+ note_font 微软雅黑
+ selected true
+ xpos 1287
+ ypos -2316
+}
+Dot {
+ name Dot22
+ note_font 微软雅黑
+ selected true
+ xpos 1321
+ ypos -2255
+}
+set N37090c00 [stack 0]
+Multiply {
+ value 0.3
+ name Multiply7
+ note_font 微软雅黑
+ selected true
+ xpos 1291
+ ypos -2202
+}
+Dot {
+ name Dot21
+ note_font 微软雅黑
+ selected true
+ xpos 1321
+ ypos -2039
+}
+set N37090400 [stack 0]
+Dot {
+ name Dot23
+ note_font 微软雅黑
+ selected true
+ xpos 1321
+ ypos -1987
+}
+push $N37090400
+push $N37090c00
+push $N33ce1000
+Dot {
+ name Dot11
+ note_font 微软雅黑
+ selected true
+ xpos 1101
+ ypos -6199
+}
+add_layer {beforeExplosion beforeExplosion.red beforeExplosion.green beforeExplosion.blue beforeExplosion.alpha}
+Shuffle {
+ out beforeExplosion
+ name Shuffle2
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -4668
+}
+Dot {
+ name Dot12
+ note_font 微软雅黑
+ selected true
+ xpos 1101
+ ypos -4567
+}
+set N370bb400 [stack 0]
+Radial {
+ inputs 0
+ opacity 0.035
+ area {-1040 -398 2040 382}
+ name Radial4
+ note_font 微软雅黑
+ selected true
+ xpos 1287
+ ypos -4740
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP04/10/SNJYW_EP04_10_sc193/EP04_10_sc193_BG_FX/Ep04_10_sc193_BG_FX.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read2
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1287
+ ypos -5240
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP04/10/SNJYW_EP04_10_sc193/EP04_10_sc193_BG_FX_A/Ep04_10_sc193_BG_FX.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read3
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1397
+ ypos -5168
+}
+push 0
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP04/10/SNJYW_EP04_10_sc193/EP04_10_sc193_BG_FX_B/Ep04_10_sc193_BG_FX.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read4
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1507
+ ypos -5000
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP04/10/SNJYW_EP04_10_sc193/EP04_10_sc193_BG_FX_C/Ep04_10_sc193_BG_FX.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 49
+ origlast 49
+ origset true
+ name Read5
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -5312
+}
+Merge2 {
+ inputs 4+1
+ operation plus
+ name Merge2
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4956
+}
+Dot {
+ name Dot14
+ note_font 微软雅黑
+ selected true
+ xpos 1211
+ ypos -4903
+}
+Grade {
+ whitepoint 1.2
+ name Grade1
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4860
+}
+ColorCorrect {
+ saturation 0.5
+ gain {0.9814299941 0.8589475751 0.03925722092 1}
+ name ColorCorrect5
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4812
+}
+Radial {
+ output none
+ premult rgba
+ area {-338.1485106 -122.1650765 2258.148511 1202.165076}
+ name Radial3
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4772
+ disable true
+}
+ColorCorrect {
+ inputs 1+1
+ gain 10
+ name ColorCorrect11
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4716
+}
+Multiply {
+ channels rgba
+ value 6
+ name Multiply4
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4619
+}
+add_layer {Wood Wood.alpha}
+Multiply {
+ inputs 1+1
+ value 0
+ maskChannelMask Wood.alpha
+ invert_mask true
+ name Multiply5
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -4580
+ disable true
+}
+clone $C3705dc00 {
+ xpos 1177
+ ypos -4485
+ selected true
+}
+Dot {
+ name Dot24
+ note_font 微软雅黑
+ selected true
+ xpos 1211
+ ypos -4399
+}
+push $N370bb400
+Merge2 {
+ inputs 2
+ operation plus
+ name Merge6
+ label LightAffect
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -4412
+}
+SoftClip {
+ conversion "logarithmic compress"
+ softclip_min 1
+ name SoftClip1
+ selected true
+ xpos 1067
+ ypos -4330
+}
+Dot {
+ name Dot35
+ note_font 微软雅黑
+ selected true
+ xpos 1101
+ ypos -2423
+}
+set N373bcc00 [stack 0]
+Dot {
+ name Dot37
+ note_font 微软雅黑
+ selected true
+ xpos 1211
+ ypos -2423
+}
+Shuffle {
+ in beforeExplosion
+ name Shuffle5
+ note_font 微软雅黑
+ selected true
+ xpos 1177
+ ypos -2332
+}
+push $N373bcc00
+Merge2 {
+ inputs 2+1
+ operation copy
+ invert_mask true
+ name Merge12
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -2260
+}
+Merge2 {
+ inputs 2
+ operation soft-light
+ mix 0.3
+ name Merge11
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -2048
+}
+ColorCorrect {
+ inputs 1+1
+ saturation 0.8
+ gamma 0.8
+ gain {2.424999952 1.331325054 0.4365000129 1}
+ name ColorCorrect3
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -1992
+}
+Merge2 {
+ inputs 2
+ name Merge1
+ label Explosion
+ note_font 微软雅黑
+ selected true
+ xpos 1067
+ ypos -1884
+}
+Merge2 {
+ inputs 2
+ operation copy
+ Achannels explosion
+ Bchannels {{{Achannels}}}
+ output {{{Achannels}}}
+ name Merge8
+ selected true
+ xpos 1067
+ ypos -1761
+}
+Dot {
+ name Dot41
+ selected true
+ xpos 1101
+ ypos -1582
+}
+set N373eec00 [stack 0]
+Dot {
+ name Dot42
+ selected true
+ xpos 1211
+ ypos -1582
+}
+add_layer {Distort Distort.u Distort.v Distort.blur}
+Shuffle {
+ in explosion
+ blue alpha
+ out Distort
+ name Shuffle1
+ selected true
+ xpos 1177
+ ypos -1562
+}
+FilterErode {
+ channels {Distort.u Distort.v -Distort.blur}
+ size -100
+ filter gaussian
+ name FilterErode2
+ selected true
+ xpos 1177
+ ypos -1489
+}
+Noise {
+ output {-Distort.u Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise1
+ selected true
+ xpos 1177
+ ypos -1441
+}
+Noise {
+ output {Distort.u -Distort.v -Distort.blur}
+ replace true
+ maskChannelInput Distort.u
+ type turbulence
+ size 10000
+ zoffset {{x/1000+199}}
+ octaves 141
+ lacunarity 10
+ gain 1
+ gamma 0.235
+ center {960 540}
+ name Noise2
+ selected true
+ xpos 1177
+ ypos -1393
+}
+Blur {
+ channels {Distort.u Distort.v -Distort.blur}
+ size 20
+ name Blur4
+ selected true
+ xpos 1177
+ ypos -1345
+}
+Dot {
+ name Dot33
+ selected true
+ xpos 1211
+ ypos -1311
+}
+set N37431000 [stack 0]
+Keyer {
+ input {Distort.u Distort.v -Distort.blur}
+ operation "luminance key"
+ range {0.003945607434 0.1327302341 1 1}
+ name Keyer4
+ selected true
+ xpos 1287
+ ypos -1321
+}
+Dot {
+ name Dot34
+ selected true
+ xpos 1321
+ ypos -1263
+}
+push $N37431000
+Grade {
+ inputs 1+1
+ channels {Distort.u Distort.v -Distort.blur}
+ add -0.5
+ black_clamp false
+ name Grade8
+ selected true
+ xpos 1177
+ ypos -1273
+}
+IDistort {
+ uv Distort
+ uv_scale {{2.5*parent.Multiply1.value x25 0.6}}
+ blur Distort.blur
+ blur_scale 3
+ name IDistort1
+ selected true
+ xpos 1177
+ ypos -1203
+}
+Dot {
+ name Dot43
+ selected true
+ xpos 1211
+ ypos -1143
+}
+push $N373eec00
+Merge2 {
+ inputs 2
+ operation copy
+ name Merge10
+ selected true
+ xpos 1067
+ ypos -1147
+}
+push $N33ce1000
+Switch {
+ inputs 3
+ which 1
+ name Switch3
+ note_font 微软雅黑
+ selected true
+ xpos 737
+ ypos -1148
+}
