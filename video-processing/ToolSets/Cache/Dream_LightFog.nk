@@ -1,0 +1,134 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode5
+ tile_color 0x7171c600
+ label "Dream_LightFog v0.1"
+ note_font_size 42
+ selected true
+ xpos -518
+ ypos -1122
+ bdwidth 491
+ bdheight 572
+}
+Ramp {
+ inputs 0
+ p0 {1116 1121}
+ p1 {1127 377}
+ name Ramp4
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -755
+}
+push $cut_paste_input
+Dot {
+ name Dot24
+ note_font 微软雅黑
+ selected true
+ xpos -666
+ ypos -942
+}
+set N3017d000 [stack 0]
+Dot {
+ name Dot27
+ note_font 微软雅黑
+ selected true
+ xpos -446
+ ypos -942
+}
+Dot {
+ name Dot28
+ note_font 微软雅黑
+ selected true
+ xpos -446
+ ypos -798
+}
+set N3017c800 [stack 0]
+Ramp {
+ output none
+ premult all
+ p0 {995 356}
+ p1 {1001 546}
+ name Ramp2
+ label Mask
+ selected true
+ xpos -370
+ ypos -815
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/Render/EP04/04/SNJYW_EP04_04_sc105/EP04_04_sc105_BG_fog/EP04_04_sc105_BG_fog.%04d.exr
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 157
+ origlast 157
+ origset true
+ name Read3
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos -260
+ ypos -967
+}
+add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha none BG_A.green BG_A.blue BG_A.alpha}
+Multiply {
+ inputs 1+1
+ value 0
+ maskChannelMask BG_A.alpha
+ name Multiply5
+ note_font 微软雅黑
+ selected true
+ xpos -260
+ ypos -811
+ disable true
+}
+Blur {
+ inputs 1+1
+ size 10
+ name Blur1
+ note_font 微软雅黑
+ selected true
+ xpos -260
+ ypos -763
+}
+Ramp {
+ output none
+ premult all
+ p0 {951 92}
+ p1 {949 999}
+ type smooth0
+ name Ramp3
+ label Mask
+ selected true
+ xpos -260
+ ypos -719
+}
+ColorCorrect {
+ gain {1.396666646 0.9666666985 0.6366666555 1}
+ name ColorCorrect5
+ note_font 微软雅黑
+ selected true
+ xpos -260
+ ypos -659
+}
+push $N3017c800
+Merge2 {
+ inputs 2
+ operation plus
+ name Merge3
+ note_font 微软雅黑
+ selected true
+ xpos -480
+ ypos -659
+}
+push $N3017d000
+Switch {
+ inputs 2
+ which 1
+ name Switch5
+ note_font 微软雅黑
+ selected true
+ xpos -700
+ ypos -659
+}

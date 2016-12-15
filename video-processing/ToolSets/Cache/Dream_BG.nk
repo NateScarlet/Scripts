@@ -1,0 +1,169 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode3
+ tile_color 0x7171c600
+ label "Dream_BG v0.2"
+ note_font_size 42
+ selected true
+ xpos -612
+ ypos -2995
+ bdwidth 573
+ bdheight 902
+}
+push $cut_paste_input
+Dot {
+ name Dot11
+ note_font 微软雅黑
+ selected true
+ xpos -666
+ ypos -2886
+}
+set N3428b800 [stack 0]
+Dot {
+ name Dot12
+ note_font 微软雅黑
+ selected true
+ xpos -442
+ ypos -2886
+}
+Dot {
+ name Dot15
+ note_font 微软雅黑
+ selected true
+ xpos -442
+ ypos -2646
+}
+set N3428b000 [stack 0]
+Dot {
+ name Dot16
+ note_font 微软雅黑
+ selected true
+ xpos -442
+ ypos -2334
+}
+set N3428ac00 [stack 0]
+Radial {
+ inputs 0
+ invert true
+ area {390 -287 2006 791}
+ name Radial2
+ selected true
+ xpos -256
+ ypos -2578
+}
+Radial {
+ invert true
+ opacity 0.5
+ area {756 96 1688 496}
+ name Radial7
+ note_font 微软雅黑
+ selected true
+ xpos -256
+ ypos -2555
+}
+Ramp {
+ p0 {1172 -546}
+ p1 {1176 548}
+ type smooth1
+ name Ramp1
+ note_font 微软雅黑
+ selected true
+ xpos -256
+ ypos -2507
+}
+Dot {
+ name Dot14
+ note_font 微软雅黑
+ selected true
+ xpos -222
+ ypos -2406
+}
+push $N3428b000
+Constant {
+ inputs 0
+ color {0.474999994 0.474999994 0.474999994 1}
+ name Constant1
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos -2771
+}
+Multiply {
+ inputs 1+1
+ value 0
+ name Multiply1
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos -2659
+}
+Radial {
+ invert true
+ opacity 0.1
+ area {-354 -948 2282 1268}
+ name Radial3
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos -2603
+}
+ColorCorrect {
+ saturation 0.9
+ gain {1.052840233 1.00316 1.194238067 1}
+ name ColorCorrect5
+ label "\[python \{str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Dream')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Dream'), nuke.thisNode())\}]\n\[knob this.xpos \[value this.input0.xpos]]\n\[knob this.ypos \[value this.input0.ypos]+100]\n"
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos {{-2603+100 x438 -2503}}
+}
+ColorCorrect {
+ inputs 1+1
+ gain {0.006674752571 0.01118451729 0.01183466706 0.02999999933}
+ name ColorCorrect2
+ label "\[python \{str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Color_DreamBG')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Color_DreamBG'), nuke.thisNode())\}]\n"
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos -2427
+}
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+Multiply {
+ inputs 1+1
+ value 0
+ maskChannelMask depth3split.Close
+ name Multiply3
+ note_font 微软雅黑
+ selected true
+ xpos -366
+ ypos -2347
+ disable true
+}
+Dot {
+ name Dot21
+ note_font 微软雅黑
+ selected true
+ xpos -332
+ ypos -2118
+}
+push $N3428ac00
+Merge2 {
+ inputs 2
+ name Merge1
+ note_font 微软雅黑
+ selected true
+ xpos -476
+ ypos -2123
+}
+push $N3428b800
+Switch {
+ inputs 2
+ which 1
+ name Switch4
+ note_font 微软雅黑
+ selected true
+ xpos -700
+ ypos -2123
+}

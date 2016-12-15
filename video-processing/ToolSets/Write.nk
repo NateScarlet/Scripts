@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode2
  tile_color 0x9fbcc6ff
- label "Write v3.1"
+ label "Write v3.2"
  note_font_size 42
  selected true
- xpos 588
- ypos 1945
+ xpos -842
+ ypos 1296
  bdwidth 365
  bdheight 431
 }
@@ -17,17 +17,17 @@ NoOp {
  name setRootFormat_HD1080_fps25_1
  label "\[knob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}]\n\[knob root.fps 25]"
  selected true
- xpos 730
- ypos 2031
+ xpos -700
+ ypos 1382
 }
 Dot {
- name Dot2
+ name Dot7
  note_font 微软雅黑
  selected true
- xpos 764
- ypos 2083
+ xpos -666
+ ypos 1434
 }
-set N37652c00 [stack 0]
+set N35f07000 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.mov"
@@ -52,13 +52,13 @@ Write {
  beforeRender "# Create output folder;\nif not nuke.Root()\['project_directory'].value():\n    nuke.error('工程目录未设置');\n    nuke.cancel();\nfile = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
  name Write_MOV_1
  selected true
- xpos 620
- ypos 2114
+ xpos -810
+ ypos 1465
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
-push $N37652c00
+push $N35f07000
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -73,28 +73,28 @@ Write {
  beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\nif not nuke.Root()\['project_directory'].value():\n    nuke.error('工程目录未设置');\n    nuke.cancel();\nfile = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file);\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);"
  afterRender "global rsmbList;\nprint(rsmbList);\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.toNode(\"root\")\[\"lock_connections\"].setValue(1);\nnuke.thisNode()\['disable'].setValue(1);"
  name Write_JPG_1
- label "\[\nknob root.onScriptLoad \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.warning('工程目录未设置');\n\}\n]\n\[\nknob root.onScriptSave \{\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\n]\n\[\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    if w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]\n\[knob_default Switch.which 1]\n\[knob_default Read.label \{<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>\}]\n\[knob_default Keyer.label \{输入通道 :\[value input]\}]\n\[knob_default note_font 微软雅黑]\n\[input Viewer1 1 this]"
+ label "\[\nknob root.onScriptLoad \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.warning('工程目录未设置');\n\}\n]\n\[\nknob root.onScriptSave \{\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\n]\n\[\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    if w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]\n\[knob_default Switch.which 1]\n\[knob_default Read.label \{<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>\}]\n\[knob_default Shuffle.label \{\[value in] \[value in2] -> \[value out] \[value out2]\}]\n\[knob_default Keyer.label \{输入通道 :\[value input]\}]\n\[knob_default note_font 微软雅黑]\n\[input Viewer1 1 this]"
  selected true
- xpos 730
- ypos 2161
+ xpos -700
+ ypos 1513
  disable true
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
 Dot {
- name Dot3
+ name Dot10
  selected true
- xpos 764
- ypos 2227
+ xpos -666
+ ypos 1578
 }
-set N3769bc00 [stack 0]
+set N35f06000 [stack 0]
 Group {
  name HueToRGB2
  label "\[input Viewer1 4 this]"
  selected true
- xpos 730
- ypos 2319
+ xpos -700
+ ypos 1670
 }
  Input {
   inputs 0
@@ -141,17 +141,17 @@ Read {
  name ReadWrite_JPG_1
  label "第 \[value first] 帧\n\[input Viewer1 3 this]"
  selected true
- xpos 840
- ypos 2139
+ xpos -590
+ ypos 1490
  disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
 }
-push $N3769bc00
+push $N35f06000
 Expression {
  channel0 rgb
  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
  name Expression2
  label "SaturationToRGB\n\[input Viewer1 2 this]"
  selected true
- xpos 620
- ypos 2265
+ xpos -810
+ ypos 1616
 }

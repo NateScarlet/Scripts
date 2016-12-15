@@ -1,6 +1,7 @@
 import nuke
 def nodePresetsStartup():
   nuke.setUserPreset("AddChannels", "depth", {'channels': 'depth', 'color': '1', 'selected': 'true'})
+  nuke.setUserPreset("Camera2", "Camera_3DEnv_1", {'suppress_dialog': 'true', 'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'selected': 'true', 'label': '[knob this.xpos 0]\n[knob this.ypos 0]\n[knob this.name Camera_3DEnv_1]', 'read_from_file': 'true', 'frame_rate': '25'})
   nuke.setUserPreset("ChannelMerge", "depth.z", {'A': 'depth.Z', 'output': 'depth.Z', 'operation': 'min', 'B': 'depth.Z', 'selected': 'true'})
   nuke.setUserPreset("ColorCorrect", "ShadowWarm", {'shadows.gamma': '0.86', 'shadows.gain': '7.575611115 2.787825584 1.515122175 1', 'selected': 'true', 'lookup': 'shadow {curve 1 s0 x0.01183120441 0 s0}\nmidtone {1-shadow-highlight}\nhighlight {curve x0.06572888792 0 s0 x0.1314577758 1 s0}', 'offset': '0.004999999888 0.002457999857 0.001899999916 0.004999999888'})
   nuke.setUserPreset("ColorCorrect", "HighlightAdjust", {'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'highlights.saturation': '0.9', 'selected': 'true', 'label': 'HighlightAdjust', 'lookup': 'shadow {curve 1 s0 x0.03307496011 0 s0}\nmidtone {1-shadow-highlight}\nhighlight {curve x0.1837497354 0 s0 x0.3674994707 1 s0}', 'highlights.gain': '1.031999946 1.160999894 1.289999962 1'})
@@ -52,7 +53,7 @@ def nodePresetsStartup():
   nuke.setUserPreset("Merge2", "LayerCopy", {'Achannels': 'BumpNormals', 'output': '{{Achannels}}', 'operation': 'copy', 'Bchannels': '{{Achannels}}', 'selected': 'true'})
   nuke.setUserPreset("ModifyMetaData", "frameRange", {'selected': 'true', 'metadata': '{set first_frame "\\[value input.first]"}\n{set last_frame "\\[value input.last]"}'})
   nuke.setUserPreset("Multiply", "alpha*0", {'channels': 'alpha', 'selected': 'true', 'value': '0'})
-  nuke.setUserPreset("NoOp", "", {'selected': 'true', 'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'customPresetName': 'Light_Fire'})
+  nuke.setUserPreset("NoOp", "", {'selected': 'true', 'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'customPresetName': 'Light_Cold'})
   nuke.setUserPreset("Premult", "depth", {'channels': 'depth', 'selected': 'true'})
   nuke.setUserPreset("Radial", "Soft:0.5 Invert", {'softness': '0.5', 'invert': 'true', 'selected': 'true', 'area': '-79.98813498 -174 1999.988135 1254'})
   nuke.setUserPreset("Radial", "Mask", {'note_font': '\xe5\xbe\xae\xe8\xbd\xaf\xe9\x9b\x85\xe9\xbb\x91', 'premult': 'all', 'area': '480 270 1440 810', 'selected': 'true', 'label': 'Mask', 'output': 'none'})

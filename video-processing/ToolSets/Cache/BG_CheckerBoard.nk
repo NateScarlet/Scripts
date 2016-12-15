@@ -1,0 +1,162 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+CheckerBoard2 {
+ inputs 0
+ name CheckerBoard1
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6659
+}
+ColorCorrect {
+ gain 0.03
+ name ColorCorrect3
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6587
+}
+ColorCorrect {
+ name ColorCorrect9
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6491
+}
+AddChannels {
+ channels depth
+ color 1
+ name AddChannels2
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6403
+}
+Group {
+ name Depth3Split2
+ tile_color 0xff00ff
+ selected true
+ xpos 1170
+ ypos -6346
+ addUserKnob {20 Depth3Split}
+ addUserKnob {6 preview +STARTLINE}
+ addUserKnob {41 input T Middle.input}
+ addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
+ addUserKnob {41 invert -STARTLINE T Middle.invert}
+ addUserKnob {41 value l multiply T Multiply1.value}
+ addUserKnob {41 operation T Middle.operation}
+ addUserKnob {41 range T Middle.range}
+ addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
+ addUserKnob {26 Focus_div l Focus}
+ addUserKnob {32 focus_close l "focus Close" T "set tar group.Close\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.B]" +STARTLINE}
+ addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar group.Far\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
+ addUserKnob {41 range_1 l range T Focus.range}
+ addUserKnob {41 gamma T Grade1.gamma}
+ addUserKnob {41 size l "blur size" T Blur1.size}
+ addUserKnob {41 filter l "blur filter" T Blur1.filter}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 180
+  ypos -586
+ }
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  out depth3split
+  name Shuffle
+  xpos 180
+  ypos -562
+ }
+ Multiply {
+  channels depth
+  name Multiply1
+  xpos 180
+  ypos -520
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Far
+  operation "luminance key"
+  range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
+  name Far
+  label "\[value input]"
+  xpos 180
+  ypos -479
+ }
+ Keyer {
+  input depth
+  output depth3split.Middle
+  operation "luminance key"
+  range {{parent.parent.Depth3Split_Global_1.Middle.range.A} {parent.parent.Depth3Split_Global_1.Middle.range.B} {parent.parent.Depth3Split_Global_1.Middle.range.C} {parent.parent.Depth3Split_Global_1.Middle.range.D}}
+  name Middle
+  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  xpos 180
+  ypos -431
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Close
+  invert true
+  operation "luminance key"
+  range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
+  name Close
+  label "\[value input]"
+  xpos 180
+  ypos -383
+ }
+ Keyer {
+  input {{{parent.Middle.input}}}
+  output depth3split.Focus
+  invert true
+  operation "luminance key"
+  range {{parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range}}
+  name Focus
+  xpos 180
+  ypos -328
+ }
+ Grade {
+  channels {none none none depth3split.Focus}
+  name Grade1
+  xpos 180
+  ypos -280
+ }
+ Blur {
+  channels {none none none depth3split.Focus}
+  name Blur1
+  xpos 180
+  ypos -232
+ }
+ Shuffle {
+  in depth3split
+  red blue
+  blue red
+  name Shuffle1
+  xpos 180
+  ypos -178
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos 180
+  ypos -58
+ }
+end_group
+ZDefocus2 {
+ z_channel depth3split.Focus
+ math direct
+ size 8
+ max_size {{size}}
+ legacy_resize_mode false
+ show_legacy_resize_mode false
+ name ZDefocus2
+ selected true
+ xpos 1170
+ ypos -6280
+ cached true
+}

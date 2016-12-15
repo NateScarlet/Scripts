@@ -1,0 +1,260 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot52
+ note_font 微软雅黑
+ selected true
+ xpos -336
+ ypos -6558
+}
+set N3fb25400 [stack 0]
+Dot {
+ name Dot53
+ note_font 微软雅黑
+ selected true
+ xpos -116
+ ypos -6558
+}
+Grade {
+ channels alpha
+ gamma 1000
+ name Grade4
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -6547
+}
+add_layer {Ground Ground.red Ground.green Ground.blue Ground.alpha}
+Unpremult {
+ channels Ground
+ name Unpremult3
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -6475
+}
+Premult {
+ channels alpha
+ alpha Ground.alpha
+ invert true
+ name Premult7
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -6427
+}
+add_layer {Tree Tree.red Tree.green Tree.blue Tree.alpha}
+Unpremult {
+ channels Tree
+ name Unpremult1
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -6379
+}
+Premult {
+ channels alpha
+ alpha Tree.alpha
+ invert true
+ name Premult9
+ note_font 微软雅黑
+ selected true
+ xpos -150
+ ypos -6331
+}
+push $N3fb25400
+Group {
+ name DepthFix2
+ tile_color 0x823a7dff
+ label "\[knob_default \[class this].maxZ 1]\n"
+ selected true
+ xpos -260
+ ypos -6394
+ addUserKnob {20 tab1 l DepthFix}
+ addUserKnob {26 text1 l v2.5}
+ addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
+ addUserKnob {7 size l "fix size" R 0 10}
+ size 10
+ addUserKnob {4 math l "math conversion" M {none "RedShift -> Nuke" "Nuke -> RedShift" "" ""}}
+ addUserKnob {7 minZ l min}
+ addUserKnob {7 maxZ l max}
+ maxZ 1
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 510
+  ypos -898
+ }
+ Dot {
+  name Dot6
+  xpos 544
+  ypos -846
+ }
+set N8f1c8000 [stack 0]
+ Dot {
+  name Dot5
+  xpos 764
+  ypos -774
+ }
+ Dot {
+  name Dot4
+  label Nuke
+  xpos 764
+  ypos -462
+ }
+push $N8f1c8000
+ Dot {
+  name Dot3
+  xpos 544
+  ypos -750
+ }
+set Nc8f7f000 [stack 0]
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -750
+ }
+ Dilate {
+  channels depth
+  size {{-width*parent.size/100}}
+  name Dilate1
+  xpos 620
+  ypos -736
+ }
+ Dot {
+  name Dot11
+  note_font 微软雅黑
+  xpos 654
+  ypos -630
+ }
+push $Nc8f7f000
+ MergeExpression {
+  inputs 2
+  channel0 depth
+  expr0 (a<1)?Az:Bz
+  name MergeExpression1
+  xpos 510
+  ypos -634
+ }
+ Reformat {
+  type "to box"
+  box_width {{input.width}}
+  box_height {{input.height}}
+  resize none
+  center false
+  name Reformat1
+  note_font 微软雅黑
+  xpos 510
+  ypos -611
+ }
+ Expression {
+  channel0 depth
+  expr0 (a==0)?1:z
+  name Expression1
+  xpos 510
+  ypos -538
+ }
+ Dot {
+  name Dot2
+  label RedShift
+  xpos 544
+  ypos -462
+ }
+ Switch {
+  inputs 2
+  which {{parent.for}}
+  name Switch1
+  label Renderer
+  xpos 510
+  ypos -352
+ }
+ Dot {
+  name Dot9
+  xpos 544
+  ypos -294
+ }
+set N40d7c400 [stack 0]
+ Dot {
+  name Dot10
+  xpos 654
+  ypos -294
+ }
+set N40d7c000 [stack 0]
+ Dot {
+  name Dot15
+  xpos 764
+  ypos -294
+ }
+ Expression {
+  channel0 depth
+  expr0 (z==0)?99999:1/z*0.0001
+  name Expression3
+  label Depth:NukeToRedshift
+  xpos 730
+  ypos -256
+ }
+ Dot {
+  name Dot12
+  label NukeToRedShift
+  xpos 764
+  ypos -198
+ }
+push $N40d7c000
+ Expression {
+  channel0 depth
+  expr0 (z==0)?0:1/(z*10000)
+  name Expression2
+  label Depth:RedshiftToNuke
+  xpos 620
+  ypos -256
+ }
+ Dot {
+  name Dot8
+  label RedShiftToNuke
+  xpos 654
+  ypos -198
+ }
+push $N40d7c400
+ Dot {
+  name Dot7
+  label none
+  xpos 544
+  ypos -198
+ }
+ Switch {
+  inputs 3
+  which {{parent.math}}
+  name Switch2
+  label math
+  xpos 510
+  ypos -136
+ }
+ Expression {
+  channel0 depth
+  expr0 (z<=parent.minZ)?parent.minZ:((z>parent.maxZ)?parent.maxZ:z)
+  channel1 none
+  name Expression4
+  note_font 微软雅黑
+  xpos 510
+  ypos -83
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -10
+ }
+end_group
+push $N3fb25400
+Merge2 {
+ inputs 2+1
+ operation copy
+ Achannels depth
+ Bchannels {{{Achannels}}}
+ output {{{Achannels}}}
+ name Merge3
+ selected true
+ xpos -370
+ ypos -6328
+}
