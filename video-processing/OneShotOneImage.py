@@ -13,7 +13,7 @@ def mtime(x):
 	return os.stat(imageDir + x);
 
 list = os.listdir(imageDir);
-list.sort(key=mtime);
+list.sort(key=mtime, reverse=True);
 listB = [];
 for i in list:
     listB.append(i.split('.')[0]);
