@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# 同镜中只保留最新的单帧v0.2
+# 同镜中只保留最新的单帧v0.3
 # 将文件夹拖到此脚本上来使用
 
 import os;
@@ -10,10 +10,10 @@ argv1 = sys.argv[1];
 imageDir = argv1.strip('"') + '\\';
 
 def mtime(x):
-	return os.stat(imageDir + x);
+	return os.stat(imageDir + x).st_mtime;
 
 list = os.listdir(imageDir);
-list.sort(key=mtime, reverse=True);
+list.sort(key=mtime, reverse=False);
 listB = [];
 for i in list:
     listB.append(i.split('.')[0]);
