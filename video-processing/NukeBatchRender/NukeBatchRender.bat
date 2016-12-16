@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.6
+TITLE Nuke批渲染v1.71
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -123,7 +123,7 @@ FOR %%i in ("%~dp0\*.nk") do (
         IF  /I "%isLowPriority%" EQU "TRUE" (
             ECHO --低优先级
             ECHO.
-            %NUKE% -x -p --cont --priority low "%%~i" 2>>%RenderLog%
+            %NUKE% -x -p -c 8G --cont --priority low "%%~i" 2>>%RenderLog%
         ) ELSE (
             %NUKE% -x -p --cont "%%~i" 2>>%RenderLog%
         )
@@ -142,7 +142,7 @@ FOR %%i in ("%~dp0\*.nk") do (
         IF  /I "%isLowPriority%" EQU "TRUE" (
             ECHO --低优先级
             ECHO.
-            %NUKE% -x -f --cont --priority low "%%~i" 2>>%RenderLog%
+            %NUKE% -x -f -c 8G --cont --priority low "%%~i" 2>>%RenderLog%
         ) ELSE (
             %NUKE% -x -f --cont "%%~i" 2>>%RenderLog%
         )

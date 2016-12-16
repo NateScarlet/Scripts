@@ -1,0 +1,136 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Tracker4 {
+tracks { { 1 31 1 } 
+{ { 5 1 20 enable e 1 } 
+{ 3 1 75 name name 1 } 
+{ 2 1 58 track_x track_x 1 } 
+{ 2 1 58 track_y track_y 1 } 
+{ 2 1 63 offset_x offset_x 1 } 
+{ 2 1 63 offset_y offset_y 1 } 
+{ 4 1 27 T T 1 } 
+{ 4 1 27 R R 1 } 
+{ 4 1 27 S S 1 } 
+{ 2 0 45 error error 1 } 
+{ 1 1 0 error_min error_min 1 } 
+{ 1 1 0 error_max error_max 1 } 
+{ 1 1 0 pattern_x pattern_x 1 } 
+{ 1 1 0 pattern_y pattern_y 1 } 
+{ 1 1 0 pattern_r pattern_r 1 } 
+{ 1 1 0 pattern_t pattern_t 1 } 
+{ 1 1 0 search_x search_x 1 } 
+{ 1 1 0 search_y search_y 1 } 
+{ 1 1 0 search_r search_r 1 } 
+{ 1 1 0 search_t search_t 1 } 
+{ 2 1 0 key_track key_track 1 } 
+{ 2 1 0 key_search_x key_search_x 1 } 
+{ 2 1 0 key_search_y key_search_y 1 } 
+{ 2 1 0 key_search_r key_search_r 1 } 
+{ 2 1 0 key_search_t key_search_t 1 } 
+{ 2 1 0 key_track_x key_track_x 1 } 
+{ 2 1 0 key_track_y key_track_y 1 } 
+{ 2 1 0 key_track_r key_track_r 1 } 
+{ 2 1 0 key_track_t key_track_t 1 } 
+{ 2 1 0 key_centre_offset_x key_centre_offset_x 1 } 
+{ 2 1 0 key_centre_offset_y key_centre_offset_y 1 } 
+} 
+{ 
+ { {curve K x1 1} "track 1" {curve x1 1220 1084.800049 1046.400024 1032 1023.599976 1019.200012 1014.400024 1013.599976 1011.599976 1011.599976 1010 1010 1010 1010 1010 x17 1010.799988 x25 1011 x57 1010 x72 1010.119995} {curve x1 330 673.2000122 756.7999878 790.4000244 804 804.7999878 803.2000122 798.4000244 790.4000244 782.4000244 771.5999756 761.5999756 750 739.2000122 728.4000244 x17 708.4000244 x25 662.8800049 x57 625.5999756 x72 623.5599976} {curve K x1 0} {curve K x1 0} 1 0 0 {curve x1 0 0} 0 0 -30 -30 30 30 -21 -21 21 21 {curve} {curve x1 1168 1032} {curve x1 280 624} {curve x1 1268 1132} {curve x1 378 722} {curve x1 1190 1054} {curve x1 300 644} {curve x1 1248 1112} {curve x1 358 702} {curve x1 29 29.80004883} {curve x1 29 28.20001221}  } 
+} 
+}
+
+cornerPinOptions "Transform (match-move, baked)"
+translate {{curve x1 0 -135.1999512 -173.5999756 -188 -196.4000244 -200.7999878 -205.5999756 -206.4000244 -208.4000244 -208.4000244 -210 -210 -210 -210 -210 x17 -209.2000122 x25 -209 x57 -210 x72 -209.8800049} {curve x1 0 343.2000122 426.7999878 460.4000244 474 474.7999878 473.2000122 468.4000244 460.4000244 452.4000244 441.5999756 431.5999756 420 409.2000122 398.4000244 x17 378.4000244 x25 332.8800049 x57 295.5999756 x72 293.5599976}}
+center {{curve x1 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 x17 1220 x25 1220 x57 1220 x72 1220} {curve x1 330 330 330 330 330 330 330 330 330 330 330 330 330 330 330 x17 330 x25 330 x57 330 x72 330}}
+selected_tracks 0
+name Tracker1
+selected true
+xpos 510
+ypos -7282
+}
+Blur {
+size {{curve x1 30 x4 10}}
+filter quadratic
+mix 0.5
+name Blur2
+selected true
+xpos 510
+ypos -7240
+}
+Transform {
+translate {{"(!invert) ? Tracker1.translate.x : -Tracker1.translate.x" i} {"(!invert) ? Tracker1.translate.y : -Tracker1.translate.y" i}}
+rotate {{"(!invert) ? Tracker1.rotate : -Tracker1.rotate" i}}
+scale {{"(!invert) ? Tracker1.scale.w : 1/Tracker1.scale.w"}}
+center {{"(!invert) ? Tracker1.center.x : Tracker1.center.x + Tracker1.translate.x" i} {"(!invert) ? Tracker1.center.y : Tracker1.center.y + Tracker1.translate.y" i}}
+filter {{Tracker1.filter i}}
+name Transform_Stabilize1
+selected true
+xpos 510
+ypos -7186
+addUserKnob {20 User}
+addUserKnob {4 transform M {stabilize match-move}}
+addUserKnob {4 src_transform l "src transform" M {none stabilize "stabilize 1-pt" match-move "match-move 1-pt" "remove jitter"}}
+src_transform {{Tracker1.transform i}}
+addUserKnob {6 invert -STARTLINE}
+invert {{"\[python -execlocal srcTransformKnob\\ =\\ nuke.thisNode()\\\['src\\_transform'\\]\\nsrcTransformName\\ =\\ srcTransformKnob.enumName(int(srcTransformKnob.getValue()))\\ndestTransform\\ =\\ nuke.thisNode()\\\['transform'\\].getValue()\\nsrcTransformIsStabilize\\ =\\ (srcTransformName.find('stabilize')==0\\ or\\ srcTransformName.find('remove\\ jitter')==0)\\ninvertDueToDestStabilize\\ =\\ (destTransform\\ ==\\ 0\\ and\\ not\\ srcTransformIsStabilize)\\ninvertDueToSrcStabilize\\ =\\ (destTransform\\ ==\\ 1\\ and\\ srcTransformIsStabilize)\\nret\\ =\\ (invertDueToDestStabilize\\ or\\ invertDueToSrcStabilize)]" i}}
+}
+Retime {
+input.last 72
+output.last 288
+speed 0.25
+time ""
+name Retime1
+selected true
+xpos 510
+ypos -7162
+}
+Transform {
+translate {{curve 1155 95.03905964 x4 0 x8 -135.1999512 -173.5999756 -188 -196.4000244 -200.7999878 -205.5999756 -206.4000244 -208.4000244 -208.4000244 -210 -210 -210 -210 -210 x68 -209.2000122 x100 -209 x228 -210 x288 -209.8800049} {curve -3190 -241.3593736 x4 0 x8 343.2000122 426.7999878 460.4000244 474 474.7999878 473.2000122 468.4000244 460.4000244 452.4000244 441.5999756 431.5999756 420 409.2000122 398.4000244 x68 378.4000244 x100 332.8800049 x228 295.5999756 x288 293.5599976}}
+scale {{curve 1.868047237 C 1.496474028 S x4 1 x5 1.983866692 s0 x8 1 x9 1.41 s0 x12 1 s0}}
+center {{curve 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 1220 x17 1220 x25 1220 x57 1220 x72 1220} {curve 330 330 x4 330 x8 330 330 330 330 330 330 330 330 330 330 330 330 330 330 x68 330 x100 330 x228 330 x288 330}}
+name Transform_MatchMove1
+selected true
+xpos 510
+ypos -7138
+}
+Crop {
+box {0 0 1920 1080}
+name Crop4
+selected true
+xpos 510
+ypos -7114
+}
+TimeEcho {
+framesbehind 20
+frmaesfade 20
+name TimeEcho1
+selected true
+xpos 510
+ypos -7090
+}
+Retime {
+input.last 288
+output.last 72
+speed 4
+time ""
+name Retime2
+selected true
+xpos 510
+ypos -7066
+}
+Dot {
+name Dot32
+selected true
+xpos 544
+ypos -7038
+}
+push 0
+Merge2 {
+inputs 2
+mix 0.3
+name Merge9
+selected true
+xpos 290
+ypos -7042
+}
