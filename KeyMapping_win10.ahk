@@ -1,8 +1,24 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+﻿; #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
+Loop
+{
+	PrevWin := CurrentWin
+    WinGet, CurrentWin, ID, A
+	If (CurrentWin != PrevWin) {
+	    OnWinChange()
+	}
+}
+
+OnWinChange()
+{
+	WinWaitNotActive, ahk_exe NeptuniaReBirth2.exe
+	{
+        PostMessage, 0x06, 1, 0,
+	}
+}
 
 $#1:: 
 IfWinExist, ahk_exe firefox.exe
@@ -33,6 +49,19 @@ return
 
 $#f:: 
 Run, Everything
+return
+
+$#e:: 
+IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe
+{
+    Run, %Windir%\explorer.exe
+	Run, %Windir%\explorer.exe
+}
+else
+{
+	GroupAdd, G_EXLPORER, ahk_class CabinetWClass ahk_exe explorer.exe
+	GroupActivate, G_EXPLORER
+}
 return
 
 $^#e:: 
