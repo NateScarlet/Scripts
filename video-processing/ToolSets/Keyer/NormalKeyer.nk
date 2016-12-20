@@ -1,14 +1,6 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
-Dot {
- name Dot12
- note_font 微软雅黑
- selected true
- xpos 1094
- ypos -4048
-}
-set Nb7b1c800 [stack 0]
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
 Group {
  name NormalKeyer1
@@ -188,14 +180,3 @@ push $N3596a000
   ypos -202
  }
 end_group
-push $Nb7b1c800
-Grade {
- inputs 1+1
- gamma {2.200000286 2.900000334 3.600000381 2.900000095}
- maskChannelMask rgba.red
- name Grade2
- label NormalLight
- selected true
- xpos 1056
- ypos -3949
-}

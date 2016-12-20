@@ -1,0 +1,521 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode3
+ tile_color 0x71c67100
+ label "MP_EP04_02a_sc083b v0.3"
+ note_font_size 42
+ selected true
+ xpos 1347
+ ypos -7744
+ bdwidth 827
+ bdheight 1275
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/MP/EP04/02a/SNJYW_EP04_02a_sc083b.psd
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ origset true
+ name Read7
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7675
+ postage_stamp false
+}
+set N9a34400 [stack 0]
+add_layer {_____7 _____7.red _____7.green _____7.blue _____7.alpha}
+Shuffle {
+ in _____7
+ name Shuffle12
+ label _____7
+ note_font 微软雅黑
+ selected true
+ xpos 2050
+ ypos -7461
+}
+Premult {
+ name Premult12
+ note_font 微软雅黑
+ selected true
+ xpos 2050
+ ypos -7429
+}
+push $N9a34400
+add_layer {_____5 _____5.red _____5.green _____5.blue _____5.alpha}
+Shuffle {
+ in _____5
+ name Shuffle11
+ label _____5
+ note_font 微软雅黑
+ selected true
+ xpos 1940
+ ypos -7461
+}
+Premult {
+ name Premult11
+ note_font 微软雅黑
+ selected true
+ xpos 1940
+ ypos -7429
+}
+push $N9a34400
+add_layer {_____8 _____8.red _____8.green _____8.blue _____8.alpha}
+Shuffle {
+ in _____8
+ name Shuffle9
+ label _____8
+ note_font 微软雅黑
+ selected true
+ xpos 1830
+ ypos -7461
+}
+Premult {
+ name Premult5
+ note_font 微软雅黑
+ selected true
+ xpos 1830
+ ypos -7405
+}
+push $N9a34400
+add_layer {_____10 _____10.red _____10.green _____10.blue _____10.alpha}
+Shuffle {
+ in _____10
+ name Shuffle5
+ label _____10
+ note_font 微软雅黑
+ selected true
+ xpos 1720
+ ypos -7470
+}
+Premult {
+ name Premult4
+ note_font 微软雅黑
+ selected true
+ xpos 1720
+ ypos -7414
+}
+Group {
+ name ValueGamma5
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "(\[value alpha])\n\[knob_default gain 1]\n\[knob_default gamma 1]"
+ selected true
+ xpos 1720
+ ypos -7386
+ addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+ addUserKnob {26 text1 l v0.1}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 lift}
+ addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+ gain 0.3
+ addUserKnob {7 gamma R 0 4}
+ gamma 5
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
+ addUserKnob {41 alpha l mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T Grade1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+ addUserKnob {41 mix T Grade1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -634
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -582
+ }
+set N795b9c00 [stack 0]
+ Dot {
+  name Dot2
+  xpos 654
+  ypos -582
+ }
+ Input {
+  inputs 0
+  name InputMask
+  xpos 730
+  ypos -466
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input parent 1]]"}}
+  name Switch1
+  xpos 620
+  ypos -466
+ }
+set N36215180 [stack 0]
+ Premult {
+  alpha none
+  name MaskChannelChoose
+  xpos 620
+  ypos -440
+ }
+ Dot {
+  name Dot3
+  xpos 654
+  ypos -366
+ }
+push $N36215180
+push $N795b9c00
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 510
+  ypos -514
+ }
+ Grade {
+  inputs 1+1
+  channels {none none none rgba.blue}
+  black {{parent.lift}}
+  white {{parent.gain}}
+  gamma {{parent.gamma}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  name Grade1
+  xpos 510
+  ypos -472
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 510
+  ypos -418
+ }
+ Saturation {
+  inputs 1+1
+  channels {{{parent.Colorspace1.channels}}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  mix {{parent.Grade1.mix}}
+  name Saturation1
+  xpos 510
+  ypos -370
+ }
+ Grade {
+  white 0.1
+  maskChannelInput {{{parent.Grade1.maskChannelMask}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  name Grade2
+  xpos 510
+  ypos -333
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -271
+ }
+end_group
+Multiply {
+ value 0.5
+ name Multiply5
+ note_font 微软雅黑
+ selected true
+ xpos 1720
+ ypos -7348
+}
+push 0
+push $N9a34400
+add_layer {_____11 _____11.red _____11.green _____11.blue _____11.alpha}
+Shuffle {
+ in _____11
+ name Shuffle10
+ label _____11
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -7461
+}
+Premult {
+ name Premult10
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -7429
+}
+push $N9a34400
+add_layer {_____3_____ _____3_____.red _____3_____.green _____3_____.blue _____3_____.alpha}
+Shuffle {
+ in _____3_____
+ name Shuffle4
+ label _____3_____
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7461
+}
+Premult {
+ name Premult3
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7429
+}
+Merge2 {
+ inputs 2
+ name Merge14
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7333
+}
+Multiply {
+ value 0
+ name Multiply4
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7293
+}
+push 0
+Merge2 {
+ inputs 6+1
+ name Merge12
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7189
+}
+PostageStamp {
+ name PostageStamp4
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7165
+ postage_stamp true
+}
+Transform {
+ translate {44 -358}
+ center {960 540}
+ name Transform1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7093
+}
+Unpremult {
+ name Unpremult9
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -7045
+}
+Group {
+ name ValueGamma7
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "(\[value alpha])\n\[knob_default gain 1]\n\[knob_default gamma 1]"
+ selected true
+ xpos 1500
+ ypos -7002
+ addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
+ addUserKnob {26 text1 l v0.1}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 lift}
+ addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
+ gain 0.66
+ addUserKnob {7 gamma R 0 4}
+ gamma 0.76
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {41 white l gain T Grade2.white}
+ addUserKnob {41 alpha l mask T MaskChannelChoose.alpha}
+ addUserKnob {41 inject -STARTLINE T Grade1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Grade1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Grade1.fringe}
+ addUserKnob {41 mix T Grade1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -634
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -582
+ }
+set Ncf5b8400 [stack 0]
+ Dot {
+  name Dot2
+  xpos 654
+  ypos -582
+ }
+ Input {
+  inputs 0
+  name InputMask
+  xpos 730
+  ypos -466
+  number 1
+ }
+ Switch {
+  inputs 2
+  which {{"\[string is digit \[input parent 1]]"}}
+  name Switch1
+  xpos 620
+  ypos -466
+ }
+set N3107e880 [stack 0]
+ Premult {
+  alpha none
+  name MaskChannelChoose
+  xpos 620
+  ypos -440
+ }
+ Dot {
+  name Dot3
+  xpos 654
+  ypos -366
+ }
+push $N3107e880
+push $Ncf5b8400
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 510
+  ypos -514
+ }
+ Grade {
+  inputs 1+1
+  channels {none none none rgba.blue}
+  black {{parent.lift}}
+  white {{parent.gain}}
+  gamma {{parent.gamma}}
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  name Grade1
+  xpos 510
+  ypos -472
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 510
+  ypos -418
+ }
+ Saturation {
+  inputs 1+1
+  channels {{{parent.Colorspace1.channels}}}
+  saturation 0.91
+  maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
+  maskChannelInput {{{parent.Grade1.maskChannelInput}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  mix {{parent.Grade1.mix}}
+  name Saturation1
+  xpos 510
+  ypos -370
+ }
+ Grade {
+  maskChannelInput {{{parent.Grade1.maskChannelMask}}}
+  inject {{parent.Grade1.inject}}
+  invert_mask {{parent.Grade1.invert_mask}}
+  fringe {{parent.Grade1.fringe}}
+  name Grade2
+  xpos 510
+  ypos -333
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -271
+ }
+end_group
+ColorCorrect {
+ saturation 0.8
+ gain {0.2352000177 0.6076000333 0.9800000191 1}
+ name ColorCorrect9
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -6925
+}
+ColorCorrect {
+ saturation 0.8
+ gain {0.7242379189 0.6642379761 1.00423789 1}
+ name ColorCorrect3
+ label "\[python \{str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Cold')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Cold'), nuke.thisNode())\}]\n\[knob xpos \[value this.input0.xpos]]\n\[knob ypos \[expr \[value this.input0.ypos]+100]]"
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -6845
+}
+Grade {
+ add {-0.001166667207 0.002916666446 0.007000000216 0.009999999776}
+ name Grade2
+ label fog
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -6813
+}
+Premult {
+ name Premult13
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -6757
+}
+Defocus {
+ defocus 6
+ name Defocus1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -6717
+}
+Dot {
+ name Dot21
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -6560
+}
+push 0
+Dot {
+ name Dot22
+ note_font 微软雅黑
+ selected true
+ xpos 1204
+ ypos -7496
+}
+set Nd3f18000 [stack 0]
+Dot {
+ name Dot23
+ note_font 微软雅黑
+ selected true
+ xpos 1424
+ ypos -7496
+}
+Merge2 {
+ inputs 2
+ name Merge13
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos -6565
+}
+push $Nd3f18000
+Switch {
+ inputs 2
+ which 1
+ name Switch9
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6565
+}

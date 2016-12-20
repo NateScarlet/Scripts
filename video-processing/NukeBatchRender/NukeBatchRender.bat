@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.71
+TITLE Nuke批渲染v1.8
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -165,6 +165,9 @@ FOR /F "demils=" %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "Rend
     DEL %%i
 )
 EXPLORER %RenderLog%
+IF EXIST %~dp0afterRender.bat% (
+    START /WAIT POWERSHELL "& '%~dp0afterRender.bat%'"
+)
 GOTO:EOF
 REM
 :RetryRender

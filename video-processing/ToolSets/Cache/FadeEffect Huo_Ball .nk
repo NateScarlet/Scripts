@@ -1,0 +1,378 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode3
+ tile_color 0x8e8e3800
+ label "FadeEffect Huo_Ball "
+ note_font_size 42
+ selected true
+ xpos 1048
+ ypos -2098
+ bdwidth 764
+ bdheight 1364
+}
+push $cut_paste_input
+Dot {
+ name Dot65
+ note_font 微软雅黑
+ selected true
+ xpos 764
+ ypos -1854
+}
+set N37e3c400 [stack 0]
+Dot {
+ name Dot63
+ note_font 微软雅黑
+ selected true
+ xpos 1314
+ ypos -1854
+}
+set N37e3c000 [stack 0]
+Dot {
+ name Dot64
+ note_font 微软雅黑
+ selected true
+ xpos 1424
+ ypos -1854
+}
+set N37e73c00 [stack 0]
+Dot {
+ name Dot66
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -1854
+}
+Dot {
+ name Dot67
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -990
+}
+push $N37e73c00
+add_layer {Ball_Huo Ball_Huo.red Ball_Huo.green Ball_Huo.blue Ball_Huo.alpha}
+Premult {
+ channels rgba
+ alpha Ball_Huo.alpha
+ name Premult3
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos -1819
+}
+Write {
+ channels rgba
+ file Z:/SNJYW/Render/EP04/10/SNJYW_EP04_10_sc196/proxy/EP04_10_sc196_CH_A_Ball/EP04_10_sc196_CH_A_Ball.%04d.dpx
+ file_type dpx
+ reading true
+ checkHashOnRead false
+ on_error checkerboard
+ version 16
+ beforeRender "file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\nabsolutePath = os.path.splitdrive(file)\[0];\nproject_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\npathHead = '' if absolutePath else project_directory+'/';\ntarget = pathHead+os.path.dirname(file)\nif os.path.exists(target):\n    pass;\nelse:\n    os.makedirs(target);\n"
+ name Write1
+ selected true
+ xpos 1390
+ ypos -1726
+ postage_stamp true
+ addUserKnob {20 caravr l CaraVR}
+ addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+ addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
+}
+Retime {
+ input.first 136
+ input.last 220
+ output.first 136
+ output.last 220
+ before black
+ after black
+ time ""
+ name Retime3
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos -1619
+}
+Dot {
+ name Dot58
+ note_font 微软雅黑
+ selected true
+ xpos 1424
+ ypos -1566
+}
+set N37e72400 [stack 0]
+Dot {
+ name Dot59
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -1566
+}
+GodRays {
+ channels rgba
+ translate {{curve x181 0 x184 -194 x188 -386 x198 -464 x207 -458} {curve x181 0 x184 -18 x188 -70 x198 -106 x207 -124}}
+ scale {{curve x184 0.7 x188 0.3 x198 0.1}}
+ center {{parent.Transform_Stabilize2.center} {parent.Transform_Stabilize2.center}}
+ to_color 0
+ gamma 0.5
+ max true
+ name GodRays1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -1115
+}
+Blur {
+ channels rgba
+ size 11
+ mix 0.695
+ name Blur2
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -1067
+}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front CH_A.notSSS CH_A.Front}
+Multiply {
+ inputs 1+1
+ channels rgba
+ value 0.2
+ maskChannelMask CH_A.alpha
+ name Multiply12
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -995
+}
+Dot {
+ name Dot61
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -942
+}
+push $N37e72400
+Multiply {
+ value {{curve x175 1 x179 0}}
+ name Multiply11
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos -1555
+}
+Tracker4 {
+ tracks { { 1 31 1 } 
+{ { 5 1 20 enable e 1 } 
+{ 3 1 75 name name 1 } 
+{ 2 1 58 track_x track_x 1 } 
+{ 2 1 58 track_y track_y 1 } 
+{ 2 1 63 offset_x offset_x 1 } 
+{ 2 1 63 offset_y offset_y 1 } 
+{ 4 1 27 T T 1 } 
+{ 4 1 27 R R 1 } 
+{ 4 1 27 S S 1 } 
+{ 2 0 45 error error 1 } 
+{ 1 1 0 error_min error_min 1 } 
+{ 1 1 0 error_max error_max 1 } 
+{ 1 1 0 pattern_x pattern_x 1 } 
+{ 1 1 0 pattern_y pattern_y 1 } 
+{ 1 1 0 pattern_r pattern_r 1 } 
+{ 1 1 0 pattern_t pattern_t 1 } 
+{ 1 1 0 search_x search_x 1 } 
+{ 1 1 0 search_y search_y 1 } 
+{ 1 1 0 search_r search_r 1 } 
+{ 1 1 0 search_t search_t 1 } 
+{ 2 1 0 key_track key_track 1 } 
+{ 2 1 0 key_search_x key_search_x 1 } 
+{ 2 1 0 key_search_y key_search_y 1 } 
+{ 2 1 0 key_search_r key_search_r 1 } 
+{ 2 1 0 key_search_t key_search_t 1 } 
+{ 2 1 0 key_track_x key_track_x 1 } 
+{ 2 1 0 key_track_y key_track_y 1 } 
+{ 2 1 0 key_track_r key_track_r 1 } 
+{ 2 1 0 key_track_t key_track_t 1 } 
+{ 2 1 0 key_centre_offset_x key_centre_offset_x 1 } 
+{ 2 1 0 key_centre_offset_y key_centre_offset_y 1 } 
+} 
+{ 
+ { {curve K x187 0 x210 1} "track 1" {curve x155 1922.5 1737 1546.5 1366.400024 1204.199951 1110 1063 x163 1007.200012 967.4000244 945.7999878 x171 921 x173 903 x174 903.5 929 1082.800049 1297.5 1441.5 1636 1746 1899 1732 1518 1324 1199 1128 1132 1136 1141 1145 x192 1153.60582 x193 1158 x197 1176 x205 1204 x220 1235} {curve x155 84.5 253 473 711 918.7999878 1014 1030 x163 1043 1054 1058.900024 x171 1053.5 x173 1051 x174 1035 1004 882.7999878 725.5 676 717 749 765 801 784 708 666 652 652 652 652 652 x192 651.7037037 x205 644 x220 640} {curve} {curve} 1 0 0 {curve x155 0 0 0 0 0 0 0 x163 0 0 0 x171 0 x173 0 x174 0 0 0 0 0 0 0 0 0 0 0 0 0 0 x189 0 x190 0 x192 0 x205 0 x220 0} 0 0 -30 -30 30 30 -108.894 -111.796 108.894 111.796 {curve} {curve x136 229 x155 1712 x156 1528 1336 1148 986 1059 1012 x163 956 750 895 x171 870 x173 852 x174 686 878 866 1247 1378 1583 1617 1702 1535 1271 1134 1143 1005 1075 x189 1000 x190 1088 x192 1015 x205 1060 x210 968 x220 1184} {curve x136 357 x155 -106 x156 62 282 520 728 963 979 x163 992 863 1008 x171 1003 x173 1000 x174 844 953 692 675 644 664 643 547 597 529 522 613 509 597 x189 509 x190 601 x192 510 x205 502 x210 627 x220 589} {curve x136 330 x155 2131 x156 1946 1755 1583 1421 1160 1113 x163 1057 1184 996 x171 971 x173 953 x174 1121 979 1300 1348 1505 1684 1860 2095 1928 1762 1509 1244 1290 1176 x189 1285 x190 1189 x192 1292 x205 1339 x210 1387 x220 1285} {curve x136 458 x155 275 x156 443 663 901 1109 1064 1080 x163 1093 1244 1109 x171 1104 x173 1101 x174 1225 1054 1073 776 708 763 864 954 1004 1024 897 712 794 696 x189 794 x190 702 x192 793 x205 785 x210 1008 x220 690} {curve x136 250 x155 1900 x156 1715 1524 1336 1174 1080 1033 x163 977 937 916 x171 891 x173 873 x174 874 899 1053 1268 1412 1604 1709 1869 1702 1487 1292 1164 1126 1096 x189 1121 x190 1109 x192 1124 x205 1170 x210 1156 x220 1205} {curve x136 378 x155 56 x156 224 444 682 890 984 1000 x163 1013 1025 1029 x171 1024 x173 1021 x174 1006 974 854 696 676 685 724 721 771 747 680 634 623 618 x189 623 x190 622 x192 622 x205 614 x210 789 x220 610} {curve x136 309 x155 1943 x156 1758 1567 1395 1233 1139 1092 x163 1036 996 975 x171 950 x173 932 x174 933 958 1112 1327 1471 1663 1768 1928 1761 1546 1351 1223 1169 1155 x189 1164 x190 1168 x192 1183 x205 1229 x210 1199 x220 1264} {curve x136 437 x155 113 x156 281 501 739 947 1043 1059 x163 1072 1082 1088 x171 1083 x173 1080 x174 1063 1033 911 755 676 742 783 780 830 806 739 691 680 675 x189 680 x190 681 x192 681 x205 673 x210 846 x220 669} {curve x136 29.5 x155 22 x156 21.5 22 29.90002441 29.69995117 29.5 29.5 x163 29.70001221 29.90002441 29.29998779 x171 29.5 x173 29.5 x174 29 29.5 29.30004883 29 29 29.5 29.5 29.5 29.5 29.5 29.5 29.5 21.5 29.5 x189 21.5 x190 29.5 x192 29.1058197 x205 29.5 x210 21.95910645 x220 29.5} {curve x136 29.5 x155 28 x156 28.5 28.5 28.5 28.29998779 29.5 29.5 x163 29.5 28.5 29.40002441 x171 29 x173 29.5 x174 28.5 29.5 28.29998779 29 -0.5 28.09997559 30 29.5 29.5 29.5 29.5 28.5 28.5 29 x189 28.5 x190 29.5 x192 29.20370293 x205 29.5 x210 28.77636719 x220 29.5}  } 
+} 
+}
+
+cornerPinOptions "Transform (match-move, baked)"
+zoom_window_size 7
+zoom_window_wh_size {150 148}
+Auto-Tracking 1
+"Keyframe Tracking" 1
+keyframe_display 3
+translate {{curve x155 0 -185.5 -376 -556.0999756 -718.3000488 -812.5 -859.5 x163 -915.2999878 -955.0999756 -976.7000122 x171 -1001.5 x173 -1019.5 x174 -1019 -993.5 -839.6999512 -625 -481 -286.5 -176.5 -23.5 -190.5 -404.5 -598.5 -723.5 -794.5 -790.5 -786.5 -781.5 -777.5 x192 -768.894165 x193 -764.5 x197 -746.5 x205 -718.5 x220 -687.5} {curve x155 0 168.5 388.5 626.5 834.2999878 929.5 945.5 x163 958.5 969.5 974.4000244 x171 969 x173 966.5 x174 950.5 919.5 798.2999878 641 591.5 632.5 664.5 680.5 716.5 699.5 623.5 581.5 567.5 567.5 567.5 567.5 567.5 x192 567.2036743 x193 566.7249756 x197 564.3146362 x205 559.5 x220 555.5}}
+center {{curve x155 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 x163 1922.5 1922.5 1922.5 x171 1922.5 x173 1922.5 x174 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 x192 1922.5 x193 1922.5 x197 1922.5 x205 1922.5 x220 1922.5} {curve x155 84.5 84.5 84.5 84.5 84.5 84.5 84.5 x163 84.5 84.5 84.5 x171 84.5 x173 84.5 x174 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 x192 84.5 x193 84.5 x197 84.5 x205 84.5 x220 84.5}}
+selected_tracks 0
+name Tracker2
+selected true
+xpos 1390
+ypos -1498
+}
+Crop {
+box {88 0 1920 1080}
+crop false
+name Crop4
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -1475
+}
+BlackOutside {
+name BlackOutside1
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -1427
+}
+Transform {
+translate {{"(!invert) ? Tracker2.translate.x : -Tracker2.translate.x"} {"(!invert) ? Tracker2.translate.y : -Tracker2.translate.y"}}
+rotate {{"(!invert) ? Tracker2.rotate : -Tracker2.rotate"}}
+center {{"(!invert) ? Tracker2.center.x : Tracker2.center.x + Tracker2.translate.x"} {"(!invert) ? Tracker2.center.y : Tracker2.center.y + Tracker2.translate.y"}}
+filter {{Tracker2.filter}}
+name Transform_Stabilize2
+selected true
+xpos 1390
+ypos -1378
+addUserKnob {20 User}
+addUserKnob {4 transform M {stabilize match-move}}
+addUserKnob {4 src_transform l "src transform" M {none stabilize "stabilize 1-pt" match-move "match-move 1-pt" "remove jitter"}}
+src_transform {{Tracker2.transform}}
+addUserKnob {6 invert -STARTLINE}
+invert {{"\[python -execlocal srcTransformKnob\\ =\\ nuke.thisNode()\\\['src\\_transform'\\]\\nsrcTransformName\\ =\\ srcTransformKnob.enumName(int(srcTransformKnob.getValue()))\\ndestTransform\\ =\\ nuke.thisNode()\\\['transform'\\].getValue()\\nsrcTransformIsStabilize\\ =\\ (srcTransformName.find('stabilize')==0\\ or\\ srcTransformName.find('remove\\ jitter')==0)\\ninvertDueToDestStabilize\\ =\\ (destTransform\\ ==\\ 0\\ and\\ not\\ srcTransformIsStabilize)\\ninvertDueToSrcStabilize\\ =\\ (destTransform\\ ==\\ 1\\ and\\ srcTransformIsStabilize)\\nret\\ =\\ (invertDueToDestStabilize\\ or\\ invertDueToSrcStabilize)]"}}
+}
+TimeWarp {
+lookup {{floor(curve) C x136 136 L x158 158 x159 157 160 160 160 160 160 x168 160 x169 160 175 x173 175 x174 175 175 x179 179 x180 179 181 181 183 C x220 220}}
+time ""
+name TimeWarp1
+label 修复遮挡
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -1315
+}
+Retime {
+input.first_lock true
+input.last 186
+output.last 744
+speed 0.25
+time ""
+name Retime4
+selected true
+xpos 1390
+ypos -1258
+}
+Transform {
+scale {{curve L x1 1 x5 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1.01728785 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 x620 0.85 x621 1 x624 0.86 x625 1 x629 1 1 1 1 1 1 1 1 1 1 1 1 x676 0.92 x677 1 x681 1 1 1 1 1 1 x704 1.18 x705 1 x708 1.2 x709 1 x712 1.2 x713 1 x716 1 x717 1 x720 2.2 x721 1 x725 1 x728 1.22 x729 1 x732 0.77 x733 1 x736 0.86 x737 1 x740 0.91 x741 1 x745 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 x880 1}}
+center {{parent.Transform_MatchMove3.center x880 0} {parent.Transform_MatchMove3.center x880 0}}
+name Transform1
+label scale
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -1219
+}
+Blur {
+size 10
+filter quadratic
+mix 0.5
+name Blur3
+selected true
+xpos 1390
+ypos -1168
+}
+Transform {
+translate {{curve x620 0 x624 -185.5 -376 -556.0999756 -718.3000488 -812.5 -859.5 x652 -915.2999878 -955.0999756 -976.7000122 x684 -1001.5 x692 -1019.5 x696 -1019 -993.5 -839.6999512 -625 -481 -286.5 -176.5 -23.5 -190.5 -404.5 -598.5 -723.5 -794.5 -790.5 -786.5 -781.5 -777.5 x768 -768.894165 x772 -764.5 x788 -746.5 x820 -718.5 x880 -687.5} {curve x620 0 x624 168.5 388.5 626.5 834.2999878 929.5 945.5 x652 958.5 969.5 974.4000244 x684 969 x692 966.5 x696 950.5 919.5 798.2999878 641 591.5 632.5 664.5 680.5 716.5 699.5 623.5 581.5 567.5 567.5 567.5 567.5 567.5 x768 567.2036743 x772 566.7249756 x788 564.3146362 x820 559.5 x880 555.5}}
+scale {1 1}
+center {{curve x620 1922.5 x624 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 x652 1922.5 1922.5 1922.5 x684 1922.5 x692 1922.5 x696 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 1922.5 x768 1922.5 x772 1922.5 x788 1922.5 x820 1922.5 x880 1922.5} {curve x620 84.5 x624 84.5 84.5 84.5 84.5 84.5 84.5 x652 84.5 84.5 84.5 x684 84.5 x692 84.5 x696 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 84.5 x768 84.5 x772 84.5 x788 84.5 x820 84.5 x880 84.5}}
+name Transform_MatchMove3
+selected true
+xpos 1390
+ypos -1114
+}
+Crop {
+box {792 0 1920 1080}
+name Crop1
+selected true
+xpos 1390
+ypos -1090
+}
+TimeEcho {
+framesbehind 20
+frmaesfade 20
+name TimeEcho4
+selected true
+xpos 1390
+ypos -1066
+}
+Retime {
+input.last 744
+output.last 186
+speed 4
+time ""
+name Retime5
+selected true
+xpos 1390
+ypos -1042
+}
+OFXcom.revisionfx.rsmb_v3 {
+menuTrackFrame "Previous Frame"
+menuDisplay "Source Blurred"
+MBAmount 0.5
+MBSensitivity 70
+valMBAmountFG1 0.5
+valMBSensitivityFG1 70
+menuFG1MatteChannel Alpha
+valFG1InvMatteShrink 0
+CustomData_DoNotEdit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+name RSMB3
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -1019
+}
+Dot {
+name Dot53
+selected true
+xpos 1424
+ypos -990
+}
+Merge2 {
+inputs 2
+name Merge19
+note_font 微软雅黑
+selected true
+xpos 1390
+ypos -947
+}
+push $N37e3c000
+Dot {
+name Dot60
+note_font 微软雅黑
+selected true
+xpos 1314
+ypos -990
+}
+Merge2 {
+inputs 2
+mix 0.3
+name Merge20
+selected true
+xpos 1280
+ypos -946
+}
+push $N37e3c400
+Switch {
+inputs 2
+which 1
+name Switch8
+note_font 微软雅黑
+selected true
+xpos 730
+ypos -947
+}
