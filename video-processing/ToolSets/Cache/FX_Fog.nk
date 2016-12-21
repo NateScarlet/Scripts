@@ -2,15 +2,15 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 BackdropNode {
  inputs 0
- name BackdropNode5
+ name BackdropNode6
  tile_color 0x8e8e3800
- label "FX_Fog v0.3"
+ label "FX_Fog v0.4"
  note_font_size 42
  selected true
- xpos -542
- ypos -5449
- bdwidth 589
- bdheight 2458
+ xpos -553
+ ypos -4656
+ bdwidth 602
+ bdheight 2584
 }
 Ramp {
  inputs 0
@@ -21,69 +21,69 @@ Ramp {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -3563
+ ypos -2771
 }
 Read {
  inputs 0
- file Z:/SNJYW/FX/Final/EP04/04/EP04_04_sc108/EP04_04_sc108_fx_004_a/EP04_04_sc108_fx_004_a.%04d.iff
+ file Z:/SNJYW/FX/Final/EP04/04/EP04_04_sc106/images/qian/SNJYW_EP04_04_sc106_FX004_a.%04d.iff
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 438
- last 484
- origfirst 438
- origlast 484
+ first 80
+ last 141
+ origfirst 80
+ origlast 141
  origset true
- name Read3
+ name Read5
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -5047
+ ypos -4423
 }
 Dot {
  name Dot73
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -4782
+ ypos -4158
 }
 Read {
  inputs 0
- file Z:/SNJYW/FX/Final/EP04/04/EP04_04_sc108/EP04_04_sc108_fx_004_b/EP04_04_sc108_fx_004_b.%04d.iff
+ file Z:/SNJYW/FX/Final/EP04/04/EP04_04_sc106/images/hou/SNJYW_EP04_04_sc106_FX004_b.%04d.iff
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 438
- last 484
- origfirst 438
- origlast 484
+ first 80
+ last 141
+ origfirst 80
+ origlast 141
  origset true
- name Read4
+ name Read6
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -5287
+ ypos -4591
 }
 push $cut_paste_input
 Dot {
  name Dot55
  selected true
  xpos -666
- ypos -5094
+ ypos -4470
 }
-set N6df8f000 [stack 0]
+set N30e78c00 [stack 0]
 Dot {
  name Dot56
  note_font 微软雅黑
  selected true
  xpos -446
- ypos -5094
+ ypos -4470
 }
 Dot {
  name Dot57
  selected true
  xpos -446
- ypos -5070
+ ypos -4446
 }
-set N7a39bc00 [stack 0]
+set N30e78400 [stack 0]
 Merge2 {
  inputs 2
  operation copy
@@ -91,7 +91,7 @@ Merge2 {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -5075
+ ypos -4451
 }
 add_layer {YuanXiaoZhi YuanXiaoZhi.red YuanXiaoZhi.green YuanXiaoZhi.blue YuanXiaoZhi.alpha}
 Multiply {
@@ -102,7 +102,8 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -5035
+ ypos -4411
+ disable true
 }
 Merge2 {
  inputs 2
@@ -110,7 +111,7 @@ Merge2 {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4787
+ ypos -4163
 }
 Saturation {
  saturation 0
@@ -118,7 +119,16 @@ Saturation {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4763
+ ypos -4139
+}
+Defocus {
+ channels rgba
+ defocus 30
+ name Defocus1
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -4115
 }
 add_layer {YuanXiaoTang YuanXiaoTang.red YuanXiaoTang.green YuanXiaoTang.blue YuanXiaoTang.alpha}
 Multiply {
@@ -129,7 +139,7 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4723
+ ypos -4027
 }
 add_layer {Tree Tree.red Tree.green Tree.blue Tree.alpha}
 Multiply {
@@ -140,7 +150,7 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4675
+ ypos -3979
 }
 Multiply {
  channels rgba
@@ -150,40 +160,61 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4627
+ ypos -3955
+}
+add_layer {Petal Petal.red Petal.green Petal.blue Petal.alpha}
+Grade {
+ channels {-Petal.red -Petal.green -Petal.blue Petal.alpha}
+ gamma 0.34
+ name Grade2
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -3907
+}
+Multiply {
+ channels rgba
+ value 0
+ maskChannelInput Petal.alpha
+ name Multiply5
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -3859
 }
 Grade {
  black {0.05833334103 0.06005333364 0.101333335 0.08500000089}
  maskChannelInput rgba.alpha
  name Grade9
+ label "SNJYW/EP04/04/Fog_Lift\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP04/04/Fog_Lift', nuke.thisNode())\}]\n"
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4579
+ ypos -3803
 }
 Dot {
  name Dot63
  note_font 微软雅黑
  selected true
  xpos -336
- ypos -4494
+ ypos -3702
 }
-set Nf503a400 [stack 0]
+set N366a1400 [stack 0]
 Dot {
  name Dot65
  note_font 微软雅黑
  selected true
  xpos -336
- ypos -4374
+ ypos -3582
 }
-set N36a68400 [stack 0]
-push $Nf503a400
+set N366a1000 [stack 0]
+push $N366a1400
 Dot {
  name Dot64
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -4494
+ ypos -3702
 }
 Keyer {
  input depth
@@ -195,9 +226,8 @@ Keyer {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -4467
+ ypos -3675
 }
-add_layer {Petal Petal.red Petal.green Petal.blue Petal.alpha}
 ChannelMerge {
  inputs 2
  A Petal.alpha
@@ -206,16 +236,16 @@ ChannelMerge {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -4395
+ ypos -3603
 }
 Dot {
  name Dot66
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -4326
+ ypos -3534
 }
-push $N36a68400
+push $N366a1000
 Multiply {
  inputs 1+1
  channels rgba
@@ -224,22 +254,23 @@ Multiply {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4331
+ ypos -3539
+ disable true
 }
 Dot {
  name Dot58
  note_font 微软雅黑
  selected true
  xpos -336
- ypos -4278
+ ypos -3486
 }
-set N6ba3ac00 [stack 0]
+set N366d1800 [stack 0]
 Dot {
  name Dot59
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -4278
+ ypos -3486
 }
 Dilate {
  channels YuanXiaoZhi
@@ -248,7 +279,7 @@ Dilate {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -4267
+ ypos -3475
 }
 Dilate {
  channels rgba
@@ -258,7 +289,7 @@ Dilate {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -4195
+ ypos -3403
 }
 EdgeBlur {
  channels rgba
@@ -268,16 +299,16 @@ EdgeBlur {
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -4147
+ ypos -3355
 }
 Dot {
  name Dot60
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -4086
+ ypos -3294
 }
-push $N6ba3ac00
+push $N366d1800
 Merge2 {
  inputs 2
  operation copy
@@ -285,26 +316,26 @@ Merge2 {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4091
+ ypos -3299
  disable true
 }
 Premult {
  channels rgba
  alpha YuanXiaoZhi.alpha
  invert true
- name Premult9
+ name Premult5
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -4051
+ ypos -3259
  disable true
 }
 Unpremult {
- name Unpremult1
+ name Unpremult5
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -3995
+ ypos -3203
  disable true
 }
 Dot {
@@ -312,15 +343,15 @@ Dot {
  note_font 微软雅黑
  selected true
  xpos -336
- ypos -3942
+ ypos -3150
 }
-set Nc64d0800 [stack 0]
+set N36703400 [stack 0]
 Dot {
  name Dot69
  note_font 微软雅黑
  selected true
  xpos -6
- ypos -3942
+ ypos -3150
 }
 Keyer {
  operation "luminance key"
@@ -330,23 +361,23 @@ Keyer {
  note_font 微软雅黑
  selected true
  xpos -40
- ypos -3795
+ ypos -3003
 }
 Blur {
  channels alpha
  size 10
- name Blur1
+ name Blur2
  note_font 微软雅黑
  selected true
  xpos -40
- ypos -3739
+ ypos -2947
 }
 Dot {
  name Dot72
  note_font 微软雅黑
  selected true
  xpos -6
- ypos -3678
+ ypos -2886
 }
 Radial {
  inputs 0
@@ -356,35 +387,35 @@ Radial {
  note_font 微软雅黑
  selected true
  xpos -150
- ypos -3851
+ ypos -3059
 }
-push $Nc64d0800
+push $N36703400
 Dot {
  name Dot70
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -3894
+ ypos -3102
 }
 ColorCorrect {
  inputs 1+1
  saturation 0.5
  gamma 1.1
  gain {10 9.258999825 4.300000191 4}
- name ColorCorrect9
+ name ColorCorrect12
  note_font 微软雅黑
  selected true
  xpos -260
- ypos -3851
+ ypos -3059
 }
 Dot {
  name Dot71
  note_font 微软雅黑
  selected true
  xpos -226
- ypos -3750
+ ypos -2958
 }
-push $Nc64d0800
+push $N36703400
 Merge2 {
  inputs 2+1
  operation copy
@@ -392,40 +423,42 @@ Merge2 {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -3683
+ ypos -2891
+ disable true
 }
 Grade {
- white 0.23
+ white 0.4
+ gamma 0.8
  name Grade5
  selected true
  xpos -370
- ypos -3634
+ ypos -2842
 }
 ColorCorrect {
  inputs 1+1
  gain 0.125
- name ColorCorrect10
+ name ColorCorrect13
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -3563
+ ypos -2771
 }
 ColorCorrect {
  saturation 0.9
  gain {1.052840233 1.00316 1.194238067 1}
- name ColorCorrect11
+ name ColorCorrect14
  label "\[python \{str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Dream')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Dream'), nuke.thisNode())\}]\n\[knob this.xpos \[value this.input0.xpos]]\n\[knob this.ypos \[value this.input0.ypos]+100]\n"
  note_font 微软雅黑
  selected true
  xpos -370
- ypos {{-3560+100 x438 -3459}}
+ ypos {{-2771+100}}
 }
 Multiply {
  channels alpha
  name Multiply12
  selected true
  xpos -370
- ypos -3304
+ ypos -2512
  disable true
 }
 Premult {
@@ -433,7 +466,7 @@ Premult {
  note_font 微软雅黑
  selected true
  xpos -370
- ypos -3203
+ ypos -2411
  disable true
 }
 Dot {
@@ -441,31 +474,81 @@ Dot {
  note_font 微软雅黑
  selected true
  xpos -336
- ypos -3150
+ ypos -2358
 }
-push $N7a39bc00
+set N36785800 [stack 0]
+Remove {
+ channels depth
+ name Remove1
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -2299
+}
+AddChannels {
+ channels depth
+ color 0.001
+ name AddChannels2
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -2251
+}
+set N36785000 [stack 0]
+Grade {
+ channels alpha
+ gamma 3
+ name Grade7
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -2227
+}
+Multiply {
+ value 10
+ maskChannelInput Petal.alpha
+ name Multiply9
+ note_font 微软雅黑
+ selected true
+ xpos -370
+ ypos -2179
+}
+push $N36785000
+push $N36785800
+push $N30e78400
 Merge2 {
  inputs 2
  bbox B
  name Merge6
  selected true
  xpos -480
- ypos -3154
+ ypos -2314
+}
+Merge2 {
+ inputs 2+1
+ operation min
+ Achannels depth
+ Bchannels depth
+ output depth
+ name Merge4
+ selected true
+ xpos -480
+ ypos -2200
 }
 Dot {
  name Dot62
  note_font 微软雅黑
  selected true
  xpos -446
- ypos -3030
+ ypos -2142
 }
-push $N6df8f000
+push $N30e78c00
 Switch {
  inputs 2
  which 1
- name Switch5
+ name Switch6
  label FX_Fog
  selected true
  xpos -700
- ypos -3040
+ ypos -2152
 }
