@@ -4,93 +4,79 @@ BackdropNode {
  inputs 0
  name BackdropNode3
  tile_color 0xc399b2ff
- label "Petal v0.2"
+ label "Petal v0.5"
  note_font_size 42
  selected true
- xpos 734
- ypos -2972
+ xpos 729
+ ypos -6283
  bdwidth 482
  bdheight 1184
 }
 Read {
  inputs 0
- file Z:/SNJYW/FX/Final/EP05/01/EP05_01_sc065/Z/huaban_VRayZDepth%04d.tga
+ file Z:/SNJYW/FX/Final/EP05/01/EP05_01_sc075/Z_Depth/sc075_Z_Depth__%04d.tga
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 732
- last 820
- origfirst 732
- origlast 820
+ last 73
+ origlast 73
  origset true
  name Read2
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
- xpos 1060
- ypos -2743
+ xpos 1055
+ ypos -6096
 }
 Read {
  inputs 0
- file Z:/SNJYW/FX/Final/EP05/01/EP05_01_sc065/huaban/huaban%04d.tga
+ file Z:/SNJYW/FX/Final/EP05/01/EP05_01_sc075/color/sc075_color__%04d.tga
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 732
- last 820
- origfirst 732
- origlast 820
+ last 73
+ origlast 73
  origset true
- name Read1
+ name Read3
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2863
+ xpos 945
+ ypos -6216
 }
 Copy {
  inputs 2
  from0 rgba.blue
  to0 depth.Z
- name Copy2
+ name Copy3
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2707
-}
-Grade {
- channels depth
- blackpoint 1
- black_clamp false
- name Grade5
- note_font 微软雅黑
- selected true
- xpos 948
- ypos -2662
+ xpos 945
+ ypos -6060
 }
 Expression {
  channel0 depth
  expr0 1/z*this.multiple1
- name Expression3
+ name Expression4
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2614
+ xpos 945
+ ypos -5967
  addUserKnob {20 User}
  addUserKnob {7 multiple1 R 0 0.01}
  multiple1 0.001
 }
 Clamp {
  channels depth
- name Clamp2
+ name Clamp3
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2586
+ xpos 945
+ ypos -5939
 }
 Group {
- name DepthFix1
+ name DepthFix2
  tile_color 0x823a7dff
  label "\[knob_default \[class this].maxZ 1]\n\[knob_default \[class this].threshold 1]\n"
  selected true
- xpos 950
- ypos -2530
+ xpos 945
+ ypos -5883
  addUserKnob {20 tab1 l DepthFix}
  addUserKnob {26 text1 l v2.6}
  addUserKnob {7 threshold}
@@ -114,7 +100,7 @@ Group {
   xpos 544
   ypos -846
  }
-set N3c69800 [stack 0]
+set Ncb642800 [stack 0]
  Dot {
   name Dot5
   xpos 764
@@ -126,13 +112,13 @@ set N3c69800 [stack 0]
   xpos 764
   ypos -462
  }
-push $N3c69800
+push $Ncb642800
  Dot {
   name Dot3
   xpos 544
   ypos -750
  }
-set N3c9f400 [stack 0]
+set Nc7c7f000 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -151,7 +137,7 @@ set N3c9f400 [stack 0]
   xpos 654
   ypos -630
  }
-push $N3c9f400
+push $Nc7c7f000
  MergeExpression {
   inputs 2
   channel0 depth
@@ -198,13 +184,13 @@ push $N3c9f400
   xpos 544
   ypos -294
  }
-set N3cbcc00 [stack 0]
+set N6e62dc00 [stack 0]
  Dot {
   name Dot10
   xpos 654
   ypos -294
  }
-set N3cbc800 [stack 0]
+set N6e62d800 [stack 0]
  Dot {
   name Dot15
   xpos 764
@@ -224,7 +210,7 @@ set N3cbc800 [stack 0]
   xpos 764
   ypos -198
  }
-push $N3cbc800
+push $N6e62d800
  Expression {
   channel0 depth
   expr0 (z==0)?0:1/(z*10000)
@@ -239,7 +225,7 @@ push $N3cbc800
   xpos 654
   ypos -198
  }
-push $N3cbcc00
+push $N6e62dc00
  Dot {
   name Dot7
   label none
@@ -270,11 +256,11 @@ push $N3cbcc00
  }
 end_group
 Group {
- name Depth3Split2
+ name Depth3Split4
  tile_color 0xff00ff
  selected true
- xpos 950
- ypos -2458
+ xpos 945
+ ypos -5849
  addUserKnob {20 Depth3Split}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
@@ -384,19 +370,28 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   ypos -58
  }
 end_group
-Dot {
- name Dot23
+Grade {
+ channels {none none none depth3split.Focus}
+ black 0.2
+ name Grade11
  note_font 微软雅黑
  selected true
- xpos 984
- ypos -2430
+ xpos 945
+ ypos -5823
+}
+Dot {
+ name Dot43
+ note_font 微软雅黑
+ selected true
+ xpos 979
+ ypos -5783
 }
 Unpremult {
  name Unpremult7
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2387
+ xpos 945
+ ypos -5740
 }
 Group {
  name ValueGamma6
@@ -404,8 +399,8 @@ Group {
  tile_color 0x79a8ffff
  label "(\[value alpha])\n\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
- xpos 950
- ypos -2344
+ xpos 945
+ ypos -5697
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {26 text1 l v0.1}
  addUserKnob {41 channels T Colorspace1.channels}
@@ -433,7 +428,7 @@ Group {
   xpos 544
   ypos -582
  }
-set Nf1bbc00 [stack 0]
+set N49d6bc00 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -453,7 +448,7 @@ set Nf1bbc00 [stack 0]
   xpos 620
   ypos -466
  }
-set N3c23f80 [stack 0]
+set Nd7b42d80 [stack 0]
  Premult {
   alpha none
   name MaskChannelChoose
@@ -465,8 +460,8 @@ set N3c23f80 [stack 0]
   xpos 654
   ypos -366
  }
-push $N3c23f80
-push $Nf1bbc00
+push $Nd7b42d80
+push $N49d6bc00
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -522,95 +517,117 @@ push $Nf1bbc00
  }
 end_group
 ColorCorrect {
+ saturation 0.1
+ gain {1.840000033 1.840000033 1.840000033 1}
+ name ColorCorrect6
+ label "SNJYW/EP05/01/Color_Petal\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP05/01/Color_Petal', nuke.thisNode())\}]\n"
+ note_font 微软雅黑
+ selected true
+ xpos 945
+ ypos -5659
+}
+ColorCorrect {
  saturation 0.8
- gain {0.8597364426 0.9097363949 1.099736452 1}
- name ColorCorrect9
+ gain {0.8314030766 0.9664031863 1.071403146 1}
+ offset {-0.0008326000534 -0.0007300000289 -0.001000000047 0}
+ name ColorCorrect1
  label "SNJYW/EP05/01/Env_OutRoom_Day\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP05/01/Env_OutRoom_Day', nuke.thisNode())\}]\n"
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2283
+ xpos 945
+ ypos -5590
 }
 Premult {
- name Premult3
+ name Premult4
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -2219
+ xpos 945
+ ypos -5530
 }
-set N1aac2c00 [stack 0]
-push $N1aac2c00
+set Nf4ac2c00 [stack 0]
+push $Nf4ac2c00
+push $Nf4ac2c00
 ZDefocus2 {
  inputs 2
  z_channel depth3split.Focus
  math direct
- size 20
+ size {{ZDefocus_Global_1.size}}
  max_size {{size}}
  legacy_resize_mode false
  show_legacy_resize_mode false
- name ZDefocus2
+ name ZDefocus3
  selected true
- xpos 950
- ypos -2148
+ xpos 1022
+ ypos -5483
  cached true
+ disable {{1-ZDefocus_Global_1.disable x400 1}}
 }
-set C1aac2800 [stack 0]
-Dot {
- name Dot22
+Switch {
+ inputs 2
+ which 1
+ name Switch9
  note_font 微软雅黑
  selected true
- xpos 984
- ypos -2070
+ xpos 945
+ ypos -5429
+ disable true
 }
-set N1aac2000 [stack 0]
 Dot {
- name Dot30
+ name Dot44
  note_font 微软雅黑
  selected true
- xpos 984
- ypos -1974
+ xpos 979
+ ypos -5381
+}
+set Nf4ac2000 [stack 0]
+Dot {
+ name Dot45
+ note_font 微软雅黑
+ selected true
+ xpos 979
+ ypos -5285
 }
 push 0
 push 0
 Dot {
- name Dot14
+ name Dot46
  note_font 微软雅黑
  selected true
  xpos 654
- ypos -2862
+ ypos -6173
 }
-set N2cf85800 [stack 0]
+set N66e9d800 [stack 0]
 Dot {
- name Dot21
+ name Dot47
  note_font 微软雅黑
  selected true
- xpos 874
- ypos -2862
+ xpos 869
+ ypos -6173
 }
 Dot {
- name Dot27
+ name Dot48
  note_font 微软雅黑
  selected true
- xpos 874
- ypos -2118
+ xpos 869
+ ypos -5429
 }
-set N2cf85000 [stack 0]
+set N66e9d000 [stack 0]
 Dot {
- name Dot33
+ name Dot49
  note_font 微软雅黑
  selected true
- xpos 764
- ypos -2070
+ xpos 759
+ ypos -5381
 }
-push $N1aac2000
-push $N2cf85000
+push $Nf4ac2000
+push $N66e9d000
 ZMerge {
  inputs 2
  name ZMerge5
  note_font 微软雅黑
  selected true
- xpos 840
- ypos -2075
+ xpos 835
+ ypos -5386
 }
 Merge2 {
  inputs 3+1
@@ -618,18 +635,18 @@ Merge2 {
  name Merge8
  note_font 微软雅黑
  selected true
- xpos 840
- ypos -1979
+ xpos 835
+ ypos -5290
 }
 Clamp {
  channels depth
- name Clamp3
+ name Clamp4
  note_font 微软雅黑
  selected true
- xpos 840
- ypos -1915
+ xpos 835
+ ypos -5226
 }
-push $N2cf85800
+push $N66e9d800
 Switch {
  inputs 2
  which 1
@@ -638,5 +655,5 @@ Switch {
  note_font 微软雅黑
  selected true
  xpos 620
- ypos -1915
+ ypos -5226
 }

@@ -7,65 +7,67 @@ BackdropNode {
  label BG_A
  note_font_size 42
  selected true
- xpos 1334
- ypos -6070
+ xpos -477
+ ypos -876
  bdwidth 734
  bdheight 1559
 }
 Radial {
  inputs 0
  opacity 0.2
- area {-378 64 2506 640}
+ area {-116 220 2768 796}
  name Radial6
  note_font 微软雅黑
  selected true
- xpos 1610
- ypos -5555
+ xpos -150
+ ypos -371
 }
 Radial {
  inputs 0
- area {-402.3679649 -575.8204312 1974.367965 759.8204312}
+ area {-390 232 2642 760}
  name Radial5
  note_font 微软雅黑
  selected true
- xpos 1610
- ypos -5603
+ xpos -150
+ ypos -419
 }
 Read {
  inputs 0
- file Z:/SNJYW/Render/EP04/02/SNJYW_EP04_02a_sc083b/EP04_02a_SC083b_BG_A/EP04_02a_SC083b_BG_A.%d.exr
+ file Z:/SNJYW/Render/EP05/01/SNJYW_EP05_01_sc060/EP05_01_sc060_BG_A/EP05_01_sc060_BG.%04d.exr
  format "1920 1080 0 0 1920 1080 1 HD_1080"
- first 70
- last 146
- origfirst 70
- origlast 146
+ first 382
+ last 418
+ origfirst 382
+ origlast 418
  origset true
- name Read1
- label "<font size=\"3\" color =#548DD4><b> Frame range :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ name Read10
+ label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
+ note_font 微软雅黑
  selected true
- xpos 1500
- ypos -6003
+ xpos -260
+ ypos -847
 }
 Multiply {
  channels depth
  value 0.0001
  name Multiply3
  selected true
- xpos 1500
- ypos -5896
+ xpos -260
+ ypos -712
+ disable true
 }
 Dot {
  name BG_A
  selected true
- xpos 1534
- ypos -5838
+ xpos -226
+ ypos -654
 }
 Group {
  name Depth3Split
  tile_color 0xff00ff
  selected true
- xpos 1500
- ypos -5770
+ xpos -260
+ ypos -586
  addUserKnob {20 Depth3Split}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
@@ -178,8 +180,8 @@ end_group
 Unpremult {
  name Unpremult2
  selected true
- xpos 1500
- ypos -5698
+ xpos -260
+ ypos -514
 }
 Group {
  name ValueGamma2
@@ -187,13 +189,13 @@ Group {
  tile_color 0x79a8ffff
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
- xpos 1500
- ypos -5674
+ xpos -260
+ ypos -490
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
  addUserKnob {7 gain t "\[knob_default gain 1]" R 0 5}
- gain 1.2
+ gain 1
  addUserKnob {7 gamma R 0 4}
  gamma 1
  addUserKnob {41 saturation T Saturation1.saturation}
@@ -215,7 +217,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N2584ac00 [stack 0]
+set Nba121800 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -235,7 +237,7 @@ set N2584ac00 [stack 0]
   xpos 620
   ypos -466
  }
-set N3c03200 [stack 0]
+set Naa3c2480 [stack 0]
  Premult {
   alpha none
   name MaskChannelChoose
@@ -247,8 +249,8 @@ set N3c03200 [stack 0]
   xpos 654
   ypos -366
  }
-push $N3c03200
-push $N2584ac00
+push $Naa3c2480
+push $Nba121800
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -276,7 +278,6 @@ push $N2584ac00
  Saturation {
   inputs 1+1
   channels {{{parent.Colorspace1.channels}}}
-  saturation 1.1
   maskChannelMask {{{parent.MaskChannelChoose.alpha}}}
   maskChannelInput {{{parent.Grade1.maskChannelInput}}}
   inject {{parent.Grade1.inject}}
@@ -307,8 +308,8 @@ SoftClip {
  softclip_min 0
  name SoftClip2
  selected true
- xpos 1500
- ypos -5650
+ xpos -260
+ ypos -466
 }
 ColorCorrect {
  inputs 1+1
@@ -318,8 +319,8 @@ ColorCorrect {
  name ColorCorrect4
  note_font 微软雅黑
  selected true
- xpos 1500
- ypos -5603
+ xpos -260
+ ypos -419
 }
 ColorCorrect {
  inputs 1+1
@@ -329,18 +330,15 @@ ColorCorrect {
  name ColorCorrect8
  note_font 微软雅黑
  selected true
- xpos 1500
- ypos -5555
+ xpos -260
+ ypos -371
 }
 ColorCorrect {
- saturation 0.8
- gain {0.7242379189 0.6642379761 1.00423789 1}
  name ColorCorrect2
- label "\[python \{str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Cold')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP04/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_Cold'), nuke.thisNode())\}]\n\[knob xpos \[value this.input0.xpos]]\n\[knob ypos \[expr \[value this.input0.ypos]+100]]"
  note_font 微软雅黑
  selected true
- xpos 1500
- ypos -5451
+ xpos -260
+ ypos -275
 }
 Grade {
  white 0.1
@@ -348,79 +346,85 @@ Grade {
  maskChannelInput depth3split.Far
  name Grade3
  selected true
- xpos 1500
- ypos -5344
+ xpos -260
+ ypos -184
  disable true
 }
 Dot {
  name Dot17
  selected true
- xpos 1534
- ypos -5310
+ xpos -226
+ ypos -126
 }
-set N258b8c00 [stack 0]
+set N8c72400 [stack 0]
 Dot {
  name Dot18
  selected true
- xpos 1534
- ypos -5214
+ xpos -226
+ ypos -30
 }
-set N258b8800 [stack 0]
+set N8c72000 [stack 0]
 Keyer {
  operation "luminance key"
  range {0 1.5 10 10}
  name Keyer6
  selected true
- xpos 1610
- ypos -5224
+ xpos -150
+ ypos -40
 }
-push $N258b8c00
+push $N8c72400
 Dot {
  name Dot19
  selected true
- xpos 1754
- ypos -5310
+ xpos -6
+ ypos -126
 }
 Premult {
  channels alpha
  alpha depth3split.Close
  name Premult1
  selected true
- xpos 1720
- ypos -5272
+ xpos -40
+ ypos -88
 }
 Merge2 {
  inputs 2
  operation stencil
  name Merge4
  selected true
- xpos 1720
- ypos -5218
+ xpos -40
+ ypos -34
 }
 Dot {
  name Dot20
  selected true
- xpos 1754
- ypos -5142
+ xpos -6
+ ypos 42
 }
-push $N258b8800
+push $N8c72000
 ColorCorrect {
  inputs 1+1
  gamma 0.75
  gain 5
  name ColorCorrect7
  selected true
- xpos 1500
- ypos -5146
+ xpos -260
+ ypos 38
  disable true
+}
+Premult {
+ name Premult6
+ selected true
+ xpos -260
+ ypos 62
 }
 Group {
  name Depth3Fog2
  tile_color 0xff8200ff
  label "\[knob_default this.mix 1]"
  selected true
- xpos 1500
- ypos -5050
+ xpos -260
+ ypos 110
  addUserKnob {20 Depth3Fog}
  addUserKnob {26 Range_div l Range}
  addUserKnob {6 preview +STARTLINE}
@@ -457,13 +461,13 @@ Group {
   xpos 214
   ypos -798
  }
-set N2590c800 [stack 0]
+set N8e94000 [stack 0]
  Dot {
   name Dot3
   xpos 544
   ypos -798
  }
-set N2590c400 [stack 0]
+set N8ee9c00 [stack 0]
  Multiply {
   channels depth
   name Multiply1
@@ -479,9 +483,9 @@ set N2590c400 [stack 0]
   xpos 510
   ypos -719
  }
-set N28c87c00 [stack 0]
+set N8e54800 [stack 0]
 push 0
-push $N28c87c00
+push $N8e54800
  Keyer {
   input depth
   operation "luminance key"
@@ -491,13 +495,13 @@ push $N28c87c00
   xpos 510
   ypos -575
  }
-set N28c87800 [stack 0]
+set N8e54400 [stack 0]
  Dot {
   name Dot4
   xpos 544
   ypos -510
  }
-set N28c87400 [stack 0]
+set N8c73c00 [stack 0]
  Dot {
   name Dot6
   xpos 654
@@ -512,7 +516,7 @@ set N28c87400 [stack 0]
   xpos 620
   ypos -407
  }
-push $N28c87400
+push $N8c73c00
  Keyer {
   input {{{parent.Middle.input}}}
   invert true
@@ -530,7 +534,7 @@ push $N28c87400
   xpos 510
   ypos -407
  }
-push $N28c87800
+push $N8e54400
  Merge2 {
   inputs 3+1
   operation plus
@@ -548,9 +552,9 @@ push $N28c87800
   xpos 290
   ypos -400
  }
-set N28cb9c00 [stack 0]
-push $N28c87800
-push $N28c87c00
+set N53422400 [stack 0]
+push $N8e54400
+push $N8e54800
  Merge2 {
   inputs 2
   operation plus
@@ -568,8 +572,8 @@ push $N28c87c00
   xpos 290
   ypos -568
  }
-set N28cb9400 [stack 0]
-push $N28c87c00
+set N9e2a3c00 [stack 0]
+push $N8e54800
  Grade {
   channels alpha
   gamma 0.33
@@ -577,8 +581,8 @@ push $N28c87c00
   xpos 290
   ypos -712
  }
-set N28cb9000 [stack 0]
-push $N2590c800
+set N9e2a3800 [stack 0]
+push $N8e94000
  Dot {
   name Dot5
   xpos 104
@@ -613,7 +617,7 @@ push $N2590c800
   xpos 104
   ypos 18
  }
-push $N2590c400
+push $N8ee9c00
  Dot {
   name Dot40
   xpos 874
@@ -624,7 +628,7 @@ push $N2590c400
   xpos 874
   ypos -150
  }
-set N28d07400 [stack 0]
+set Nbf037000 [stack 0]
  Input {
   inputs 0
   name InputMask
@@ -647,10 +651,10 @@ set N28d07400 [stack 0]
   xpos 730
   ypos -88
  }
-push $N28cb9c00
-push $N28cb9400
-push $N28cb9000
-push $N2590c800
+push $N53422400
+push $N9e2a3c00
+push $N9e2a3800
+push $N8e94000
  Grade {
   inputs 1+1
   black {0.03166666254 0.04966665804 0.07666666806 0}
@@ -659,20 +663,20 @@ push $N2590c800
   xpos 180
   ypos -706
  }
- set C28d06800 [stack 0]
-clone $C28d06800 {
+ set Cbf036400 [stack 0]
+clone $Cbf036400 {
   inputs 1+1
   xpos 180
   ypos -562
   selected false
  }
-clone $C28d06800 {
+clone $Cbf036400 {
   inputs 1+1
   xpos 180
   ypos -394
   selected false
  }
-push $N28d07400
+push $Nbf037000
  Merge2 {
   inputs 2+1
   maskChannelMask {{{parent.Premult2.alpha}}}
@@ -704,8 +708,8 @@ Group {
  name Depth3Split1
  tile_color 0xff00ff
  selected true
- xpos 1500
- ypos -5026
+ xpos -260
+ ypos 158
  addUserKnob {20 Depth3Split}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
@@ -817,52 +821,46 @@ end_group
 ZDefocus2 {
  z_channel depth3split.Focus
  math direct
- size 8
+ size {{ZDefocus_Global_1.size}}
  max_size {{size}}
  legacy_resize_mode false
  show_legacy_resize_mode false
- name ZDefocus1
+ name ZDefocus2
  selected true
- xpos 1500
- ypos -4960
+ xpos -260
+ ypos 224
  cached true
-}
-set C2bf6e400 [stack 0]
-Premult {
- name Premult6
- selected true
- xpos 1500
- ypos -4906
+ disable {{1-ZDefocus_Global_1.disable}}
 }
 SoftClip {
  conversion "logarithmic compress"
  softclip_min 0.5
  name SoftClip5
  selected true
- xpos 1500
- ypos -4882
+ xpos -260
+ ypos 302
 }
-add_layer {BG_A BG_A.Shadow BG_A.InDoor BG_A.OutDoor BG_A.GodRays BG_A.red BG_A.green BG_A.blue BG_A.alpha}
+add_layer {BG_A BG_A.red BG_A.green BG_A.blue BG_A.alpha}
 Shuffle {
  out BG_A
  name Shuffle3
  selected true
- xpos 1500
- ypos -4834
+ xpos -260
+ ypos 348
 }
 Dot {
  name Dot36
  selected true
- xpos 1534
- ypos -4782
+ xpos -226
+ ypos 402
 }
-set N2bfa9000 [stack 0]
+set N8c73400 [stack 0]
 Unpremult {
  channels depth
  name Unpremult1
  selected true
- xpos 1610
- ypos -4744
+ xpos -260
+ ypos 440
 }
 ChannelMerge {
  A depth.Z
@@ -871,60 +869,57 @@ ChannelMerge {
  output depth.Z
  name ChannelMerge2
  selected true
- xpos 1610
- ypos -4679
+ xpos -260
+ ypos 505
 }
-push $N2bfa9000
-push 0
 Dot {
+ inputs 0
  name Dot31
  selected true
- xpos 1204
- ypos -5964
+ xpos -556
+ ypos -774
 }
-set N3c4a400 [stack 0]
+set Naea97800 [stack 0]
 Dot {
  name Dot32
  selected true
- xpos 1424
- ypos -5964
+ xpos -336
+ ypos -774
 }
 Dot {
  name Dot11
  note_font 微软雅黑
  selected true
- xpos 1424
- ypos -4854
+ xpos -336
+ ypos 330
 }
-set N42c8bc00 [stack 0]
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front CH_A.notSSS CH_A.Front}
-Merge2 {
- inputs 2
- also_merge CH_A
- name Merge1
- note_font 微软雅黑
+set Naea97000 [stack 0]
+Dot {
+ name Dot1
  selected true
- xpos 1500
- ypos -4739
+ xpos -446
+ ypos 402
 }
-push $N42c8bc00
-push $N2bfa9000
+push 0
+push $N8c73400
+push $Naea97000
+push $N8c73400
 ZMerge {
  inputs 2
  name ZMerge2
  selected true
- xpos 1390
- ypos -4786
+ xpos -370
+ ypos 398
 }
 Merge2 {
- inputs 2
- operation copy
- also_merge CH_A
- name Merge3
+ inputs 3+1
+ Bchannels none
+ also_merge BG_A
+ name Merge1
  note_font 微软雅黑
  selected true
- xpos 1390
- ypos -4739
+ xpos -370
+ ypos 469
 }
 Copy {
  inputs 2
@@ -932,24 +927,24 @@ Copy {
  to0 depth.Z
  name Copy1
  selected true
- xpos 1390
- ypos -4672
+ xpos -370
+ ypos 512
 }
 PostageStamp {
  name PostageStamp2
  selected true
- xpos 1390
- ypos -4617
+ xpos -370
+ ypos 567
  cached true
  postage_stamp true
 }
-push $N3c4a400
+push $Naea97800
 Switch {
  inputs 2
  which 1
  name Switch2
  label BG_A
  selected true
- xpos 1170
- ypos -4600
+ xpos -590
+ ypos 584
 }

@@ -2,14 +2,13 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name Depth3Split_Global_1
+ name Depth3Split1
  tile_color 0xff00ff
  selected true
  xpos 950
- ypos -1078
+ ypos -12157
  addUserKnob {20 Depth3Split l Depth3Split_v1.1}
  addUserKnob {6 preview +STARTLINE}
- preview true
  addUserKnob {41 input T Middle.input}
  addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
  addUserKnob {41 invert -STARTLINE T Middle.invert}
@@ -23,6 +22,7 @@ Group {
  addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar this\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.D]\nknob group.Focus.range.C 1\nknob group.Focus.range.D 1"}
  addUserKnob {41 range_1 l range T Focus.range}
  addUserKnob {7 focus_expand l expand R 0 0.01}
+ focus_expand {{parent.Depth3Split_Global_1.focus_expand}}
  addUserKnob {41 gamma T Grade1.gamma}
  addUserKnob {41 size l "blur size" T Blur1.size}
  addUserKnob {41 filter l "blur filter" T Blur1.filter}
@@ -61,10 +61,10 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   ypos -481
  }
  Keyer {
-  input depth
+  input {{{parent.parent.Depth3Split_Global_1.Middle.input}}}
   output depth3split.Middle
   operation "luminance key"
-  range {0.0007106 0.00211259 0.00351458 0.004916574667}
+  range {{parent.parent.Depth3Split_Global_1.Middle.range} {parent.parent.Depth3Split_Global_1.Middle.range} {parent.parent.Depth3Split_Global_1.Middle.range} {parent.parent.Depth3Split_Global_1.Middle.range}}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Focus_expand.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
@@ -86,7 +86,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   output depth3split.Focus
   invert true
   operation "luminance key"
-  range {0 0 0.0007106 0.00491657}
+  range {{parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range} {parent.parent.Depth3Split_Global_1.Focus.range}}
   name Focus
   xpos 180
   ypos -330
@@ -110,7 +110,6 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
  }
  Blur {
   channels {none none none depth3split.Focus}
-  size 20
   name Blur1
   xpos 180
   ypos -167
