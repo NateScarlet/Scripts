@@ -1,6 +1,6 @@
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.8
+TITLE Nuke批渲染v1.82
 SETLOCAL EnableDelayedExpansion
 REM 完成后休眠选项
 IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
@@ -69,7 +69,9 @@ REM 将代理渲染完成的文件移出来
 IF /I "%isProxyRender%" NEQ "TRUE" (
     IF EXIST "%~dp0PorxyRenderedFiles\" (
         ECHO.
-        MOVE "%~dp0PorxyRenderedFiles\*.nk" "%~dp0"
+        ATTRIB -R "%~dp0*.nk"
+        XCOPY /D "%~dp0PorxyRenderedFiles\*.nk" "%~dp0"
+        DEL "%~dp0PorxyRenderedFiles\*.nk"
     )
 )
 REM 断开Z盘映射并重新映射Z盘到缓存文件夹
@@ -132,7 +134,7 @@ FOR %%i in ("%~dp0\*.nk") do (
         IF NOT EXIST "%~dp0PorxyRenderedFiles\" (
             MKDIR "%~dp0PorxyRenderedFiles\"
         )
-        DEL "%~dp0PorxyRenderedFiles\%%~nxi"
+        ATTRIB -R "%~dp0PorxyRenderedFiles\%%~nxi"
         MOVE /Y "%%~i" "%~dp0PorxyRenderedFiles\"
 	) ELSE (
 	    REM 全尺寸渲染
