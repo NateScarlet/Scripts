@@ -38,6 +38,22 @@ else
 }
 return
 
+$^#2:: 
+IfWinNotExist, ahk_exe NxNManagerClient.exe
+{
+	Run, NxN
+	WinWait, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
+	WinClose,
+	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
+	WinMaximize
+}
+else
+{
+	WinActivate, ahk_class ATL:0046DEB0 ahk_exe NxNManagerClient.exe
+}
+return
+
+
 $#3:: 
 IfWinExist, ahk_exe EmEditor.exe
 {

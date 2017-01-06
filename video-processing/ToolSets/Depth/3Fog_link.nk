@@ -6,8 +6,9 @@ Group {
  tile_color 0xff8200ff
  label "\[knob_default this.mix 1]"
  selected true
- xpos 1059
- ypos -13535
+ xpos -54
+ ypos -1838
+ disable {{"!\[exists Depth3Fog_Global_1]"}}
  addUserKnob {20 Depth3Fog}
  addUserKnob {26 Range_div l Range}
  addUserKnob {6 preview +STARTLINE}
@@ -44,13 +45,13 @@ Group {
   xpos 214
   ypos -798
  }
-set Na7e6dc00 [stack 0]
+set N55fffc00 [stack 0]
  Dot {
   name Dot3
   xpos 544
   ypos -798
  }
-set Na7e6d800 [stack 0]
+set N55fff800 [stack 0]
  Multiply {
   channels depth
   name Multiply1
@@ -66,9 +67,9 @@ set Na7e6d800 [stack 0]
   xpos 510
   ypos -719
  }
-set Na7e6d000 [stack 0]
+set Ndb243c00 [stack 0]
 push 0
-push $Na7e6d000
+push $Ndb243c00
  Keyer {
   input {{{parent.parent.Depth3Fog_Global_1.Middle.input}}}
   operation "luminance key"
@@ -78,13 +79,13 @@ push $Na7e6d000
   xpos 510
   ypos -575
  }
-set Na7e6cc00 [stack 0]
+set Nfa683c00 [stack 0]
  Dot {
   name Dot4
   xpos 544
   ypos -510
  }
-set Necc9dc00 [stack 0]
+set N4a120c00 [stack 0]
  Dot {
   name Dot6
   xpos 654
@@ -99,7 +100,7 @@ set Necc9dc00 [stack 0]
   xpos 620
   ypos -407
  }
-push $Necc9dc00
+push $N4a120c00
  Keyer {
   input {{{parent.Middle.input}}}
   invert true
@@ -117,7 +118,7 @@ push $Necc9dc00
   xpos 510
   ypos -407
  }
-push $Na7e6cc00
+push $Nfa683c00
  Merge2 {
   inputs 3+1
   operation plus
@@ -135,9 +136,9 @@ push $Na7e6cc00
   xpos 290
   ypos -400
  }
-set Necc9c400 [stack 0]
-push $Na7e6cc00
-push $Na7e6d000
+set N64c3f000 [stack 0]
+push $Nfa683c00
+push $Ndb243c00
  Merge2 {
   inputs 2
   operation plus
@@ -155,8 +156,8 @@ push $Na7e6d000
   xpos 290
   ypos -568
  }
-set Nedb19c00 [stack 0]
-push $Na7e6d000
+set N64c3e800 [stack 0]
+push $Ndb243c00
  Grade {
   channels alpha
   gamma {{parent.parent.Depth3Fog_Global_1.Far_Gamma.gamma}}
@@ -164,8 +165,8 @@ push $Na7e6d000
   xpos 290
   ypos -712
  }
-set Nedb19800 [stack 0]
-push $Na7e6dc00
+set N64c3e400 [stack 0]
+push $N55fffc00
  Dot {
   name Dot5
   xpos 104
@@ -200,7 +201,7 @@ push $Na7e6dc00
   xpos 104
   ypos 18
  }
-push $Na7e6d800
+push $N55fff800
  Dot {
   name Dot40
   xpos 874
@@ -211,7 +212,7 @@ push $Na7e6d800
   xpos 874
   ypos -150
  }
-set Ne9349c00 [stack 0]
+set N64c0e800 [stack 0]
  Input {
   inputs 0
   name InputMask
@@ -235,10 +236,10 @@ set Ne9349c00 [stack 0]
   xpos 730
   ypos -88
  }
-push $Necc9c400
-push $Nedb19c00
-push $Nedb19800
-push $Na7e6dc00
+push $N64c3f000
+push $N64c3e800
+push $N64c3e400
+push $N55fffc00
  Grade {
   inputs 1+1
   channels {{{parent.parent.Depth3Fog_Global_1.Grade1.channels}}}
@@ -249,20 +250,20 @@ push $Na7e6dc00
   xpos 180
   ypos -706
  }
- set Ce9349000 [stack 0]
-clone $Ce9349000 {
+ set Caa6a3c00 [stack 0]
+clone $Caa6a3c00 {
   inputs 1+1
   xpos 180
   ypos -562
   selected false
  }
-clone $Ce9349000 {
+clone $Caa6a3c00 {
   inputs 1+1
   xpos 180
   ypos -394
   selected false
  }
-push $Ne9349c00
+push $N64c0e800
  Merge2 {
   inputs 2+1
   maskChannelMask {{{parent.Premult2.alpha}}}

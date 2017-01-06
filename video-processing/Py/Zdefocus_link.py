@@ -4,4 +4,4 @@ for i in nuke.allNodes():
         i['max_size'].setExpression('ZDefocus_Global_1.max_size');
     elif  'ZDefocus' in i.Class() and 'Global' in i['name'].value():
         i['max_size'].clearAnimated();
-        i['max_size'].setValue('8''8');
+        i['max_size'].setValue(8);

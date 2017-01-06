@@ -1,0 +1,63 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Text2 {
+ font_size_toolbar 100
+ font_width_toolbar 100
+ font_height_toolbar 100
+ opacity 0.3
+ message "\[lindex \[split \[basename \[metadata input/filename]] .] 0] "
+ old_message {{69 80 48 53 95 48 49 95 115 99 48 56 51 95 65 95 73 77 32}
+   }
+ old_expression_markers {{0 17}
+   }
+ box {20 20 1000 75}
+ transforms {{0 2}
+   }
+ cursor_position 57
+ global_font_scale 0.65
+ scale {1 1}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{24 122.5}
+   }
+ group_animations {{0} imported: 0 selected: items: "root transform/"}
+ animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+   }
+ name Text1
+ note_font 微软雅黑
+ selected true
+ xpos 477
+ ypos 377
+}
+Text2 {
+ font_size_toolbar 100
+ font_width_toolbar 100
+ font_height_toolbar 100
+ opacity 0.34
+ message "\[metadata input/frame]"
+ old_message {{50 54}
+   }
+ old_expression_markers {{0 1}
+   }
+ box {1700 20 1900 75}
+ xjustify right
+ transforms {{0 2}
+   }
+ cursor_position 22
+ global_font_scale 0.65
+ scale {1 1}
+ center {960 540}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{1778.5 128.5}
+   }
+ group_animations {{0} imported: 0 selected: 0 items: "root transform/"}
+ animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+   }
+ name Text2
+ note_font 微软雅黑
+ selected true
+ xpos 477
+ ypos 414
+}

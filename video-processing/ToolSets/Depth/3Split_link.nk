@@ -5,8 +5,9 @@ Group {
  name Depth3Split1
  tile_color 0xff00ff
  selected true
- xpos 950
- ypos -12157
+ xpos -52
+ ypos -1840
+ disable {{"!\[exists Depth3Split_Global_1]"}}
  addUserKnob {20 Depth3Split l Depth3Split_v1.1}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
