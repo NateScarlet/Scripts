@@ -1,0 +1,113 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Group {
+ name ValueCorrect1
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "(\[value maskChannelInput])\n\[\nknob_default \[class this].contrast 1\nknob_default \[class this].gain 1\nknob_default \[class this].gamma 1\n]"
+ selected true
+ xpos 1068
+ ypos -7287
+ addUserKnob {20 tab1 l ValueCorrect_v0.4 t 只调整亮度不影响饱和度和色相}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {7 contrast R 0 4}
+ contrast 1
+ addUserKnob {7 gamma R 0 5}
+ gamma 1
+ addUserKnob {7 lift}
+ addUserKnob {7 gain R 0 4}
+ gain 1
+ addUserKnob {7 offset R -1 1}
+ addUserKnob {41 maskChannelInput l mask T Merge1.maskChannelInput}
+ addUserKnob {41 inject -STARTLINE T Merge1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Merge1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Merge1.fringe}
+ addUserKnob {41 mix T Merge1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -682
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -630
+ }
+set Nb2b94800 [stack 0]
+ Dot {
+  name Dot7
+  note_font 微软雅黑
+  xpos 654
+  ypos -630
+ }
+ Saturation {
+  name Saturation1
+  xpos 620
+  ypos -514
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 620
+  ypos -490
+ }
+ ColorCorrect {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  contrast {{parent.contrast}}
+  gamma {{parent.gamma}}
+  name ColorCorrect1
+  note_font 微软雅黑
+  xpos 620
+  ypos -467
+ }
+ Grade {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  black {{parent.lift}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 620
+  ypos -427
+ }
+ ColorCorrect {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  gain {{parent.gain}}
+  offset {{parent.offset}}
+  name ColorCorrect2
+  note_font 微软雅黑
+  selected true
+  xpos 620
+  ypos -379
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 620
+  ypos -322
+ }
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 654
+  ypos -270
+ }
+push $Nb2b94800
+ Merge2 {
+  inputs 2
+  operation copy
+  maskChannelMask none
+  name Merge1
+  note_font 微软雅黑
+  xpos 510
+  ypos -275
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -154
+ }
+end_group

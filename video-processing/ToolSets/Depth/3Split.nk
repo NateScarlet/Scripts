@@ -4,12 +4,12 @@ push $cut_paste_input
 Group {
  name Depth3Split_Global_1
  tile_color 0xff00ff
+ label "\[if \{!\[value this.selected]\} \{\[knob this.preview 0]\}]"
  selected true
- xpos 950
- ypos -1078
- addUserKnob {20 Depth3Split l Depth3Split_v1.1}
+ xpos 1500
+ ypos 206
+ addUserKnob {20 Depth3Split l Depth3Split_v1.2}
  addUserKnob {6 preview +STARTLINE}
- preview true
  addUserKnob {41 input T Middle.input}
  addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
  addUserKnob {41 invert -STARTLINE T Middle.invert}
@@ -64,7 +64,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   input depth
   output depth3split.Middle
   operation "luminance key"
-  range {0.0007106 0.00211259 0.00351458 0.004916574667}
+  range {0.001003762256 0.001321443333 0.001639126667 0.001956813333}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Focus_expand.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
@@ -86,7 +86,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   output depth3split.Focus
   invert true
   operation "luminance key"
-  range {0 0 0.0007106 0.00491657}
+  range {0.00100376 0.00132144 0.00163913 0.00195681}
   name Focus
   xpos 180
   ypos -330
@@ -110,7 +110,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
  }
  Blur {
   channels {none none none depth3split.Focus}
-  size 20
+  size 5
   name Blur1
   xpos 180
   ypos -167

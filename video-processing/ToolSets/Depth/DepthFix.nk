@@ -2,13 +2,13 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name DepthFix4
+ name DepthFix1
  tile_color 0x823a7dff
  label "\[knob_default \[class this].maxZ 1]\n\[knob_default \[class this].threshold 1]\n"
  selected true
- xpos 950
- ypos -14290
- addUserKnob {20 tab1 l DepthFix_v2.7}
+ xpos 1720
+ ypos -3771
+ addUserKnob {20 tab1 l DepthFix_v2.8}
  addUserKnob {7 threshold}
  threshold 1
  addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
@@ -30,7 +30,7 @@ Group {
   xpos 544
   ypos -846
  }
-set N743cec00 [stack 0]
+set N44456c00 [stack 0]
  Dot {
   name Dot5
   xpos 764
@@ -42,24 +42,32 @@ set N743cec00 [stack 0]
   xpos 764
   ypos -462
  }
-push $N743cec00
+push $N44456c00
  Dot {
   name Dot3
   xpos 544
   ypos -750
  }
-set N385f5800 [stack 0]
+set N4213a000 [stack 0]
  Dot {
   name Dot1
   xpos 654
   ypos -750
+ }
+ Expression {
+  channel0 depth
+  expr0 "(a != 1) ? 1 : z"
+  name Expression5
+  note_font 微软雅黑
+  xpos 620
+  ypos -732
  }
  Dilate {
   channels depth
   size {{-width*parent.size/100}}
   name Dilate1
   xpos 620
-  ypos -736
+  ypos -701
  }
  Dot {
   name Dot11
@@ -67,7 +75,7 @@ set N385f5800 [stack 0]
   xpos 654
   ypos -630
  }
-push $N385f5800
+push $N4213a000
  MergeExpression {
   inputs 2
   channel0 depth
@@ -113,13 +121,13 @@ push $N385f5800
   xpos 544
   ypos -294
  }
-set N6c49c400 [stack 0]
+set N25814800 [stack 0]
  Dot {
   name Dot10
   xpos 654
   ypos -294
  }
-set N6c49d000 [stack 0]
+set N25815400 [stack 0]
  Dot {
   name Dot15
   xpos 764
@@ -139,7 +147,7 @@ set N6c49d000 [stack 0]
   xpos 764
   ypos -198
  }
-push $N6c49d000
+push $N25815400
  Expression {
   channel0 depth
   expr0 (z==0)?0:1/(z*10000)
@@ -154,7 +162,7 @@ push $N6c49d000
   xpos 654
   ypos -198
  }
-push $N6c49c400
+push $N25814800
  Dot {
   name Dot7
   label none
@@ -183,7 +191,6 @@ push $N6c49c400
   crop false
   name Crop1
   note_font 微软雅黑
-  selected true
   xpos 510
   ypos -55
  }
