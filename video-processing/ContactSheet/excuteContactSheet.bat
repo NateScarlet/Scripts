@@ -1,7 +1,7 @@
 
 @ECHO off
 CHCP 65001
-TITLE 生成色板v1.21
+TITLE 生成色板v1.22
 SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
 REM
 REM 在上方设置路径变量
@@ -33,5 +33,5 @@ FOR /F %%i IN ('DIR /B "ContactSheet*.nk"') DO (
     ECHO.
     ECHO 全尺寸渲染 %%~i
     ECHO.
-    %NUKE% -x -f --cont "%%~i"
+    %NUKE% -x -f -c 8G --cont --priority low "%%~i"
 )

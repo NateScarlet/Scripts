@@ -2,23 +2,26 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name ValueCorrect1
+ name ValueCorrect2
  help 只调整亮度不影响饱和度和色相
  tile_color 0x79a8ffff
- label "(\[value maskChannelInput])\n\[\nknob_default \[class this].contrast 1\nknob_default \[class this].gain 1\nknob_default \[class this].gamma 1\n]"
+ label "\n\[\nknob_default \[class this].whitepoint 1\nknob_default \[class this].contrast 1\nknob_default \[class this].gain 1\nknob_default \[class this].gamma 1\nknob_default \[class this].white 1\n]"
  selected true
- xpos 1068
- ypos -7287
- addUserKnob {20 tab1 l ValueCorrect_v0.4 t 只调整亮度不影响饱和度和色相}
+ xpos -54
+ ypos -9075
+ addUserKnob {20 tab1 l ValueCorrect_v0.532 t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 blackpoint}
+ addUserKnob {7 whitepoint}
+ whitepoint 1
  addUserKnob {41 saturation T Saturation1.saturation}
  addUserKnob {7 contrast R 0 4}
  contrast 1
  addUserKnob {7 gamma R 0 5}
  gamma 1
- addUserKnob {7 lift}
- addUserKnob {7 gain R 0 4}
- gain 1
+ addUserKnob {7 black l lift}
+ addUserKnob {7 white l gain R 0 4}
+ white 1
  addUserKnob {7 offset R -1 1}
  addUserKnob {41 maskChannelInput l mask T Merge1.maskChannelInput}
  addUserKnob {41 inject -STARTLINE T Merge1.inject}
@@ -37,7 +40,7 @@ Group {
   xpos 544
   ypos -630
  }
-set Nb2b94800 [stack 0]
+set N3aba2400 [stack 0]
  Dot {
   name Dot7
   note_font 微软雅黑
@@ -47,13 +50,21 @@ set Nb2b94800 [stack 0]
  Saturation {
   name Saturation1
   xpos 620
-  ypos -514
+  ypos -586
  }
  Colorspace {
   colorspace_out HSV
   name Colorspace1
   xpos 620
-  ypos -490
+  ypos -562
+ }
+ Grade {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  blackpoint {{parent.blackpoint}}
+  whitepoint {{parent.whitepoint}}
+  name Grade2
+  xpos 620
+  ypos -520
  }
  ColorCorrect {
   channels {-rgba.red -rgba.green rgba.blue none}
@@ -61,26 +72,27 @@ set Nb2b94800 [stack 0]
   gamma {{parent.gamma}}
   name ColorCorrect1
   note_font 微软雅黑
+  selected true
   xpos 620
   ypos -467
  }
  Grade {
   channels {-rgba.red -rgba.green rgba.blue none}
-  black {{parent.lift}}
+  black {{parent.black}}
+  white {{parent.white}}
   name Grade1
-  note_font 微软雅黑
-  xpos 620
-  ypos -427
- }
- ColorCorrect {
-  channels {-rgba.red -rgba.green rgba.blue none}
-  gain {{parent.gain}}
-  offset {{parent.offset}}
-  name ColorCorrect2
   note_font 微软雅黑
   selected true
   xpos 620
-  ypos -379
+  ypos -419
+ }
+ ColorCorrect {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  offset {{parent.offset}}
+  name ColorCorrect2
+  note_font 微软雅黑
+  xpos 620
+  ypos -371
  }
  Colorspace {
   channels {{{parent.Colorspace1.channels}}}
@@ -95,7 +107,7 @@ set Nb2b94800 [stack 0]
   xpos 654
   ypos -270
  }
-push $Nb2b94800
+push $N3aba2400
  Merge2 {
   inputs 2
   operation copy
