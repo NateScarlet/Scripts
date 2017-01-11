@@ -1,19 +1,118 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
+Dot {
+ name Dot1
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -13567
+}
+set N500cd000 [stack 0]
+Dot {
+ name Dot2
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -13567
+}
+Remove {
+ channels rgba
+ name Remove1
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13548
+}
+AddChannels {
+ channels alpha
+ name AddChannels2
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13508
+}
+Radial {
+ area {-390 232 2642 1514}
+ name Radial_BG_A_1
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13464
+}
+Radial {
+ opacity 0.2
+ area {-116 220 2768 796}
+ name Radial_BG_A_2
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13440
+}
+Dot {
+ name Dot11
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -13375
+}
+push $N500cd000
+add_layer {Light1 Light1.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 Light1.alpha
+ name Copy1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -13388
+}
+Dot {
+ name Dot14
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -13327
+}
+set N52e7f400 [stack 0]
+Dot {
+ name Dot15
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -13327
+}
+Remove {
+ channels rgb
+ name Remove2
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13308
+}
+AddChannels {
+ channels alpha
+ color 1
+ name AddChannels3
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13280
+}
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
 Group {
- name NormalKeyer2
+ name NormalKeyer1
  tile_color 0xff00ff
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos 2252
- ypos -13969
- addUserKnob {20 tab1 l NormalKeyer_v1.2}
+ xpos 1610
+ ypos -13246
+ addUserKnob {20 NormalKeyer}
+ addUserKnob {26 text1 l v1.1}
  addUserKnob {41 in l "Normal Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show normal" +STARTLINE}
- preview true
  addUserKnob {41 pos l Position T Mask3D_RS1.pos}
  addUserKnob {41 rad l Radius T Mask3D_RS1.rad}
  addUserKnob {41 fall l "Falloff Exponent" T Mask3D_RS1.fall}
@@ -23,53 +122,37 @@ Group {
   inputs 0
   name Input
   xpos 510
-  ypos -874
+  ypos -826
  }
  Dot {
   name Dot13
   xpos 544
-  ypos -678
+  ypos -630
  }
-set N5efb7800 [stack 0]
- Dot {
-  name Dot4
-  note_font 微软雅黑
-  xpos 654
-  ypos -678
- }
-set Nfca32c00 [stack 0]
- AddChannels {
-  channels alpha
-  color 1
-  name AddChannels1
-  note_font 微软雅黑
-  xpos 620
-  ypos -595
- }
-push $Nfca32c00
- Dot {
-  name Dot3
-  note_font 微软雅黑
-  xpos 764
-  ypos -678
- }
+set N5f7ad400 [stack 0]
  Shuffle {
   in BumpNormals
-  in2 rgba
   name Shuffle2
-  xpos 730
-  ypos -514
+  xpos 620
+  ypos -586
  }
-set N18bae400 [stack 0]
+set N2500c00 [stack 0]
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -270
+ }
+push $N5f7ad400
+push $N2500c00
  Group {
   inputs 2
   name Mask3D_RS1
   tile_color 0x417c3eff
-  xpos 620
-  ypos -514
+  xpos 510
+  ypos -509
   addUserKnob {20 User}
   addUserKnob {18 pos l Position t "Select the colour that corresponds to the position you want."}
-  pos {0.375 0.5009765625 0.7797851563}
+  pos {0.9287109375 6.628036499e-005 -0.3701171875}
   addUserKnob {6 pos_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {13 rad l Radius}
   rad {2 3 3}
@@ -127,9 +210,8 @@ set N18bae400 [stack 0]
    name Perlin_gain
    help "This is an implementation of Ken Perlin's gain function. It boosts micro-contrast (acutance, in photographic terms) without clipping. When set to 0.5, it has no effect. When >0.5, gain is boosted; when <.5, gain is muted. Only luminance is affected; not hue nor saturation. Superwhites remain untouched."
    tile_color 0xcc9d6d00
-   selected true
    xpos 95
-   ypos 696
+   ypos 698
    addUserKnob {20 "" l User}
    addUserKnob {7 realGain l "Perlin Gain function" t "This is an implementation of Ken Perlin's gain function. It boosts micro-contrast (acutance, in photographic terms) without clipping. When set to 0.5, it has no effect. When >0.5, gain is boosted; when <.5, gain is muted. Only luminance is affected; not hue nor saturation. Superwhites remain untouched."}
    realGain {{parent.gain x23 0.69}}
@@ -170,62 +252,129 @@ set N18bae400 [stack 0]
    xpos 95
    ypos 762
   }
-set N44448800 [stack 0]
+set Ne2a5dc00 [stack 0]
   Output {
    name Output1
    xpos 95
    ypos 839
   }
-push $N44448800
+push $Ne2a5dc00
   Viewer {
+   frame_range 1-15
+   fps 25
    name Viewer1
    xpos -78
    ypos 627
   }
  end_group
- Dot {
-  name Dot2
-  note_font 微软雅黑
-  xpos 654
-  ypos -414
- }
-set Nfca33000 [stack 0]
-push $N18bae400
- Copy {
-  inputs 2
-  from0 rgba.alpha
-  to0 rgba.alpha
-  name Copy2
-  note_font 微软雅黑
-  xpos 730
-  ypos -427
- }
- Dot {
-  name Dot1
-  xpos 764
-  ypos -270
- }
-push $Nfca33000
-push $N5efb7800
- Copy {
-  inputs 2
-  from0 rgba.alpha
-  to0 rgba.alpha
-  name Copy1
-  note_font 微软雅黑
-  xpos 510
-  ypos -427
- }
  Switch {
   inputs 2
   which {{parent.preview}}
   name Switch1
   xpos 510
-  ypos -274
+  ypos -280
  }
  Output {
   name Output1
   xpos 510
-  ypos -58
+  ypos -202
  }
 end_group
+add_layer {Column Column.alpha}
+Multiply {
+ channels rgba
+ value 0
+ maskChannelInput Column.alpha
+ invert_mask true
+ name Multiply4
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13202
+}
+Dot {
+ name Dot16
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -13135
+}
+push $N52e7f400
+add_layer {Light2 Light2.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 Light2.alpha
+ name Copy2
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -13148
+}
+Dot {
+ name Dot17
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -13111
+}
+set Ne2a5c800 [stack 0]
+Dot {
+ name Dot18
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -13111
+}
+Remove {
+ channels rgba
+ name Remove3
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13092
+}
+AddChannels {
+ channels alpha
+ name AddChannels4
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13052
+}
+Radial {
+ area {-390 232 2642 1514}
+ name Radial_BG_A_5
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -12996
+}
+Radial {
+ opacity 0.2
+ area {-116 220 2768 796}
+ name Radial_BG_A_6
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -12972
+}
+Dot {
+ name Dot19
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -12919
+}
+push $Ne2a5c800
+add_layer {Light3 Light3.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 Light3.alpha
+ name Copy3
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -12932
+}

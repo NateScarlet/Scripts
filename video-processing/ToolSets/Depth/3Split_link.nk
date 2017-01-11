@@ -4,11 +4,12 @@ push $cut_paste_input
 Group {
  name Depth3Split1
  tile_color 0xff00ff
+ label "\[if \{!\[value this.selected]\} \{\[knob this.preview 0]\}]"
  selected true
- xpos -52
- ypos -1840
+ xpos 2136
+ ypos -130
  disable {{"!\[exists Depth3Split_Global_1]"}}
- addUserKnob {20 Depth3Split l Depth3Split_v1.1}
+ addUserKnob {20 Depth3Split l Depth3Split_v1.2}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}
  addUserKnob {41 combine l "" -STARTLINE T Middle.combine}
@@ -23,7 +24,7 @@ Group {
  addUserKnob {32 focus_far l "focus Far" -STARTLINE T "set tar this\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.D]\nknob group.Focus.range.C 1\nknob group.Focus.range.D 1"}
  addUserKnob {41 range_1 l range T Focus.range}
  addUserKnob {7 focus_expand l expand R 0 0.01}
- focus_expand {{parent.Depth3Split_Global_1.focus_expand}}
+ focus_expand {{"\[set a parent.Depth3Split_Global_1.focus_expand]\n(\[exists \$a]) ? \$a : 0"}}
  addUserKnob {41 gamma T Grade1.gamma}
  addUserKnob {41 size l "blur size" T Blur1.size}
  addUserKnob {41 filter l "blur filter" T Blur1.filter}
