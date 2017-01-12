@@ -27,11 +27,18 @@ def SwapKnobValue( ka, kb ):
     kb.setValue( va )
 
 def Show( s ):
+    def nodeName( n ) :
+        return n.name()
+    list1 = []
     for i in nuke.allNodes():
+        a = 0
         try:
-            a = 0
             a = not i['disable'].value()
         except:
             pass
         if s in i.name() and a:
-            i.showControlPanel()
+            list1.append( i )
+    list1.sort( key=nodeName, reverse=True )
+    for i in list1:
+        i.showControlPanel()
+        
