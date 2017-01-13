@@ -28,7 +28,7 @@ IF "%~1"=="" (
     GOTO:EOF
 )
 :LocaliseFootage
-IF "%NUKE_TEMP_DIDR%"=="" (
+IF "%NUKE_TEMP_DIR%"=="" (
     SET "NUKE_TEMP_DIR=%TEMP%\Nuke"
     ECHO 使用默认缓存目录: %TEMP%\Nuke
 ) ELSE (
