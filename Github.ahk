@@ -14,5 +14,5 @@ IfWinExist, ahk_exe GitHub.exe
 }
 else
 {
-	Run, GitHub
+	Run, GitHub.appref-ms
 }
