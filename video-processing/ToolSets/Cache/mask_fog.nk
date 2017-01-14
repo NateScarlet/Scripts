@@ -1,0 +1,41 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push 0
+push 0
+push $cut_paste_input
+push 0
+add_layer {mask_fog mask_fog.alpha}
+Merge2 {
+ inputs 3+1
+ operation max
+ Achannels mask_fog
+ Bchannels none
+ output {{{Achannels}}}
+ name Merge3
+ note_font 微软雅黑
+ selected true
+ xpos 833
+ ypos -9241
+}
+push 0
+clone node3ab75400|Keyer|7788 Keyer {
+ input depth
+ output mask_fog.alpha
+ invert true
+ operation "luminance key"
+ range {0.001824448877 0.01454508724 1 1}
+ name Keyer2
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1053
+ ypos -10582
+}
+Premult {
+ channels mask_fog
+ name Premult1
+ note_font 微软雅黑
+ selected true
+ xpos 1053
+ ypos -10522
+}

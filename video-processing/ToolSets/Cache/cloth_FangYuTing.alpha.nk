@@ -1,0 +1,69 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
+Keyer {
+ input SSS
+ output SSS.alpha
+ operation "luminance key"
+ range {0 0.007297795507 1 1}
+ name Keyer2
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1056
+ ypos -7710
+}
+Dot {
+ name Dot1
+ note_font 微软雅黑
+ selected true
+ xpos 1090
+ ypos -7629
+}
+set Nee42ec00 [stack 0]
+Dot {
+ name Dot2
+ note_font 微软雅黑
+ selected true
+ xpos 1200
+ ypos -7629
+}
+Radial {
+ replace true
+ area {569.5 -309 2312.5 683}
+ name Radial1
+ note_font 微软雅黑
+ selected true
+ xpos 1166
+ ypos -7610
+}
+Premult {
+ channels rgba
+ alpha SSS.alpha
+ invert true
+ name Premult1
+ note_font 微软雅黑
+ selected true
+ xpos 1166
+ ypos -7570
+}
+Dot {
+ name Dot3
+ note_font 微软雅黑
+ selected true
+ xpos 1200
+ ypos -7509
+}
+push $Nee42ec00
+add_layer {cloth_FangYuTing cloth_FangYuTing.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 cloth_FangYuTing.alpha
+ name Copy1
+ note_font 微软雅黑
+ selected true
+ xpos 1056
+ ypos -7522
+}

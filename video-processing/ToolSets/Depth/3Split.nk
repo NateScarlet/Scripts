@@ -4,10 +4,10 @@ push $cut_paste_input
 Group {
  name Depth3Split_Global_1
  tile_color 0xff00ff
- label "\[if \{!\[value this.selected]\} \{\[knob this.preview 0]\}]"
+ label "\[\nif \{!\[value this.selected]\} \{\n    \[knob this.preview 0]\n\} else \{\n    return\n\}\n]"
  selected true
- xpos 1500
- ypos 206
+ xpos 200
+ ypos -140
  addUserKnob {20 Depth3Split l Depth3Split_v1.2}
  addUserKnob {6 preview +STARTLINE}
  addUserKnob {41 input T Middle.input}

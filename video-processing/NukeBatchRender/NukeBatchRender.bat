@@ -1,22 +1,8 @@
+
 @ECHO OFF
 CHCP 65001 > nul
-TITLE Nuke批渲染v1.82
-SETLOCAL EnableDelayedExpansion
-REM 完成后休眠选项
-IF /I "%~1" EQU "-noHiberOption" GOTO:StartUp
-CHOICE /T 15 /D n /M "渲染完成后休眠"
-ECHO.
-IF "%ERRORLEVEL%" EQU "1" (
-    ECHO 保持此窗口开启以实现渲染完毕自动休眠
-    TITLE 休眠 - 渲染完成后
-    START /WAIT POWERSHELL "& '%~0'" -noHiberOption
-    ECHO.
-    CHOICE /T 15 /D y /M "15秒后休眠"
-    IF ERRORLEVEL 2 GOTO:EOF
-    SHUTDOWN /h
-    GOTO:EOF
-)
-:StartUp
+
+:VariablesSetting
 REM
 REM 在下方设置路径变量
 REM
@@ -25,13 +11,33 @@ SET "serverZ=\\192.168.1.7\z"
 REM
 REM 在上方设置路径变量
 REM
-ECHO 渲染时使用的NUKE路径: %NUKE%
-ECHO 本地缓存时使用的Z盘网络路径: %serverZ%
-ECHO.
-ECHO 提示 - 可以编辑此批处理文件头部来设置路径
-ECHO.
-:SettingCheck
-REM 检查路径设置
+SET "VERSION=Nuke批渲染v1.93"
+SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
+SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
+
+TITLE %VERSION%
+SETLOCAL EnableDelayedExpansion
+CD /D %~dp0
+
+:CheckSingleInstance
+IF /I "%~1" EQU "-noHiberOption" (
+    GOTO :OptionOfRendering
+)
+IF EXIST %SWITCH_RENDERING% (
+    IF EXIST %SWITCH_HIBER% (
+        ECHO 渲染完成后将休眠
+        GOTO :OptionOfRendering
+    ) ELSE (
+        CHOICE /T 15 /D n /M "前一次渲染尚未正常结束,仍要继续?"
+        IF "!ERRORLEVEL!" EQU "2" (
+            GOTO :EOF
+        )
+    )
+) ELSE (
+    ECHO. > %SWITCH_RENDERING%
+)
+
+:CheckEnv
 FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
 FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
 IF NOT EXIST !NUKE! (
@@ -42,8 +48,30 @@ IF NOT EXIST !NUKE! (
         SET "NUKE=!inputTemp!"
         SET "inputTemp="
     )
-    GOTO SettingCheck
+    GOTO CheckEnv
 )
+
+:OptionOfHiberAfterRender
+CHOICE /T 15 /D n /M "渲染完成后休眠"
+ECHO.
+IF "%ERRORLEVEL%" EQU "1" (
+    ECHO 保持此窗口开启以实现渲染完毕自动休眠
+    TITLE 休眠 - 渲染完成后
+    START /WAIT POWERSHELL -Command "& '.\NukeBatchRender.bat'"  -noHiberOption"
+    ECHO.
+    CHOICE /T 15 /D y /M "15秒后休眠"
+    IF ERRORLEVEL 2 GOTO:EOF
+    SHUTDOWN /H
+    GOTO:EOF
+)
+
+:OptionOfRendering
+ECHO 渲染时使用的NUKE路径: %NUKE%
+ECHO 本地缓存时使用的Z盘网络路径: %serverZ%
+ECHO.
+ECHO 提示 - 可以编辑此批处理文件头部来设置路径
+ECHO.
+
 CHOICE /T 15 /D n /M "素材缓存到本地后从缓存渲染"
 IF "%ERRORLEVEL%" EQU "1" SET "isLocalRender=TRUE"
 IF /I "%~1" EQU "-PROXY" (
@@ -107,6 +135,7 @@ IF /I "%isLocalRender%" EQU "TRUE" (
 )
 
 SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
+
 :Render
 REM 渲染
 IF NOT EXIST "%~dp0\*.nk" (
@@ -163,13 +192,14 @@ IF /I "%isLocalRender%" EQU "TRUE" (
     NET USE Z: "%serverZ%" /PERSISTENT:YES
 )
 REM 清理2个月前的日志
-FOR /F "demils=" %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
+FOR /F %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
     DEL %%i
 )
 EXPLORER %RenderLog%
 IF EXIST %~dp0afterRender.bat% (
     START /WAIT POWERSHELL "& '%~dp0afterRender.bat%'"
 )
+DEL %SWITCH_RENDERING%
 GOTO:EOF
 REM
 :RetryRender

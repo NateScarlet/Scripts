@@ -3,6 +3,7 @@ Loop {
         WinClose,
 	IfWinExist, ahk_exe CrashReporterNuke.exe,
 		WinClose,
+	Sleep, 1000
 }
 
 $#f:: Run Everything

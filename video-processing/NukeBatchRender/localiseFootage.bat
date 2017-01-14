@@ -1,7 +1,7 @@
 @ECHO OFF
 CHCP 65001 > nul
 IF "%~2"=="" (
-    TITLE 本地化素材v1.3
+    TITLE 本地化素材v1.4
 )
 REM
 REM 默认服务器地址
@@ -28,6 +28,12 @@ IF "%~1"=="" (
     GOTO:EOF
 )
 :LocaliseFootage
+IF "%NUKE_TEMP_DIR%"=="" (
+    SET "NUKE_TEMP_DIR=%TEMP%\Nuke"
+    ECHO 使用默认缓存目录: %TEMP%\Nuke
+) ELSE (
+    ECHO 使用自定义缓存目录: %NUKE_TEMP_DIR%
+)
 SET "localDir=%NUKE_TEMP_DIR%\localize\Z_"
 SET "agrv1=%~n1%"
 SETLOCAL EnableDelayedExpansion

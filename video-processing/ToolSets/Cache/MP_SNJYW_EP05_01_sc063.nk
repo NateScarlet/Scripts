@@ -4,48 +4,58 @@ BackdropNode {
  inputs 0
  name BackdropNode7
  tile_color 0x388e8e00
- label "MP_SNJYW_EP05_01_sc063 v2.2"
+ label "MP v2.3\nSNJYW_EP05_01_sc063"
  note_font_size 42
  selected true
- xpos 803
- ypos -8184
+ xpos -1567
+ ypos -701
  bdwidth 687
  bdheight 1379
  z_order 1
 }
+push $cut_paste_input
 Dot {
- inputs 0
  name Dot28
  note_font 微软雅黑
  selected true
- xpos 654
- ypos -7950
+ xpos -1716
+ ypos -467
 }
-set N1de4cc00 [stack 0]
+set N55ed8400 [stack 0]
 Dot {
  name Dot29
  note_font 微软雅黑
  selected true
- xpos 874
- ypos -7950
+ xpos -1496
+ ypos -467
 }
-push $cut_paste_input
+Camera2 {
+ inputs 0
+ read_from_file true
+ frame_rate 25
+ suppress_dialog true
+ name Camera_3DEnv_1
+ label "\[knob this.xpos 0]\n\[knob this.ypos 0]\n\[knob this.name Camera_3DEnv_1]"
+ note_font 微软雅黑
+ selected true
+ xpos 0
+}
 Dot {
  name Dot15
  label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]\n"
  selected true
- xpos 1094
- ypos -7302
+ xpos -1276
+ ypos 181
  hide_input true
 }
-set N1de4c000 [stack 0]
+set N55ed9000 [stack 0]
 Dot {
  name Dot24
  selected true
- xpos 1094
- ypos -7014
+ xpos -1276
+ ypos 469
 }
-push $N1de4c000
+push $N55ed9000
 push 0
 Reconcile3D {
  inputs 2
@@ -56,11 +66,11 @@ Reconcile3D {
  name Reconcile3D1
  note_font 微软雅黑
  selected true
- xpos 1280
- ypos -7363
+ xpos -1078
+ ypos 288
  hide_input true
 }
-push $N1de4c000
+push $N55ed9000
 Read {
  inputs 0
  file Z:/SNJYW/MP/moon.jpg
@@ -70,8 +80,8 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7999
+ xpos -1200
+ ypos -516
 }
 Keyer {
  operation "max keyer"
@@ -80,15 +90,15 @@ Keyer {
  label "输入通道 :\[value input]"
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7875
+ xpos -1200
+ ypos -392
 }
 Reformat {
  name Reformat1
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7811
+ xpos -1200
+ ypos -328
 }
 Transform {
  scale {{"pow((pow((Reconcile3D2.output.x-Reconcile3D1.output.x), 2) + pow((Reconcile3D2.output.y-Reconcile3D1.output.y), 2)), 0.5)/12.8162"}}
@@ -96,8 +106,8 @@ Transform {
  name Transform4
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7763
+ xpos -1200
+ ypos -280
 }
 Transform {
  translate {-494.9398193 473.2299194}
@@ -106,8 +116,8 @@ Transform {
  name Transform3
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7715
+ xpos -1200
+ ypos -232
 }
 Group {
  name ValueGamma1
@@ -115,8 +125,8 @@ Group {
  tile_color 0x79a8ffff
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
- xpos 1170
- ypos -7690
+ xpos -1200
+ ypos -207
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
@@ -143,7 +153,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N1debd800 [stack 0]
+set N4c309c00 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -163,7 +173,7 @@ set N1debd800 [stack 0]
   xpos 620
   ypos -466
  }
-set N3b65600 [stack 0]
+set N4c313b00 [stack 0]
  Premult {
   alpha none
   name MaskChannelChoose
@@ -175,8 +185,8 @@ set N3b65600 [stack 0]
   xpos 654
   ypos -366
  }
-push $N3b65600
-push $N1debd800
+push $N4c313b00
+push $N4c309c00
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -236,19 +246,21 @@ ColorCorrect {
  name ColorCorrect10
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7643
+ xpos -1200
+ ypos -160
 }
 ColorCorrect {
- saturation 0.8
- gain {0.4131160975 0.8129324317 1.190536261 1}
+ saturation 0.95
+ gamma {0.9152863622 0.9502863884 1.025286317 1}
+ gain {0.8800000548 1 1.120000005 1}
  name ColorCorrect5
- label "\[python \{str('SNJYW/EP01/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_OutRoom_Cold')\}]\n预设锁定 :\[python \{nuke.applyUserPreset('', str('SNJYW/EP01/' + os.path.splitext(os.path.basename(nuke.scriptName()))\[0].split('_')\[-2] + '/Env_OutRoom_Cold'), nuke.thisNode())\}]\n"
+ label "SNJYW/EP05/01/Env_OutRoom_Day\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP05/01/Env_OutRoom_Day', nuke.thisNode())\}]\n"
+ note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7607
+ xpos -1200
+ ypos -124
 }
-set N1deee800 [stack 0]
+set N56fd6c00 [stack 0]
 Reconcile3D {
  inputs 2
  point {34400000 44000000 17799998.78}
@@ -258,8 +270,8 @@ Reconcile3D {
  name Reconcile3D2
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7291
+ xpos -1200
+ ypos 192
 }
 Switch {
  inputs 2
@@ -267,28 +279,28 @@ Switch {
  name Switch6
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7187
- disable true
+ xpos -1200
+ ypos 296
+ disable {{1}}
 }
-push $N1de4c000
-push $N1de4c000
+push $N55ed9000
+push $N55ed9000
 FrameHold {
- first_frame 53
+ first_frame {{"int( ( root.first_frame + root.last_frame ) / 2 )"}}
  name FrameHold_Camera_3DEnv_1
  selected true
- xpos 1060
- ypos -7408
+ xpos -1310
+ ypos 75
 }
 Dot {
  name Dot16
  note_font 微软雅黑
  selected true
- xpos 1094
- ypos -7470
+ xpos -1276
+ ypos 13
 }
-set N1deee000 [stack 0]
-push $N1deee800
+set N56fd6400 [stack 0]
+push $N56fd6c00
 Glow2 {
  brightness 1.1
  size 80
@@ -296,16 +308,16 @@ Glow2 {
  name Glow2
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7523
+ xpos -1200
+ ypos -40
 }
 Project3D2 {
  inputs 2
  crop false
  name Project3D2
  selected true
- xpos 1170
- ypos -7450
+ xpos -1200
+ ypos 33
 }
 Card2 {
  translate {3440 4400 1779.999878}
@@ -325,11 +337,11 @@ Card2 {
  name Card1
  note_font 微软雅黑
  selected true
- xpos 1170
- ypos -7403
+ xpos -1200
+ ypos 80
  disable true
 }
-push $N1deee000
+push $N56fd6400
 Ramp {
  inputs 0
  cliptype none
@@ -340,8 +352,8 @@ Ramp {
  name Ramp4
  note_font 微软雅黑
  selected true
- xpos 1060
- ypos -7595
+ xpos -1310
+ ypos -112
 }
 Read {
  inputs 0
@@ -352,15 +364,15 @@ Read {
  label "<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>"
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -8023
+ xpos -1420
+ ypos -540
 }
 Reformat {
  name Reformat3
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -7811
+ xpos -1420
+ ypos -328
 }
 Transform {
  translate {-266 -46}
@@ -369,8 +381,8 @@ Transform {
  name Transform2
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -7787
+ xpos -1420
+ ypos -304
 }
 Group {
  name ValueGamma3
@@ -378,8 +390,8 @@ Group {
  tile_color 0x79a8ffff
  label "\[knob_default gain 1]\n\[knob_default gamma 1]"
  selected true
- xpos 950
- ypos -7762
+ xpos -1420
+ ypos -279
  addUserKnob {20 ValueGamma t 只调整亮度不影响饱和度和色相}
  addUserKnob {41 channels T Colorspace1.channels}
  addUserKnob {7 lift}
@@ -406,7 +418,7 @@ Group {
   xpos 544
   ypos -582
  }
-set N23757800 [stack 0]
+set N2c021c00 [stack 0]
  Dot {
   name Dot2
   xpos 654
@@ -426,7 +438,7 @@ set N23757800 [stack 0]
   xpos 620
   ypos -466
  }
-set N2374f200 [stack 0]
+set N4c312900 [stack 0]
  Premult {
   alpha none
   name MaskChannelChoose
@@ -438,8 +450,8 @@ set N2374f200 [stack 0]
   xpos 654
   ypos -366
  }
-push $N2374f200
-push $N23757800
+push $N4c312900
+push $N2c021c00
  Colorspace {
   colorspace_out HSV
   name Colorspace1
@@ -498,20 +510,20 @@ Grade {
  gamma {1.307583451 1.305833459 1.340833426 1.24000001}
  name Grade4
  selected true
- xpos 950
- ypos -7738
+ xpos -1420
+ ypos -255
 }
 ColorCorrect {
- saturation 0.8
- gain {0.8597364426 0.9097363949 1.099736452 1}
+ saturation 0.95
+ gamma {0.9152863622 0.9502863884 1.025286317 1}
+ gain {0.8800000548 1 1.120000005 1}
  name ColorCorrect13
  label "SNJYW/EP05/01/Env_OutRoom_Day\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP05/01/Env_OutRoom_Day', nuke.thisNode())\}]\n"
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -7707
+ xpos -1420
+ ypos -224
 }
-set N23784800 [stack 0]
 ColorCorrect {
  inputs 1+1
  gamma 1.1
@@ -519,16 +531,16 @@ ColorCorrect {
  name ColorCorrect14
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -7595
+ xpos -1420
+ ypos -112
 }
 Project3D2 {
  inputs 2
  crop false
  name Project3D1
  selected true
- xpos 950
- ypos -7498
+ xpos -1420
+ ypos -15
 }
 Sphere {
  translate {0 -24 0}
@@ -536,16 +548,16 @@ Sphere {
  uniform_scale 10000
  name Sphere2
  selected true
- xpos 950
- ypos -7402
+ xpos -1420
+ ypos 81
 }
-push $N1de4c000
+push $N55ed9000
 Scene {
  inputs 3
  name Scene3
  selected true
- xpos 960
- ypos -7350
+ xpos -1410
+ ypos 133
 }
 push 0
 ScanlineRender {
@@ -554,16 +566,16 @@ ScanlineRender {
  motion_vectors_type distance
  name ScanlineRender3
  selected true
- xpos 950
- ypos -7234
+ xpos -1420
+ ypos 249
 }
 Merge2 {
  inputs 2
  name Merge7
  note_font 微软雅黑
  selected true
- xpos 950
- ypos -7187
+ xpos -1420
+ ypos 296
  disable true
 }
 Expression {
@@ -572,22 +584,22 @@ Expression {
  name Expression1
  label Depth:NukeToRedshift
  selected true
- xpos 950
- ypos -7144
+ xpos -1420
+ ypos 339
 }
 Defocus {
  defocus {{ZDefocus2.size}}
  name Defocus4
  selected true
- xpos 950
- ypos -7096
+ xpos -1420
+ ypos 387
 }
 MotionBlur3D {
  inputs 2
  name MotionBlur3D2
  selected true
- xpos 950
- ypos -7018
+ xpos -1420
+ ypos 465
  disable true
 }
 VectorBlur2 {
@@ -595,8 +607,8 @@ VectorBlur2 {
  scale 10
  name VectorBlur2_2
  selected true
- xpos 950
- ypos -6976
+ xpos -1420
+ ypos 507
  disable true
 }
 add_layer {MP MP.red MP.green MP.blue MP.alpha}
@@ -604,38 +616,24 @@ Shuffle {
  out MP
  name Shuffle2
  selected true
- xpos 950
- ypos -6922
+ xpos -1420
+ ypos 561
 }
 ZMerge {
  inputs 2
  name ZMerge1
  note_font 微软雅黑
  selected true
- xpos 840
- ypos -6923
+ xpos -1530
+ ypos 560
 }
-push $N1de4cc00
+push $N55ed8400
 Switch {
  inputs 2
  which 1
  name Switch7
  label MP
  selected true
- xpos 620
- ypos -6928
-}
-push $N23784800
-NoOp {
- name LockPreset1
- note_font 微软雅黑
- selected true
- xpos 1060
- ypos -7547
- addUserKnob {20 User l 锁定预设v1.6}
- addUserKnob {26 text1 l 为输入节点}
- addUserKnob {22 lock l 加锁 -STARTLINE T "n = nuke.thisNode();\nni = n.input(0);\nl = ni\['label'].value();\ncpn = n\['customPresetName'].value();\nif nuke.root()\['name'].value():\n    pn = os.path.basename(nuke.scriptName());\n    pn = pn.replace('_', '/');\n    pnS = os.path.dirname(pn);\n    pn = pn.split('/');\n    pn = '/'.join(pn\[:-1]);\n    if not cpn:\n        cpn = 'Temp';\n    pnS = pnS + '/' + cpn;\n    pnPy = \"'\" + pnS + \"'\";\n    pnTcl = pnS;\nelse:\n    pnS = 'Temp';\n    pnPy = 'Temp';\n    pnTcl = 'Temp';\n    if cpn:\n        pnS = 'Temp/' + cpn;\n        pnPy = \"'Temp/\" + cpn + \"'\";\n        pnTcl = 'Temp/' + cpn;\nif not '预设锁定' in l:\n    ol = ni\['label'].value();\n    s = pnTcl + \"\\n预设锁定 :\[python \{nuke.applyUserPreset('', \" + pnPy + \", nuke.thisNode())\}]\\n\" + ol;\n    ni\['label'].setValue(s);\n    nuke.saveUserPreset(ni, pnS);\nelse:\n    nuke.message('节点已锁,请先解锁');"}
- addUserKnob {22 unlock l 解锁 -STARTLINE T "n = nuke.thisNode();\nni = n.input(0);\nl = ni\['label'].value();\no = l.split('\\n')\[2:]\no = '\\n'.join(o)\nif '预设锁定' in l:\n    presetName = nuke.tcl('return ' + l.split('\\n')\[0]);\n    nuke.deleteUserPreset(ni.Class(), presetName);\n    ni\['label'].setValue(o);\nelse:\n    nuke.message('节点未被锁定')"}
- addUserKnob {1 customPresetName l 自定义预设名}
- customPresetName Env_OutRoom_Day
+ xpos -1750
+ ypos 555
 }
