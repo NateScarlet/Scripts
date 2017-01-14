@@ -11,7 +11,7 @@ SET "serverZ=\\192.168.1.7\z"
 REM
 REM 在上方设置路径变量
 REM
-SET "VERSION=Nuke批渲染v1.9"
+SET "VERSION=Nuke批渲染v1.93"
 SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
 SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
 
@@ -20,13 +20,16 @@ SETLOCAL EnableDelayedExpansion
 CD /D %~dp0
 
 :CheckSingleInstance
+IF /I "%~1" EQU "-noHiberOption" (
+    GOTO :OptionOfRendering
+)
 IF EXIST %SWITCH_RENDERING% (
     IF EXIST %SWITCH_HIBER% (
         ECHO 渲染完成后将休眠
         GOTO :OptionOfRendering
     ) ELSE (
-        CHOICE /T 15 /D n /M "前一次渲染尚未正常结束,继续?"
-        IF "%ERRORLEVEL%" EQU "2" (
+        CHOICE /T 15 /D n /M "前一次渲染尚未正常结束,仍要继续?"
+        IF "!ERRORLEVEL!" EQU "2" (
             GOTO :EOF
         )
     )
@@ -49,15 +52,12 @@ IF NOT EXIST !NUKE! (
 )
 
 :OptionOfHiberAfterRender
-IF /I "%~1" EQU "-noHiberOption" (
-    GOTO :OptionOfRendering
-)
 CHOICE /T 15 /D n /M "渲染完成后休眠"
 ECHO.
 IF "%ERRORLEVEL%" EQU "1" (
     ECHO 保持此窗口开启以实现渲染完毕自动休眠
     TITLE 休眠 - 渲染完成后
-    START /WAIT POWERSHELL -Command "Set-Location ^"%~dp0^" ; & ^".\Nuke批渲染.lnk^"  -noHiberOption"
+    START /WAIT POWERSHELL -Command "& '.\NukeBatchRender.bat'"  -noHiberOption"
     ECHO.
     CHOICE /T 15 /D y /M "15秒后休眠"
     IF ERRORLEVEL 2 GOTO:EOF
@@ -192,7 +192,7 @@ IF /I "%isLocalRender%" EQU "TRUE" (
     NET USE Z: "%serverZ%" /PERSISTENT:YES
 )
 REM 清理2个月前的日志
-FOR /F "demils=" %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
+FOR /F %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
     DEL %%i
 )
 EXPLORER %RenderLog%
