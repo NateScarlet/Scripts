@@ -1,0 +1,79 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot8
+ note_font 微软雅黑
+ selected true
+ xpos 984
+ ypos -15798
+}
+set N4e2e6c00 [stack 0]
+Dot {
+ name Dot9
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos -15798
+}
+add_layer {DiffuseTint DiffuseTint.red DiffuseTint.green DiffuseTint.blue DiffuseTint.alpha}
+Shuffle {
+ in DiffuseTint
+ name Shuffle2
+ label "\[value in] \[value in2] -> \[value out] \[value out2]"
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -15787
+}
+set Na4370c00 [stack 0]
+Keyer {
+ invert true
+ operation "saturation key"
+ range {0.002045402894 0.04561122194 1 1}
+ name Keyer4
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -15747
+}
+push $Na4370c00
+Keyer {
+ operation "luminance key"
+ range {0.05227772026 0.5681674705 1 1}
+ name Keyer3
+ label "输入通道 :\[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -15747
+}
+ChannelMerge {
+ inputs 2
+ operation in
+ name ChannelMerge1
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -15675
+}
+Dot {
+ name Dot10
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos -15582
+}
+push $N4e2e6c00
+add_layer {cloth_white cloth_white.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 cloth_white.alpha
+ name Copy3
+ note_font 微软雅黑
+ selected true
+ xpos 950
+ ypos -15595
+}

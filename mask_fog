@@ -2,7 +2,7 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 add_layer {mask_fog mask_fog.alpha}
-Keyer {
+clone node1401efc00|Keyer|11420 Keyer {
  input depth
  output mask_fog.alpha
  invert true
@@ -12,14 +12,14 @@ Keyer {
  label "输入通道 :\[value input]"
  note_font 微软雅黑
  selected true
- xpos 1060
- ypos -7449
+ xpos 1200
+ ypos -2223
 }
-Premult {
+clone node1401ef800|Premult|11420 Premult {
  channels mask_fog
  name Premult1
  note_font 微软雅黑
  selected true
- xpos 1060
- ypos -7389
+ xpos 1200
+ ypos -2163
 }
