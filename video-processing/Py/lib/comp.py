@@ -42,3 +42,15 @@ def Show( s ):
     for i in list1:
         i.showControlPanel()
         
+def UpdateToolsets( s , path ):
+    for i in nuke.allNodes():
+       if s in i.name() and 'python' not in i[ 'label' ].value() :
+           i.selectOnly()
+           n = nuke.loadToolset( path )
+           for k in i.allKnobs() :
+               kn = k.name()
+               if kn in [ 'name', '', 'label' ] :
+                   pass
+               elif kn in allKnobsName( n ) :
+                   n[ kn ].setValue( i[ kn ].value() )
+           nuke.delete( i )

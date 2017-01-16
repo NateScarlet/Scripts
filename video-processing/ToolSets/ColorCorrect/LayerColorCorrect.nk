@@ -1,0 +1,230 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
+Group {
+ name LayerColorCorrect1
+ tile_color 0x7aa9ffff
+ label "\[value in]\n\[knob_default saturation 1]\n\[knob_default gain 1]\n\[knob_default gamma 1]\n\[knob_default layer_mix 1]\n\[knob_default mix_1 1]"
+ selected true
+ xpos 2528
+ ypos -3494
+ addUserKnob {20 tab1 l LayerColorCorrect_v1.2}
+ addUserKnob {6 preview l "view range" +STARTLINE}
+ addUserKnob {41 in l layer T Shuffle1.in}
+ addUserKnob {7 layer_mix l "layer color affect"}
+ layer_mix 1
+ addUserKnob {41 size l erode T Dilate1.size}
+ addUserKnob {41 size_1 l "blur size" T Blur1.size}
+ addUserKnob {41 whitepoint T Grade3.whitepoint}
+ addUserKnob {26 div1 l "Depth Falloff"}
+ addUserKnob {41 whitepoint_1 l farpoint T Grade2.whitepoint}
+ addUserKnob {41 mix T Multiply1.mix}
+ addUserKnob {26 dev2 l "Color Correcet"}
+ addUserKnob {41 highlights.saturation l saturation T ColorCorrect1.highlights.saturation}
+ addUserKnob {41 highlights.contrast l contrast T ColorCorrect1.highlights.contrast}
+ addUserKnob {41 highlights.gamma l gamma T ColorCorrect1.highlights.gamma}
+ addUserKnob {41 highlights.gain l gain T ColorCorrect1.highlights.gain}
+ addUserKnob {41 highlights.offset l offset T ColorCorrect1.highlights.offset}
+ addUserKnob {18 mix_1 l mix}
+ mix_1 1
+ addUserKnob {6 mix_1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos -40
+  ypos -586
+ }
+set N9031f400 [stack 0]
+ Dot {
+  name Dot1
+  xpos 104
+  ypos -582
+ }
+set N9031f800 [stack 0]
+ Dot {
+  name Dot7
+  xpos 214
+  ypos -582
+ }
+ Premult {
+  channels alpha
+  alpha depth.Z
+  name Premult1
+  xpos 180
+  ypos -520
+ }
+ Grade {
+  channels {none none none rgba.alpha}
+  whitepoint 0.075
+  name Grade2
+  xpos 180
+  ypos -472
+ }
+ Dot {
+  name Dot8
+  xpos 214
+  ypos -390
+ }
+push $N9031f800
+ Shuffle {
+  in SSS
+  name Shuffle1
+  xpos 70
+  ypos -466
+ }
+ Multiply {
+  inputs 1+1
+  channels rgba
+  value 0
+  mix 0
+  name Multiply1
+  xpos 70
+  ypos -394
+  disable {{"\[string is digit \[input parent 0]]"}}
+ }
+ Dilate {
+  channels rgba
+  name Dilate1
+  xpos 70
+  ypos -370
+ }
+ Blur {
+  name Blur1
+  xpos 70
+  ypos -328
+ }
+ Grade {
+  whitepoint 0.01
+  mix {{1-parent.layer_mix}}
+  name Grade1
+  xpos 70
+  ypos -274
+ }
+ Grade {
+  name Grade3
+  xpos 70
+  ypos -226
+ }
+ SoftClip {
+  conversion "logarithmic compress"
+  softclip_min 0
+  name SoftClip1
+  xpos 70
+  ypos -202
+ }
+set Nd369ec00 [stack 0]
+ Viewer {
+  frame_range 1-146
+  fps 25
+  name Viewer1
+  note_font 微软雅黑
+  xpos 180
+  ypos -11
+ }
+push $Nd369ec00
+ Dot {
+  name Dot10
+  note_font 微软雅黑
+  xpos 104
+  ypos 186
+ }
+set Ncd399800 [stack 0]
+ Dot {
+  name Dot11
+  note_font 微软雅黑
+  xpos 104
+  ypos 234
+ }
+set Ncd399000 [stack 0]
+ Dot {
+  name Dot15
+  note_font 微软雅黑
+  xpos 104
+  ypos 282
+ }
+set Ncd398800 [stack 0]
+ Dot {
+  name Dot9
+  xpos 104
+  ypos 354
+ }
+push $Ncd398800
+push $N9031f400
+ ColorCorrect {
+  name ColorCorrect1
+  note_font 微软雅黑
+  selected true
+  xpos -40
+  ypos -173
+ }
+ Dot {
+  name Dot16
+  note_font 微软雅黑
+  xpos -6
+  ypos 162
+ }
+set Ncd398400 [stack 0]
+push $Ncd399000
+push $Ncd398400
+push $Ncd399800
+push $Ncd398400
+push $N9031f400
+ Dot {
+  name Dot2
+  xpos -116
+  ypos -582
+ }
+ Dot {
+  name Dot3
+  xpos -116
+  ypos 138
+ }
+ Merge2 {
+  inputs 2+1
+  operation copy
+  Achannels {none none none rgba.red}
+  Bchannels {{{Achannels}}}
+  output {{{Bchannels}}}
+  maskChannelMask rgba.red
+  name Merge1
+  xpos -150
+  ypos 176
+ }
+ Merge2 {
+  inputs 2+1
+  operation copy
+  Achannels {none none none rgba.green}
+  Bchannels {{{Achannels}}}
+  output {{{Bchannels}}}
+  maskChannelMask rgba.green
+  name Merge3
+  xpos -150
+  ypos 224
+ }
+ Merge2 {
+  inputs 2+1
+  operation copy
+  Achannels {none none none rgba.blue}
+  Bchannels {{{Achannels}}}
+  output {{{Bchannels}}}
+  maskChannelMask rgba.blue
+  name Merge4
+  xpos -150
+  ypos 272
+ }
+ Merge2 {
+  inputs 2
+  operation copy
+  name Merge2
+  xpos -150
+  ypos 350
+  disable {{1-parent.preview}}
+ }
+ Output {
+  name Output1
+  xpos -150
+  ypos 470
+ }
+end_group

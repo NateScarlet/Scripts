@@ -2,26 +2,50 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Dot {
- name Dot12
+ name Dot14
  note_font 微软雅黑
  selected true
- xpos 1754
- ypos -3865
+ xpos 1538
+ ypos -13459
 }
-set Ne943a400 [stack 0]
+set N339ccc00 [stack 0]
+Dot {
+ name Dot15
+ note_font 微软雅黑
+ selected true
+ xpos 1648
+ ypos -13459
+}
+Remove {
+ channels rgb
+ name Remove2
+ note_font 微软雅黑
+ selected true
+ xpos 1614
+ ypos -13440
+}
+AddChannels {
+ channels alpha
+ color 1
+ name AddChannels3
+ note_font 微软雅黑
+ selected true
+ xpos 1614
+ ypos -13424
+}
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
 Group {
- name NormalKeyer2
+ name NormalKeyer1
  tile_color 0xff00ff
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos 1834
- ypos -3850
- addUserKnob {20 tab1 l NormalKeyer_v1.2}
+ xpos 1614
+ ypos -13376
+ addUserKnob {20 NormalKeyer}
+ addUserKnob {26 text1 l v1.1}
  addUserKnob {41 in l "Normal Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show normal" +STARTLINE}
- preview true
  addUserKnob {41 pos l Position T Mask3D_RS1.pos}
  addUserKnob {41 rad l Radius T Mask3D_RS1.rad}
  addUserKnob {41 fall l "Falloff Exponent" T Mask3D_RS1.fall}
@@ -31,56 +55,40 @@ Group {
   inputs 0
   name Input
   xpos 510
-  ypos -874
+  ypos -826
  }
  Dot {
   name Dot13
   xpos 544
-  ypos -678
+  ypos -630
  }
-set Ne622a400 [stack 0]
- Dot {
-  name Dot4
-  note_font 微软雅黑
-  xpos 654
-  ypos -678
- }
-set Ne622ac00 [stack 0]
- AddChannels {
-  channels alpha
-  color 1
-  name AddChannels1
-  note_font 微软雅黑
-  xpos 620
-  ypos -595
- }
-push $Ne622ac00
- Dot {
-  name Dot3
-  note_font 微软雅黑
-  xpos 764
-  ypos -678
- }
+set N33a05800 [stack 0]
  Shuffle {
   in BumpNormals
-  in2 rgba
   name Shuffle2
-  xpos 730
-  ypos -514
+  xpos 620
+  ypos -586
  }
-set Ne622a000 [stack 0]
+set N33a05400 [stack 0]
+ Dot {
+  name Dot1
+  xpos 654
+  ypos -270
+ }
+push $N33a05800
+push $N33a05400
  Group {
   inputs 2
   name Mask3D_RS1
   tile_color 0x417c3eff
-  xpos 620
-  ypos -514
+  xpos 510
+  ypos -509
   addUserKnob {20 User}
   addUserKnob {18 pos l Position t "Select the colour that corresponds to the position you want."}
-  pos {0.00691986084 0.830078125 0.1962890625}
+  pos {0.9287109375 6.628036499e-005 -0.3701171875}
   addUserKnob {6 pos_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {13 rad l Radius}
-  rad {3 3 2.2}
+  rad {2 3 3}
   addUserKnob {7 fall l "Falloff Exponent" R 1 10}
   fall 10
   addUserKnob {7 gain l Hardness}
@@ -135,9 +143,8 @@ set Ne622a000 [stack 0]
    name Perlin_gain
    help "This is an implementation of Ken Perlin's gain function. It boosts micro-contrast (acutance, in photographic terms) without clipping. When set to 0.5, it has no effect. When >0.5, gain is boosted; when <.5, gain is muted. Only luminance is affected; not hue nor saturation. Superwhites remain untouched."
    tile_color 0xcc9d6d00
-   selected true
    xpos 95
-   ypos 696
+   ypos 698
    addUserKnob {20 "" l User}
    addUserKnob {7 realGain l "Perlin Gain function" t "This is an implementation of Ken Perlin's gain function. It boosts micro-contrast (acutance, in photographic terms) without clipping. When set to 0.5, it has no effect. When >0.5, gain is boosted; when <.5, gain is muted. Only luminance is affected; not hue nor saturation. Superwhites remain untouched."}
    realGain {{parent.gain x23 0.69}}
@@ -178,72 +185,71 @@ set Ne622a000 [stack 0]
    xpos 95
    ypos 762
   }
-set N70126800 [stack 0]
+set N33a2c400 [stack 0]
   Output {
    name Output1
    xpos 95
    ypos 839
   }
-push $N70126800
+push $N33a2c400
   Viewer {
+   frame_range 1-15
+   fps 25
    name Viewer1
    xpos -78
    ypos 627
   }
  end_group
- Dot {
-  name Dot2
-  note_font 微软雅黑
-  xpos 654
-  ypos -414
- }
-set N5b0b7c00 [stack 0]
-push $Ne622a000
- Copy {
-  inputs 2
-  from0 rgba.alpha
-  to0 rgba.alpha
-  name Copy2
-  note_font 微软雅黑
-  xpos 730
-  ypos -427
- }
- Dot {
-  name Dot1
-  xpos 764
-  ypos -270
- }
-push $N5b0b7c00
-push $Ne622a400
- Copy {
-  inputs 2
-  from0 rgba.alpha
-  to0 rgba.alpha
-  name Copy1
-  note_font 微软雅黑
-  xpos 510
-  ypos -427
- }
  Switch {
   inputs 2
   which {{parent.preview}}
   name Switch1
   xpos 510
-  ypos -274
+  ypos -280
  }
  Output {
   name Output1
   xpos 510
-  ypos -58
+  ypos -202
  }
 end_group
-push $Ne943a400
-Grade {
- inputs 1+1
- gamma {2.200000286 2.900000334 3.600000381 2.900000095}
- name Grade2
- label NormalLight
+add_layer {column column.alpha}
+Multiply {
+ channels rgba
+ value 0
+ maskChannelInput column.alpha
+ invert_mask true
+ name Multiply4
+ note_font 微软雅黑
  selected true
- xpos 1711
- ypos -3762
+ xpos 1614
+ ypos -13328
+}
+Grade {
+ channels rgba
+ white 0.6
+ name Grade3
+ note_font 微软雅黑
+ selected true
+ xpos 1614
+ ypos -13296
+}
+Dot {
+ name Dot16
+ note_font 微软雅黑
+ selected true
+ xpos 1648
+ ypos -13243
+}
+push $N339ccc00
+add_layer {light light.sky light.fire}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 light.fire
+ name Copy2
+ note_font 微软雅黑
+ selected true
+ xpos 1504
+ ypos -13256
 }

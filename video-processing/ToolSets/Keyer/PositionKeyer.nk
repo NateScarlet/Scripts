@@ -3,18 +3,18 @@ version 10.0 v4
 push $cut_paste_input
 add_layer {P P.red P.green P.blue}
 Group {
- name PositionKeyer1
+ name PositionKeyer2
  tile_color 0xff00ff
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos 1188
- ypos -15428
- addUserKnob {20 tab1 l PositionKeyer_v0.3}
+ xpos 2820
+ ypos -13099
+ addUserKnob {20 tab1 l PositionKeyer_v0.4}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show position" +STARTLINE}
  preview true
- addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 ""}
  addUserKnob {6 x +STARTLINE}
  addUserKnob {6 invert_x l invert -STARTLINE}
  addUserKnob {6 y +STARTLINE}
@@ -42,12 +42,12 @@ Group {
   xpos 544
   ypos -966
  }
-set Na2b3a800 [stack 0]
+set N87c4c000 [stack 0]
  Dot {
   name Dot5
   note_font 微软雅黑
   xpos 654
-  ypos -942
+  ypos -966
  }
  Shuffle {
   in P
@@ -62,7 +62,7 @@ set Na2b3a800 [stack 0]
   xpos 654
   ypos -894
  }
-set N1749dc00 [stack 0]
+set N4f567000 [stack 0]
  AddChannels {
   channels alpha
   color 1
@@ -78,7 +78,7 @@ set N1749dc00 [stack 0]
   name Grade1
   note_font 微软雅黑
   xpos 620
-  ypos -680
+  ypos -691
  }
  Grade {
   channels {none none none rgba.green}
@@ -87,7 +87,7 @@ set N1749dc00 [stack 0]
   name Grade2
   note_font 微软雅黑
   xpos 620
-  ypos -636
+  ypos -643
  }
  Grade {
   channels {none none none rgba.blue}
@@ -96,7 +96,7 @@ set N1749dc00 [stack 0]
   name Grade3
   note_font 微软雅黑
   xpos 620
-  ypos -592
+  ypos -595
  }
  Expression {
   temp_name0 x
@@ -110,21 +110,21 @@ set N1749dc00 [stack 0]
   name Expression1
   note_font 微软雅黑
   xpos 620
-  ypos -462
+  ypos -467
  }
  Dot {
   name Dot2
   note_font 微软雅黑
   xpos 654
-  ypos -409
+  ypos -414
  }
-set N453f800 [stack 0]
-push $N1749dc00
+set N4b30ac00 [stack 0]
+push $N4f567000
  Dot {
   name Dot3
   note_font 微软雅黑
-  xpos 1094
-  ypos -870
+  xpos 764
+  ypos -894
  }
  Copy {
   inputs 2
@@ -132,16 +132,16 @@ push $N1749dc00
   to0 rgba.alpha
   name Copy2
   note_font 微软雅黑
-  xpos 1060
-  ypos -403
+  xpos 730
+  ypos -427
  }
  Dot {
   name Dot1
-  xpos 1094
-  ypos -246
+  xpos 764
+  ypos -270
  }
-push $N453f800
-push $Na2b3a800
+push $N4b30ac00
+push $N87c4c000
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -157,6 +157,13 @@ push $Na2b3a800
   name Switch1
   xpos 510
   ypos -274
+ }
+ Clamp {
+  channels alpha
+  name Clamp1
+  note_font 微软雅黑
+  xpos 510
+  ypos -235
  }
  Output {
   name Output1
