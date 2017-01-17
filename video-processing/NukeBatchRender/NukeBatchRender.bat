@@ -11,9 +11,10 @@ SET "serverZ=\\192.168.1.7\z"
 REM
 REM 在上方设置路径变量
 REM
-SET "VERSION=Nuke批渲染v1.93"
+SET "VERSION=Nuke批渲染v1.94"
 SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
 SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
+SET "CLOSE_ERROR_WINDOW="%~dp0CloseErrorWindow.exe""
 
 TITLE %VERSION%
 SETLOCAL EnableDelayedExpansion
@@ -35,6 +36,9 @@ IF EXIST %SWITCH_RENDERING% (
     )
 ) ELSE (
     ECHO. > %SWITCH_RENDERING%
+)
+IF EXIST %CLOSE_ERROR_WINDOW% (
+    START "" %CLOSE_ERROR_WINDOW%
 )
 
 :CheckEnv

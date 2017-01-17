@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode_Write_1
  tile_color 0x9fbcc6ff
- label "Write v4.03\n\[\nknob root.onScriptLoad \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.warning('工程目录未设置');\n\}\nknob root.onScriptSave \{\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n# setKnobDefault\nknob_default Switch.which 1\nknob_default Read.label \{<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> <font color = red>\[value first] - \[value last] </font>\}\nknob_default Shuffle.label \{\[value in] \[value in2] -> \[value out] \[value out2]\}\nknob_default Keyer.label \{输入通道 :\[value input]\}\nknob_default note_font 微软雅黑\n]"
+ label "Write v4.1\n"
  note_font_size 42
  selected true
- xpos 94
- ypos -278
+ xpos 1029
+ ypos 1365
  bdwidth 365
  bdheight 431
  addUserKnob {20 tab1 l 设置}
@@ -26,38 +26,22 @@ BackdropNode {
  addUserKnob {6 isLock5 l "5 -> 色相视图" -STARTLINE}
  isLock5 true
 }
-Read {
- inputs 0
- file "\[value Write_JPG_1.file]"
- first {{parent.Write_JPG_1.last}}
- last {{first}}
- origset true
- version 28
- in_colorspace linear
- out_colorspace linear
- name ReadWrite_JPG_1
- label "第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
- selected true
- xpos 346
- ypos -84
- disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
-}
 push $cut_paste_input
 NoOp {
- name setRootFormat_HD1080_fps25_1
- label "\[\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
+ name setProject
+ label "\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
  selected true
- xpos 236
- ypos -192
+ xpos 1170
+ ypos 1443
 }
 Dot {
- name Dot7
+ name Dot_Write_2
  note_font 微软雅黑
  selected true
- xpos 270
- ypos -140
+ xpos 1204
+ ypos 1480
 }
-set N18bafc00 [stack 0]
+set N3662e400 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
@@ -82,8 +66,8 @@ Write {
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_1
  selected true
- xpos 126
- ypos -109
+ xpos 1060
+ ypos 1511
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
@@ -94,7 +78,7 @@ Text2 {
  font_height_toolbar 100
  opacity 0.3
  message "\[lindex \[split \[basename \[value root.name]] .] 0]"
- old_message {{83 78 74 89 87 95 69 80 48 49 95 48 52 95 115 99 49 50 56}
+ old_message {{83 78 74 89 87 95 69 80 48 55 95 48 51 95 115 99 49 51 51}
    }
  old_expression_markers {{0 18}
    }
@@ -115,46 +99,45 @@ Text2 {
  enable_background {{!root.proxy}}
  background_opacity 0.3
  background_border_x 20
- name Text1
+ name Text2_Write_2
  note_font 微软雅黑
  selected true
- xpos 126
- ypos -35
+ xpos 1060
+ ypos 1595
 }
 Text2 {
  font_size_toolbar 100
  font_width_toolbar 100
  font_height_toolbar 100
  opacity 0.34
- message "\[x]"
- old_message {{52 48 56}
+ message "242424242422\[x]"
+ old_message {{50 52 50 52 50 52 50 52 50 52 50 50 55 52}
    }
- old_expression_markers {{0 2}
+ old_expression_markers {{12 13}
    }
  box {1700 20 1900 75}
  xjustify right
  transforms {{0 2}
    }
- cursor_position 2
+ cursor_position 4
  font {{ Microsoft YaHei : Regular : msyh.ttf : 0 }}
  global_font_scale 0.65
  scale {1 1}
- center {960 540}
  cursor_initialised true
  autofit_bbox false
  initial_cursor_position {{1778.5 128.5}
    }
- group_animations {{0} imported: 0 selected: 0 items: "root transform/"}
+ group_animations {{0} imported: 0 selected: items: "root transform/"}
  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
    }
  enable_background {{!root.proxy}}
  background_opacity 0.3
  background_border_x 20
- name Text2
+ name Text2_Write_1
  note_font 微软雅黑
  selected true
- xpos 126
- ypos -1
+ xpos 1060
+ ypos 1619
 }
 Write {
  file "mov/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
@@ -181,13 +164,13 @@ Write {
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_2
  selected true
- xpos 126
- ypos 35
+ xpos 1060
+ ypos 1655
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
-push $N18bafc00
+push $N3662e400
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -199,43 +182,31 @@ Write {
  use_limit true
  checkHashOnRead false
  version 55
- in_colorspace linear
- out_colorspace linear
  beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  afterRender "global rsmbList;\nprint(rsmbList);\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.toNode(\"root\")\[\"lock_connections\"].setValue(1);\nnuke.thisNode()\['disable'].setValue(1);"
  name Write_JPG_1
  label "\[\n# lockViewer\nset isLock2 \"parent.BackdropNode_Write_1.isLock2\"\nif \{(\[exists \$isLock2]) && (\[value \$isLock2]) && (\[exists Viewer1])\} \{\n    input Viewer1 1 this\n\}\n]"
  selected true
- xpos 236
- ypos -67
+ xpos 1170
+ ypos 1553
  disable true
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
 Dot {
- name Dot10
+ name Dot_Write_1
  selected true
- xpos 270
- ypos 4
+ xpos 1204
+ ypos 1624
 }
-set Na3b90000 [stack 0]
-Expression {
- channel0 rgb
- expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
- name SaturationToRGB1
- label "\[\n# lockViewer\nset isLock3 \"parent.BackdropNode_Write_1.isLock3\"\nif \{(\[exists \$isLock3]) && (\[value \$isLock3]) && (\[exists Viewer1])\} \{\n    input Viewer1 2 this\n\}\n]"
- selected true
- xpos 346
- ypos 72
-}
-push $Na3b90000
+set N368d8400 [stack 0]
 Group {
- name HueToRGB1
+ name HueToRGB_Write_1
  label "\[\n# lockViewer\nset isLock5 \"parent.BackdropNode_Write_1.isLock5\"\nif \{(\[exists \$isLock5]) && (\[value \$isLock5]) && (\[exists Viewer1])\} \{\n    input Viewer1 4 this\n\}\n]"
  selected true
- xpos 236
- ypos 96
+ xpos 1170
+ ypos 1716
 }
  Input {
   inputs 0
@@ -272,3 +243,27 @@ Group {
   ypos 113
  }
 end_group
+Read {
+ inputs 0
+ file "\[value Write_JPG_1.file]"
+ first {{parent.Write_JPG_1.last}}
+ last {{first}}
+ origset true
+ version 28
+ name ReadWrite_JPG_1
+ label "第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
+ selected true
+ xpos 1280
+ ypos 1536
+ disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
+}
+push $N368d8400
+Expression {
+ channel0 rgb
+ expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+ name Expression_Write_1
+ label "\[\n# lockViewer\nset isLock3 \"parent.BackdropNode_Write_1.isLock3\"\nif \{(\[exists \$isLock3]) && (\[value \$isLock3]) && (\[exists Viewer1])\} \{\n    input Viewer1 2 this\n\}\n]"
+ selected true
+ xpos 1280
+ ypos 1691
+}

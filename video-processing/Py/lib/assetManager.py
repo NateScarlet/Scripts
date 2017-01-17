@@ -1,22 +1,10 @@
-# -*- coding=UTF-8 -*-
-
 import os
 import nuke
-import re
 
 def createOutDirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
     if not os.path.isdir( trgDir ):
         os.makedirs( trgDir )
-        
-def fileFrameRange( filePath ) :
-    re.complie( '.*(#.|%0\d?d).*' )
-
-def checkFootage():
-    for i in nuke.allNodes():
-        if i.Class() == 'Read':
-            print( i.name() )
-            print( nuke.getFileNameList( os.path.dirname( nuke.filename( i ) )  )  )
 
 def convert_422HQ():
     '''
@@ -48,3 +36,22 @@ def convert_422HQ():
     nuke.root()[ 'project_directory' ].setValue( r_pd )
     os.system( 'EXPLORER "' + pd + '\\mov"')
 
+def setFontsPath():
+    k = nuke.Root()['free_type_font_path']
+    if k.value() == '':
+        k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
+
+def fileFrameRange( filePath ) :
+    '''
+    not finished
+    '''
+    re.complie( '.*(#.|%0\d?d).*' )
+
+def checkFootage():
+    '''
+    not finished
+    '''
+    for i in nuke.allNodes():
+        if i.Class() == 'Read':
+            print( i.name() )
+            print( nuke.getFileNameList( os.path.dirname( nuke.filename( i ) )  )  )
