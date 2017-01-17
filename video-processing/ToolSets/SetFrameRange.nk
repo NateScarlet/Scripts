@@ -2,8 +2,8 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 NoOp {
- name SetFrameRange
- label "将工程的帧范围设为\n前一个读取节点的原始帧范围(original range)\n\[\n# Set_RootFrameRange_ToInput v0.3\nif \{(\[value this.name] == \"SetFrameRange\") && (\[class input] == \"Read\")\} \{\n    knob root.first_frame \[value input.origfirst]\n    knob root.last_frame \[value input.origlast]\n    knob root.lock_range 1\n\} else \{\n    python nuke.warning('节点无效: \[value this.name]')\n    return \"<font color = red>没连接至读取节点\\n或此节点有多个</fonta>\"\n\}\n]"
+ name _SetFrameRange
+ label "将工程的帧范围设为\n前一个读取节点的原始帧范围(original range)\n\[\n# Set_RootFrameRange_ToInput v0.3\nif \{(\[value this.name] == \"_SetFrameRange\") && (\[class input] == \"Read\")\} \{\n    knob root.first_frame \[value input.origfirst]\n    knob root.last_frame \[value input.origlast]\n    knob root.lock_range 1\n\} else \{\n    python nuke.warning('节点无效: \[value this.name]')\n    return \"<font color = red>没连接至读取节点\\n或此节点有多个</fonta>\"\n\}\n]"
  note_font 微软雅黑
  selected true
  xpos 1728
