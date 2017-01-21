@@ -2,6 +2,7 @@
 
 import os
 import nuke
+import nukescripts
 import re
 
 def createOutDirs():
@@ -41,11 +42,25 @@ def convert_422HQ():
 
 def setFontsPath():
     '''
-    Set Fonts path to 
+    Set Fonts path to server
     '''
     k = nuke.Root()['free_type_font_path']
     if k.value() == '':
         k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
+
+def replaceFrame( filename, frame ):
+    '''
+    Return a frame mark expaned version of filename, with given frame
+    '''
+    def _frame( matchobj ):
+    	_num = matchobj.group( 1 )
+    	if _num :
+    	    _num = int( _num )
+            return '%0*d' % ( _num, frame )
+        else :
+        	return str( frame )
+    _pat = re.compile( r'%0?(\d*)d' )
+    return re.sub(_pat, _frame , nukescripts.frame.replaceHashes( filename ) )
 
 def getDropFrameRanges( n ):
     '''
@@ -56,47 +71,30 @@ def getDropFrameRanges( n ):
         return
     L = []
     for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
-        pth = nuke.filename( n ).replace( '%04d', str( f ).zfill( 4 ) )
+        pth = replaceFrame( nuke.filename( n ), f )
         if not os.path.exists( pth ):
             L.append( f )
     fgs = nuke.FrameRanges( L )
     fgs.compact()
     return fgs
 
-def checkFootage( hasMsg=False ):
+def showDropFrames():
     '''
-    If any footage exist drop frame, put it out on error console.
-    @param hasMsg: Also show a dialog box. 
+    Show a dialog display all drop frames.
     '''
     if not nuke.env[ 'gui' ] :
         return 'this fucntion only work on gui mode'
-    ver = '素材检查v0.1'
-    s = ''
-    checked = []
+    _D = {}
     for i in nuke.allNodes():
         if i.Class() == 'Read' and not i[ 'disable' ].value() :
-           file = nuke.filename( i )
-           if file in checked :
-               continue
-           checked.append( file )
-           dir = os.path.dirname( file )
-           file = os.path.basename( file )
-           list = nuke.getFileNameList( dir, True )
-           ptn = re.compile( '.*(#|%0?\d?d).*' )
-           mch = ptn.match( file )
-           if not mch:
-               continue
-           num = ptn.match( file ).group( 1 )
-           ptn = file.replace( '.', '\\.' ).replace( num, '\\d*' )
-           ptn = re.compile( ptn )
-           for j in list :
-               mch = ptn.match( j )
-               if mch == None:
-                   list.remove( j )
-           if len( list ) > 1 :
-               s += '\n' + i.name() + '\n' + str( list ) 
-    if s != '':
-        s = '\n    ' + ver + ':\n' + s + '\n'
-        nuke.warning( s )
-        if hasMsg:
-            nuke.message( s )
+            frmrg = str( getDropFrameRanges( i ) )
+            file = nuke.filename( i )
+            if frmrg :
+                _D[ file ] = frmrg
+    _S = ''
+    for i in _D.keys() :
+        _S += i + ' ' + _D[ i ] + '\n'
+    _S = _S.rstrip( '\n' )
+    if _S != '':
+        _S = '缺帧:\n' + _S
+        nuke.message( _S )

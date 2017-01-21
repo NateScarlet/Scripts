@@ -17,6 +17,7 @@ def autolabelCustom() :
     elif this.Class() == 'Read' :
         df = str( getDropFrameRanges( this ) )
         if df :
+            nuke.warning( '[缺帧]' + this.name() + ' ' + nuke.filename( this ) + ' ' + df )
             df = '\n<font color = red>缺帧:' + df + '</font>'
         else :
             df = ''
