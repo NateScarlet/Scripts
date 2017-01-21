@@ -47,6 +47,23 @@ def setFontsPath():
     if k.value() == '':
         k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
 
+def getDropFrameRanges( n ):
+    '''
+    Return frameRanges of footage drop frame.
+    '''
+    if n.Class() != 'Read' :
+        print 'This function only work with Read node.'
+    L = []
+    for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
+        nuke.frame( f )
+        pth = nuke.filename( n, True )
+        if not os.path.exists( pth ):
+            L.append( f )
+    fgs = nuke.FrameRanges( L )
+    fgs.compact()
+    return fgs
+
+
 def checkFootage( hasMsg=False ):
     '''
     If any footage exist drop frame, put it out on error console.
