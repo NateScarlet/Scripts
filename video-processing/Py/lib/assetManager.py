@@ -53,6 +53,7 @@ def getDropFrameRanges( n ):
     '''
     if n.Class() != 'Read' :
         print 'This function only work with Read node.'
+        return
     L = []
     for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
         nuke.frame( f )
