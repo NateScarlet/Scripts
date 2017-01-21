@@ -331,7 +331,7 @@ Ramp {
  xpos 1653
  ypos 896
 }
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front CH_A.notSSS CH_A.Front}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 AddChannels {
  channels {none none none CH_A.alpha}
  name AddChannels1

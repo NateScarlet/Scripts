@@ -1,0 +1,212 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot3
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -13758
+}
+set Naab6c00 [stack 0]
+add_layer {P P.red P.green P.blue}
+Group {
+ name PositionKeyer_BG_A_1
+ tile_color 0xff00ff
+ label "输入通道: \[value in]"
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -13699
+ addUserKnob {20 tab1 l PositionKeyer_v0.4}
+ addUserKnob {41 in l "Position Layer" T Shuffle2.in}
+ addUserKnob {6 preview l "show position" +STARTLINE}
+ preview true
+ addUserKnob {26 ""}
+ addUserKnob {6 x +STARTLINE}
+ x true
+ addUserKnob {6 invert_x l invert -STARTLINE}
+ addUserKnob {6 y +STARTLINE}
+ addUserKnob {6 invert_y l invert -STARTLINE}
+ addUserKnob {6 z +STARTLINE}
+ addUserKnob {6 invert_z l invert -STARTLINE}
+ addUserKnob {18 p0 l "point 0"}
+ p0 {-37 1.4140625 -60.03125}
+ addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 p1 l "point 1"}
+ p1 {{"p0.r - 0.1"} 1.4140625 -62.78125}
+ addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -1162
+ }
+ Dot {
+  name Dot13
+  xpos 544
+  ypos -966
+ }
+set Naab6400 [stack 0]
+ Dot {
+  name Dot5
+  note_font 微软雅黑
+  xpos 654
+  ypos -966
+ }
+ Shuffle {
+  in P
+  in2 rgba
+  name Shuffle2
+  xpos 620
+  ypos -922
+ }
+ Dot {
+  name Dot4
+  note_font 微软雅黑
+  xpos 654
+  ypos -894
+ }
+set Nae829800 [stack 0]
+ AddChannels {
+  channels alpha
+  color 1
+  name AddChannels1
+  note_font 微软雅黑
+  xpos 620
+  ypos -859
+ }
+ Grade {
+  channels {none none none rgba.red}
+  blackpoint {{parent.p0.r}}
+  whitepoint {{parent.p1.r}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 620
+  ypos -691
+ }
+ Grade {
+  channels {none none none rgba.green}
+  blackpoint {{parent.p0.g}}
+  whitepoint {{parent.p1.g}}
+  name Grade2
+  note_font 微软雅黑
+  xpos 620
+  ypos -643
+ }
+ Grade {
+  channels {none none none rgba.blue}
+  blackpoint {{parent.p0.b}}
+  whitepoint {{parent.p1.b}}
+  name Grade3
+  note_font 微软雅黑
+  xpos 620
+  ypos -595
+ }
+ Expression {
+  temp_name0 x
+  temp_expr0 "( parent.x ) ? ( ( parent.invert_x ) ? ( 1- r ) : r ) : 1"
+  temp_name1 y
+  temp_expr1 "( parent.y ) ? ( ( parent.invert_y ) ? ( 1- g ) : g ) : 1"
+  temp_name2 z
+  temp_expr2 "( parent.z ) ? ( ( parent.invert_z ) ? ( 1- b ) : b ) : 1"
+  channel0 alpha
+  expr0 "x * y * z"
+  name Expression1
+  note_font 微软雅黑
+  xpos 620
+  ypos -467
+ }
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 654
+  ypos -414
+ }
+set N57e49400 [stack 0]
+push $Nae829800
+ Dot {
+  name Dot3
+  note_font 微软雅黑
+  xpos 764
+  ypos -894
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy2
+  note_font 微软雅黑
+  xpos 730
+  ypos -427
+ }
+ Dot {
+  name Dot1
+  xpos 764
+  ypos -270
+ }
+push $N57e49400
+push $Naab6400
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  note_font 微软雅黑
+  xpos 510
+  ypos -427
+ }
+ Switch {
+  inputs 2
+  which {{parent.preview}}
+  name Switch1
+  xpos 510
+  ypos -274
+ }
+ Clamp {
+  channels alpha
+  name Clamp1
+  note_font 微软雅黑
+  xpos 510
+  ypos -235
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -58
+ }
+end_group
+push $Naab6c00
+add_layer {indoor indoor.alpha}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 indoor.alpha
+ name Copy_BG_A_3
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -13627
+}
+add_layer {outdoor outdoor.alpha}
+Shuffle {
+ in indoor
+ out outdoor
+ name Shuffle1
+ label "\[value in] \[value in2] -> \[value out] \[value out2]"
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -13579
+}
+Invert {
+ channels {none none none outdoor.alpha}
+ name Invert1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -13531
+}

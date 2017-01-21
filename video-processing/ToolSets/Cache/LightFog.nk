@@ -62,7 +62,7 @@ Dot {
  xpos 1534
  ypos -1278
 }
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front CH_A.notSSS CH_A.Front}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 Shuffle {
  in CH_A
  name Shuffle_LightFog_1

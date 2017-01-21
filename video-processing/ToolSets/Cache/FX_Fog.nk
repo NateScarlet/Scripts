@@ -96,7 +96,7 @@ Defocus {
  xpos 950
  ypos -3611
 }
-add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha none CH_A.CH_Right CH_A.Shadow CH_A.SSS CH_A.notSSS CH_A.Front CH_A.notSSS CH_A.Front}
+add_layer {CH_A CH_A.red CH_A.green CH_A.blue CH_A.alpha}
 add_layer {CH_B CH_B.red CH_B.green CH_B.blue CH_B.alpha}
 add_layer {CH_C CH_C.red CH_C.green CH_C.blue CH_C.alpha}
 Group {

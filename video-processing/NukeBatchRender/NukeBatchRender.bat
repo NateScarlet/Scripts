@@ -11,7 +11,7 @@ SET "serverZ=\\192.168.1.7\z"
 REM
 REM 在上方设置路径变量
 REM
-SET "VERSION=Nuke批渲染v1.94"
+SET "VERSION=Nuke批渲染v1.95"
 SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
 SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
 SET "CLOSE_ERROR_WINDOW="%~dp0CloseErrorWindow.exe""
@@ -29,8 +29,8 @@ IF EXIST %SWITCH_RENDERING% (
         ECHO 渲染完成后将休眠
         GOTO :OptionOfRendering
     ) ELSE (
-        CHOICE /T 15 /D n /M "前一次渲染尚未正常结束,仍要继续?"
-        IF "!ERRORLEVEL!" EQU "2" (
+        CHOICE /T 15 /D y /M "前一次渲染尚未正常结束,取消本次渲染?"
+        IF "!ERRORLEVEL!" EQU "1" (
             GOTO :EOF
         )
     )
