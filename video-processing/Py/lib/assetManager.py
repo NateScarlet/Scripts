@@ -56,14 +56,12 @@ def getDropFrameRanges( n ):
         return
     L = []
     for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
-        nuke.frame( f )
-        pth = nuke.filename( n, True )
+        pth = nuke.filename( n ).replace( '%04d', str( f ).zfill( 4 ) )
         if not os.path.exists( pth ):
             L.append( f )
     fgs = nuke.FrameRanges( L )
     fgs.compact()
     return fgs
-
 
 def checkFootage( hasMsg=False ):
     '''
