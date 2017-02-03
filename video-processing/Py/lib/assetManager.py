@@ -60,7 +60,7 @@ def replaceFrame( filename, frame ):
         else :
             return str( frame )
     _pat = re.compile( r'%0?(\d*)d' )
-    return re.sub(_pat, _frame , nukescripts.frame.replaceHashes( filename ) )
+    return re.sub( _pat, _frame , nukescripts.frame.replaceHashes( filename ) )
 
 def getDropFrameRanges( n ):
     '''
