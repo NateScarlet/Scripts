@@ -53,12 +53,12 @@ def replaceFrame( filename, frame ):
     Return a frame mark expaned version of filename, with given frame
     '''
     def _frame( matchobj ):
-    	_num = matchobj.group( 1 )
-    	if _num :
-    	    _num = int( _num )
+        _num = matchobj.group( 1 )
+        if _num :
+            _num = int( _num )
             return '%0*d' % ( _num, frame )
         else :
-        	return str( frame )
+            return str( frame )
     _pat = re.compile( r'%0?(\d*)d' )
     return re.sub(_pat, _frame , nukescripts.frame.replaceHashes( filename ) )
 
