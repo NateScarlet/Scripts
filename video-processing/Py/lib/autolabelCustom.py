@@ -17,12 +17,13 @@ def autolabelCustom() :
     elif this.Class() == 'Read' :
         df = str( getDropFrameRanges( this ) )
         if df :
-            nuke.warning( '[缺帧]' + this.name() + ' ' + nuke.filename( this ) + ' ' + df )
-            df = '\n<font color = red>缺帧:' + df + '</font>'
+            if not this['disable'].value():
+                nuke.warning( '[缺帧]' + this.name() + ' ' + nuke.filename( this ) + ' ' + df )
+            df = '\n<span style=\"color:red\">缺帧:' + df + '</span>'
         else :
             df = ''
-        s = '<font size=\"3\" color =#548DD4><b> 帧范围 :</b></font> '\
-            '<font color = red>' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</font>'\
+        s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
+            '<span style=\"color:red\">' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</span>'\
              + df
     elif this.Class() == 'Shuffle' :
         ch = dict.fromkeys( [ 'in', 'in2', 'out', 'out2'], '' )
