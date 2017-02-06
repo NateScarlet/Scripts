@@ -93,8 +93,11 @@ def showDropFrames():
                 _D[ file ] = frmrg
     _S = ''
     for i in _D.keys() :
-        _S += i + ' ' + _D[ i ] + '\n'
-    _S = _S.rstrip( '\n' )
+        _S += '<tr><td>' + i + '</td><td><span style=\"color:red\">' + _D[ i ] + '</span></td></tr>'
     if _S != '':
-        _S = '缺帧:\n' + _S
+        _S = '<style>td{padding:8px;}</style>'\
+             '<table>'\
+             '<tr><th>素材</th><th>缺帧</th></tr>'\
+             + _S + \
+             '</table>'
         nuke.message( _S )
