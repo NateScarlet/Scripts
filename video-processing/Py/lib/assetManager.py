@@ -5,6 +5,8 @@ import nuke
 import nukescripts
 import re
 
+dropframes = {}
+
 def createOutDirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
     if not os.path.isdir( trgDir ):
@@ -62,20 +64,23 @@ def replaceFrame( filename, frame ):
     _pat = re.compile( r'%0?(\d*)d' )
     return re.sub( _pat, _frame , nukescripts.frame.replaceHashes( filename ) )
 
-def getDropFrameRanges( n ):
+def getDropFrameRanges( n=nuke.thisNode() ):
     '''
     Return frameRanges of footage drop frame.
     '''
     if n.Class() != 'Read' :
-        print 'This function only work with Read node.'
+        print n.name() + ':This function only work with Read node.'
         return
     L = []
+    filename = nuke.filename(n)
     for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
-        pth = replaceFrame( nuke.filename( n ), f )
+        pth = replaceFrame(filename, f)
         if not os.path.exists( pth ):
             L.append( f )
     fgs = nuke.FrameRanges( L )
     fgs.compact()
+    global dropframes
+    dropframes[filename] = fgs
     return fgs
 
 def showDropFrames():

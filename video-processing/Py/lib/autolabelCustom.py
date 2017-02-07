@@ -2,6 +2,7 @@
 
 import nuke
 from autolabel import autolabel
+import assetManager
 from assetManager import getDropFrameRanges
 
 def autolabelCustom() :
@@ -15,16 +16,21 @@ def autolabelCustom() :
     if this.Class() == 'Keyer' :
         s = '输入通道 : ' + nuke.value( 'this.input' )
     elif this.Class() == 'Read' :
-        df = str( getDropFrameRanges( this ) )
+        filename = nuke.filename(this)
+        df = ''
+        dropframes = assetManager.dropframes
+        if filename in dropframes.keys():
+            df = str(dropframes[filename])
+        print df
         if df :
             if not this['disable'].value():
-                nuke.warning( '[缺帧]' + this.name() + ' ' + nuke.filename( this ) + ' ' + df )
+                nuke.warning( '[缺帧]' + this.name() + ' ' + filename + ' ' + df )
             df = '\n<span style=\"color:red\">缺帧:' + df + '</span>'
         else :
             df = ''
         s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
             '<span style=\"color:red\">' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</span>'\
-             + df
+            + df
     elif this.Class() == 'Shuffle' :
         ch = dict.fromkeys( [ 'in', 'in2', 'out', 'out2'], '' )
         for i in ch.keys() :
