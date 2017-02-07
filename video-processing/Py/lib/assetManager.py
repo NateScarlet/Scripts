@@ -89,16 +89,12 @@ def showDropFrames():
     '''
     if not nuke.env[ 'gui' ] :
         return 'this fucntion only work on gui mode'
-    _D = {}
-    for i in nuke.allNodes():
-        if i.Class() == 'Read' and not i[ 'disable' ].value() :
-            frmrg = str( getDropFrameRanges( i ) )
-            file = nuke.filename( i )
-            if frmrg :
-                _D[ file ] = frmrg
+    _D = dropframes
     _S = ''
     for i in _D.keys() :
-        _S += '<tr><td>' + i + '</td><td><span style=\"color:red\">' + _D[ i ] + '</span></td></tr>'
+        frmrgs = str(_D[i])
+        if frmrgs :
+            _S += '<tr><td>' + i + '</td><td><span style=\"color:red\">' + frmrgs + '</span></td></tr>'
     if _S != '':
         _S = '<style>td{padding:8px;}</style>'\
              '<table>'\
