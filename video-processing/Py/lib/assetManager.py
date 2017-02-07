@@ -80,7 +80,8 @@ def getDropFrameRanges( n=nuke.thisNode() ):
     fgs = nuke.FrameRanges( L )
     fgs.compact()
     global dropframes
-    dropframes[filename] = fgs
+    if not n['disable'].value() :
+        dropframes[filename] = fgs
     return fgs
 
 def showDropFrames():
