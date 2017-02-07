@@ -49,3 +49,5 @@ Temporary Items
 *.bak
 video-processing/ContactSheet/灯光合成模板_底板.jpg
 *.exe
+*.*~
+*.swp
