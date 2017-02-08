@@ -1,0 +1,107 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+add_layer {DiffuseTint DiffuseTint.red DiffuseTint.green DiffuseTint.blue DiffuseTint.alpha}
+Group {
+ name ColorKeyer1
+ tile_color 0xff00ff
+ note_font 微软雅黑
+ selected true
+ xpos 1490
+ ypos -13892
+ addUserKnob {20 tab1 l ColorKeyer_v0.1}
+ addUserKnob {41 input T Shuffle2.in}
+ addUserKnob {41 color T Constant1.color}
+ addUserKnob {7 threshold}
+ threshold 0.07
+ addUserKnob {41 output T Copy3.to0}
+ addUserKnob {6 invert -STARTLINE}
+}
+ Constant {
+  inputs 0
+  channels rgb
+  color {0.3157067299 0.08490144461 0.07899270207 1}
+  name Constant1
+  note_font 微软雅黑
+  xpos 511
+  ypos -453
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos 291
+  ypos -560
+ }
+ Dot {
+  name Dot8
+  note_font 微软雅黑
+  xpos 325
+  ypos -520
+ }
+set Nec083c00 [stack 0]
+ Dot {
+  name Dot9
+  note_font 微软雅黑
+  xpos 435
+  ypos -520
+ }
+ Shuffle {
+  in DiffuseTint
+  name Shuffle2
+  note_font 微软雅黑
+  xpos 401
+  ypos -497
+ }
+ Difference {
+  inputs 2
+  name Difference1
+  note_font 微软雅黑
+  xpos 401
+  ypos -433
+ }
+ Invert {
+  channels alpha
+  name Invert1
+  note_font 微软雅黑
+  xpos 401
+  ypos -389
+ }
+ Grade {
+  channels alpha
+  blackpoint {{"1 - parent.threshold"}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 401
+  ypos -341
+ }
+ Invert {
+  channels alpha
+  name Invert2
+  note_font 微软雅黑
+  xpos 401
+  ypos -297
+  disable {{"! parent.invert"}}
+ }
+ Dot {
+  name Dot10
+  note_font 微软雅黑
+  xpos 435
+  ypos -256
+ }
+push $Nec083c00
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy3
+  note_font 微软雅黑
+  selected true
+  xpos 291
+  ypos -269
+ }
+ Output {
+  name Output1
+  xpos 291
+  ypos -169
+ }
+end_group

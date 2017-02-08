@@ -1,19 +1,22 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
+add_layer {YuanXiaoTang YuanXiaoTang.alpha}
 Group {
- name DepthFix1
+ name DepthFix2
  tile_color 0x823a7dff
  label "\[knob_default \[class this].maxZ 1]\n\[knob_default \[class this].threshold 1]\n"
+ note_font Verdana
  selected true
- xpos -192
- ypos -93
- addUserKnob {20 tab1 l DepthFix_v2.81}
+ xpos 1710
+ ypos -7101
+ addUserKnob {20 tab1 l DepthFix_v3.1}
+ addUserKnob {41 by l "fix by" T Copy1.from0}
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z会被调整,而高于此值的保持不变}
- threshold 1
+ threshold 0.9
  addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
- size 1
+ size 0.4
  addUserKnob {4 math l "math conversion" t 在深度表示方法之间进行转换 M {none "RedShift -> Nuke" "Nuke -> RedShift" "" "" ""}}
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
  addUserKnob {7 maxZ l max t 高于此值的深度会被设为此值}
@@ -23,66 +26,148 @@ Group {
   inputs 0
   name Input1
   xpos 510
-  ypos -898
+  ypos -1114
  }
  Dot {
   name Dot6
   xpos 544
-  ypos -846
+  ypos -1062
  }
-set N3b98800 [stack 0]
+set N71e84400 [stack 0]
  Dot {
   name Dot5
-  xpos 764
-  ypos -774
+  xpos 984
+  ypos -1062
  }
  Dot {
   name Dot4
   label Nuke
-  xpos 764
+  xpos 984
   ypos -462
  }
-push $N3b98800
+push $N71e84400
  Dot {
   name Dot3
   xpos 544
-  ypos -750
+  ypos -966
  }
-set N3b99000 [stack 0]
+set N4e41cc00 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -750
+  ypos -966
+ }
+set N4e41d000 [stack 0]
+push $N4e41d000
+ Copy {
+  inputs 2
+  from0 YuanXiaoTang.alpha
+  to0 rgba.alpha
+  name Copy1
+  note_font 微软雅黑
+  xpos 620
+  ypos -931
+ }
+ Dot {
+  name Dot20
+  note_font 微软雅黑
+  xpos 654
+  ypos -870
+ }
+set Nc8720400 [stack 0]
+ Dot {
+  name Dot17
+  note_font 微软雅黑
+  xpos 764
+  ypos -870
+ }
+ Dot {
+  name Dot14
+  note_font 微软雅黑
+  xpos 764
+  ypos -798
+ }
+set N4e6a1c00 [stack 0]
+ Dilate {
+  channels alpha
+  size -1
+  name Dilate2
+  note_font 微软雅黑
+  xpos 730
+  ypos -787
  }
  Expression {
+  channel0 alpha
+  expr0 "(a <= parent.threshold ) ? (( a > 0 ) ? 1 : 0) : 0"
+  name Expression6
+  note_font 微软雅黑
+  xpos 730
+  ypos -731
+ }
+ set Cfc50f000 [stack 0]
+push $N4e6a1c00
+ Dot {
+  name Dot19
+  note_font 微软雅黑
+  xpos 874
+  ypos -798
+ }
+clone $Cfc50f000 {
+  xpos 840
+  ypos -731
+  selected false
+ }
+ Dot {
+  name Dot18
+  note_font 微软雅黑
+  xpos 874
+  ypos -678
+ }
+ ChannelMerge {
+  inputs 2
+  name ChannelMerge2
+  note_font 微软雅黑
+  xpos 730
+  ypos -699
+ }
+ Dot {
+  name Dot13
+  note_font 微软雅黑
+  xpos 764
+  ypos -630
+ }
+push $Nc8720400
+ Expression {
   channel0 depth
-  expr0 "(a != 1) ? 1 : z"
+  expr0 "(a <= parent.threshold) ? 1 : z"
   name Expression5
   note_font 微软雅黑
   xpos 620
-  ypos -732
+  ypos -779
  }
  Dilate {
   channels depth
   size {{-width*parent.size/100}}
   name Dilate1
   xpos 620
-  ypos -701
+  ypos -736
  }
  Dot {
   name Dot11
   note_font 微软雅黑
   xpos 654
-  ypos -630
+  ypos -678
  }
-push $N3b99000
- MergeExpression {
-  inputs 2
-  channel0 depth
-  expr0 (a<parent.threshold)?Az:Bz
-  name MergeExpression1
+push $N4e41cc00
+ ChannelMerge {
+  inputs 2+1
+  A depth.Z
+  operation min
+  B depth.Z
+  output depth.Z
+  name ChannelMerge1
   xpos 510
-  ypos -634
+  ypos -647
  }
  Reformat {
   type "to box"
@@ -93,11 +178,11 @@ push $N3b99000
   name Reformat1
   note_font 微软雅黑
   xpos 510
-  ypos -611
+  ypos -587
  }
  Expression {
   channel0 depth
-  expr0 (a==0)?1:z
+  expr0 "(a == 0) ? 1 : z"
   name Expression1
   xpos 510
   ypos -538
@@ -121,13 +206,13 @@ push $N3b99000
   xpos 544
   ypos -294
  }
-set N1de76400 [stack 0]
+set N66b86c00 [stack 0]
  Dot {
   name Dot10
   xpos 654
   ypos -294
  }
-set N1e30d400 [stack 0]
+set N66b87c00 [stack 0]
  Dot {
   name Dot15
   xpos 764
@@ -147,7 +232,7 @@ set N1e30d400 [stack 0]
   xpos 764
   ypos -198
  }
-push $N1e30d400
+push $N66b87c00
  Expression {
   channel0 depth
   expr0 (z==0)?0:1/(z*10000)
@@ -162,7 +247,7 @@ push $N1e30d400
   xpos 654
   ypos -198
  }
-push $N1de76400
+push $N66b86c00
  Dot {
   name Dot7
   label none
@@ -192,7 +277,7 @@ push $N1de76400
   name Crop1
   note_font 微软雅黑
   xpos 510
-  ypos -55
+  ypos -59
  }
  Output {
   name Output1

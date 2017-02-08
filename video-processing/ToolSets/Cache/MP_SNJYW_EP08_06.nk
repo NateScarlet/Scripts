@@ -1,0 +1,371 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+BackdropNode {
+ inputs 0
+ name BackdropNode3
+ tile_color 0x388e8e00
+ label "MP v2.3\nSNJYW_EP08_06"
+ note_font_size 42
+ selected true
+ xpos 1307
+ ypos -16506
+ bdwidth 687
+ bdheight 1379
+ z_order 1
+}
+Dot {
+ inputs 0
+ name Dot2
+ note_font 微软雅黑
+ selected true
+ xpos 1204
+ ypos -16278
+}
+set N27dd6000 [stack 0]
+Dot {
+ name Dot_MP_5
+ note_font 微软雅黑
+ selected true
+ xpos 1424
+ ypos -16278
+}
+push $cut_paste_input
+Dot {
+ name Dot_MP_4
+ label "Camera_3DEnv_1\n\[input this 0 Camera_3DEnv_1]\n"
+ selected true
+ xpos 1644
+ ypos -15702
+ hide_input true
+}
+set N27e03400 [stack 0]
+Dot {
+ name Dot_MP_3
+ selected true
+ xpos 1644
+ ypos -15414
+}
+push $N27e03400
+push $N27e03400
+FrameHold {
+ first_frame {{"int( ( root.first_frame + root.last_frame ) / 2 )"}}
+ name FrameHold_Camera_3DEnv_2
+ selected true
+ xpos 1610
+ ypos -15808
+}
+Dot {
+ name Dot_MP_2
+ note_font 微软雅黑
+ selected true
+ xpos 1644
+ ypos -15870
+}
+Ramp {
+ inputs 0
+ cliptype none
+ opacity 0.5
+ p0 {1190 1074}
+ p1 {1140 610}
+ type smooth1
+ name Ramp_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1610
+ ypos -15995
+}
+Read {
+ inputs 0
+ file Z:/SNJYW/MP/EP08/sky.jpg
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ origset true
+ name Read_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -16399
+}
+Reformat {
+ name Reformat_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -16235
+}
+Transform {
+ translate {446 -14}
+ scale 2.609999895
+ center {970.2000122 582.5999756}
+ name Transform_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -16210
+}
+Group {
+ name ValueCorrect_MP_1
+ help 只调整亮度不影响饱和度和色相
+ tile_color 0x79a8ffff
+ label "\n\[\nknob_default \[class this].whitepoint 1\nknob_default \[class this].contrast 1\nknob_default \[class this].gain 1\nknob_default \[class this].gamma 1\nknob_default \[class this].white 1\n]"
+ selected true
+ xpos 1500
+ ypos -16182
+ addUserKnob {20 tab1 l ValueCorrect_v0.541 t 只调整亮度不影响饱和度和色相}
+ addUserKnob {41 channels T Colorspace1.channels}
+ addUserKnob {7 blackpoint}
+ addUserKnob {7 whitepoint}
+ whitepoint 1
+ addUserKnob {41 saturation T Saturation1.saturation}
+ addUserKnob {7 contrast R 0 4}
+ contrast 1
+ addUserKnob {7 gamma R 0 5}
+ gamma 1
+ addUserKnob {7 black l lift}
+ addUserKnob {7 white l gain R 0 4}
+ white 1.2
+ addUserKnob {7 offset R -1 1}
+ addUserKnob {41 regular_gamma l "regular gamma" t 正常的gamma,会导致饱和度变化 T Grade3.gamma}
+ addUserKnob {41 maskChannelInput l mask T Merge1.maskChannelInput}
+ addUserKnob {41 inject -STARTLINE T Merge1.inject}
+ addUserKnob {41 invert_mask l invert -STARTLINE T Merge1.invert_mask}
+ addUserKnob {41 fringe -STARTLINE T Merge1.fringe}
+ addUserKnob {41 mix T Merge1.mix}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -719
+ }
+ Dot {
+  name Dot1
+  xpos 544
+  ypos -667
+ }
+set N27e3d000 [stack 0]
+ Dot {
+  name Dot7
+  note_font 微软雅黑
+  xpos 654
+  ypos -667
+ }
+ Saturation {
+  name Saturation1
+  xpos 620
+  ypos -623
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  selected true
+  xpos 620
+  ypos -599
+ }
+ Grade {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  blackpoint {{parent.blackpoint}}
+  whitepoint {{parent.whitepoint}}
+  name Grade2
+  xpos 620
+  ypos -557
+ }
+ ColorCorrect {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  contrast {{parent.contrast}}
+  gamma {{parent.gamma}}
+  name ColorCorrect1
+  note_font 微软雅黑
+  xpos 620
+  ypos -504
+ }
+ Grade {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  black {{parent.black}}
+  white {{parent.white}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 620
+  ypos -456
+ }
+ ColorCorrect {
+  channels {-rgba.red -rgba.green rgba.blue none}
+  offset {{parent.offset}}
+  name ColorCorrect2
+  note_font 微软雅黑
+  xpos 620
+  ypos -408
+ }
+ Colorspace {
+  channels {{{parent.Colorspace1.channels}}}
+  colorspace_in HSV
+  name Colorspace2
+  xpos 620
+  ypos -359
+ }
+ Grade {
+  name Grade3
+  label "\[\nknob this.channels \[value parent.Colorspace1.channels]\n]"
+  note_font 微软雅黑
+  xpos 620
+  ypos -321
+ }
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 654
+  ypos -270
+ }
+push $N27e3d000
+ Merge2 {
+  inputs 2
+  operation copy
+  maskChannelMask none
+  name Merge1
+  note_font 微软雅黑
+  xpos 510
+  ypos -275
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -154
+ }
+end_group
+ColorCorrect {
+ saturation 0.95
+ gain {1 0.9634647965 0.9106916189 1}
+ name ColorCorrect_MP_1
+ label "SNJYW/EP08/06/Env\n预设锁定 :\[python \{nuke.applyUserPreset('', 'SNJYW/EP08/06/Env', nuke.thisNode())\}]\n"
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -16107
+}
+SoftClip {
+ conversion "logarithmic compress"
+ softclip_min 1
+ name SoftClip_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -16047
+}
+ColorCorrect {
+ inputs 1+1
+ saturation 0.28
+ gain {1.5 1.467825055 1.252499938 1.100000024}
+ name ColorCorrect_MP_2
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -15995
+}
+Project3D2 {
+ inputs 2
+ crop false
+ name Project3D2_MP_1
+ selected true
+ xpos 1500
+ ypos -15898
+}
+Sphere {
+ translate {0 -24 0}
+ rotate {0 131 0}
+ uniform_scale 10000
+ name Sphere_MP_1
+ selected true
+ xpos 1500
+ ypos -15802
+}
+push $N27e03400
+Scene {
+ inputs 2
+ name Scene_MP_1
+ selected true
+ xpos 1510
+ ypos -15750
+}
+push 0
+ScanlineRender {
+ inputs 3
+ conservative_shader_sampling false
+ motion_vectors_type distance
+ name ScanlineRender_MP_1
+ selected true
+ xpos 1500
+ ypos -15634
+}
+Merge2 {
+ name Merge7
+ note_font 微软雅黑
+ selected true
+ xpos 1500
+ ypos -15587
+ disable true
+}
+Expression {
+ channel0 depth
+ expr0 (z==0)?99999:1/z*0.0001
+ name Expression_MP_1
+ label Depth:NukeToRedshift
+ selected true
+ xpos 1500
+ ypos -15544
+}
+Defocus {
+ defocus {{ZDefocus_Global_1.size}}
+ name Defocus_MP_1
+ selected true
+ xpos 1500
+ ypos -15496
+}
+MotionBlur3D {
+ inputs 2
+ name MotionBlur3D1
+ selected true
+ xpos 1500
+ ypos -15418
+ disable true
+}
+VectorBlur2 {
+ uv motion
+ scale 10
+ name VectorBlur2_1
+ selected true
+ xpos 1500
+ ypos -15376
+ disable true
+}
+add_layer {MP MP.red MP.green MP.blue MP.alpha}
+Shuffle {
+ out MP
+ name Shuffle_MP_1
+ selected true
+ xpos 1500
+ ypos -15353
+}
+Dot {
+ name Dot_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1534
+ ypos -15246
+}
+ZMerge {
+ inputs 2
+ name ZMerge_MP_1
+ note_font 微软雅黑
+ selected true
+ xpos 1390
+ ypos -15251
+}
+push $N27dd6000
+Switch {
+ inputs 2
+ which 1
+ name Switch7
+ label MP
+ selected true
+ xpos 1170
+ ypos -15256
+}

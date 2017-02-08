@@ -1,14 +1,37 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
+Dot {
+ name Dot5
+ note_font 微软雅黑
+ selected true
+ xpos 1754
+ ypos -8574
+}
+set Nd61e1800 [stack 0]
+Dot {
+ name Dot6
+ note_font 微软雅黑
+ selected true
+ xpos 1864
+ ypos -8574
+}
+set N6c4d3800 [stack 0]
+Dot {
+ name Dot7
+ note_font 微软雅黑
+ selected true
+ xpos 1974
+ ypos -8574
+}
 add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
 add_layer {P P.red P.green P.blue}
 Group {
  name DirectionLightKeyer1
  tile_color 0xff00ff
  selected true
- xpos 1935
- ypos -8686
+ xpos 1940
+ ypos -8488
  addUserKnob {20 tab1 l DirectionLightKeyer_v0.4}
  addUserKnob {26 dev2 l Input}
  addUserKnob {41 normal l "normal vectors" T ReLight1.normal}
@@ -54,7 +77,7 @@ push 0
   xpos -6
   ypos -54
  }
-set N47c31800 [stack 0]
+set Nbae72800 [stack 0]
  Dot {
   name Dot2
   note_font 微软雅黑
@@ -92,7 +115,7 @@ set N47c31800 [stack 0]
   xpos 104
   ypos 258
  }
-push $N47c31800
+push $Nbae72800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -109,3 +132,28 @@ push $N47c31800
   ypos 398
  }
 end_group
+Dot {
+ name Dot10
+ note_font 微软雅黑
+ selected true
+ xpos 1974
+ ypos -8406
+}
+push $N6c4d3800
+Dot {
+ name Dot9
+ note_font 微软雅黑
+ selected true
+ xpos 1864
+ ypos -8478
+}
+push $Nd61e1800
+Merge2 {
+ inputs 2+1
+ operation copy
+ name Merge1
+ note_font 微软雅黑
+ selected true
+ xpos 1720
+ ypos -8411
+}
