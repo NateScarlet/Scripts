@@ -1,23 +1,20 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
-add_layer {YuanXiaoTang YuanXiaoTang.alpha}
 Group {
- name DepthFix2
+ name DepthFix3
  tile_color 0x823a7dff
- label "\[knob_default \[class this].maxZ 1]\n\[knob_default \[class this].threshold 1]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 1710
- ypos -7101
- addUserKnob {20 tab1 l DepthFix_v3.1}
+ xpos 1715
+ ypos -7161
+ addUserKnob {20 tab1 l DepthFix_v3.2}
  addUserKnob {41 by l "fix by" T Copy1.from0}
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z会被调整,而高于此值的保持不变}
  threshold 0.9
- addUserKnob {4 for l "for renderer" t 选择素材使用的渲染器 M {RedShift Nuke "" "" "" ""}}
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
  size 0.4
- addUserKnob {4 math l "math conversion" t 在深度表示方法之间进行转换 M {none "RedShift -> Nuke" "Nuke -> RedShift" "" "" ""}}
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
  addUserKnob {7 maxZ l max t 高于此值的深度会被设为此值}
  maxZ 1
@@ -26,75 +23,57 @@ Group {
   inputs 0
   name Input1
   xpos 510
-  ypos -1114
+  ypos -724
  }
- Dot {
-  name Dot6
-  xpos 544
-  ypos -1062
- }
-set N71e84400 [stack 0]
- Dot {
-  name Dot5
-  xpos 984
-  ypos -1062
- }
- Dot {
-  name Dot4
-  label Nuke
-  xpos 984
-  ypos -462
- }
-push $N71e84400
  Dot {
   name Dot3
   xpos 544
-  ypos -966
+  ypos -576
  }
-set N4e41cc00 [stack 0]
+set Nf1c0f400 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -966
+  ypos -576
  }
-set N4e41d000 [stack 0]
-push $N4e41d000
+set Nc8720800 [stack 0]
+push $Nc8720800
  Copy {
   inputs 2
-  from0 YuanXiaoTang.alpha
+  from0 rgba.alpha
   to0 rgba.alpha
   name Copy1
   note_font 微软雅黑
   xpos 620
-  ypos -931
+  ypos -541
  }
  Dot {
   name Dot20
   note_font 微软雅黑
   xpos 654
-  ypos -870
+  ypos -480
  }
-set Nc8720400 [stack 0]
+set N66b87800 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
   xpos 764
-  ypos -870
+  ypos -480
  }
  Dot {
   name Dot14
   note_font 微软雅黑
   xpos 764
-  ypos -798
+  ypos -408
  }
-set N4e6a1c00 [stack 0]
+set Nfc46c400 [stack 0]
  Dilate {
   channels alpha
   size -1
   name Dilate2
   note_font 微软雅黑
   xpos 730
-  ypos -787
+  ypos -397
  }
  Expression {
   channel0 alpha
@@ -102,63 +81,63 @@ set N4e6a1c00 [stack 0]
   name Expression6
   note_font 微软雅黑
   xpos 730
-  ypos -731
+  ypos -341
  }
- set Cfc50f000 [stack 0]
-push $N4e6a1c00
+ set C6fd2c400 [stack 0]
+push $Nfc46c400
  Dot {
   name Dot19
   note_font 微软雅黑
   xpos 874
-  ypos -798
+  ypos -408
  }
-clone $Cfc50f000 {
+clone $C6fd2c400 {
   xpos 840
-  ypos -731
+  ypos -341
   selected false
  }
  Dot {
   name Dot18
   note_font 微软雅黑
   xpos 874
-  ypos -678
+  ypos -288
  }
  ChannelMerge {
   inputs 2
   name ChannelMerge2
   note_font 微软雅黑
   xpos 730
-  ypos -699
+  ypos -309
  }
  Dot {
   name Dot13
   note_font 微软雅黑
   xpos 764
-  ypos -630
+  ypos -240
  }
-push $Nc8720400
+push $N66b87800
  Expression {
   channel0 depth
   expr0 "(a <= parent.threshold) ? 1 : z"
   name Expression5
   note_font 微软雅黑
   xpos 620
-  ypos -779
+  ypos -389
  }
  Dilate {
   channels depth
   size {{-width*parent.size/100}}
   name Dilate1
   xpos 620
-  ypos -736
+  ypos -346
  }
  Dot {
   name Dot11
   note_font 微软雅黑
   xpos 654
-  ypos -678
+  ypos -288
  }
-push $N4e41cc00
+push $Nf1c0f400
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -167,7 +146,7 @@ push $N4e41cc00
   output depth.Z
   name ChannelMerge1
   xpos 510
-  ypos -647
+  ypos -257
  }
  Reformat {
   type "to box"
@@ -178,89 +157,14 @@ push $N4e41cc00
   name Reformat1
   note_font 微软雅黑
   xpos 510
-  ypos -587
+  ypos -197
  }
  Expression {
   channel0 depth
   expr0 "(a == 0) ? 1 : z"
   name Expression1
   xpos 510
-  ypos -538
- }
- Dot {
-  name Dot2
-  label RedShift
-  xpos 544
-  ypos -462
- }
- Switch {
-  inputs 2
-  which {{parent.for}}
-  name Switch1
-  label Renderer
-  xpos 510
-  ypos -352
- }
- Dot {
-  name Dot9
-  xpos 544
-  ypos -294
- }
-set N66b86c00 [stack 0]
- Dot {
-  name Dot10
-  xpos 654
-  ypos -294
- }
-set N66b87c00 [stack 0]
- Dot {
-  name Dot15
-  xpos 764
-  ypos -294
- }
- Expression {
-  channel0 depth
-  expr0 (z==0)?99999:1/z*0.0001
-  name Expression3
-  label Depth:NukeToRedshift
-  xpos 730
-  ypos -256
- }
- Dot {
-  name Dot12
-  label NukeToRedShift
-  xpos 764
-  ypos -198
- }
-push $N66b87c00
- Expression {
-  channel0 depth
-  expr0 (z==0)?0:1/(z*10000)
-  name Expression2
-  label Depth:RedshiftToNuke
-  xpos 620
-  ypos -256
- }
- Dot {
-  name Dot8
-  label RedShiftToNuke
-  xpos 654
-  ypos -198
- }
-push $N66b86c00
- Dot {
-  name Dot7
-  label none
-  xpos 544
-  ypos -198
- }
- Switch {
-  inputs 3
-  which {{parent.math}}
-  name Switch2
-  label math
-  xpos 510
-  ypos -136
+  ypos -148
  }
  Expression {
   channel0 depth
@@ -269,7 +173,7 @@ push $N66b86c00
   name Expression4
   note_font 微软雅黑
   xpos 510
-  ypos -83
+  ypos -98
  }
  Crop {
   box {0 0 1920 1080}
@@ -277,7 +181,7 @@ push $N66b86c00
   name Crop1
   note_font 微软雅黑
   xpos 510
-  ypos -59
+  ypos -55
  }
  Output {
   name Output1
