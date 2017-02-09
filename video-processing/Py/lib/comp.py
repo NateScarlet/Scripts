@@ -8,6 +8,7 @@ def addMenu():
     m.addCommand( "重命名全部节点", "comp.RenameAll()" )
     n = m.addMenu( "显示面板" )
     n.addCommand( "ValueCorrect" , "comp.Show( 'ValueCorrect' )", 'F1' )
+    m.addCommand( "MaskShuffle" , "comp.MaskShuffle()", 'F2' )
     n = m.addMenu( "工具集更新" )
     n.addCommand( "ValueCorrect" , "comp.UpdateToolsets( 'ValueCorrect', r'C:\Users\zhouxuan.WLF\.nuke\ToolSets\ColorCorrect\ValueCorrect.nk' )" )
     n.addCommand( "DepthFix" , "comp.UpdateToolsets( 'DepthFix', r'C:\Users\zhouxuan.WLF\.nuke\ToolSets\Depth\DepthFix.nk' )" )
@@ -66,3 +67,46 @@ def UpdateToolsets( s , path ):
                elif kn in allKnobsName( n ) :
                    n[ kn ].setValue( i[ kn ].value() )
            nuke.delete( i )
+
+def MaskShuffle(prefix='PuzzleMatte', n=''):
+    if not n:
+        n = nuke.selectedNode()
+    # Prepare dictionary
+    _D = {}
+    for i in n.channels():
+        if i.startswith(prefix):
+            c_i = i
+            c_o = i.replace('.', '_')
+            _D[c_i] = c_o
+            if c_i.endswith('.alpha'):
+                _D[c_i] = ''
+    _L = _D.keys()
+    rgbaOrder = lambda s: s.replace(prefix + '.', '!_').replace('.red', '_0_').replace('.green', '_1_').replace('.blue', '_2_').replace('.alpha', '_3_')
+    _L.sort(key=rgbaOrder)
+    # Panel
+    n_lcs = nuke.createNode('LayerContactSheet')
+    n_vw = nuke.toNode('Viewer1')
+    if n_vw :
+        n_vw.setInput(0, n_lcs)
+    p = nuke.Panel('MaskShuffle')
+    for i in _L:
+        p.addSingleLineInput(i, _D[i])
+    p.show()
+    nuke.delete(n_lcs)
+    n.selectOnly()
+    # Create Copy
+    for i in _L:
+        count = _L.index(i) % 4
+        if count == 0:
+            c = nuke.createNode('Copy')
+            if c.input(1):
+                c.setInput(0, c.input(1))
+            elif c.input(0):
+                c.setInput(1, c.input(0))
+        if p.value(i):
+            to = 'mask_extra.' + p.value(i)
+            nuke.Layer('mask_extra', [to])
+        else:
+            to = 'none'
+        c['from' + str(count)].setValue(i)
+        c['to' + str(count)].setValue(to)
