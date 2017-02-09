@@ -4,15 +4,15 @@ push $cut_paste_input
 Group {
  name DepthFix3
  tile_color 0x823a7dff
- label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.99\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
  xpos 1720
- ypos -9359
+ ypos -9451
  addUserKnob {20 tab1 l DepthFix_v3.3}
  addUserKnob {41 by l "fix by" T Copy1.from0}
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z会被调整,而高于此值的保持不变}
- threshold 1
+ threshold 0.99
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
  size 0.4
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
@@ -30,14 +30,14 @@ Group {
   xpos 544
   ypos -582
  }
-set N39e95000 [stack 0]
+set N9e6e7400 [stack 0]
  Dot {
   name Dot1
   xpos 654
   ypos -582
  }
-set N39e94400 [stack 0]
-push $N39e94400
+set N71b30800 [stack 0]
+push $N71b30800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -53,7 +53,7 @@ push $N39e94400
   xpos 654
   ypos -486
  }
-set Ne491ec00 [stack 0]
+set N71b30000 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -74,7 +74,7 @@ set Ne491ec00 [stack 0]
   xpos 764
   ypos -246
  }
-push $Ne491ec00
+push $N71b30000
  Expression {
   channel0 depth
   expr0 "(a < parent.threshold) ? 1 : z"
@@ -96,7 +96,7 @@ push $Ne491ec00
   xpos 654
   ypos -294
  }
-push $N39e95000
+push $N9e6e7400
  ChannelMerge {
   inputs 2+1
   A depth.Z

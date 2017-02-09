@@ -81,10 +81,11 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
             if c_i.endswith('.alpha'):
                 _D[c_i] = ''
     _L = _D.keys()
-    rgbaOrder = lambda s: s.replace(prefix + '.', '!_').replace('.red', '_0_').replace('.green', '_1_').replace('.blue', '_2_').replace('.alpha', '_3_')
+    rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
     _L.sort(key=rgbaOrder)
     # Panel
     n_lcs = nuke.createNode('LayerContactSheet')
+    n_lcs['showLayerNames'].setValue('1')
     n_vw = nuke.toNode('Viewer1')
     if n_vw :
         n_vw.setInput(0, n_lcs)
