@@ -7,12 +7,12 @@ Group {
  label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 1715
- ypos -7161
- addUserKnob {20 tab1 l DepthFix_v3.2}
+ xpos 1720
+ ypos -9359
+ addUserKnob {20 tab1 l DepthFix_v3.3}
  addUserKnob {41 by l "fix by" T Copy1.from0}
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z会被调整,而高于此值的保持不变}
- threshold 0.9
+ threshold 1
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
  size 0.4
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
@@ -23,21 +23,21 @@ Group {
   inputs 0
   name Input1
   xpos 510
-  ypos -724
+  ypos -730
  }
  Dot {
   name Dot3
   xpos 544
-  ypos -576
+  ypos -582
  }
-set Nf1c0f400 [stack 0]
+set N39e95000 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -576
+  ypos -582
  }
-set Nc8720800 [stack 0]
-push $Nc8720800
+set N39e94400 [stack 0]
+push $N39e94400
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -45,126 +45,75 @@ push $Nc8720800
   name Copy1
   note_font 微软雅黑
   xpos 620
-  ypos -541
+  ypos -547
  }
  Dot {
   name Dot20
   note_font 微软雅黑
   xpos 654
-  ypos -480
+  ypos -486
  }
-set N66b87800 [stack 0]
+set Ne491ec00 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
   xpos 764
-  ypos -480
- }
- Dot {
-  name Dot14
-  note_font 微软雅黑
-  xpos 764
-  ypos -408
- }
-set Nfc46c400 [stack 0]
- Dilate {
-  channels alpha
-  size -1
-  name Dilate2
-  note_font 微软雅黑
-  xpos 730
-  ypos -397
+  ypos -486
  }
  Expression {
   channel0 alpha
-  expr0 "(a <= parent.threshold ) ? (( a > 0 ) ? 1 : 0) : 0"
+  expr0 "(a < 1 && a > 0) ? 1 : 0"
   name Expression6
   note_font 微软雅黑
   xpos 730
-  ypos -341
- }
- set C6fd2c400 [stack 0]
-push $Nfc46c400
- Dot {
-  name Dot19
-  note_font 微软雅黑
-  xpos 874
-  ypos -408
- }
-clone $C6fd2c400 {
-  xpos 840
-  ypos -341
-  selected false
- }
- Dot {
-  name Dot18
-  note_font 微软雅黑
-  xpos 874
-  ypos -288
- }
- ChannelMerge {
-  inputs 2
-  name ChannelMerge2
-  note_font 微软雅黑
-  xpos 730
-  ypos -309
+  ypos -395
  }
  Dot {
   name Dot13
   note_font 微软雅黑
   xpos 764
-  ypos -240
+  ypos -246
  }
-push $N66b87800
+push $Ne491ec00
  Expression {
   channel0 depth
-  expr0 "(a <= parent.threshold) ? 1 : z"
+  expr0 "(a < parent.threshold) ? 1 : z"
   name Expression5
   note_font 微软雅黑
   xpos 620
-  ypos -389
+  ypos -393
  }
  Dilate {
   channels depth
   size {{-width*parent.size/100}}
   name Dilate1
   xpos 620
-  ypos -346
+  ypos -352
  }
  Dot {
   name Dot11
   note_font 微软雅黑
   xpos 654
-  ypos -288
+  ypos -294
  }
-push $Nf1c0f400
+push $N39e95000
  ChannelMerge {
   inputs 2+1
   A depth.Z
   operation min
   B depth.Z
   output depth.Z
+  bbox B
   name ChannelMerge1
   xpos 510
-  ypos -257
- }
- Reformat {
-  type "to box"
-  box_width {{input.width}}
-  box_height {{input.height}}
-  resize none
-  center false
-  name Reformat1
-  note_font 微软雅黑
-  xpos 510
-  ypos -197
+  ypos -263
  }
  Expression {
   channel0 depth
   expr0 "(a == 0) ? 1 : z"
   name Expression1
   xpos 510
-  ypos -148
+  ypos -167
  }
  Expression {
   channel0 depth
@@ -173,7 +122,7 @@ push $Nf1c0f400
   name Expression4
   note_font 微软雅黑
   xpos 510
-  ypos -98
+  ypos -107
  }
  Crop {
   box {0 0 1920 1080}
@@ -181,7 +130,7 @@ push $Nf1c0f400
   name Crop1
   note_font 微软雅黑
   xpos 510
-  ypos -55
+  ypos -59
  }
  Output {
   name Output1
