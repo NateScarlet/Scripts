@@ -84,16 +84,31 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
     _L.sort(key=rgbaOrder)
     # Panel
-    n_lcs = nuke.createNode('LayerContactSheet')
-    n_lcs['showLayerNames'].setValue('1')
-    n_vw = nuke.toNode('Viewer1')
-    if n_vw :
-        n_vw.setInput(0, n_lcs)
+    n_vw = nuke.activeViewer()
+    _raw = {}.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
+    if n_vw:
+        _raw['has_viewer'] = True
+        _raw['viewer_input'] = n_vwn.input(0)
+        _raw['viewer_channels'] = n_vwn['channels'].value()
+    else:
+        _raw['has_viewer'] = False
+        nuke.createNode('Viewer')
+        n_vw = nuke.activeViewer()
+    n_vwn = n_vw.node()
+    n_lcs = nuke.nodes.LayerContactSheet(showLayerNames=1)
+    n_lcs.setInput(0, n)
+    n_vwn.setInput(0, n_lcs)
+    n_vwn['channels'].setValue('rgba')
     p = nuke.Panel('MaskShuffle')
     for i in _L:
         p.addSingleLineInput(i, _D[i])
     p.show()
     nuke.delete(n_lcs)
+    if _raw['has_viewer']:
+        n_vwn.setInput(0, _raw['viewer_input'])
+        n_vwn['channels'].setValue(_raw['viewer_channels'])
+    else:
+        nuke.delete(n_vwn)
     n.selectOnly()
     # Create Copy
     for i in _L:
