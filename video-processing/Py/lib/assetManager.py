@@ -6,6 +6,7 @@ import nukescripts
 import re
 
 dropframes = {}
+dropframes_showed = []
 
 def createOutDirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
@@ -94,7 +95,8 @@ def showDropFrames():
     _S = ''
     for i in _D.keys() :
         frmrgs = str(_D[i])
-        if frmrgs :
+        if frmrgs and i not in dropframes_showed:
+            dropframes_showed.append(i)
             _S += '<tr><td>' + i + '</td><td><span style=\"color:red\">' + frmrgs + '</span></td></tr>'
     if _S != '':
         _S = '<style>td{padding:8px;}</style>'\

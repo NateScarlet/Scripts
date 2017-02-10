@@ -85,16 +85,19 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     _L.sort(key=rgbaOrder)
     # Panel
     n_vw = nuke.activeViewer()
-    _raw = {}.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
+    _raw = dict.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
+    _raw_viewer = {}
     if n_vw:
         n_vwn = n_vw.node()
         _raw['has_viewer'] = True
         _raw['viewer_input'] = n_vwn.input(0)
-        _raw['viewer_channels'] = n_vwn['channels'].value()
+        for knob in n_vwn.knobs():
+            _raw_viewer[knob] = n_vwn[knob].value()
     else:
         _raw['has_viewer'] = False
         n_vwn = nuke.createNode('Viewer')
         n_vwn.setInput(0, n)
+    nuke.activeViewer().activateInput(0)
     n_lcs = nuke.nodes.LayerContactSheet(showLayerNames=1)
     n_lcs.setInput(0, n)
     n_vwn.setInput(0, n_lcs)
@@ -106,7 +109,11 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     nuke.delete(n_lcs)
     if _raw['has_viewer']:
         n_vwn.setInput(0, _raw['viewer_input'])
-        n_vwn['channels'].setValue(_raw['viewer_channels'])
+        for knob in n_vwn.knobs():
+            try:
+                n_vwn[knob].setValue(_raw_viewer[knob])
+            except:
+                pass
     else:
         nuke.delete(n_vwn)
     n.selectOnly()
