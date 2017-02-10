@@ -87,14 +87,14 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     n_vw = nuke.activeViewer()
     _raw = {}.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
     if n_vw:
+        n_vwn = n_vw.node()
         _raw['has_viewer'] = True
         _raw['viewer_input'] = n_vwn.input(0)
         _raw['viewer_channels'] = n_vwn['channels'].value()
     else:
         _raw['has_viewer'] = False
-        nuke.createNode('Viewer')
-        n_vw = nuke.activeViewer()
-    n_vwn = n_vw.node()
+        n_vwn = nuke.createNode('Viewer')
+        n_vwn.setInput(0, n)
     n_lcs = nuke.nodes.LayerContactSheet(showLayerNames=1)
     n_lcs.setInput(0, n)
     n_vwn.setInput(0, n_lcs)
