@@ -91,6 +91,8 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
         n_vwn = n_vw.node()
         _raw['has_viewer'] = True
         _raw['viewer_input'] = n_vwn.input(0)
+        if not _raw['viewer_input']:
+            n_vwn.setInput(0, n)
         for knob in n_vwn.knobs():
             _raw_viewer[knob] = n_vwn[knob].value()
     else:
