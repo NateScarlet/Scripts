@@ -182,7 +182,6 @@ push $N3d40400
  }
  Keyer {
   input mask
-  output depth.Z
   operation "red keyer"
   name Keyer1
   note_font 微软雅黑
