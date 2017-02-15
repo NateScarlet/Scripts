@@ -2,25 +2,21 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name Depth3Split_Global_1
+ name Depth3Split_3
  tile_color 0xff00ff
- label "\[if \{!\[value this.selected]\} \{\[knob this.preview 0]\}]"
+ label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\n]"
  selected true
- xpos 49
- ypos -395
- addUserKnob {20 Depth3Split l Depth3Split_v1.3}
+ xpos 1806
+ ypos -14155
+ addUserKnob {20 tab1 l Depth3Split_v1.31}
  addUserKnob {6 preview +STARTLINE}
- addUserKnob {41 input t "knob this.NoOp1.middle \[value this.ZDefocus1.center]" T Middle.input}
- addUserKnob {41 combine l "" -STARTLINE T group.Middle.combine}
- addUserKnob {41 invert -STARTLINE T group.Middle.invert}
- addUserKnob {41 value l multiply T group.Multiply1.value}
- addUserKnob {41 operation T group.Middle.operation}
+ addUserKnob {41 depth_channel l "depth channel" T Copy1.from0}
  addUserKnob {41 range T group.Middle.range}
  addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
  addUserKnob {41 focal_point l "focal point" T ZDefocus1.focal_point}
  addUserKnob {32 bt_close l Close -STARTLINE T "set tg \[value group.ZDefocus1.center]\nset a \[value this.range.A]\nset b \[value this.range.B]\nset c \[value this.range.C]\nset d \[value this.range.D]\nknob group.NoOp1.close \$tg\nknob this.range.A \$tg"}
  addUserKnob {32 bt_far l Far -STARTLINE T "set tg \[value group.ZDefocus1.center]\nset a \[value this.range.A]\nset b \[value this.range.B]\nset c \[value this.range.C]\nset d \[value this.range.D]\nknob group.NoOp1.far \$tg\nknob this.range.D \$tg"}
- addUserKnob {32 bt_middle l Middle -STARTLINE T "set tg \[value group.ZDefocus1.center]\nset a \[value this.range.A]\nset b \[value this.range.B]\nset c \[value this.range.C]\nset d \[value this.range.D]\nknob group.NoOp1.middle \$tg\nknob this.range.B \[expr abs(\$tg - \$a) / 2.0]\nknob this.range.C \[expr abs(\$tg - \$d) / 2.0]"}
+ addUserKnob {32 bt_middle l Middle -STARTLINE T "set tg \[value group.ZDefocus1.center]\nset a \[value this.range.A]\nset b \[value this.range.B]\nset c \[value this.range.C]\nset d \[value this.range.D]\nknob group.NoOp1.middle \$tg\nknob this.range.B \[expr (\$tg + \$a) / 2.0]\nknob this.range.C \[expr (\$tg + \$d) / 2.0]"}
  addUserKnob {26 Focus_div l Focus}
  addUserKnob {32 focus_close l "focus Close" T "set tar this\nknob group.Focus.range.A 0\nknob group.Focus.range.B 0\nknob group.Focus.range.C \[value \$tar.range.A]\nknob group.Focus.range.D \[value \$tar.range.D]" +STARTLINE}
  addUserKnob {32 focus_middle l "focus Middle" -STARTLINE T "set tar group.Middle\nknob group.Focus.range.A \[value \$tar.range.A]\nknob group.Focus.range.B \[value \$tar.range.B]\nknob group.Focus.range.C \[value \$tar.range.C]\nknob group.Focus.range.D \[value \$tar.range.D]"}
@@ -35,89 +31,93 @@ Group {
   inputs 0
   name Input
   xpos 180
-  ypos -588
+  ypos -728
  }
-set N99090800 [stack 0]
-add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus}
- Shuffle {
-  red black
-  green black
-  blue black
-  alpha black
-  out depth3split
-  name Shuffle
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus depth3split.far depth3split.middle depth3split.close depth3split.focus}
+ AddChannels {
+  channels depth3split
+  name AddChannels1
+  note_font 微软雅黑
   xpos 180
-  ypos -564
+  ypos -691
  }
- Multiply {
-  channels depth
-  name Multiply1
+set Nbb612800 [stack 0]
+push $Nbb612800
+ Copy {
+  inputs 2
+  from0 depth.Z
+  to0 depth.Z
+  name Copy1
+  note_font 微软雅黑
+  selected true
   xpos 180
-  ypos -522
+  ypos -643
  }
+set N71213800 [stack 0]
  Keyer {
   input {{{parent.Middle.input}}}
-  output depth3split.Far
-  operation "luminance key"
+  output depth3split.far
+  operation "red keyer"
   range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
   name Far
   label "\[value input]"
   xpos 180
-  ypos -481
+  ypos -581
  }
  Keyer {
   input depth
-  output depth3split.Middle
-  operation "luminance key"
-  range {0.003265749896 0.0037365504 0.0084854796 0.02715114318}
+  output depth3split.middle
+  operation "red keyer"
+  range {0.03362513334 0.03971563333 0.04580616667 0.05189667642}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Focus_expand.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
-  ypos -433
+  ypos -509
  }
+set N54e17000 [stack 0]
  Keyer {
   input {{{parent.Middle.input}}}
-  output depth3split.Close
+  output depth3split.close
   invert true
-  operation "luminance key"
+  operation "red keyer"
   range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
   name Close
   label "\[value input]"
   xpos 180
-  ypos -382
+  ypos -437
  }
  Keyer {
   input {{{parent.Middle.input}}}
-  output depth3split.Focus
+  output depth3split.focus
   invert true
-  operation "luminance key"
-  range {0.00100376 0.000920339677 0.00163913 0.00195681}
+  operation "red keyer"
+  range {0.0336251 0.04038468872 0.04741864278 0.0518967}
   name Focus
   xpos 180
-  ypos -330
+  ypos -359
  }
  Keyer {
   input {{{parent.Middle.input}}}
   output {{{parent.Focus.output}}}
   invert true
-  operation "luminance key"
+  operation "red keyer"
   range {{"parent.Focus.range - parent.focus_expand"} {parent.Focus.range} {parent.Focus.range} {"parent.Focus.range + parent.focus_expand"}}
   name Focus_expand
   xpos 180
-  ypos -289
+  ypos -287
  }
  Grade {
-  channels {none none none depth3split.Focus}
+  channels {none none none depth3split.focus}
   name Grade1
   xpos 180
-  ypos -215
+  ypos -208
  }
  Blur {
-  channels {none none none depth3split.Focus}
+  channels {none none none depth3split.focus}
   size 5
   name Blur1
   xpos 180
-  ypos -167
+  ypos -160
  }
  Shuffle {
   in depth3split
@@ -125,7 +125,7 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   blue red
   name Shuffle1
   xpos 180
-  ypos -113
+  ypos -112
   disable {{1-parent.preview}}
  }
  Output {
@@ -133,31 +133,41 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   xpos 180
   ypos -58
  }
-push $N99090800
+ NoOp {
+  inputs 0
+  name NoOp1
+  note_font 微软雅黑
+  xpos 400
+  ypos -323
+  addUserKnob {20 User}
+  addUserKnob {7 far}
+  far 0.05189667642
+  addUserKnob {7 middle}
+  middle 0.03881164268
+  addUserKnob {7 close}
+  close 0.03362513334
+ }
+push $N71213800
  ZDefocus2 {
-  center 0.003265749896
-  focal_point {448 220}
+  center 0.03362513334
+  focal_point {1135 26}
   blur_dof false
   legacy_resize_mode false
   show_legacy_resize_mode false
   name ZDefocus1
   note_font 微软雅黑
-  xpos 421
-  ypos -440
+  xpos 400
+  ypos -451
  }
- NoOp {
-  inputs 0
-  name NoOp1
+push $N54e17000
+ Viewer {
+  frame_range 1-160
+  fps 25
+  channels {none none none depth3split.far}
+  input_process false
+  name Viewer1
   note_font 微软雅黑
-  selected true
-  xpos 415
-  ypos -334
-  addUserKnob {20 User}
-  addUserKnob {7 far}
-  far 0.02715114318
-  addUserKnob {7 middle}
-  middle 0.0101745408
-  addUserKnob {7 close}
-  close 0.003265749896
+  xpos 290
+  ypos -379
  }
 end_group
