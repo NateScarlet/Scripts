@@ -6,10 +6,11 @@ Group {
  tile_color 0xff00ff
  label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\n]"
  selected true
- xpos 1806
- ypos -14155
- addUserKnob {20 tab1 l Depth3Split_v1.31}
+ xpos -178
+ ypos -141
+ addUserKnob {20 tab1 l Depth3Split_v1.4}
  addUserKnob {6 preview +STARTLINE}
+ preview true
  addUserKnob {41 depth_channel l "depth channel" T Copy1.from0}
  addUserKnob {41 range T group.Middle.range}
  addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
@@ -27,13 +28,27 @@ Group {
  addUserKnob {41 size l "blur size" T Blur1.size}
  addUserKnob {41 filter l "blur filter" T Blur1.filter}
 }
+ NoOp {
+  inputs 0
+  name NoOp1
+  note_font 微软雅黑
+  xpos 400
+  ypos -323
+  addUserKnob {20 User}
+  addUserKnob {7 far}
+  far 0.004375178833
+  addUserKnob {7 middle}
+  middle 0.03881164268
+  addUserKnob {7 close}
+  close 0.003039786359
+ }
  Input {
   inputs 0
   name Input
   xpos 180
   ypos -728
  }
-add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus depth3split.far depth3split.middle depth3split.close depth3split.focus}
+add_layer {depth3split depth3split.far depth3split.middle depth3split.close depth3split.focus}
  AddChannels {
   channels depth3split
   name AddChannels1
@@ -41,19 +56,30 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   xpos 180
   ypos -691
  }
-set Nbb612800 [stack 0]
-push $Nbb612800
+set N3cb0400 [stack 0]
+push $N3cb0400
  Copy {
   inputs 2
   from0 depth.Z
   to0 depth.Z
   name Copy1
   note_font 微软雅黑
-  selected true
   xpos 180
   ypos -643
  }
-set N71213800 [stack 0]
+set N3cb0000 [stack 0]
+ ZDefocus2 {
+  center 0.004375178833
+  focal_point {1512 492}
+  blur_dof false
+  legacy_resize_mode false
+  show_legacy_resize_mode false
+  name ZDefocus1
+  note_font 微软雅黑
+  xpos 400
+  ypos -451
+ }
+push $N3cb0000
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.far
@@ -68,13 +94,24 @@ set N71213800 [stack 0]
   input depth
   output depth3split.middle
   operation "red keyer"
-  range {0.03362513334 0.03971563333 0.04580616667 0.05189667642}
+  range {0.003039786359 0.00348492 0.00393005 0.004375178833}
   name Middle
   label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Focus_expand.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
   xpos 180
   ypos -509
  }
-set N54e17000 [stack 0]
+set N3cb1800 [stack 0]
+ Viewer {
+  frame_range 1-160
+  fps 25
+  channels {none none none depth3split.far}
+  input_process false
+  name Viewer1
+  note_font 微软雅黑
+  xpos 290
+  ypos -379
+ }
+push $N3cb1800
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.close
@@ -119,55 +156,20 @@ set N54e17000 [stack 0]
   xpos 180
   ypos -160
  }
- Shuffle {
-  in depth3split
-  red blue
-  blue red
-  name Shuffle1
+ Expression {
+  expr0 depth3split.far
+  expr1 depth3split.middle
+  expr2 depth3split.close
+  name Expression1
+  note_font 微软雅黑
+  selected true
   xpos 180
-  ypos -112
-  disable {{1-parent.preview}}
+  ypos -122
+  disable {{"! parent.preview"}}
  }
  Output {
   name Output1
   xpos 180
-  ypos -58
- }
- NoOp {
-  inputs 0
-  name NoOp1
-  note_font 微软雅黑
-  xpos 400
-  ypos -323
-  addUserKnob {20 User}
-  addUserKnob {7 far}
-  far 0.05189667642
-  addUserKnob {7 middle}
-  middle 0.03881164268
-  addUserKnob {7 close}
-  close 0.03362513334
- }
-push $N71213800
- ZDefocus2 {
-  center 0.03362513334
-  focal_point {1135 26}
-  blur_dof false
-  legacy_resize_mode false
-  show_legacy_resize_mode false
-  name ZDefocus1
-  note_font 微软雅黑
-  xpos 400
-  ypos -451
- }
-push $N54e17000
- Viewer {
-  frame_range 1-160
-  fps 25
-  channels {none none none depth3split.far}
-  input_process false
-  name Viewer1
-  note_font 微软雅黑
-  xpos 290
-  ypos -379
+  ypos -12
  }
 end_group
