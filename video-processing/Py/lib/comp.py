@@ -129,7 +129,7 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
             elif c.input(0):
                 c.setInput(1, c.input(0))
         if p.value(i):
-            to = 'mask_extra.' + p.value(i)
+            to = 'mask_extra.' + p.value(i).replace(' ', '_').replace('.', '_')
             nuke.Layer('mask_extra', [to])
         else:
             to = 'none'
