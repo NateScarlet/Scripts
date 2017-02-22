@@ -6,27 +6,26 @@ Dot {
  note_font 微软雅黑
  selected true
  xpos 984
- ypos -15798
+ ypos -13182
 }
-set N4e2e6c00 [stack 0]
+set Na1280800 [stack 0]
 Dot {
  name Dot9
  note_font 微软雅黑
  selected true
  xpos 1094
- ypos -15798
+ ypos -13182
 }
 add_layer {DiffuseTint DiffuseTint.red DiffuseTint.green DiffuseTint.blue DiffuseTint.alpha}
 Shuffle {
  in DiffuseTint
  name Shuffle2
- label "\[value in] \[value in2] -> \[value out] \[value out2]"
  note_font 微软雅黑
  selected true
  xpos 1060
- ypos -15787
+ ypos -13171
 }
-set Na4370c00 [stack 0]
+set Na1280000 [stack 0]
 Keyer {
  invert true
  operation "saturation key"
@@ -36,9 +35,9 @@ Keyer {
  note_font 微软雅黑
  selected true
  xpos 1170
- ypos -15747
+ ypos -13139
 }
-push $Na4370c00
+push $Na1280000
 Keyer {
  operation "luminance key"
  range {0.05227772026 0.5681674705 1 1}
@@ -47,7 +46,7 @@ Keyer {
  note_font 微软雅黑
  selected true
  xpos 1060
- ypos -15747
+ ypos -13139
 }
 ChannelMerge {
  inputs 2
@@ -56,24 +55,24 @@ ChannelMerge {
  note_font 微软雅黑
  selected true
  xpos 1060
- ypos -15675
+ ypos -13059
 }
 Dot {
  name Dot10
  note_font 微软雅黑
  selected true
  xpos 1094
- ypos -15582
+ ypos -12966
 }
-push $N4e2e6c00
-add_layer {cloth_white cloth_white.alpha}
+push $Na1280800
+add_layer {mask_extra mask_extra.roof mask_extra.deadbody mask_extra.cloth_white}
 Copy {
  inputs 2
  from0 rgba.alpha
- to0 cloth_white.alpha
- name Copy3
+ to0 mask_extra.cloth_white
+ name Copy2
  note_font 微软雅黑
  selected true
  xpos 950
- ypos -15595
+ ypos -12979
 }

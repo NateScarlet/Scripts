@@ -6,9 +6,9 @@ Group {
  tile_color 0xff00ff
  label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\n]"
  selected true
- xpos -178
- ypos -141
- addUserKnob {20 tab1 l Depth3Split_v1.4}
+ xpos 1311
+ ypos -7631
+ addUserKnob {20 tab1 l Depth3Split_v1.42}
  addUserKnob {6 preview +STARTLINE}
  preview true
  addUserKnob {41 depth_channel l "depth channel" T Copy1.from0}
@@ -48,7 +48,7 @@ Group {
   xpos 180
   ypos -728
  }
-add_layer {depth3split depth3split.far depth3split.middle depth3split.close depth3split.focus}
+add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus depth3split.far depth3split.middle depth3split.close depth3split.focus}
  AddChannels {
   channels depth3split
   name AddChannels1
@@ -56,8 +56,8 @@ add_layer {depth3split depth3split.far depth3split.middle depth3split.close dept
   xpos 180
   ypos -691
  }
-set N3cb0400 [stack 0]
-push $N3cb0400
+set Nd31f0c00 [stack 0]
+push $Nd31f0c00
  Copy {
   inputs 2
   from0 depth.Z
@@ -67,7 +67,7 @@ push $N3cb0400
   xpos 180
   ypos -643
  }
-set N3cb0000 [stack 0]
+set Nd31f0400 [stack 0]
  ZDefocus2 {
   center 0.004375178833
   focal_point {1512 492}
@@ -79,7 +79,7 @@ set N3cb0000 [stack 0]
   xpos 400
   ypos -451
  }
-push $N3cb0000
+push $Nd31f0400
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.far
@@ -100,7 +100,7 @@ push $N3cb0000
   xpos 180
   ypos -509
  }
-set N3cb1800 [stack 0]
+set N7c01e800 [stack 0]
  Viewer {
   frame_range 1-160
   fps 25
@@ -111,7 +111,7 @@ set N3cb1800 [stack 0]
   xpos 290
   ypos -379
  }
-push $N3cb1800
+push $N7c01e800
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.close
@@ -157,12 +157,12 @@ push $N3cb1800
   ypos -160
  }
  Expression {
-  expr0 depth3split.far
+  expr0 depth3split.close
   expr1 depth3split.middle
-  expr2 depth3split.close
+  expr2 depth3split.far
+  expr3 depth3split.focus
   name Expression1
   note_font 微软雅黑
-  selected true
   xpos 180
   ypos -122
   disable {{"! parent.preview"}}

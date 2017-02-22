@@ -1,0 +1,518 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot19
+ note_font 微软雅黑
+ selected true
+ xpos 984
+ ypos -14766
+}
+set N9b44000 [stack 0]
+add_layer {P P.red P.green P.blue}
+Group {
+ name PositionKeyer1
+ tile_color 0xff00ff
+ label "输入通道: \[value in]"
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -14755
+ addUserKnob {20 tab1 l PositionKeyer_v0.4}
+ addUserKnob {41 in l "Position Layer" T Shuffle2.in}
+ addUserKnob {6 preview l "show position" +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {6 x +STARTLINE}
+ x true
+ addUserKnob {6 invert_x l invert -STARTLINE}
+ addUserKnob {6 y +STARTLINE}
+ addUserKnob {6 invert_y l invert -STARTLINE}
+ addUserKnob {6 z +STARTLINE}
+ z true
+ addUserKnob {6 invert_z l invert -STARTLINE}
+ addUserKnob {18 p0 l "point 0"}
+ p0 {30.265625 8.6328125 -82.75}
+ addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 p1 l "point 1"}
+ p1 {243.375 65.8125 -150.75}
+ addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -1162
+ }
+ Dot {
+  name Dot13
+  xpos 544
+  ypos -966
+ }
+set N8b9a3800 [stack 0]
+ Dot {
+  name Dot5
+  note_font 微软雅黑
+  xpos 654
+  ypos -966
+ }
+ Shuffle {
+  in P
+  in2 rgba
+  name Shuffle2
+  xpos 620
+  ypos -922
+ }
+ Dot {
+  name Dot4
+  note_font 微软雅黑
+  xpos 654
+  ypos -894
+ }
+set N8b9a2800 [stack 0]
+ AddChannels {
+  channels alpha
+  color 1
+  name AddChannels1
+  note_font 微软雅黑
+  xpos 620
+  ypos -859
+ }
+ Grade {
+  channels {none none none rgba.red}
+  blackpoint {{parent.p0.r}}
+  whitepoint {{parent.p1.r}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 620
+  ypos -691
+ }
+ Grade {
+  channels {none none none rgba.green}
+  blackpoint {{parent.p0.g}}
+  whitepoint {{parent.p1.g}}
+  name Grade2
+  note_font 微软雅黑
+  xpos 620
+  ypos -643
+ }
+ Grade {
+  channels {none none none rgba.blue}
+  blackpoint {{parent.p0.b}}
+  whitepoint {{parent.p1.b}}
+  name Grade3
+  note_font 微软雅黑
+  xpos 620
+  ypos -595
+ }
+ Expression {
+  temp_name0 x
+  temp_expr0 "( parent.x ) ? ( ( parent.invert_x ) ? ( 1- r ) : r ) : 1"
+  temp_name1 y
+  temp_expr1 "( parent.y ) ? ( ( parent.invert_y ) ? ( 1- g ) : g ) : 1"
+  temp_name2 z
+  temp_expr2 "( parent.z ) ? ( ( parent.invert_z ) ? ( 1- b ) : b ) : 1"
+  channel0 alpha
+  expr0 "x * y * z"
+  name Expression1
+  note_font 微软雅黑
+  xpos 620
+  ypos -467
+ }
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 654
+  ypos -414
+ }
+set N8deae000 [stack 0]
+push $N8b9a2800
+ Dot {
+  name Dot3
+  note_font 微软雅黑
+  xpos 764
+  ypos -894
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy2
+  note_font 微软雅黑
+  xpos 730
+  ypos -427
+ }
+ Dot {
+  name Dot1
+  xpos 764
+  ypos -270
+ }
+push $N8deae000
+push $N8b9a3800
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  note_font 微软雅黑
+  xpos 510
+  ypos -427
+ }
+ Switch {
+  inputs 2
+  which {{parent.preview}}
+  name Switch1
+  xpos 510
+  ypos -274
+ }
+ Clamp {
+  channels alpha
+  name Clamp1
+  note_font 微软雅黑
+  xpos 510
+  ypos -235
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -58
+ }
+end_group
+push $N9b44000
+add_layer {DiffuseTint DiffuseTint.red DiffuseTint.green DiffuseTint.blue DiffuseTint.alpha}
+Group {
+ name ColorKeyer1
+ tile_color 0xff00ff
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -14731
+ addUserKnob {20 tab1 l ColorKeyer_v0.1}
+ addUserKnob {41 input T Shuffle2.in}
+ addUserKnob {41 color T Constant1.color}
+ addUserKnob {7 threshold}
+ threshold 0.02
+ addUserKnob {41 output T Copy3.to0}
+ addUserKnob {6 invert -STARTLINE}
+}
+ Constant {
+  inputs 0
+  channels rgb
+  color {0.08034209907 0.1423400939 0.05101623386 1}
+  name Constant1
+  note_font 微软雅黑
+  xpos 511
+  ypos -453
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos 291
+  ypos -560
+ }
+ Dot {
+  name Dot8
+  note_font 微软雅黑
+  xpos 325
+  ypos -520
+ }
+set Nc5ce5c00 [stack 0]
+ Dot {
+  name Dot9
+  note_font 微软雅黑
+  xpos 435
+  ypos -520
+ }
+ Shuffle {
+  in DiffuseTint
+  name Shuffle2
+  note_font 微软雅黑
+  xpos 401
+  ypos -497
+ }
+ Difference {
+  inputs 2
+  name Difference1
+  note_font 微软雅黑
+  xpos 401
+  ypos -433
+ }
+ Invert {
+  channels alpha
+  name Invert1
+  note_font 微软雅黑
+  xpos 401
+  ypos -389
+ }
+ Grade {
+  channels alpha
+  blackpoint {{"1 - parent.threshold"}}
+  name Grade1
+  note_font 微软雅黑
+  xpos 401
+  ypos -341
+ }
+ Invert {
+  channels alpha
+  name Invert2
+  note_font 微软雅黑
+  xpos 401
+  ypos -297
+  disable {{"! parent.invert"}}
+ }
+ Dot {
+  name Dot10
+  note_font 微软雅黑
+  xpos 435
+  ypos -256
+ }
+push $Nc5ce5c00
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy3
+  note_font 微软雅黑
+  selected true
+  xpos 291
+  ypos -269
+ }
+ Output {
+  name Output1
+  xpos 291
+  ypos -169
+ }
+end_group
+ChannelMerge {
+ inputs 2
+ operation in
+ name ChannelMerge1
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -14667
+}
+Blur {
+ size 50
+ name Blur2
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -14611
+}
+Roto {
+ output alpha
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097152}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px x41e00000
+        {x3fcccc00 xc1200000}
+        {x44057dfb x441efb4a}
+        {xbfcccc00 x41200000}
+        {xc0000000 xc1533340}
+        {x44054666 x4425a000}
+        {x40000000 x41533340}
+        {xc2d80000 xc0a00000}
+        {x44294000 x447a4000}
+        {x42d80000 x40a00000}
+        {x41700000 x422c0000}
+        {x446a4000 x44548000}
+        {xc1700000 xc22c0000}
+        {0 x41200000}
+        {x44670000 x442c0000}
+        {0 xc1200000}
+        {x40a00000 x41900000}
+        {x4466c000 x4411e000}
+        {xc0a00000 xc1900000}
+        {x40400000 x41180000}
+        {x44622000 x44026000}
+        {xc0400000 xc1180000}
+        {x41480000 x41ec0000}
+        {x445a8000 x43f40000}
+        {xc1480000 xc1ec0000}
+        {x40b00000 x40400000}
+        {x444d6000 x43d64000}
+        {xc0b00000 xc0400000}
+        {0 0}
+        {x444a0000 x43ea4000}
+        {0 0}
+        {0 0}
+        {x444a0000 x43f98000}
+        {0 0}
+        {0 0}
+        {x44468000 x44002000}
+        {0 0}
+        {0 0}
+        {x443f6000 x44022000}
+        {0 0}
+        {x41380000 x41d80000}
+        {x4436e000 x43f2c000}
+        {xc1380000 xc1d80000}
+        {x41880000 x41900000}
+        {x44326000 x43d88000}
+        {xc1880000 xc1900000}
+        {x41480000 xbfc00000}
+        {x44218000 x43c78000}
+        {xc1480000 x3fc00000}
+        {xc1900000 xc1840000}
+        {x441dc000 x43d98000}
+        {x41900000 x41840000}
+        {0 xc1200000}
+        {x44236000 x43ed4000}
+        {0 x41200000}
+        {x41500000 x40000000}
+        {x441e8000 x43fc0000}
+        {xc1500000 xc0000000}
+        {x41100000 x41300000}
+        {x44170000 x43f24000}
+        {xc1100000 xc1300000}
+        {x41300000 xc1400000}
+        {x44104000 x43ec4000}
+        {xc1300000 x41400000}
+        {xc0c00000 xc19c0000}
+        {x440ce000 x43fe8000}
+        {x40c00000 x419c0000}
+        {xbfc00000 xc1880000}
+        {x440d0000 x440b6000}
+        {x3fc00000 x41880000}
+        {x40a00000 xc0f00000}
+        {x440d6000 x44122000}
+        {xc0a00000 x40f00000}
+        {x41680000 xc1700000}
+        {x440d8000 x441ac000}
+        {xc1680000 x41700000}}}
+      {cc
+       {f 8192}
+       {px x41e00000
+        {x3fcccc00 xc1200000}
+        {xc16cfd00 xc017a400}
+        {xbfcccc00 x41200000}
+        {xc0000000 xc1533340}
+        {xc16d4b00 x400fca00}
+        {x40000000 x41533340}
+        {xc2d80000 xc0a00000}
+        {0 0}
+        {x42d80000 x40a00000}
+        {x41700000 x422c0000}
+        {0 0}
+        {xc1700000 xc22c0000}
+        {0 x41200000}
+        {x41700000 0}
+        {0 xc1200000}
+        {x40a00000 x41900000}
+        {x41673e40 xc0807780}
+        {xc0a00000 xc1900000}
+        {x40400000 x41180000}
+        {x4164dbc0 xc0908e80}
+        {xc0400000 xc1180000}
+        {x41480000 x41ec0000}
+        {x415cfb00 xc0bb44c0}
+        {xc1480000 xc1ec0000}
+        {x40b00000 x40400000}
+        {x40e5da00 xc152b1a0}
+        {xc0b00000 xc0400000}
+        {0 0}
+        {xc16bb780 xc0348d00}
+        {0 0}
+        {0 0}
+        {xc164b400 xc09189c0}
+        {0 0}
+        {0 0}
+        {xc0d8ac80 xc1562800}
+        {0 0}
+        {0 0}
+        {x40be5c00 xc15c51e0}
+        {0 0}
+        {x41380000 x41d80000}
+        {x415ccec0 xc0bc16c0}
+        {xc1380000 xc1d80000}
+        {x41880000 x41900000}
+        {x412e7b00 xc124cac0}
+        {xc1880000 xc1900000}
+        {x41480000 xbfc00000}
+        {xbfe4c000 xc16e4a60}
+        {xc1480000 x3fc00000}
+        {xc1900000 xc1840000}
+        {xc1222b80 x4130ebc0}
+        {x41900000 x41840000}
+        {0 xc1200000}
+        {xc1700000 0}
+        {0 x41200000}
+        {x41500000 x40000000}
+        {x4011fe00 xc16d3540}
+        {xc1500000 xc0000000}
+        {x41100000 x41300000}
+        {x4139bf80 xc117fa40}
+        {xc1100000 xc1300000}
+        {x41300000 xc1400000}
+        {xc130eb00 xc1222c40}
+        {xc1300000 x41400000}
+        {xc0c00000 xc19c0000}
+        {xc1656380 x408d26c0}
+        {x40c00000 x419c0000}
+        {xbfc00000 xc1880000}
+        {xc16f1240 x3fa8c000}
+        {x3fc00000 x41880000}
+        {x40a00000 xc0f00000}
+        {xc147b180 xc10520c0}
+        {xc0a00000 x40f00000}
+        {x41680000 xc1700000}
+        {xc12c8f00 xc126cd40}
+        {xc1680000 x41700000}}}}
+     {tx x41e00000 x442fd07e x440affc1}
+     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x41e00000 ltm x41e00000 tt x40800000 a 0 b 0 g 0 r 0 inv 1}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ color 0
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 28
+ lifetime_end 28
+ motionblur_shutter_offset_type centred
+ inverted true
+ source_black_outside true
+ name Roto2
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -14587
+}
+push $N9b44000
+add_layer {mask_extra mask_extra.cloth_latern mask_extra.cloth_drum mask_extra.cloth_hanging_down mask_extra.cloth_hangin_up mask_extra.deadbody mask_extra.roof mask_extra.cloth_white mask_extra.ground mask_extra.tree_middle}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.tree_middle
+ name Copy5
+ note_font 微软雅黑
+ selected true
+ xpos 950
+ ypos -14539
+}

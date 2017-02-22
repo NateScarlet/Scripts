@@ -75,11 +75,7 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     _D = {}
     for i in n.channels():
         if i.startswith(prefix):
-            c_i = i
-            c_o = i.replace('.', '_')
-            _D[c_i] = c_o
-            if c_i.endswith('.alpha'):
-                _D[c_i] = ''
+            _D[i] = ''
     _L = _D.keys()
     rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
     _L.sort(key=rgbaOrder)

@@ -1,91 +1,60 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
-Dot {
- name Dot9
- note_font 微软雅黑
- selected true
- xpos 2248
- ypos -8889
-}
-set N9acc8400 [stack 0]
-Dot {
- name Dot10
- note_font 微软雅黑
- selected true
- xpos 2358
- ypos -8889
-}
-RolloffContrast {
- center 0.13
- soft_clip 1
- slope_mag_low1 0.1999999881
- slope_mag_high2 0.1999999881
- name RolloffContrast_1
- note_font 微软雅黑
- selected true
- xpos 2324
- ypos -8812
-}
-Dot {
- name Dot11
- note_font 微软雅黑
- selected true
- xpos 2358
- ypos -8759
-}
-push $N9acc8400
+push 0
 Group {
  inputs 2
- name KeepHSV2
+ name KeepHSV1
  tile_color 0x79a8ffff
- label "\[\nset str \"\"\nif \{! \[value this.h]\} \{set h red\} \{set h \" \";set str \"\$str Hue\"\}\nif \{! \[value this.s]\} \{set s green\} \{set s \" \";set str \"\$str Sartuation\"\}\nif \{! \[value this.v]\} \{set v blue\} \{set v \" \";set str \"\$str Value\"\}\nknob this.Merge1.output \"\$h \$s \$v\"\nreturn \"\$str\"\n]"
+ label "\[\nset str \"\"\nif \{\[value this.h]\} \{set h red;set str \"\$str Hue\"\} \{set h \" \"\}\nif \{\[value this.s]\} \{set s green;set str \"\$str Sartuation\"\} \{set s \" \"\}\nif \{\[value this.v]\} \{set v blue;set str \"\$str Value\"\} \{set v \" \"\}\nknob this.Merge1.output \"\$h \$s \$v\"\nreturn \"\$str\"\n]"
  note_font 微软雅黑
  selected true
- xpos 2214
- ypos -8772
- addUserKnob {20 tab1 l KeepHSV_v0.2}
+ xpos -211
+ ypos -164
+ addUserKnob {20 tab1 l KeepHSV_v0.3}
  addUserKnob {41 h T Merge1.h}
  addUserKnob {41 s -STARTLINE T Merge1.s}
  addUserKnob {41 v -STARTLINE T Merge1.v}
+ addUserKnob {41 mix T Merge1.mix}
 }
  Input {
   inputs 0
   name InputA
-  xpos 511
-  ypos -471
+  xpos 521
+  ypos -476
   number 1
  }
  Colorspace {
   colorspace_out HSV
-  name Colorspace1
-  xpos 511
-  ypos -432
+  name Colorspace3
+  xpos 521
+  ypos -435
  }
  Input {
   inputs 0
   name InputB
-  xpos 401
-  ypos -513
+  xpos 405
+  ypos -527
  }
  Colorspace {
   colorspace_out HSV
-  name Colorspace3
-  xpos 401
-  ypos -472
+  name Colorspace1
+  xpos 405
+  ypos -488
  }
  Merge2 {
   inputs 2
   operation copy
-  output {rgba.red -rgba.green rgba.blue}
+  output {rgba.red -rgba.green -rgba.blue}
   name Merge1
   note_font 微软雅黑
-  xpos 401
+  selected true
+  xpos 405
   ypos -441
   addUserKnob {20 User}
   addUserKnob {6 h +STARTLINE}
+  h true
   addUserKnob {6 s +STARTLINE}
-  s true
   addUserKnob {6 v +STARTLINE}
  }
  Colorspace {

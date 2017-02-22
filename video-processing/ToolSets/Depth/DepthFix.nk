@@ -2,42 +2,77 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name DepthFix5
+ name DepthFix1
  tile_color 0x823a7dff
- label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 2308
- ypos -653
- addUserKnob {20 tab1 l DepthFix_v3.4}
+ xpos 1060
+ ypos -7371
+ addUserKnob {20 tab1 l DepthFix_v3.61}
+ addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
+ addUserKnob {7 closepoint}
+ addUserKnob {7 farpoint}
+ farpoint 1
  addUserKnob {41 by l "fix by" T Copy1.from0}
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z值会在处理过程中被忽略}
- threshold 0.95
+ threshold 1
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
  size 0.4
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
  addUserKnob {7 maxZ l max t 高于此值的深度会被设为此值}
  maxZ 1
+ addUserKnob {4 empty_area_depth l "empty area depth" M {0 1 original}}
+ empty_area_depth 1
 }
  Input {
   inputs 0
   name Input1
   xpos 510
-  ypos -730
+  ypos -749
+ }
+set Ne23f6800 [stack 0]
+push $Ne23f6800
+ Copy {
+  inputs 2
+  from0 depth.Z
+  to0 depth.Z
+  name Copy2
+  note_font 微软雅黑
+  xpos 510
+  ypos -710
+ }
+ Grade {
+  channels {none none none depth.Z}
+  blackpoint {{parent.closepoint}}
+  whitepoint {{parent.farpoint}}
+  name Grade1
+  note_font 微软雅黑
+  selected true
+  xpos 510
+  ypos -669
  }
  Dot {
   name Dot3
   xpos 544
-  ypos -582
+  ypos -601
  }
-set N3e2b3400 [stack 0]
+set Ndaf13c00 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -582
+  ypos -601
  }
-set N3e2b3000 [stack 0]
-push $N3e2b3000
+ AddChannels {
+  channels alpha
+  color 1
+  name AddChannels1
+  note_font 微软雅黑
+  xpos 620
+  ypos -583
+ }
+set Ndaf13400 [stack 0]
+push $Ndaf13400
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -45,7 +80,7 @@ push $N3e2b3000
   name Copy1
   note_font 微软雅黑
   xpos 620
-  ypos -547
+  ypos -530
  }
  Dot {
   name Dot20
@@ -53,7 +88,7 @@ push $N3e2b3000
   xpos 654
   ypos -486
  }
-set N3e2b2800 [stack 0]
+set Ndaf12c00 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -74,13 +109,12 @@ set N3e2b2800 [stack 0]
   xpos 764
   ypos -246
  }
-push $N3e2b2800
+push $Ndaf12c00
  Dilate {
   channels depth
   size 2
   name Dilate2
   note_font 微软雅黑
-  selected true
   xpos 620
   ypos -451
  }
@@ -105,7 +139,7 @@ push $N3e2b2800
   xpos 654
   ypos -294
  }
-push $N3e2b3400
+push $Ndaf13c00
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -119,10 +153,11 @@ push $N3e2b3400
  }
  Expression {
   channel0 depth
-  expr0 "(a == 0) ? 1 : z"
+  expr0 "(a == 0) ? parent.empty_area_depth : z"
   name Expression1
   xpos 510
   ypos -178
+  disable {{"parent.empty_area_depth == 2"}}
  }
  Expression {
   channel0 depth

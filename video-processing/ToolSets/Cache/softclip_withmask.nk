@@ -1,0 +1,41 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+Radial {
+ inputs 0
+ invert true
+ area {409.0757459 248.9983763 1422.924254 1083.001624}
+ softness 0.5
+ name Radial7
+ selected true
+ xpos 1170
+ ypos -6802
+}
+push $cut_paste_input
+Dot {
+ name Dot7
+ note_font 微软雅黑
+ selected true
+ xpos 1094
+ ypos -6894
+}
+set N90f44400 [stack 0]
+SoftClip {
+ conversion "logarithmic compress"
+ softclip_min 0.4
+ softclip_max 0.6
+ name SoftClip6
+ note_font 微软雅黑
+ selected true
+ xpos 1170
+ ypos -6851
+}
+push $N90f44400
+Merge2 {
+ inputs 2+1
+ operation copy
+ name Merge3
+ note_font 微软雅黑
+ selected true
+ xpos 1060
+ ypos -6803
+}

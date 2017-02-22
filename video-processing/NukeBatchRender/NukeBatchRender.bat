@@ -29,7 +29,7 @@ IF EXIST %SWITCH_RENDERING% (
         ECHO 渲染完成后将休眠
         GOTO :OptionOfRendering
     ) ELSE (
-        CHOICE /T 15 /D y /M "前一次渲染尚未正常结束,取消本次渲染?"
+        CHOICE /T 15 /C ac /D c /M "前一次渲染尚未正常结束,本次渲染中止(A)/继续(C)?"
         IF "!ERRORLEVEL!" EQU "1" (
             GOTO :EOF
         )
