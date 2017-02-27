@@ -109,11 +109,14 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
     _L.sort(key=rgbaOrder)
 
+    # Set text style
+    textStyle = lambda s: s.replace('.red', '.<span style=\"color:#FF4444\">red</span>').replace('.green', '.<span style=\"color:#44FF44\">green</span>').replace('.blue', '.<span style=\"color:#4444FF\">blue</span>')
+    _L_stylized = map(textStyle, _L)
+
     # Set panel from dictionary
     p = nuke.Panel('MaskShuffle')
-    textStyle = lambda s: s.replace('.red', '.<span style=\"color:#FF4444\">red</span>').replace('.green', '.<span style=\"color:#44FF44\">green</span>').replace('.blue', '.<span style=\"color:#4444FF\">blue</span>')
-    for i in _L:
-        p.addSingleLineInput(textStyle(i) , _D[i])
+    for i in range(len(_L)):
+        p.addSingleLineInput(_L_stylized[i], _D[_L[i]])
 
     # Show panel
     p.show()
@@ -130,19 +133,25 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
     else:
         nuke.delete(n_vwn)
     n.selectOnly()
-    # Create Copy
-    for i in _L:
-        count = _L.index(i) % 4
+
+    # Create copy
+    for i in range(len(_L)):
+        # Create copy node every 4 channels
+        count = i % 4
         if count == 0:
             c = nuke.createNode('Copy')
+            # Set two input to same node
             if c.input(1):
                 c.setInput(0, c.input(1))
             elif c.input(0):
                 c.setInput(1, c.input(0))
-        if p.value(i):
-            to = 'mask_extra.' + p.value(i).replace(' ', '_').replace('.', '_')
+        # Prepare 'to' channel name
+        _input = p.value(_L_stylized[i])
+        if _input:
+            to = 'mask_extra.' + _input.replace(' ', '_').replace('.', '_')
             nuke.Layer('mask_extra', [to])
         else:
             to = 'none'
-        c['from' + str(count)].setValue(i)
+        # Set node
+        c['from' + str(count)].setValue(_L[i])
         c['to' + str(count)].setValue(to)
