@@ -1,0 +1,116 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot1
+ note_font 微软雅黑
+ selected true
+ xpos 995
+ ypos -17527
+}
+set Nd108e400 [stack 0]
+Roto {
+ output alpha
+ replace true
+ curves {{{v x3f99999a}
+  {f 0}
+  {n
+   {layer Root
+    {f 2097152}
+    {t x44700000 x44070000}
+    {a pt1x 0 pt1y 0 pt2x 0 pt2y 0 pt3x 0 pt3y 0 pt4x 0 pt4y 0 ptex00 0 ptex01 0 ptex02 0 ptex03 0 ptex10 0 ptex11 0 ptex12 0 ptex13 0 ptex20 0 ptex21 0 ptex22 0 ptex23 0 ptex30 0 ptex31 0 ptex32 0 ptex33 0 ptof1x 0 ptof1y 0 ptof2x 0 ptof2y 0 ptof3x 0 ptof3y 0 ptof4x 0 ptof4y 0 pterr 0 ptrefset 0 ptmot x40800000 ptref 0}
+    {curvegroup Bezier2 512 bezier
+     {{cc
+       {f 8192}
+       {px x40400000
+        {0 0}
+        {xc1c40000 x4477a000}
+        {0 0}
+        {xc1700000 x41100000}
+        {x4440e000 x4456e000}
+        {x41700000 xc1100000}
+        {0 0}
+        {x443de000 x44750000}
+        {0 0}
+        {0 0}
+        {x43680000 x44853000}
+        {0 0}
+        {0 0}
+        {xc1840000 x44784000}
+        {0 0}}}     idem}
+     {tx x40400000 x43ac3333 x44746ccd}
+     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x40400000 ltm x40400000 tt x40800000}}
+    {curvegroup Bezier1 512 bezier
+     {{cc
+       {f 8192}
+       {px x40400000
+        {0 0}
+        {x44bfe000 x445fc000}
+        {0 0}
+        {xc0000000 xbfc00000}
+        {x44f9d000 x446ac000}
+        {x40000000 x3fc00000}
+        {0 0}
+        {x44e98000 x448fc000}
+        {0 0}
+        {xbf000000 xbf800000}
+        {x44c37000 x4483e000}
+        {x3f000000 1}
+        {0 0}
+        {x44bdb000 x44730000}
+        {0 0}}}     idem}
+     {tx x40400000 x44d41000 x447a8ccd}
+     {a osw x41200000 osf 0 str 1 spx x44700000 spy x44070000 sb 1 ltn x40400000 ltm x40400000 tt x40800000}}}}}}
+ toolbox {selectAll {
+  { selectAll str 1 ssx 1 ssy 1 sf 1 }
+  { createBezier str 1 ssx 1 ssy 1 sf 1 sb 1 tt 4 }
+  { createBezierCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createBSpline str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createEllipse str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangle str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { createRectangleCusped str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { brush str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { eraser src 2 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { clone src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { reveal src 3 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { dodge src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { burn src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { blur src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { sharpen src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+  { smear src 1 str 1 ssx 1 ssy 1 sf 1 sb 1 }
+} }
+ toolbar_brush_hardness 0.200000003
+ toolbar_source_transform_scale {1 1}
+ toolbar_source_transform_center {960 540}
+ colorOverlay {0 0 0 0}
+ lifetime_type "all frames"
+ lifetime_start 3
+ lifetime_end 3
+ motionblur_shutter_offset_type centred
+ source_black_outside true
+ name Roto3
+ note_font 微软雅黑
+ selected true
+ xpos 1101
+ ypos -17500
+}
+Expression {
+ expr3 "clamp(a - roof)"
+ name Expression1
+ note_font 微软雅黑
+ selected true
+ xpos 1101
+ ypos -17456
+}
+push $Nd108e400
+add_layer {mask_extra mask_extra.cloth_latern mask_extra.cloth_drum mask_extra.cloth_hanging_down mask_extra.cloth_hanging_up mask_extra.cloth_deadbody mask_extra.roof mask_extra.cloth_white mask_extra.cloth_hangin_up mask_extra.deadbody mask_extra.ground mask_extra.bg_far}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.bg_far
+ name Copy5
+ note_font 微软雅黑
+ selected true
+ xpos 959
+ ypos -17456
+}

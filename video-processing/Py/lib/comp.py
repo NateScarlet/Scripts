@@ -69,17 +69,12 @@ def UpdateToolsets( s , path ):
            nuke.delete( i )
 
 def MaskShuffle(prefix='PuzzleMatte', n=''):
+
+    # Defaut node value, not use function default feature becuse may not selecting a node.
     if not n:
         n = nuke.selectedNode()
-    # Prepare dictionary
-    _D = {}
-    for i in n.channels():
-        if i.startswith(prefix):
-            _D[i] = ''
-    _L = _D.keys()
-    rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
-    _L.sort(key=rgbaOrder)
-    # Panel
+
+    # Record viewer status
     n_vw = nuke.activeViewer()
     _raw = dict.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
     _raw_viewer = {}
@@ -95,16 +90,36 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
         _raw['has_viewer'] = False
         n_vwn = nuke.createNode('Viewer')
         n_vwn.setInput(0, n)
+
+    # Set viewer
     nuke.activeViewer().activateInput(0)
     n_lcs = nuke.nodes.LayerContactSheet(showLayerNames=1)
     n_lcs.setInput(0, n)
     n_vwn.setInput(0, n_lcs)
     n_vwn['channels'].setValue('rgba')
+
+    # Prepare dictionary
+    _D = {}
+    for i in n.channels():
+        if i.startswith(prefix):
+            _D[i] = ''
+    _L = _D.keys()
+
+    # Sort object on rgba order
+    rgbaOrder = lambda s: s.replace(prefix + '.', '!.').replace('.red', '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
+    _L.sort(key=rgbaOrder)
+
+    # Set panel from dictionary
     p = nuke.Panel('MaskShuffle')
+    textStyle = lambda s: s.replace('.red', '.<span style=\"color:#FF4444\">red</span>').replace('.green', '.<span style=\"color:#44FF44\">green</span>').replace('.blue', '.<span style=\"color:#4444FF\">blue</span>')
     for i in _L:
-        p.addSingleLineInput(i, _D[i])
+        p.addSingleLineInput(textStyle(i) , _D[i])
+
+    # Show panel
     p.show()
     nuke.delete(n_lcs)
+
+    # Recover Viewer Status
     if _raw['has_viewer']:
         n_vwn.setInput(0, _raw['viewer_input'])
         for knob in n_vwn.knobs():
