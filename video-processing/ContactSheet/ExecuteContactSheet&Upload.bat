@@ -9,6 +9,6 @@ REM ↑设置上传目标文件夹路径 %dateA%代表当前月日
 
 ECHO 当前日期:	%dateA%
 ECHO 上传目标文件夹:	%folderA%
-START /WAIT POWERSHELL -command "& '"%~dp0excuteContactSheet.bat"'"
+START /WAIT POWERSHELL -command "& '"%~dp0ExecuteContactSheet.bat"'"
 XCOPY /Y /D /I "%~dp0ContactSheet*.png" %folderA%
 REM PAUSE
