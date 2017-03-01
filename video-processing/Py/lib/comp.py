@@ -159,3 +159,17 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
         if count == 3:
             if  c['to0'].value() == c['to1'].value() == c['to2'].value() == c['to3'].value() == 'none':
                 nuke.delete(c)
+
+def DeleteUnusedNode():
+    for i in nuke.allNodes():
+        
+        # Deal with dependent list
+        _dependent_nodes = i.dependent()
+        for j in _dependent_nodes:
+            if j.Class() == 'Viewer':
+                _dependent_nodes.remove(j)
+        
+        # Delete node if no use
+        if (not _dependent_nodes) and (i.Class() not in ['BackdropNode','Write','Viewer']):
+           print i.name()
+           nuke.delete(i)

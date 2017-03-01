@@ -1,4 +1,3 @@
-REM Disable command echo
 @ECHO OFF
 
 REM Set codepage to UTF-8

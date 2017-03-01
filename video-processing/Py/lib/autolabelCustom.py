@@ -5,7 +5,7 @@ from autolabel import autolabel
 import assetManager
 from assetManager import getDropFrameRanges
 
-def autolabelCustom() :
+def autolabelCustom(enable_text_style=True) :
     '''
     add addition information on Node in Gui
     '''
@@ -25,12 +25,18 @@ def autolabelCustom() :
         if df :
             if not this['disable'].value():
                 nuke.warning( '[缺帧]' + this.name() + ' ' + filename + ' ' + df )
-            df = '\n<span style=\"color:red\">缺帧:' + df + '</span>'
+            if enable_text_style:
+                df = '\n<span style=\"color:red\">缺帧:' + df + '</span>'
+            else:
+                df = '\n缺帧:' + df
         else :
             df = ''
-        s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
-            '<span style=\"color:red\">' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</span>'\
-            + df
+        if enable_text_style:
+            s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
+                '<span style=\"color:red\">' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</span>'\
+                + df
+        else:
+            s = '帧范围 :' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + df
     elif this.Class() == 'Shuffle' :
         ch = dict.fromkeys( [ 'in', 'in2', 'out', 'out2'], '' )
         for i in ch.keys() :
