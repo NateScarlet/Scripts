@@ -58,8 +58,11 @@ return
 $#e:: 
 IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe
 {
-    Run, %Windir%\explorer.exe
-	Run, %Windir%\explorer.exe
+	IfWinExist, ahk_exe doublecmd.exe
+		WinActivate
+	else
+		Run explorer.exe
+		Run explorer.exe
 }
 else
 {

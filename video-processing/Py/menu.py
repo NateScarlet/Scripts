@@ -4,11 +4,13 @@ import nuke
 import comp
 from autolabelCustom import autolabelCustom
 
+# Set menu
 comp.addMenu()
 nuke.addAutolabel( autolabelCustom )
 nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
 nuke.addOnScriptSave( assetManager.showDropFrames)
 
+# Set knob Default
 nuke.knobDefault( "LayerContactSheet.showLayerNames", "1" )
 nuke.knobDefault( "note_font", u"微软雅黑".encode('utf8') )
 nuke.knobDefault( "ZDefocus2.blur_dof", "0" )
@@ -19,3 +21,15 @@ nuke.knobDefault( "Switch.which", "1" )
 nuke.knobDefault( "Viewer.input_process", "False" )
 nuke.knobDefault( "SoftClip.conversion", "3" )
 nuke.knobDefault( "RolloffContrast.soft_clip", "1" )
+
+# Ben Dickson's tabtabtab
+def ttt():
+    import tabtabtab
+    m_edit = nuke.menu('Nuke').findItem('Edit')
+    m_edit.addCommand('Tabtabtab', tabtabtab.main, 'Tab')
+
+try:
+    ttt()
+except Exception:
+    import traceback
+    traceback.print_exc()
