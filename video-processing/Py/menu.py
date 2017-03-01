@@ -22,6 +22,8 @@ nuke.knobDefault( "Viewer.input_process", "False" )
 nuke.knobDefault( "SoftClip.conversion", "3" )
 nuke.knobDefault( "RolloffContrast.soft_clip", "1" )
 
+# Scripts from Nukepedia
+
 # Ben Dickson's tabtabtab
 def ttt():
     import tabtabtab
@@ -33,3 +35,4 @@ try:
 except Exception:
     import traceback
     traceback.print_exc()
+
