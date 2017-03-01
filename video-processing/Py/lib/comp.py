@@ -155,3 +155,7 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
         # Set node
         c['from' + str(count)].setValue(_L[i])
         c['to' + str(count)].setValue(to)
+        # Delete empty copy node
+        if count == 3:
+            if  c['to0'].value() == c['to1'].value() == c['to2'].value() == c['to3'].value() == 'none':
+                nuke.delete(c)

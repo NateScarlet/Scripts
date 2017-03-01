@@ -1,0 +1,68 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+add_layer {SSS SSS.red SSS.green SSS.blue SSS.alpha}
+Keyer {
+ input SSS
+ output SSS.alpha
+ operation "luminance key"
+ range {0 0.007297795507 1 1}
+ name Keyer3
+ note_font 微软雅黑
+ selected true
+ xpos 1726
+ ypos -6977
+}
+Dot {
+ name Dot8
+ note_font 微软雅黑
+ selected true
+ xpos 1760
+ ypos -6896
+}
+set Nae91b000 [stack 0]
+Dot {
+ name Dot9
+ note_font 微软雅黑
+ selected true
+ xpos 1870
+ ypos -6896
+}
+Radial {
+ replace true
+ area {569.5 -309 2312.5 683}
+ name Radial2
+ note_font 微软雅黑
+ selected true
+ xpos 1836
+ ypos -6877
+}
+Premult {
+ channels rgba
+ alpha SSS.alpha
+ invert true
+ name Premult3
+ note_font 微软雅黑
+ selected true
+ xpos 1836
+ ypos -6837
+}
+Dot {
+ name Dot10
+ note_font 微软雅黑
+ selected true
+ xpos 1870
+ ypos -6776
+}
+push $Nae91b000
+add_layer {mask_extra mask_extra.ground mask_extra.column mask_extra.desk mask_extra.indoor mask_extra.outdoor mask_extra.ShiYaoShan_cloth mask_extra.FangYuTing_cloth}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.FangYuTing_cloth
+ name Copy5
+ note_font 微软雅黑
+ selected true
+ xpos 1726
+ ypos -6789
+}
