@@ -70,8 +70,7 @@ def getDropFrameRanges( n=nuke.thisNode() ):
     Return frameRanges of footage drop frame.
     '''
     if n.Class() != 'Read' :
-        print n.name() + ':This function only work with Read node.'
-        return
+        return  False
     L = []
     filename = nuke.filename(n)
     for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
@@ -80,7 +79,6 @@ def getDropFrameRanges( n=nuke.thisNode() ):
             L.append( f )
     fgs = nuke.FrameRanges( L )
     fgs.compact()
-    global dropframes
     if not n['disable'].value() :
         dropframes[filename] = fgs
     return fgs
@@ -105,3 +103,18 @@ def showDropFrames():
              + _S + \
              '</table>'
         nuke.message( _S )
+
+def allDropFrames():
+    _D = dropframes
+    _S = '\n'.join(_D.keys())
+    return _S
+
+def checkDropFrames():
+    global dropframes
+    global dropframes_showed
+    dropframes = {}
+    dropframes_showed = []
+    for i in nuke.allNodes():
+        getDropFrameRanges(i)
+    showDropFrames()
+    return
