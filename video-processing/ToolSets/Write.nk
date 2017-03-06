@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode_Write_1
  tile_color 0x9fbcc6ff
- label "Write v4.2"
+ label "Write v4.3"
  note_font_size 42
  selected true
- xpos 368
- ypos -1032
+ xpos 38
+ ypos -216
  bdwidth 365
  bdheight 431
  addUserKnob {20 tab1 l 设置}
@@ -27,17 +27,17 @@ NoOp {
  name _SetProject
  label "\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
  selected true
- xpos 510
- ypos -946
+ xpos 180
+ ypos -130
 }
 Dot {
  name Dot_Write_2
  note_font 微软雅黑
  selected true
- xpos 544
- ypos -894
+ xpos 214
+ ypos -78
 }
-set N6f219400 [stack 0]
+set N3ced400 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
@@ -57,13 +57,11 @@ Write {
  mov64_b_frames 0
  checkHashOnRead false
  version 11
- in_colorspace linear
- out_colorspace linear
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_1
  selected true
- xpos 400
- ypos -863
+ xpos 70
+ ypos -47
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
@@ -74,7 +72,9 @@ Text2 {
  font_height_toolbar 100
  opacity 0.3
  message "\[lindex \[split \[basename \[value root.name]] .] 0]"
- old_expression_markers {{0 -1}
+ old_message {{83 78 74 89 87 95 69 80 48 55 95 48 50 95 115 99 48 57 50}
+   }
+ old_expression_markers {{0 18}
    }
  box {20 20 1000 75}
  transforms {{0 2}
@@ -97,8 +97,8 @@ Text2 {
  label "\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -779
+ xpos 70
+ ypos 37
 }
 Text2 {
  font_size_toolbar 100
@@ -132,12 +132,12 @@ Text2 {
  label "\[knob this.message \{\[x]\}]"
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -755
+ xpos 70
+ ypos 61
 }
 Write {
  file "mov/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/burn-in/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+ proxy "mov/proxy/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  colorspace sRGB
  file_type mov
  meta_codec apch
@@ -155,13 +155,11 @@ Write {
  render_order 2
  checkHashOnRead false
  version 11
- in_colorspace linear
- out_colorspace linear
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_2
  selected true
- xpos 400
- ypos -719
+ xpos 70
+ ypos 97
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
@@ -173,16 +171,31 @@ Read {
  last {{first}}
  origset true
  version 28
- in_colorspace linear
- out_colorspace linear
  name ReadWrite_JPG_1
  label "第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
  selected true
- xpos 620
- ypos -851
+ xpos 290
+ ypos -131
  disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
 }
-push $N6f219400
+Dot {
+ name Dot1
+ note_font 微软雅黑
+ selected true
+ xpos 324
+ ypos 18
+}
+push $N3ced400
+Switch {
+ inputs 2
+ which 1
+ name Switch1
+ note_font 微软雅黑
+ selected true
+ xpos 180
+ ypos 13
+ disable true
+}
 Write {
  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
@@ -199,93 +212,10 @@ Write {
  name Write_JPG_1
  label "\[\n# lockViewer\nset isLock2 \"parent.BackdropNode_Write_1.isLock2\"\nif \{(\[exists \$isLock2]) && (\[value \$isLock2]) && (\[exists Viewer1])\} \{\n    input Viewer1 1 this\n\}\n]"
  selected true
- xpos 510
- ypos -821
+ xpos 180
+ ypos 115
  disable true
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
 }
-Group {
- name VIEWER_INPUT
- note_font 微软雅黑
- selected true
- xpos 510
- ypos -683
- addUserKnob {20 User}
- addUserKnob {4 choice M {Hue Saturation}}
-}
- Input {
-  inputs 0
-  name Input1
-  xpos 510
-  ypos -466
- }
- Dot {
-  name Dot_Write_1
-  xpos 544
-  ypos -414
- }
-set N6f2a1000 [stack 0]
- Expression {
-  channel0 rgb
-  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
-  name Expression_Write_1
-  xpos 620
-  ypos -346
- }
-push $N6f2a1000
- Group {
-  name HueToRGB_Write_1
-  xpos 510
-  ypos -345
- }
-  Input {
-   inputs 0
-   name Input1
-   xpos -78
-   ypos -79
-  }
-  Colorspace {
-   colorspace_in sRGB
-   colorspace_out HSV
-   name Colorspace1
-   xpos -78
-   ypos -39
-  }
-  Shuffle {
-   in rgb
-   green white
-   blue white
-   out rgb
-   name Shuffle1
-   xpos -78
-   ypos -13
-  }
-  Colorspace {
-   colorspace_in HSV
-   colorspace_out sRGB
-   name Colorspace2
-   xpos -78
-   ypos 13
-  }
-  Output {
-   name Output1
-   xpos -78
-   ypos 113
-  }
- end_group
- Switch {
-  inputs 2
-  which {{parent.choice}}
-  name Switch1
-  note_font 微软雅黑
-  xpos 510
-  ypos -275
- }
- Output {
-  name Output1
-  xpos 510
-  ypos -202
- }
-end_group

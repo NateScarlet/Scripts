@@ -2,15 +2,14 @@ set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
 Group {
- name Depth3Split_3
+ name Depth3Split_1
  tile_color 0xff00ff
  label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\n]"
  selected true
- xpos 1311
- ypos -7631
+ xpos 1732
+ ypos 633
  addUserKnob {20 tab1 l Depth3Split_v1.42}
  addUserKnob {6 preview +STARTLINE}
- preview true
  addUserKnob {41 depth_channel l "depth channel" T Copy1.from0}
  addUserKnob {41 range T group.Middle.range}
  addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
@@ -56,8 +55,8 @@ add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close dept
   xpos 180
   ypos -691
  }
-set Nd31f0c00 [stack 0]
-push $Nd31f0c00
+set N7dafec00 [stack 0]
+push $N7dafec00
  Copy {
   inputs 2
   from0 depth.Z
@@ -67,7 +66,7 @@ push $Nd31f0c00
   xpos 180
   ypos -643
  }
-set Nd31f0400 [stack 0]
+set N7dafe800 [stack 0]
  ZDefocus2 {
   center 0.004375178833
   focal_point {1512 492}
@@ -79,7 +78,7 @@ set Nd31f0400 [stack 0]
   xpos 400
   ypos -451
  }
-push $Nd31f0400
+push $N7dafe800
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.far
@@ -100,7 +99,7 @@ push $Nd31f0400
   xpos 180
   ypos -509
  }
-set N7c01e800 [stack 0]
+set N6e59f400 [stack 0]
  Viewer {
   frame_range 1-160
   fps 25
@@ -111,7 +110,7 @@ set N7c01e800 [stack 0]
   xpos 290
   ypos -379
  }
-push $N7c01e800
+push $N6e59f400
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.close

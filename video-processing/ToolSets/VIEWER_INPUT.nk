@@ -1,0 +1,86 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Group {
+ name VIEWER_INPUT
+ note_font 微软雅黑
+ selected true
+ xpos 510
+ ypos 278
+ addUserKnob {20 User}
+ addUserKnob {4 choice M {Hue Saturation}}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 510
+  ypos -466
+ }
+ Dot {
+  name Dot_Write_1
+  xpos 544
+  ypos -414
+ }
+set N51385800 [stack 0]
+ Expression {
+  channel0 rgb
+  expr0 (max(r,g,b)-min(r,g,b))/max(r,g,b)
+  name Expression_Write_1
+  xpos 620
+  ypos -346
+ }
+push $N51385800
+ Group {
+  name HueToRGB_Write_1
+  xpos 510
+  ypos -345
+ }
+  Input {
+   inputs 0
+   name Input1
+   xpos -78
+   ypos -79
+  }
+  Colorspace {
+   colorspace_in sRGB
+   colorspace_out HSV
+   name Colorspace1
+   xpos -78
+   ypos -39
+  }
+  Shuffle {
+   in rgb
+   green white
+   blue white
+   out rgb
+   name Shuffle1
+   xpos -78
+   ypos -13
+  }
+  Colorspace {
+   colorspace_in HSV
+   colorspace_out sRGB
+   name Colorspace2
+   xpos -78
+   ypos 13
+  }
+  Output {
+   name Output1
+   xpos -78
+   ypos 113
+  }
+ end_group
+ Switch {
+  inputs 2
+  which {{parent.choice}}
+  name Switch1
+  note_font 微软雅黑
+  xpos 510
+  ypos -275
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -202
+ }
+end_group
