@@ -4,11 +4,11 @@ BackdropNode {
  inputs 0
  name BackdropNode_Write_1
  tile_color 0x9fbcc6ff
- label "Write v4.3"
+ label "Write v4.31"
  note_font_size 42
  selected true
- xpos 38
- ypos -216
+ xpos -30
+ ypos -556
  bdwidth 365
  bdheight 431
  addUserKnob {20 tab1 l 设置}
@@ -25,19 +25,19 @@ BackdropNode {
 push $cut_paste_input
 NoOp {
  name _SetProject
- label "\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
+ label "设置工程为\n1080p fps25\n\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
  selected true
- xpos 180
- ypos -130
+ xpos 112
+ ypos -470
 }
 Dot {
  name Dot_Write_2
  note_font 微软雅黑
  selected true
- xpos 214
- ypos -78
+ xpos 146
+ ypos -418
 }
-set N3ced400 [stack 0]
+set N47497400 [stack 0]
 Write {
  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
  proxy "mov/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
@@ -57,11 +57,13 @@ Write {
  mov64_b_frames 0
  checkHashOnRead false
  version 11
+ in_colorspace linear
+ out_colorspace linear
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_1
  selected true
- xpos 70
- ypos -47
+ xpos 2
+ ypos -387
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
@@ -97,8 +99,8 @@ Text2 {
  label "\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
  note_font 微软雅黑
  selected true
- xpos 70
- ypos 37
+ xpos 2
+ ypos -303
 }
 Text2 {
  font_size_toolbar 100
@@ -132,8 +134,8 @@ Text2 {
  label "\[knob this.message \{\[x]\}]"
  note_font 微软雅黑
  selected true
- xpos 70
- ypos 61
+ xpos 2
+ ypos -279
 }
 Write {
  file "mov/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
@@ -155,11 +157,13 @@ Write {
  render_order 2
  checkHashOnRead false
  version 11
+ in_colorspace linear
+ out_colorspace linear
  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
  name Write_MOV_2
  selected true
- xpos 70
- ypos 97
+ xpos 2
+ ypos -243
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
@@ -174,26 +178,26 @@ Read {
  name ReadWrite_JPG_1
  label "第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
  selected true
- xpos 290
- ypos -131
- disable {{"1-\[file exists \[eval \{value Write_JPG_1.file\}]]"}}
+ xpos 222
+ ypos -471
+ disable {{"! \[file exists \[value Write_JPG_1.file]]"}}
 }
 Dot {
  name Dot1
  note_font 微软雅黑
  selected true
- xpos 324
- ypos 18
+ xpos 256
+ ypos -322
 }
-push $N3ced400
+push $N47497400
 Switch {
  inputs 2
  which 1
  name Switch1
  note_font 微软雅黑
  selected true
- xpos 180
- ypos 13
+ xpos 112
+ ypos -327
  disable true
 }
 Write {
@@ -212,8 +216,8 @@ Write {
  name Write_JPG_1
  label "\[\n# lockViewer\nset isLock2 \"parent.BackdropNode_Write_1.isLock2\"\nif \{(\[exists \$isLock2]) && (\[value \$isLock2]) && (\[exists Viewer1])\} \{\n    input Viewer1 1 this\n\}\n]"
  selected true
- xpos 180
- ypos 115
+ xpos 112
+ ypos -225
  disable true
  addUserKnob {20 caravr l CaraVR}
  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}

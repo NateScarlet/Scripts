@@ -1,18 +1,26 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
-Group {
- name Depth3Fog_1
- tile_color 0xff8200ff
- label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\nknob_default \[class this].range_gamma 1\n]"
+Dot {
+ name Dot9
+ note_font 微软雅黑
  selected true
- xpos 1494
- ypos -12908
- addUserKnob {20 tab1 l Depth3Fog_v0.5}
+ xpos 3096
+ ypos -5952
+}
+set Nc4480c00 [stack 0]
+Group {
+ name DepthKeyer1
+ tile_color 0xff00ff
+ label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\nknob_default \[class this].range_gamma 1\nreturn \"输入通道: \[value this.input \"\"]\"\n]"
+ note_font 微软雅黑
+ selected true
+ xpos 3191
+ ypos -5924
+ addUserKnob {20 tab1 l DepthKeyer_v0.5}
  addUserKnob {26 Range_div l Range}
  addUserKnob {6 preview +STARTLINE}
- preview true
- addUserKnob {41 from0 l "depth channel" T Copy4.from0}
+ addUserKnob {41 input l "depth channel" T Copy4.from0}
  addUserKnob {41 range T Keyer1.range}
  addUserKnob {32 avg_range l "Averge Range" T "set A \[value this.range.A]\nset B \[value this.range.B]\nset C \[value this.range.C]\nset D \[value this.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob this.range.B \[expr \$A+\$avg]\nknob this.range.C \[expr \$A+2*\$avg]" +STARTLINE}
  addUserKnob {41 focal_point l "focal point" T ZDefocus1.focal_point}
@@ -25,43 +33,21 @@ Group {
  addUserKnob {41 size l erode T Dilate1.size}
  addUserKnob {41 size_1 l "blur size" T Blur1.size}
  addUserKnob {6 gamma_4_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
- addUserKnob {26 Color}
- addUserKnob {41 black l lift T Grade1.black}
- addUserKnob {41 white l gain T Grade1.white}
- addUserKnob {41 multiply T Grade1.multiply}
- addUserKnob {41 add l offset T Grade1.add}
- addUserKnob {41 gamma T Grade1.gamma}
- addUserKnob {41 unpremult l "(un)premult by" T Grade1.unpremult}
- addUserKnob {41 mix T Grade1.mix}
 }
  Input {
   inputs 0
   name Input
-  xpos 180
+  xpos 730
   ypos -1594
  }
  Dot {
   name Dot2
   note_font 微软雅黑
-  xpos 214
+  xpos 764
   ypos -1518
  }
-set N23fefc00 [stack 0]
- Dot {
-  name Dot4
-  note_font 微软雅黑
-  xpos 214
-  ypos -1446
- }
-set Nd2405800 [stack 0]
- Dot {
-  name Dot3
-  note_font 微软雅黑
-  xpos 764
-  ypos -1446
- }
-set N9b52400 [stack 0]
-push $N9b52400
+set N45b7dc00 [stack 0]
+push $N45b7dc00
  Copy {
   inputs 2
   from0 depth.Z
@@ -101,14 +87,14 @@ push $N9b52400
   xpos 764
   ypos -1110
  }
-set N30ff2c00 [stack 0]
+set N45b7c800 [stack 0]
  Dot {
   name Dot8
   note_font 微软雅黑
   xpos 764
   ypos -1038
  }
-set N30ff2800 [stack 0]
+set N45b7c400 [stack 0]
  Dot {
   name Dot9
   note_font 微软雅黑
@@ -127,8 +113,8 @@ set N30ff2800 [stack 0]
   xpos 510
   ypos -987
  }
-set N30ff2000 [stack 0]
-push $N30ff2800
+set N674cbc00 [stack 0]
+push $N45b7c400
  Grade {
   channels alpha
   blackpoint {{parent.Keyer1.range.B}}
@@ -141,8 +127,8 @@ push $N30ff2800
   xpos 510
   ypos -1059
  }
-set N8b713c00 [stack 0]
-push $N30ff2c00
+set N674cb800 [stack 0]
+push $N45b7c800
  Grade {
   channels alpha
   blackpoint {{parent.Keyer1.range.A}}
@@ -155,8 +141,8 @@ push $N30ff2c00
   xpos 510
   ypos -1131
  }
-set N8b713800 [stack 0]
-push $N23fefc00
+set N674cb400 [stack 0]
+push $N45b7dc00
  Dot {
   name Dot5
   xpos 874
@@ -191,10 +177,10 @@ push $N23fefc00
   xpos 874
   ypos -222
  }
-push $N30ff2000
+push $N674cbc00
 push 0
-push $N8b713c00
-push $N8b713800
+push $N674cb800
+push $N674cb400
  Merge2 {
   inputs 3+1
   operation plus
@@ -231,27 +217,29 @@ push $N8b713800
   xpos 434
   ypos -582
  }
-push $Nd2405800
- Grade {
-  inputs 1+1
-  black {0.009 0.025133 0.045 0}
-  black_panelDropped true
-  unpremult rgba.alpha
-  name Grade1
-  xpos 180
-  ypos -586
- }
  Switch {
   inputs 2
   which {{parent.preview}}
   name SwitchPreview
   label Preview
-  xpos 180
+  xpos 400
   ypos -232
  }
  Output {
   name Output1
-  xpos 180
+  xpos 400
   ypos -178
  }
 end_group
+push $Nc4480c00
+Grade {
+ inputs 1+1
+ black {0.009 0.025133 0.045 0}
+ black_panelDropped true
+ unpremult rgba.alpha
+ name Grade12
+ label DepthFog
+ selected true
+ xpos 3062
+ ypos -5876
+}

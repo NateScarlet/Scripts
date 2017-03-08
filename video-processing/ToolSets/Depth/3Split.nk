@@ -47,7 +47,7 @@ Group {
   xpos 180
   ypos -728
  }
-add_layer {depth3split depth3split.Far depth3split.Middle depth3split.Close depth3split.Focus depth3split.far depth3split.middle depth3split.close depth3split.focus}
+add_layer {depth3split depth3split.far depth3split.middle depth3split.close depth3split.focus}
  AddChannels {
   channels depth3split
   name AddChannels1
