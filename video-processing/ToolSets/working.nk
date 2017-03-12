@@ -1,0 +1,141 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+Read {
+ inputs 0
+ file "Z:/SNJYW/Render/EP08/06/SNJYW_EP08_06_sc197/EP08_06_sc197_BG_A/EP08_06_sc197_BG_A .%04d.exr"
+ format "1920 1080 0 0 1920 1080 1 HD_1080"
+ last 188
+ origlast 188
+ origset true
+ name Read1
+ note_font 微软雅黑
+ selected true
+ xpos -185
+ ypos -213
+}
+add_layer {P P.red P.green P.blue}
+Group {
+ name PositionKeyer1
+ tile_color 0xff00ff
+ label "输入通道: \[value input]"
+ note_font 微软雅黑
+ selected true
+ xpos -8
+ ypos -177
+ addUserKnob {20 tab1 l PositionKeyer_v0.4}
+ addUserKnob {41 input l "Position Layer" T Shuffle2.in}
+ addUserKnob {22 bt_setViewe2Input l "View this" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    input_channel =  ' '.join(nuke.Layer(nuke.value('this.input')).channels()\[:3] + \['rgba.alpha'])\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue(input_channel)\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
+ addUserKnob {22 bt_setViewer2rgba l "View rgba" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue('rgba')\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
+ addUserKnob {26 ""}
+ addUserKnob {6 x +STARTLINE}
+ addUserKnob {6 invert_x l invert -STARTLINE}
+ addUserKnob {6 y +STARTLINE}
+ addUserKnob {6 invert_y l invert -STARTLINE}
+ addUserKnob {6 z +STARTLINE}
+ z true
+ addUserKnob {6 invert_z l invert -STARTLINE}
+ addUserKnob {18 range_a l A}
+ range_a {52.3125 8.1171875 92.75}
+ addUserKnob {6 range_a_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 range_b}
+ range_b {-238.375 26.828125 82.9375}
+ addUserKnob {6 range_b_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 enable_c +STARTLINE}
+ enable_c true
+ addUserKnob {6 enable_d -STARTLINE}
+ addUserKnob {18 range_c}
+ range_c {-168.375 26.828125 82.9375}
+ addUserKnob {6 range_c_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 range_d}
+ range_d {-238.375 26.828125 82.9375}
+ addUserKnob {6 range_d_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 A_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 510
+  ypos -970
+ }
+ Dot {
+  name Dot13
+  xpos 544
+  ypos -822
+ }
+set N7d5e5800 [stack 0]
+ Dot {
+  name Dot5
+  note_font 微软雅黑
+  xpos 654
+  ypos -822
+ }
+ Shuffle {
+  in P
+  name Shuffle2
+  xpos 620
+  ypos -784
+ }
+ Expression {
+  expr3 1
+  name Expression2
+  label "1 -> alpha "
+  note_font 微软雅黑
+  xpos 620
+  ypos -739
+ }
+ Keyer {
+  combine intersect
+  invert {{parent.invert_x}}
+  operation "red keyer"
+  range {{parent.range_a.r} {parent.range_b.r} {"(parent.enable_c) ? parent.range_c.r : this.range.B"} {"(parent.enable_d) ? parent.range_d.r : inf"}}
+  name KeyerX
+  note_font 微软雅黑
+  xpos 620
+  ypos -672
+  disable {{"! parent.x"}}
+ }
+ Keyer {
+  combine intersect
+  invert {{parent.invert_y}}
+  operation "green keyer"
+  range {{parent.range_a.g} {parent.range_b.g} {"(parent.enable_c) ? parent.range_c.g : this.range.B"} {"(parent.enable_d) ? parent.range_d.g : inf"}}
+  name KeyerY
+  note_font 微软雅黑
+  selected true
+  xpos 620
+  ypos -603
+  disable {{"! parent.y"}}
+ }
+ Keyer {
+  combine intersect
+  invert {{parent.invert_z}}
+  operation "blue keyer"
+  range {{parent.range_a.b} {parent.range_b.b} {"(parent.enable_c) ? parent.range_c.b : this.range.B"} {"(parent.enable_d) ? parent.range_d.b : inf"}}
+  name KeyerZ
+  note_font 微软雅黑
+  xpos 620
+  ypos -531
+  disable {{"! parent.z"}}
+ }
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 654
+  ypos -414
+ }
+push $N7d5e5800
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  note_font 微软雅黑
+  xpos 510
+  ypos -427
+ }
+ Output {
+  name Output1
+  xpos 510
+  ypos -274
+ }
+end_group
