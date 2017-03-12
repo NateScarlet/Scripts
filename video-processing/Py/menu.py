@@ -22,6 +22,9 @@ nuke.knobDefault( "Viewer.input_process", "False" )
 nuke.knobDefault( "SoftClip.conversion", "3" )
 nuke.knobDefault( "RolloffContrast.soft_clip", "1" )
 
+# Add Drop data callback
+nukescripts.addDropDataCallback(assetManager.DropDataCallBack_fbx)
+
 # Scripts from Nukepedia
 
 # Ben Dickson's tabtabtab

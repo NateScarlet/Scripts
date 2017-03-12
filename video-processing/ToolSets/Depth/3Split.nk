@@ -4,12 +4,12 @@ push $cut_paste_input
 Group {
  name Depth3Split_1
  tile_color 0xff00ff
- label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\n]"
  selected true
- xpos 1732
- ypos 633
- addUserKnob {20 tab1 l Depth3Split_v1.42}
- addUserKnob {6 preview +STARTLINE}
+ xpos -85
+ ypos -163
+ addUserKnob {20 tab1 l Depth3Split_v1.5}
+ addUserKnob {22 bt_setViewe2Output l "view output" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    input_channel =  'depth3split.close depth3split.middle depth3split.far depth3split.focus'\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue(input_channel)\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
+ addUserKnob {22 bt_setViewer2rgba l "view rgba" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue('rgba')\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
  addUserKnob {41 depth_channel l "depth channel" T Copy1.from0}
  addUserKnob {41 range T group.Middle.range}
  addUserKnob {32 avg_range l "Averge Range" T "set A \[value group.Middle.range.A]\nset B \[value group.Middle.range.B]\nset C \[value group.Middle.range.C]\nset D \[value group.Middle.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob group.Middle.range.B \[expr \$A+\$avg]\nknob group.Middle.range.C \[expr \$A+2*\$avg]" +STARTLINE}
@@ -27,27 +27,13 @@ Group {
  addUserKnob {41 size l "blur size" T Blur1.size}
  addUserKnob {41 filter l "blur filter" T Blur1.filter}
 }
- NoOp {
-  inputs 0
-  name NoOp1
-  note_font 微软雅黑
-  xpos 400
-  ypos -323
-  addUserKnob {20 User}
-  addUserKnob {7 far}
-  far 0.004375178833
-  addUserKnob {7 middle}
-  middle 0.03881164268
-  addUserKnob {7 close}
-  close 0.003039786359
- }
  Input {
   inputs 0
   name Input
   xpos 180
   ypos -728
  }
-add_layer {depth3split depth3split.far depth3split.middle depth3split.close depth3split.focus}
+add_layer {depth3split depth3split.close depth3split.middle depth3split.far depth3split.focus}
  AddChannels {
   channels depth3split
   name AddChannels1
@@ -55,8 +41,8 @@ add_layer {depth3split depth3split.far depth3split.middle depth3split.close dept
   xpos 180
   ypos -691
  }
-set N7dafec00 [stack 0]
-push $N7dafec00
+set N3d10400 [stack 0]
+push $N3d10400
  Copy {
   inputs 2
   from0 depth.Z
@@ -66,26 +52,13 @@ push $N7dafec00
   xpos 180
   ypos -643
  }
-set N7dafe800 [stack 0]
- ZDefocus2 {
-  center 0.004375178833
-  focal_point {1512 492}
-  blur_dof false
-  legacy_resize_mode false
-  show_legacy_resize_mode false
-  name ZDefocus1
-  note_font 微软雅黑
-  xpos 400
-  ypos -451
- }
-push $N7dafe800
+set N830dc00 [stack 0]
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.far
   operation "red keyer"
   range {{parent.Middle.range.C} {parent.Middle.range.D} 1 1}
   name Far
-  label "\[value input]"
   xpos 180
   ypos -581
  }
@@ -93,24 +66,12 @@ push $N7dafe800
   input depth
   output depth3split.middle
   operation "red keyer"
-  range {0.003039786359 0.00348492 0.00393005 0.004375178833}
+  range {0.0086309053 0.01679920667 0.02496750333 0.03313579783}
   name Middle
-  label "\[value input]\n\[knob this.parent.Far.operation \[value this.operation]]\n\[knob this.parent.Close.operation \[value this.operation]]\n\[knob this.parent.Focus.operation \[value this.operation]]\n\[knob this.parent.Focus_expand.operation \[value this.operation]]\n\[knob this.parent.Multiply1.channels \[value this.input]]"
+  label "\[\nknob this.parent.Far.operation \[value this.operation]\nknob this.parent.Close.operation \[value this.operation]\nknob this.parent.Focus.operation \[value this.operation]\nknob this.parent.Focus_expand.operation \[value this.operation]\nreturn \" \"\n]"
   xpos 180
   ypos -509
  }
-set N6e59f400 [stack 0]
- Viewer {
-  frame_range 1-160
-  fps 25
-  channels {none none none depth3split.far}
-  input_process false
-  name Viewer1
-  note_font 微软雅黑
-  xpos 290
-  ypos -379
- }
-push $N6e59f400
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.close
@@ -118,7 +79,6 @@ push $N6e59f400
   operation "red keyer"
   range {{parent.Middle.range.A} {parent.Middle.range.B} 1 1}
   name Close
-  label "\[value input]"
   xpos 180
   ypos -437
  }
@@ -155,20 +115,35 @@ push $N6e59f400
   xpos 180
   ypos -160
  }
- Expression {
-  expr0 depth3split.close
-  expr1 depth3split.middle
-  expr2 depth3split.far
-  expr3 depth3split.focus
-  name Expression1
-  note_font 微软雅黑
-  xpos 180
-  ypos -122
-  disable {{"! parent.preview"}}
- }
  Output {
   name Output1
   xpos 180
   ypos -12
+ }
+ NoOp {
+  inputs 0
+  name NoOp1
+  note_font 微软雅黑
+  xpos 400
+  ypos -323
+  addUserKnob {20 User}
+  addUserKnob {7 far}
+  far 0.03313579783
+  addUserKnob {7 middle}
+  middle 0.03881164268
+  addUserKnob {7 close}
+  close 0.0086309053
+ }
+push $N830dc00
+ ZDefocus2 {
+  center 0.0086309053
+  focal_point {1654 62}
+  blur_dof false
+  legacy_resize_mode false
+  show_legacy_resize_mode false
+  name ZDefocus1
+  note_font 微软雅黑
+  xpos 400
+  ypos -451
  }
 end_group

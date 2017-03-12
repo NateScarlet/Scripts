@@ -118,3 +118,16 @@ def checkDropFrames():
         getDropFrameRanges(i)
     showDropFrames()
     return
+    
+def DropDataCallBack_fbx(type, data):
+    # Only deal with nonstyle text
+    if type != 'text/plain':
+        return None
+    # Only deal with fbx
+    if data.endswith('.fbx'):
+        # Create camera node
+        nuke.nodes.Camera2(read_from_file=True, file=data, label='导入的摄像机：\n[basename [value file]]').setName('Camera_3DEnv_1')
+        return True
+    else:
+        return None
+

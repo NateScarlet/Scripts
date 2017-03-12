@@ -1,3 +1,8 @@
+;
+
+Shortcut = %UserProfile%\Shortcut
+
+
 Loop {
     IfWinExist, ahk_exe WerFault.exe,
         WinClose,
@@ -6,7 +11,7 @@ Loop {
 	Sleep, 1000
 }
 
-$#f:: Run Everything
+$#f:: Run %Shortcut%\Everything
 
 $#1:: 
 IfWinExist, ahk_exe chrome.exe
@@ -15,14 +20,14 @@ IfWinExist, ahk_exe chrome.exe
 }
 else
 {
-	Run Chrome
+	Run %Shortcut%\Chrome
 }
 return
 
 $#2:: 
 IfWinNotExist, ahk_exe NxNManagerClient.exe
 {
-	Run, NxN
+	Run, %Shortcut%\NxN
 	WinWait, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
 	WinClose,
 	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
@@ -43,7 +48,7 @@ return
 $^#2:: 
 IfWinNotExist, ahk_exe NxNManagerClient.exe
 {
-	Run, NxN
+	Run, %Shortcut%\NxN
 	WinWait, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
 	WinClose,
 	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
@@ -57,14 +62,7 @@ return
 
 
 $#3:: 
-IfWinExist, ahk_exe EmEditor.exe
-{
-	WinActivate
-}
-else
-{
-	Run txt
-}
+Run %Shortcut%\txt
 return
 
 
@@ -88,11 +86,6 @@ IfWinExist, ahk_exe Q-Dir.exe
 }
 else
 {
-	Run Q-Dir
+	Run %Shortcut%\Q-Dir
 }
 return
-
-
-
-$#Tab::
-Run, Dexpot

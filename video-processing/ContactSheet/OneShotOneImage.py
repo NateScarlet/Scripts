@@ -1,23 +1,23 @@
 # -*- coding: UTF-8 -*-
-# 同镜中只保留最新的单帧v0.3
+# 同镜中只保留最新的单帧v0.4
 # 将文件夹拖到此脚本上来使用
 
-import os;
-import sys;
+import os
+import sys
 
-dir = os.path.dirname(__file__);
-argv1 = sys.argv[1];
-imageDir = argv1.strip('"') + '\\';
+argv1 = sys.argv[1]
+imageDir = argv1.strip('"') + '\\'
 
-def mtime(x):
-	return os.stat(imageDir + x).st_mtime;
+mtime = lambda x : os.stat(imageDir + x).st_mtime
+getShotName = lambda file_name : file_name.split('.')[0]
 
-list = os.listdir(imageDir);
-list.sort(key=mtime, reverse=False);
-listB = [];
-for i in list:
-    listB.append(i.split('.')[0]);
-for i in range(len(list)):
-	listB.pop(0);
-	if list[i].split('.')[0] in listB:
-		os.remove(imageDir + list[i]);
+filename_list = list(map(os.path.normcase, os.listdir(imageDir)))
+filename_list.sort(key=mtime, reverse=False)
+shotname_list = list(map(getShotName, filename_list))
+
+for i in filename_list:
+    shotname_list.pop(0)
+    if getShotName(i) in shotname_list:
+        os.remove(imageDir + i)
+        print('Removed: ' + i)
+        
