@@ -8,19 +8,12 @@ import os
 import re
 
 _dict_nodeTag = {}
+_dict_tagNode = {}
 _nodes_mergeOver = []
 
 def main():
-
     # Get all footage type
-    for i in nuke.allNodes():
-        if i.Class() == 'Read':
-            type = getFootageType(i)
-            _dict_nodeTag[i] = type
-    
-    if not _dict_nodeTag:
-        nuke.message('请先将素材拖入Nuke')
-        return False
+    updateDict()
     
     # MergeOver
     mergeOver()
@@ -41,23 +34,40 @@ def main():
     if not _done:
         nuke.message('没有找到CH_A：\n请手动设置工程帧范围')
 
-def getFootageType(n):
+def updateDict():
+    for i in nuke.allNodes('Read'):
+        tag = getFootageTag(i)
+        _dict_nodeTag[i] = tag
+        _dict_tagNode[tag] = i
+            
+    if not _dict_nodeTag:
+        nuke.message('请先将素材拖入Nuke')
+        return False
+
+def getFootageTag(n):
     '''
     Figure out node footage type
     '''
     _filename = nuke.filename(n)
     _s = os.path.basename(_filename)
     _pat = re.compile(r'_sc\d+_(.*?)\.')
-    result = re.search(_pat, _s).group(1)
+    result = re.search(_pat, _s).group(1).upper()
     return result
 
+def getNodesByTag(tags):
+    result = []    
+    # Convert input param
+    tags = tuple(map(str.upper, list((tags))))
+    # Output result
+    for i in _dict_nodeTag.keys():
+        if _dict_nodeTag[i].startswith(tags):
+            result.append(i)
+    return result
 
 def mergeOver():
 
-    # Pick out node to mergeOver
-    for i in _dict_nodeTag.keys():
-        if _dict_nodeTag[i] in ['BG', 'BG_A', 'CH', 'CH_A', 'CH_B', 'CH_C', 'CH_D']:
-            _nodes_mergeOver.append(i)
+    # Find nodes to mergeOver
+    _nodes_mergeOver = getNodesByTag(['BG', 'CH'])
 
     # Sort for processing order
     _order_backfront = lambda n: _dict_nodeTag[n].replace('BG', '_1_').replace('CH', '_0_')
@@ -69,23 +79,32 @@ def mergeOver():
         if _nodes_mergeOver.index(i) == 0:
             _lastoutput = i
             continue
-        _node_merge = nuke.nodes.Merge()
+        _node_merge = nuke.nodes.Merge2()
         _node_merge.setInput(0, _lastoutput)
         _node_merge.setInput(1, i)
         _lastoutput = _node_merge
         
-    # TODO:Place node
+    placeNodes()
 
 def mergeOCC():
     # TODO
-    pass
-    
+    for tag in _dict_tagNode.keys():
+        if tag.startswith('BG'):
+            for node in getNodesByTag('OCC'):
+                _node_merge = nuke.nodes.Merge2(inputs=[_dict_tagNode[tag], node], operation='multiply', screen_alpha=True)
+            break
+            
 def mergeShadow():
     # TODO
     pass
 
+def placeNodes():
+    # XXX
+    for i in nuke.allNodes():
+        i.autoplace()
+
 def placeNode(n):
-    #TODO
+    # TODO
     inputNum = n.inputs()
     def _setNodeXY(n):
         n.setXYpos(xpos, ypos)

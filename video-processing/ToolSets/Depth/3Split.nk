@@ -5,8 +5,8 @@ Group {
  name Depth3Split_1
  tile_color 0xff00ff
  selected true
- xpos -85
- ypos -163
+ xpos 114
+ ypos -23
  addUserKnob {20 tab1 l Depth3Split_v1.5}
  addUserKnob {22 bt_setViewe2Output l "view output" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    input_channel =  'depth3split.close depth3split.middle depth3split.far depth3split.focus'\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue(input_channel)\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
  addUserKnob {22 bt_setViewer2rgba l "view rgba" -STARTLINE T "try: \n    viewer_node = nuke.activeViewer().node()\n    viewer_node.setInput(0, nuke.thisNode())\n    viewer_node\['channels'].setValue('rgba')\n    nuke.activeViewer().activateInput(0)\nexcept AttributeError:\n    nuke.message('请先创建Viewer')"}
@@ -41,8 +41,8 @@ add_layer {depth3split depth3split.close depth3split.middle depth3split.far dept
   xpos 180
   ypos -691
  }
-set N3d10400 [stack 0]
-push $N3d10400
+set N3b90400 [stack 0]
+push $N3b90400
  Copy {
   inputs 2
   from0 depth.Z
@@ -52,7 +52,7 @@ push $N3d10400
   xpos 180
   ypos -643
  }
-set N830dc00 [stack 0]
+set N3b90000 [stack 0]
  Keyer {
   input {{{parent.Middle.input}}}
   output depth3split.far
@@ -110,7 +110,6 @@ set N830dc00 [stack 0]
  }
  Blur {
   channels {none none none depth3split.focus}
-  size 5
   name Blur1
   xpos 180
   ypos -160
@@ -134,7 +133,7 @@ set N830dc00 [stack 0]
   addUserKnob {7 close}
   close 0.0086309053
  }
-push $N830dc00
+push $N3b90000
  ZDefocus2 {
   center 0.0086309053
   focal_point {1654 62}
