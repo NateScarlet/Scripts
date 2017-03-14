@@ -2,13 +2,13 @@
 
 ## 须知
 
-因为是用nuke10.0v4写的 低版本会报错 
+因为是用nuke10.0v4写的 低版本可能会报错 
 可以尝试打开文件 `ContactSheet_00_00.nk` 并复制所有节点到新的nuke文件来使用
 
 ## 使用方法
 
-1. 将单帧放到 [images](.\images) 文件夹中
-2. 运行快捷方式 `输出色板`
+1. 将单帧放到`images`文件夹中
+2. 运行快捷方式 `输出色板.lnk`
 3. 完成
 
 ## 增强功能
@@ -19,14 +19,14 @@
 
 * 渲染完成后自动上传
 
-     1. 修改 `ExecuteContactSheet&Upload.bat` 中的目标路径
+     1. 修改`ExecuteContactSheet&Upload.bat`中的目标路径
      2. 运行快捷方式"输出色板&上传"
 
 * 场集信息
 
      脚本会将文件名以下划线分割的第二和第三个信息添加在图片上
 
-     例如,重命名为 `ContactSheet_AA_BB.nk` 将显示为`AA集 BB场`
+     例如,重命名为`ContactSheet_AA_BB.nk`将显示为`AA集 BB场`
 
 * 更换底板
 
