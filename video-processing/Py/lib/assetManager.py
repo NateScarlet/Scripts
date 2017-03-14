@@ -114,7 +114,7 @@ def checkDropFrames():
     global dropframes_showed
     dropframes = {}
     dropframes_showed = []
-    for i in nuke.allNodes():
+    for i in nuke.allNodes(group=nuke.Root()):
         getDropFrameRanges(i)
     showDropFrames()
     return
