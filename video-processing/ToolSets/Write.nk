@@ -1,227 +1,235 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
-BackdropNode {
- inputs 0
- name BackdropNode_Write_1
- tile_color 0x9fbcc6ff
- label "Write v4.32"
- note_font_size 42
- selected true
- xpos 164
- ypos -607
- bdwidth 365
- bdheight 431
- addUserKnob {20 tab1 l 设置}
- addUserKnob {6 isRenderSingleFrame l 渲染时输出单帧 +STARTLINE}
- isRenderSingleFrame true
- addUserKnob {6 isLockOnSave l 保存时锁定节点连接 +STARTLINE}
- isLockOnSave true
- addUserKnob {26 div1 l 查看器1输入锁定}
- addUserKnob {6 isLock2 l "2 -> 当前输出" -STARTLINE}
- isLock2 true
- addUserKnob {6 isLock4 l "4 -> 本地单帧" -STARTLINE}
- isLock4 true
-}
 push $cut_paste_input
-NoOp {
- name _SetProject
- label "设置工程为\n1080p fps25\n\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('BackdropNode_Write_1');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('Write_JPG_1');\n    b = nuke.toNode('BackdropNode_Write_1');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\nknob root.format  \{1920 1080 0 0 1920 1080 1 HD_1080\}\nknob root.fps 25\n]"
- selected true
- xpos 306
- ypos -510
-}
-Dot {
- name Dot_Write_2
+Group {
+ name _Write
+ tile_color 0xbfbf00ff
+ label "\[value this.Write_MOV_1.file]\n\[value this.Write_JPG_1.file]\n\[\n#knob root.onScriptLoad \{\n#\}\nknob root.onScriptSave \{\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\nb = nuke.toNode('_Write');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\nif nuke.toNode(\"_Write.ReadWrite_JPG_1\"):\n    nuke.frame(nuke.toNode(\"_Write.ReadWrite_JPG_1\")\[\"first\"].value());\n    nuke.Root().setModified(False)\n\}\nknob root.onScriptClose \{\nif not nuke.modified():\n    w = nuke.toNode('_Write.Write_JPG_1');\n    b = nuke.toNode('_Write');\n    if not b or b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]"
  note_font 微软雅黑
  selected true
- xpos 340
- ypos -469
+ xpos -40
+ ypos -73
+ addUserKnob {20 tab1 l Write_v4.33}
+ addUserKnob {41 isRenderSingleFrame l 渲染时输出单帧 T BackdropNode_Write_1.isRenderSingleFrame}
+ addUserKnob {41 isLockOnSave l 保存时锁定节点连接 T BackdropNode_Write_1.isLockOnSave}
+ addUserKnob {41 first l 单帧帧编号 T Write_JPG_1.first}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {22 bt_render l Render T "nukescripts.showRenderDialog(\[nuke.thisNode()], False)" +STARTLINE}
 }
-set N2bf3fc00 [stack 0]
-Write {
- file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- colorspace sRGB
- file_type mov
- meta_codec apch
- mov32_codec "rle "
- mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
- mov64_codec apch
- mov64_fps {{root.fps}}
- mov64_advanced 1
- mov64_bitrate 20000
- mov64_bitrate_tolerance 40000000
- mov64_quality_min 2
- mov64_quality_max 31
- mov64_gop_size 12
- mov64_b_frames 0
- checkHashOnRead false
- version 11
- in_colorspace linear
- out_colorspace linear
- beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
- name Write_MOV_1
- selected true
- xpos 196
- ypos -462
- addUserKnob {20 caravr l CaraVR}
- addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
- addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
-}
-Text2 {
- font_size_toolbar 100
- font_width_toolbar 100
- font_height_toolbar 100
- opacity 0.3
- message "\[lindex \[split \[basename \[value root.name]] .] 0]"
- old_expression_markers {{0 -1}
-   }
- box {20 20 1000 75}
- transforms {{0 2}
-   }
- cursor_position 50
- font {{ Microsoft YaHei : Regular : msyh.ttf : 0 }}
- global_font_scale 0.65
- scale {1 1}
- cursor_initialised true
- autofit_bbox false
- initial_cursor_position {{24 122.5}
-   }
- group_animations {{0} imported: 0 selected: items: "root transform"}
- animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
-   }
- enable_background {{!root.proxy}}
- background_opacity 0.3
- background_border_x 20
- name Text2_Write_2
- label "镜头名称\n\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
- note_font 微软雅黑
- selected true
- xpos 196
- ypos -386
-}
-Text2 {
- font_size_toolbar 100
- font_width_toolbar 100
- font_height_toolbar 100
- opacity 0.34
- message "\[x]"
- old_message {{49}
-   }
- old_expression_markers {{0 0}
-   }
- box {1700 20 1900 75}
- xjustify right
- transforms {{0 2}
-   }
- cursor_position 1
- font {{ Microsoft YaHei : Regular : msyh.ttf : 0 }}
- global_font_scale 0.65
- scale {1 1}
- cursor_initialised true
- autofit_bbox false
- initial_cursor_position {{1778.5 128.5}
-   }
- group_animations {{0} imported: 0 selected: items: "root transform/"}
- animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
-   }
- enable_background {{!root.proxy}}
- background_opacity 0.3
- background_border_x 20
- name Text2_Write_1
- label "帧编号\n\[knob this.message \{\[x]\}]"
- note_font 微软雅黑
- selected true
- xpos 196
- ypos -338
-}
-Write {
- file "mov/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- proxy "mov/proxy/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
- colorspace sRGB
- file_type mov
- meta_codec apch
- mov32_codec "rle "
- mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
- mov64_codec apch
- mov64_fps {{root.fps}}
- mov64_advanced 1
- mov64_bitrate 20000
- mov64_bitrate_tolerance 40000000
- mov64_quality_min 2
- mov64_quality_max 31
- mov64_gop_size 12
- mov64_b_frames 0
- render_order 2
- checkHashOnRead false
- version 11
- in_colorspace linear
- out_colorspace linear
- beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
- name Write_MOV_2
- label 带帧编号的MOV
- selected true
- xpos 196
- ypos -276
- addUserKnob {20 caravr l CaraVR}
- addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
- addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
-}
-Read {
- inputs 0
- file "\[value Write_JPG_1.file]"
- first {{parent.Write_JPG_1.last}}
- last {{first}}
- origset true
- version 28
- in_colorspace linear
- out_colorspace linear
- name ReadWrite_JPG_1
- label "输出的单帧\n第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
- selected true
- xpos 416
- ypos -553
- disable {{"! \[file exists \[value Write_JPG_1.file]]"}}
-}
-Dot {
- name Dot1
- note_font 微软雅黑
- selected true
- xpos 450
- ypos -373
-}
-push $N2bf3fc00
-Switch {
- inputs 2
- which 1
- name Switch1
- label "把输入的单帧加入节点树\n勿开"
- note_font 微软雅黑
- selected true
- xpos 306
- ypos -394
- disable {{1 x1 0}}
-}
-Write {
- file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
- proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
- file_type jpeg
- _jpeg_quality 1
- render_order 2
- first {{root.first_frame+ceil((root.last_frame-root.first_frame)/2)}}
- last {{first}}
- use_limit true
- checkHashOnRead false
- version 55
- beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
- afterRender "global rsmbList;\nprint(rsmbList);\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.toNode(\"root\")\[\"lock_connections\"].setValue(1);\nnuke.thisNode()\['disable'].setValue(1);"
- name Write_JPG_1
- label "单帧\n会在退出脚本时自动输出\n\[\n# lockViewer\nset isLock2 \"parent.BackdropNode_Write_1.isLock2\"\nif \{(\[exists \$isLock2]) && (\[value \$isLock2]) && (\[exists Viewer1])\} \{\n    input Viewer1 1 this\n\}\n]"
- selected true
- xpos 306
- ypos -283
- disable true
- addUserKnob {20 caravr l CaraVR}
- addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
- addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
-}
+ BackdropNode {
+  inputs 0
+  name BackdropNode_Write_1
+  tile_color 0x9fbcc6ff
+  label "Write v4.32"
+  note_font_size 42
+  xpos 254
+  ypos -302
+  bdwidth 365
+  bdheight 431
+  addUserKnob {20 tab1 l 设置}
+  addUserKnob {6 isRenderSingleFrame l 渲染时输出单帧 +STARTLINE}
+  isRenderSingleFrame true
+  addUserKnob {6 isLockOnSave l 保存时锁定节点连接 +STARTLINE}
+  isLockOnSave true
+  addUserKnob {26 div1 l 查看器1输入锁定}
+  addUserKnob {6 isLock2 l "2 -> 当前输出" -STARTLINE}
+  addUserKnob {6 isLock4 l "4 -> 本地单帧" -STARTLINE}
+ }
+ Read {
+  inputs 0
+  file "\[value Write_JPG_1.file]"
+  first {{parent.Write_JPG_1.last}}
+  last {{first}}
+  origset true
+  version 28
+  in_colorspace linear
+  out_colorspace linear
+  name ReadWrite_JPG_1
+  label "输出的单帧\n第 \[value first] 帧\n\[\n# lockViewer\nset isLock4 \"parent.BackdropNode_Write_1.isLock4\"\nif \{(\[exists \$isLock4]) && (\[value \$isLock4]) && (\[exists Viewer1])\} \{\n    input Viewer1 3 this\n\}\n]"
+  xpos 506
+  ypos -248
+  disable {{"! \[file exists \[value Write_JPG_1.file]]"}}
+ }
+ Dot {
+  name Dot1
+  note_font 微软雅黑
+  xpos 540
+  ypos -68
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos 396
+  ypos -245
+ }
+ Dot {
+  name Dot_Write_2
+  note_font 微软雅黑
+  xpos 430
+  ypos -164
+ }
+set N4fc2d000 [stack 0]
+ Switch {
+  inputs 2
+  which 1
+  name Switch1
+  label "把输入的单帧加入节点树\n勿开"
+  note_font 微软雅黑
+  xpos 396
+  ypos -89
+  disable {{1 x1 0}}
+ }
+set N3a94fb00 [stack 0]
+ Output {
+  name Output1
+  xpos 704
+  ypos 247
+ }
+push $N4fc2d000
+ Write {
+  file "mov/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+  proxy "mov/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+  colorspace sRGB
+  file_type mov
+  meta_codec apch
+  mov32_codec "rle "
+  mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+  mov64_codec apch
+  mov64_fps {{root.fps}}
+  mov64_advanced 1
+  mov64_bitrate 20000
+  mov64_bitrate_tolerance 40000000
+  mov64_quality_min 2
+  mov64_quality_max 31
+  mov64_gop_size 12
+  mov64_b_frames 0
+  checkHashOnRead false
+  version 17
+  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
+  name Write_MOV_1
+  xpos 286
+  ypos -157
+  addUserKnob {20 caravr l CaraVR}
+  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  opacity 0.3
+  message "\[lindex \[split \[basename \[value root.name]] .] 0]"
+  old_message {{97 117 116 111 67 111 109 112 101 114}
+    }
+  old_expression_markers {{0 9}
+    }
+  box {20 20 1000 75}
+  transforms {{0 2}
+    }
+  cursor_position 50
+  font {{ Microsoft YaHei : Regular : msyh.ttf : 0 }}
+  global_font_scale 0.65
+  scale {1 1}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{24 122.5}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  enable_background {{!root.proxy}}
+  background_opacity 0.3
+  background_border_x 20
+  name Text2_Write_2
+  label "镜头名称\n\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
+  note_font 微软雅黑
+  xpos 286
+  ypos -81
+ }
+ Text2 {
+  font_size_toolbar 100
+  font_width_toolbar 100
+  font_height_toolbar 100
+  opacity 0.34
+  message "\[x]"
+  old_message {{49}
+    }
+  old_expression_markers {{0 0}
+    }
+  box {1700 20 1900 75}
+  xjustify right
+  transforms {{0 2}
+    }
+  cursor_position 1
+  font {{ Microsoft YaHei : Regular : msyh.ttf : 0 }}
+  global_font_scale 0.65
+  scale {1 1}
+  cursor_initialised true
+  autofit_bbox false
+  initial_cursor_position {{1778.5 128.5}
+    }
+  group_animations {{0} imported: 0 selected: items: "root transform/"}
+  animation_layers {{1 11 960 540 0 0 1 1 0 0 0 0}
+    }
+  enable_background {{!root.proxy}}
+  background_opacity 0.3
+  background_border_x 20
+  name Text2_Write_1
+  label "帧编号\n\[knob this.message \{\[x]\}]"
+  note_font 微软雅黑
+  xpos 286
+  ypos -33
+ }
+ Write {
+  file "mov/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+  proxy "mov/proxy/burn-in/\[lindex \[split \[basename \[value root.name]] .] 0].mov"
+  colorspace sRGB
+  file_type mov
+  meta_codec apch
+  mov32_codec "rle "
+  mov32_pixel_format {{0} "default (RGBA  8-bit)" "RGBA  8-bit"}
+  mov64_codec apch
+  mov64_fps {{root.fps}}
+  mov64_advanced 1
+  mov64_bitrate 20000
+  mov64_bitrate_tolerance 40000000
+  mov64_quality_min 2
+  mov64_quality_max 31
+  mov64_gop_size 12
+  mov64_b_frames 0
+  render_order 2
+  checkHashOnRead false
+  version 17
+  beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
+  name Write_MOV_2
+  label 带帧编号的MOV
+  xpos 286
+  ypos 29
+  addUserKnob {20 caravr l CaraVR}
+  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
+ }
+push $N3a94fb00
+ Write {
+  file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
+  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
+  file_type jpeg
+  _jpeg_quality 1
+  render_order 2
+  first {{root.first_frame+ceil((root.last_frame-root.first_frame)/2)}}
+  last {{first}}
+  use_limit true
+  checkHashOnRead false
+  version 55
+  beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes():\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
+  afterRender "global rsmbList;\nprint(rsmbList);\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.toNode(\"root\")\[\"lock_connections\"].setValue(1);\nnuke.thisNode()\['disable'].setValue(1);"
+  name Write_JPG_1
+  label "单帧\n会在退出脚本时自动输出\n\[\n# lockViewer\nset isLock2 \"parent.BackdropNode_Write_1.isLock2\"\nif \{(\[exists \$isLock2]) && (\[value \$isLock2]) && (\[exists Viewer1])\} \{\n    input Viewer1 1 this\n\}\n]"
+  xpos 396
+  ypos 22
+  disable true
+  addUserKnob {20 caravr l CaraVR}
+  addUserKnob {4 viewPresets l "View Presets" M {main stereo cams all}}
+  addUserKnob {22 set l Set -STARTLINE T "w = nuke.thisNode()\nscriptViews = nuke.views()\nviewPreset = w\['viewPresets'].getValue()\nselectedViews = None\nif viewPreset == 0:\n  selectedViews = \['main']\nif viewPreset == 1:\n  stereoViews = \['left', 'right']\n  if set(stereoViews).issubset(set(scriptViews)):\n    selectedViews = stereoViews\n  else:\n    selectedViews = None\nelif viewPreset == 2:\n  selectedViews = \[v for v in scriptViews if 'cam' in v.lower()]\nelif viewPreset == 3:\n  selectedViews = scriptViews\nif selectedViews:\n  w\['views'].fromScript(' '.join(selectedViews))\n"}
+ }
+end_group

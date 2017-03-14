@@ -9,7 +9,6 @@ import re
 
 _dict_nodeTag = {}
 _dict_tagNode = {}
-_nodes_mergeOver = []
 
 def main():
     # Get all footage type
@@ -19,7 +18,6 @@ def main():
     mergeOver()
     
     # Create write node
-    _lastoutput.selectOnly() 
     nuke.loadToolset("\\\\SERVER\scripts\NukePlugins\ToolSets\WLF\Write.nk")
     
     # Set framerange
@@ -48,16 +46,22 @@ def getFootageTag(n):
     '''
     Figure out node footage type
     '''
-    _filename = nuke.filename(n)
+    _filename = os.path.normcase(nuke.filename(n))
     _s = os.path.basename(_filename)
     _pat = re.compile(r'_sc\d+_(.*?)\.')
-    result = re.search(_pat, _s).group(1).upper()
+    result = re.search(_pat, _s)
+    if result:
+        result = result.group(1).upper()
+    else:
+        result = '_OTHER'
     return result
 
 def getNodesByTag(tags):
     result = []    
     # Convert input param
-    tags = tuple(map(str.upper, list((tags))))
+    if type(tags) is str :
+        tags = [tags]
+    tags = tuple(map(str.upper, tags))
     # Output result
     for i in _dict_nodeTag.keys():
         if _dict_nodeTag[i].startswith(tags):
@@ -74,16 +78,11 @@ def mergeOver():
     _nodes_mergeOver.sort(key=_order_backfront, reverse=True)
     
     # Create node
-    for i in _nodes_mergeOver:
-        global _lastoutput
-        if _nodes_mergeOver.index(i) == 0:
-            _lastoutput = i
-            continue
-        _node_merge = nuke.nodes.Merge2()
-        _node_merge.setInput(0, _lastoutput)
-        _node_merge.setInput(1, i)
+    _lastoutput = _nodes_mergeOver[0]
+    for i in _nodes_mergeOver[1:]:
+        _node_merge = nuke.nodes.Merge2(inputs=[_lastoutput, i])
         _lastoutput = _node_merge
-        
+    _lastoutput.selectOnly()
     placeNodes()
 
 def mergeOCC():
