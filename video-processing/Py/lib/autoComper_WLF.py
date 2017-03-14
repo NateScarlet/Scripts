@@ -87,16 +87,26 @@ def mergeOver():
 
 def mergeOCC():
     # TODO
-    for tag in _dict_tagNode.keys():
-        if tag.startswith('BG'):
-            for node in getNodesByTag('OCC'):
-                _node_merge = nuke.nodes.Merge2(inputs=[_dict_tagNode[tag], node], operation='multiply', screen_alpha=True)
-            break
-            
+    bg_node = getNodesByTag('BG')[0]
+    for i in getNodesByTag('OCC'):
+        merge_node = nuke.nodes.Merge2(inputs=[_b, i], operation='multiply')
+        _lastoutput = _node_merge
+
+    
 def mergeShadow():
     # TODO
     pass
 
+def insertNode(node, input_node):
+    # Create dot presents input_node 's output
+    input_node.selectOnly()
+    dot = nuke.createNode('Dot')
+    # Set node connection
+    node.setInput(0, input_node)
+    dot.setInput(0, node)
+    # Delete dot
+    nuke.delete(dot)
+ 
 def placeNodes():
     # XXX
     for i in nuke.allNodes():
