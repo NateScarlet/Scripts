@@ -1,14 +1,36 @@
 
-CHCP 936 > nul
 @ECHO OFF
-TITLE É«°åÉú³Éºó_ÉÏ´«
-SET "dateA=%date:~5,2%%date:~8,2%"
+CHCP 65001
+SETLOCAL ENABLEDELAYEDEXPANSION
+CD /D %~dp0
+CLS
 
-SET "folderA="\\192.168.1.7\z\SNJYW\Comp\image\%dateA%""
-REM ¡üÉèÖÃÉÏ´«Ä¿±êÎÄ¼ş¼ĞÂ·¾¶ %dateA%´ú±íµ±Ç°ÔÂÈÕ
+REM Set window title
+SET "VERSION=1.0"
+TITLE ç”Ÿæˆè‰²æ¿å_ä¸Šä¼ v%VERSION%
 
-ECHO µ±Ç°ÈÕÆÚ:	%dateA%
-ECHO ÉÏ´«Ä¿±êÎÄ¼ş¼Ğ:	%folderA%
+REM Read ini
+REM Won't support same variable name in diffrent block
+FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("path.ini") DO (
+    IF NOT "%%b"=="" (
+        SET "%%a=%%b"
+    )
+)
+
+REM Prepare folder name
+SET "DATE_=%DATE:~8,2%%DATE:~11,2%"
+SET "TARGET=%SERVER%\%FOLDER%\%DATE_%"
+
+ECHO å½“å‰æ—¥æœŸ:	%DATE%
+ECHO ä¸Šä¼ è‡³:	%TARGET%
+
+IF NOT EXIST %TARGET% (
+    ECHO é”™è¯¯ - ç›®æ ‡æ–‡ä»¶å¤¹ä¸å­˜åœ¨
+    PAUSE&EXIT
+)
+
 START /WAIT POWERSHELL -command "& '"%~dp0ExecuteContactSheet.bat"'"
-XCOPY /Y /D /I "%~dp0ContactSheet*.png" %folderA%
-REM PAUSE
+
+XCOPY /Y /D /I "%~dp0ContactSheet*.png" %TARGET%
+
+MSHTA vbscript:msgbox("æ¸²æŸ“å®Œæˆ",64,"ç”Ÿæˆè‰²æ¿å_ä¸Šä¼ v%VERSION%")(window.close)
