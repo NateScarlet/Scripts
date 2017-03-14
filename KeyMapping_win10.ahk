@@ -41,18 +41,11 @@ Run, XnView
 return
 
 $#3:: 
-IfWinExist, ahk_exe EmEditor.exe
-{
-	WinActivate
-}
-else
-{
-	Run txt
-}
+Run, "%USERPROFILE%\Shortcut\txt.lnk"
 return
 
 $#f:: 
-Run, Everything
+Run, "%USERPROFILE%\Shortcut\Everything.lnk"
 return
 
 $#e:: 
