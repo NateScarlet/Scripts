@@ -9,7 +9,10 @@ import re
 
 node_tag_dict = {}
 tag_node_dict = {}
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'CH_SD': 'SD_CH'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SD_CH'}
+_last_output = ''
+
+toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 
 def main():
     # Get all footage type
@@ -20,14 +23,14 @@ def main():
     print(node_tag_dict)
     
     # Merge
-    n = mergeOver()
+    trySelectOnly(mergeOver())
     mergeOCC()
     mergeShadow()
     mergeScreen()
-    n.selectOnly()
+    trySelectOnly(addZDefocus(mergeDepth()))
     
     # Create write node
-    nuke.loadToolset("\\\\SERVER\scripts\NukePlugins\ToolSets\WLF\Write.nk")
+    nuke.loadToolset(toolset + r"\Write.nk")
     
     # Place node
     placeNodes()
@@ -81,6 +84,10 @@ def getNodesByTag(tags):
             result.append(i)
     return result
 
+def trySelectOnly(n):
+    if n:
+        n.selectOnly()
+    
 def mergeOver():
 
     # Find nodes to mergeOver
@@ -91,23 +98,26 @@ def mergeOver():
     _nodes_mergeOver.sort(key=_order_backfront, reverse=True)
     
     # Create node
+    global _last_output
     if len(_nodes_mergeOver) == 0:
-        return node_tag_dict.keys()[0]
+        _last_output = node_tag_dict.keys()[0]
     elif len(_nodes_mergeOver) == 1:
-        return _nodes_mergeOver[0]
+        _last_output = _nodes_mergeOver[0]
     else:
-        _lastoutput = _nodes_mergeOver[0]
+        _last_output = _nodes_mergeOver[0]
         for i in _nodes_mergeOver[1:]:
-            _node_merge = nuke.nodes.Merge2(inputs=[_lastoutput, i], label=node_tag_dict[i])
-            _lastoutput = _node_merge
-        return _lastoutput
+            _node_merge = nuke.nodes.Merge2(inputs=[_last_output, i], label=node_tag_dict[i])
+            _last_output = _node_merge
+    return _last_output
 
 def mergeOCC():
     try:
         bg_node = getNodesByTag('BG')[0]
+        merge_node = None
         for i in getNodesByTag('OCC'):
             merge_node = nuke.nodes.Merge2(inputs=[bg_node, i], operation='multiply', screen_alpha=True, label='OCC')
             insertNode(merge_node, bg_node)
+        return merge_node
     except IndexError:
         return None
         
@@ -128,6 +138,26 @@ def mergeScreen():
             insertNode(merge_node, bg_node)
     except IndexError:
         return None
+
+def mergeDepth():
+    try:
+        nodes = getNodesByTag(['BG', 'CH'])
+        input_nodes = list(nodes)
+        input_nodes.insert(2, None)
+        merge_node = nuke.nodes.Merge2(inputs=input_nodes, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
+        for i in nodes:
+            depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
+            insertNode(depthfix_node, i)
+        copy_node = nuke.nodes.Copy(inputs=[_last_output, merge_node], from0='depth.Z', to0='depth.Z')
+        insertNode(copy_node, _last_output)
+        return copy_node
+    except IndexError:
+        return None
+        
+def addZDefocus(input_node):
+    nodes_zdefocus = getNodesByTag(['BG', 'CH'])
+    zdefocus_node = nuke.nodes.ZDefocus2(inputs=[input_node], math='depth', center=0.00236545, blur_dof=False, disable=True)
+    return zdefocus_node
         
 def insertNode(node, input_node):
     # Create dot presents input_node 's output
