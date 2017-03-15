@@ -1,49 +1,42 @@
-@ECHO off
 
-REM Set codepage to UTF-8
+@ECHO OFF
 CHCP 65001
+SETLOCAL ENABLEDELAYEDEXPANSION
+CD /D %~dp0
+CLS
 
 REM Set window title
-TITLE 生成色板v1.22
+TITLE 生成色板v1.3
 
-REM SET 'nuke.exe' path
-REM 设置'nuke.exe'路径
-SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
+REM Read ini
+REM Won't support same variable name in diffrent block
+FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("path.ini") DO (
+    IF NOT "%%b"=="" (
+        SET "%%a=%%b"
+    )
+)
 
 REM Set working directory to images folder
 CHDIR /D "%~dp0images"
 
-REM delete Thumbs.db
-REM 删除缩略图缓存
-ATTRIB -S -H Thumbs.db
-DEL Thumbs.db 0>nul
-
-REM Delete proxy file(disabled)
-IF 1 == 0 (
-    ECHO 删除代理文件:
-    FOR /F %%i IN ('DIR /B "*_proxy.*"') DO (
-        ECHO %%~i
-        DEL "%%~i"
-        )
+REM Delete thumbs.db
+IF EXIST thumbs.db (
+    ATTRIB -S -H thumbs.db
+    DEL Thumbs.db
 )
 
 REM Delete any .tmp file
-ECHO 删除临时文件:
-FOR /F %%i IN ('DIR /B "*.tmp"') DO (
-     ECHO %%~i
-     DEL "%%~i"
-     )
-     
-REM Try keep only one newest image for same shot
-IF EXIST "%UserProfile%\AppData\Local\Programs\Python" (
-    IF EXIST "%~dp0OneShotOneImage.py" (
-        ECHO 同镜头号只保留最新的单帧
-        "%~dp0OneShotOneImage.py" "%~dp0images"
+IF EXIST *.tmp (
+    ECHO 删除临时文件:
+    FOR /F %%i IN ('DIR /B "*.tmp"') DO (
+         ECHO %%~i
+         DEL "%%~i"
     )
 )
 
-REM Set working directory to current folder
-CHDIR /D "%~dp0"
+REM Keep only one newest image for same shot
+ECHO 同镜头号只保留最新的单帧
+%NUKE% -t "%~dp0OneShotOneImage.py" "%~dp0images"
 
 REM Execute contactsheet
 FOR /F %%i IN ('DIR /B "ContactSheet*.nk"') DO (
@@ -52,3 +45,5 @@ FOR /F %%i IN ('DIR /B "ContactSheet*.nk"') DO (
     ECHO.
     %NUKE% -x -f -c 8G --cont --priority low "%%~i"
 )
+
+GOTO :EOF

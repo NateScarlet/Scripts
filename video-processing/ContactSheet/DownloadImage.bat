@@ -27,7 +27,8 @@ ECHO 工程: %project% 集: %ep% 场: %shot%
 
 REM Excute copy
 XCOPY /D /Y /V /I "%sever%\%project%\Comp\image\%ep%\%shot%" "%~dp0\images"
-PAUSE
+
+GOTO: EOF
 
 REM Define function basename like os.path.basename in python
 :basename
