@@ -19,18 +19,19 @@ FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("path.ini") DO (
 
 REM Prepare folder name
 SET "DATE_=%DATE:~8,2%%DATE:~11,2%"
-SET "TARGET=%SERVER%\%FOLDER%\%DATE_%"
+SET "TARGET_FOLDER=%SERVER%\%FOLDER%"
+SET "TARGET=%TARGET_FOLDER%\%DATE_%"
 
 ECHO 当前日期:	%DATE%
 ECHO 上传至:	%TARGET%
 
-IF NOT EXIST %TARGET% (
+IF NOT EXIST %TARGET_FOLDER% (
     ECHO 错误 - 目标文件夹不存在
     PAUSE&EXIT
 )
 
 START /WAIT POWERSHELL -command "& '"%~dp0ExecuteContactSheet.bat"'"
 
-XCOPY /Y /D /I "%~dp0ContactSheet*.png" %TARGET%
+XCOPY /Y /D /I "%~dp0ContactSheet*.png" "%TARGET%"
 
 MSHTA vbscript:msgbox("渲染完成",64,"生成色板后_上传v%VERSION%")(window.close)

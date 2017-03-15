@@ -39,6 +39,7 @@ ECHO 同镜头号只保留最新的单帧
 %NUKE% -t "%~dp0OneShotOneImage.py" "%~dp0images"
 
 REM Execute contactsheet
+CD /D %~dp0
 FOR /F %%i IN ('DIR /B "ContactSheet*.nk"') DO (
     ECHO.
     ECHO 全尺寸渲染 %%~i

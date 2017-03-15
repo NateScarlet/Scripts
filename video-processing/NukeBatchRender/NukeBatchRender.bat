@@ -1,26 +1,48 @@
 
 @ECHO OFF
-CHCP 65001 > nul
+CHCP 65001
+SETLOCAL ENABLEDELAYEDEXPANSION
+CD /D %~dp0
+CLS
 
-:VariablesSetting
-REM
-REM 在下方设置路径变量
-REM
-SET "NUKE="C:\Program Files\Nuke10.0v4\Nuke10.0.exe""
-SET "serverZ=\\192.168.1.7\z"
-REM
-REM 在上方设置路径变量
-REM
-SET "VERSION=Nuke批渲染v1.95"
+REM Set window title
+SET "VERSION=1.97"
+TITLE 生成色板后_上传v%VERSION%
+
+REM Read ini
+REM Won't support same variable name in diffrent block
+FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("path.ini") DO (
+    IF NOT "%%b"=="" (
+        SET "%%a=%%b"
+    )
+)
+
+REM Set other
 SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
 SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
 SET "CLOSE_ERROR_WINDOW="%~dp0CloseErrorWindow.exe""
 
-TITLE %VERSION%
-SETLOCAL EnableDelayedExpansion
-CD /D %~dp0
+:CheckEnv
+REM Check if setting is correct
+IF NOT EXIST "%~dp0\*.nk" (
+    ECHO 错误 - 批处理所在文件夹不存在nk文件
+    PAUSE&GOTO:EOF
+)
+FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
+FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
+IF NOT EXIST !NUKE! (
+    ECHO 错误 - 文件内设置的路径不正确
+    ECHO 请手动设置Nuke路径__从资源管理器将Nuke.exe拖进来即可
+    SET /P "inputTemp=Nuke程序路径:"
+    IF "!inputTemp!" NEQ "" (
+        SET "NUKE=!inputTemp!"
+        SET "inputTemp="
+    )
+    GOTO CheckEnv
+)
 
 :CheckSingleInstance
+REM Check if is only rendering process
 IF /I "%~1" EQU "-noHiberOption" (
     GOTO :OptionOfRendering
 )
@@ -41,24 +63,12 @@ IF EXIST %CLOSE_ERROR_WINDOW% (
     START "" %CLOSE_ERROR_WINDOW%
 )
 
-:CheckEnv
-FOR /F "delims=" %%i IN ("!NUKE!") DO SET "NUKE="%%~i""
-FOR /F "delims=" %%i IN ("!serverZ!") DO SET "serverZ=%%~i"
-IF NOT EXIST !NUKE! (
-    ECHO 错误 - 文件内设置的路径不正确
-    ECHO 请手动设置Nuke路径__从资源管理器将Nuke.exe拖进来即可
-    SET /P "inputTemp=Nuke程序路径:"
-    IF "!inputTemp!" NEQ "" (
-        SET "NUKE=!inputTemp!"
-        SET "inputTemp="
-    )
-    GOTO CheckEnv
-)
-
 :OptionOfHiberAfterRender
+REM Hiber Option
 CHOICE /T 15 /D n /M "渲染完成后休眠"
 ECHO.
 IF "%ERRORLEVEL%" EQU "1" (
+    ECHO 重要 - 此功能需要先设置默认字体，在弹出的新窗口标题栏右键－＞默认值－＞字体－＞新宋体，然后关闭此脚本重新运行
     ECHO 保持此窗口开启以实现渲染完毕自动休眠
     TITLE 休眠 - 渲染完成后
     START /WAIT POWERSHELL -Command "& '.\NukeBatchRender.bat'"  -noHiberOption"
@@ -70,34 +80,36 @@ IF "%ERRORLEVEL%" EQU "1" (
 )
 
 :OptionOfRendering
+REM Render Options
+
+REM Display info
 ECHO 渲染时使用的NUKE路径: %NUKE%
 ECHO 本地缓存时使用的Z盘网络路径: %serverZ%
 ECHO.
 ECHO 提示 - 可以编辑此批处理文件头部来设置路径
 ECHO.
 
-CHOICE /T 15 /D n /M "素材缓存到本地后从缓存渲染"
-IF "%ERRORLEVEL%" EQU "1" SET "isLocalRender=TRUE"
-IF /I "%~1" EQU "-PROXY" (
-    SET "isProxyRender=TRUE"
-) ELSE (
-    ECHO.
-    ECHO 输出尺寸:
-    CHOICE /T 15 /C pf /D f /M "代理(P)/全尺寸(F)"
-    IF "!ERRORLEVEL!" EQU "1" SET "isProxyRender=TRUE"
-    IF "!ERRORLEVEL!" EQU "2" SET "isProxyRender=FALSE"
-)
+REM Ask render size
+ECHO 输出尺寸:
+CHOICE /T 15 /C pf /D f /M "代理(P)/全尺寸(F)"
+IF "!ERRORLEVEL!" EQU "1" SET "isProxyRender=TRUE"
+IF "!ERRORLEVEL!" EQU "2" SET "isProxyRender=FALSE"
+
+REM Ask render priority
 ECHO.
 ECHO 渲染进程优先级:
 CHOICE /T 15 /C ln /D n /M "低(L)/普通(N)"
 IF "%ERRORLEVEL%" EQU "1" SET "isLowPriority=TRUE"
 IF "%ERRORLEVEL%" EQU "2" SET "isLowPriority=FALSE"
-REM 为渲染日志作准备
+
+REM Set render log path
 SET "renderTime=%date:~5,2%%date:~8,2%%date:~11,2%_%time:~0,2%%time:~3,2%"
 IF NOT EXIST "%~dp0RenderLog" (
     MKDIR "%~dp0RenderLog"
 )
-REM 将代理渲染完成的文件移出来
+SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
+
+REM Move out proxy rendered file
 IF /I "%isProxyRender%" NEQ "TRUE" (
     IF EXIST "%~dp0PorxyRenderedFiles\" (
         ECHO.
@@ -106,52 +118,15 @@ IF /I "%isProxyRender%" NEQ "TRUE" (
         DEL "%~dp0PorxyRenderedFiles\*.nk"
     )
 )
-REM 断开Z盘映射并重新映射Z盘到缓存文件夹
-IF /I "%isLocalRender%" EQU "TRUE" (
-    IF NOT EXIST "%NUKE_TEMP_DIR%" (
-        ECHO 错误 - 需要设置环境变量%NUKE_TEMP_DIR%^(末尾不要反斜杠^)
-        ECHO 将不使用本地缓存渲染
-        PAUSE
-        SET "isLocalRender=FALSE"
-        GOTO:Render
-    )
-    ECHO.
-    ECHO 提示 - 将进行本地化渲染
-    IF NOT EXIST "%~dp0localiseFootage.bat" (
-        ECHO 找不到文件 - localiseFootage.bat
-        ECHO 将不使用本地缓存渲染
-        PAUSE
-        SET "isLocalRender=FALSE"
-        GOTO:Render
-    )
-    IF EXIST "Z:\" (
-        SUBST Z: /D >nul || NET USE Z: /DELETE 2>nul
-        IF ERRORLEVEL 1 (        
-            ECHO 错误 - 无法断开Z盘
-            ECHO 将不使用本地缓存渲染
-            SET "isLocalRender=FALSE"
-            GOTO:Render
-        )
-    )
-    SUBST Z: "%NUKE_TEMP_DIR%\localize\Z_"
-    REM 调用LocaliseFootage.bat来缓存素材
-    CALL "%~dp0LocaliseFootage.bat" "" "%serverZ%"
-)
-
-SET "RenderLog="%~dp0RenderLog\RenderLog_%renderTime%.txt""
 
 :Render
-REM 渲染
-IF NOT EXIST "%~dp0\*.nk" (
-    ECHO 错误 - 批处理所在文件夹不存在nk文件
-    PAUSE&GOTO:EOF
-)
+REM Render
 FOR %%i in ("%~dp0\*.nk") do (
 	SET "startTime=!time:~0,8!"
 	SET "triedTimes=0"
     :SingleRender
    	IF /I "%isProxyRender%" EQU "TRUE" (
-	    REM 代理渲染
+	    REM Render in proxy size
 	    ECHO.
         ECHO 代理模式渲染 %%~nxi
         ECHO.
@@ -170,7 +145,7 @@ FOR %%i in ("%~dp0\*.nk") do (
         ATTRIB -R "%~dp0PorxyRenderedFiles\%%~nxi"
         MOVE /Y "%%~i" "%~dp0PorxyRenderedFiles\"
 	) ELSE (
-	    REM 全尺寸渲染
+	    REM Render in full size
         ECHO.
         ECHO 全尺寸渲染 %%~nxi 
         ECHO.
@@ -190,22 +165,20 @@ FOR %%i in ("%~dp0\*.nk") do (
 	)
 )
 ECHO [!time:~0,8!] 渲染完成
-REM 重新映射回Z盘
-IF /I "%isLocalRender%" EQU "TRUE" (
-    SUBST /D Z:
-    NET USE Z: "%serverZ%" /PERSISTENT:YES
-)
-REM 清理2个月前的日志
-FOR /F %%i in ('FORFILES /P %~dp0/Renderlog /D -30 ^| FINDSTR /I "RenderLog_.*\.txt") do (
-    DEL %%i
-)
+
+REM Display renderlog
 EXPLORER %RenderLog%
+
+REM Execute afterrender script
 IF EXIST %~dp0afterRender.bat% (
     START /WAIT POWERSHELL "& '%~dp0afterRender.bat%'"
 )
+
+REM Exiting
 DEL %SWITCH_RENDERING%
 GOTO:EOF
-REM
+
+REM Function define
 :RetryRender
 IF ERRORLEVEL 1 (
     IF "!renderTimes!" LEQ "3" (
