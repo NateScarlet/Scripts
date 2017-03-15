@@ -65,10 +65,19 @@ def replaceFrame( filename, frame ):
     _pat = re.compile( r'%0?(\d*)d' )
     return re.sub( _pat, _frame , nukescripts.frame.replaceHashes( filename ) )
 
-def getDropFrameRanges( n=nuke.thisNode() ):
+def getDropFrameRanges( n=nuke.thisNode(), avoid=True):
     '''
     Return frameRanges of footage drop frame.
+    
+    @param n: node
+    @param avoid: Avoid node that name endswith '_' for special use.
+    @return frameranges
     '''
+    # Avoid special node
+    if avoid and n.name().endswith('_'):
+        return None
+    
+    # Get dropframe ranges
     if n.Class() != 'Read' :
         return  False
     L = []

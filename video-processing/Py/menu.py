@@ -6,7 +6,11 @@ from autolabelCustom import autolabelCustom
 
 # Set menu
 comp.addMenu()
+
+# Custom autolabel
 nuke.addAutolabel( autolabelCustom )
+
+# Add dropframe check
 nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
 nuke.addOnScriptSave( assetManager.showDropFrames)
 

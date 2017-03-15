@@ -8,8 +8,8 @@ Group {
  note_font 微软雅黑
  selected true
  xpos 1170
- ypos 1431
- addUserKnob {20 tab1 l Write_v4.4}
+ ypos 1249
+ addUserKnob {20 tab1 l Write_v4.41}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
  addUserKnob {26 text1 l 保存时}
@@ -39,10 +39,11 @@ Group {
   last {{root.last_frame}}
   origset true
   version 30
-  name ReadWrite_JPG_1
+  name ReadWrite_JPG_
   label "输出的单帧\n第 \[value first] 帧\n"
+  selected true
   xpos 400
-  ypos -290
+  ypos -304
   disable {{"! \[file exist \[value this.file]]"}}
  }
  FrameHold {
@@ -107,6 +108,8 @@ Group {
   mov64_b_frames 0
   checkHashOnRead false
   version 18
+  in_colorspace linear
+  out_colorspace linear
   beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
   name Write_MOV_1
   xpos 290
@@ -202,6 +205,8 @@ Group {
   render_order 2
   checkHashOnRead false
   version 17
+  in_colorspace linear
+  out_colorspace linear
   beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
   name Write_MOV_2
   label 带帧编号的MOV
@@ -216,7 +221,6 @@ Group {
   which {{parent.knob.is_output_JPG}}
   name Switch1
   note_font 微软雅黑
-  selected true
   xpos 290
   ypos 109
  }
