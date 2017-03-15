@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.1
+# Version 0.2
 
 import nuke
 import os
@@ -9,7 +9,7 @@ import re
 
 node_tag_dict = {}
 tag_node_dict = {}
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SD_CH'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH'}
 _last_output = ''
 
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
@@ -20,10 +20,10 @@ def main():
     if not node_tag_dict:
         nuke.message('请先将素材拖入Nuke')
         return False
-    print(node_tag_dict)
     
     # Merge
-    trySelectOnly(mergeOver())
+    mergeOver()
+    addSoftClip()
     mergeOCC()
     mergeShadow()
     mergeScreen()
@@ -36,16 +36,10 @@ def main():
     placeNodes()
     
     # Set framerange
-    _done = False
-    for i in node_tag_dict.keys():
-        if node_tag_dict[i] == 'CH_A':
-            nuke.Root()['first_frame'].setValue(i['first'].value())
-            nuke.Root()['last_frame'].setValue(i['last'].value())
-            nuke.Root()['lock_range'].setValue(True)
-            _done = True
-            break
-    if not _done:
-        nuke.message('没有找到CH_A：\n请手动设置工程帧范围')
+    try:
+        setFrameRangeByNode(sortNodesByTag(getNodesByTag(['CH', 'BG']))[-1])
+    except IndexError:
+        nuke.message('没有找到CH或BG\n请手动设置工程帧范围')
 
 def updateDict():
     node_tag_dict.clear()
@@ -84,6 +78,16 @@ def getNodesByTag(tags):
             result.append(i)
     return result
 
+def sortNodesByTag(node_list):
+    order = lambda n: ('_' + node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
+    node_list.sort(key=order, reverse=True)
+    return node_list
+
+def setFrameRangeByNode(n):
+    nuke.Root()['first_frame'].setValue(n['first'].value())
+    nuke.Root()['last_frame'].setValue(n['last'].value())
+    nuke.Root()['lock_range'].setValue(True)
+    
 def trySelectOnly(n):
     if n:
         n.selectOnly()
@@ -91,35 +95,39 @@ def trySelectOnly(n):
 def mergeOver():
 
     # Find nodes to mergeOver
-    _nodes_mergeOver = getNodesByTag(['BG', 'CH'])
+    nodes = getNodesByTag(['BG', 'CH'])
 
     # Sort for processing order
     _order_backfront = lambda n: node_tag_dict[n].replace('BG', '_1_').replace('CH', '_0_')
-    _nodes_mergeOver.sort(key=_order_backfront, reverse=True)
+    nodes.sort(key=_order_backfront, reverse=True)
     
     # Create node
     global _last_output
-    if len(_nodes_mergeOver) == 0:
+    if len(nodes) == 0:
         _last_output = node_tag_dict.keys()[0]
-    elif len(_nodes_mergeOver) == 1:
-        _last_output = _nodes_mergeOver[0]
+    elif len(nodes) == 1:
+        _last_output = nodes[0]
     else:
-        _last_output = _nodes_mergeOver[0]
-        for i in _nodes_mergeOver[1:]:
-            _node_merge = nuke.nodes.Merge2(inputs=[_last_output, i], label=node_tag_dict[i])
-            _last_output = _node_merge
+        _last_output = nodes[0]
+        for i in nodes[1:]:
+            merge_node = nuke.nodes.Merge2(inputs=[_last_output, i], label=node_tag_dict[i])
+            _last_output = merge_node
     return _last_output
+
+def addSoftClip():
+    for i in getNodesByTag(['BG', 'CH']):
+        insertNode(nuke.nodes.SoftClip(conversion=3), i)
 
 def mergeOCC():
     try:
         bg_node = getNodesByTag('BG')[0]
         merge_node = None
-        for i in getNodesByTag('OCC'):
+        for i in getNodesByTag('OC'):
             merge_node = nuke.nodes.Merge2(inputs=[bg_node, i], operation='multiply', screen_alpha=True, label='OCC')
             insertNode(merge_node, bg_node)
         return merge_node
     except IndexError:
-        return None
+        return
         
 def mergeShadow():
     try:
@@ -128,7 +136,7 @@ def mergeShadow():
             grade_node = nuke.nodes.Grade(inputs=[bg_node, i], white="0.08420000225 0.1441999972 0.2041999996 0.0700000003", white_panelDropped=True, label='Shadow')
             insertNode(grade_node, bg_node)
     except IndexError:
-        return None
+        return
 
 def mergeScreen():
     try:
@@ -137,22 +145,19 @@ def mergeScreen():
             merge_node = nuke.nodes.Merge2(inputs=[bg_node, i], operation='screen', label=node_tag_dict[i])
             insertNode(merge_node, bg_node)
     except IndexError:
-        return None
+        return
 
 def mergeDepth():
-    try:
-        nodes = getNodesByTag(['BG', 'CH'])
-        input_nodes = list(nodes)
-        input_nodes.insert(2, None)
-        merge_node = nuke.nodes.Merge2(inputs=input_nodes, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
-        for i in nodes:
-            depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
-            insertNode(depthfix_node, i)
-        copy_node = nuke.nodes.Copy(inputs=[_last_output, merge_node], from0='depth.Z', to0='depth.Z')
-        insertNode(copy_node, _last_output)
-        return copy_node
-    except IndexError:
-        return None
+    nodes = getNodesByTag(['BG', 'CH'])
+    if len(nodes) == 1:
+        return
+    merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
+    for i in nodes:
+        depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
+        insertNode(depthfix_node, i)
+    copy_node = nuke.nodes.Copy(inputs=[_last_output, merge_node], from0='depth.Z', to0='depth.Z')
+    insertNode(copy_node, _last_output)
+    return copy_node
         
 def addZDefocus(input_node):
     nodes_zdefocus = getNodesByTag(['BG', 'CH'])
