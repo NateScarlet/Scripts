@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.2
+# Version 0.21
 
 import nuke
 import os
@@ -28,12 +28,16 @@ def main():
     mergeShadow()
     mergeScreen()
     trySelectOnly(addZDefocus(mergeDepth()))
+    n = nuke.selectedNode()
     
     # Create write node
     nuke.loadToolset(toolset + r"\Write.nk")
     
     # Place node
     placeNodes()
+    
+    # Connect viewer
+    nuke.connectViewer(1, n)
     
     # Set framerange
     try:
