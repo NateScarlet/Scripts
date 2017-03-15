@@ -10,7 +10,6 @@ def addMenu():
     n.addCommand( "ValueCorrect" , "comp.Show( 'ValueCorrect' )", 'F1' )
     m.addCommand( "MaskShuffle" , "comp.MaskShuffle()", 'F2' )
     n = m.addMenu( "工具集更新" )
-    n.addCommand( "ValueCorrect" , "comp.UpdateToolsets( 'ValueCorrect', r'C:\Users\zhouxuan.WLF\.nuke\ToolSets\ColorCorrect\ValueCorrect.nk' )" )
     n.addCommand( "DepthFix" , "comp.UpdateToolsets( 'DepthFix', r'C:\Users\zhouxuan.WLF\.nuke\ToolSets\Depth\DepthFix.nk' )" )
 
 def allKnobsName( n ):
@@ -161,15 +160,5 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
                 nuke.delete(c)
 
 def DeleteUnusedNode():
-    for i in nuke.allNodes():
-        
-        # Deal with dependent list
-        _dependent_nodes = i.dependent()
-        for j in _dependent_nodes:
-            if j.Class() == 'Viewer':
-                _dependent_nodes.remove(j)
-        
-        # Delete node if no use
-        if (not _dependent_nodes) and (i.Class() not in ['BackdropNode','Write','Viewer']):
-           print i.name()
-           nuke.delete(i)
+    pass
+                

@@ -8,8 +8,8 @@ Group {
  note_font 微软雅黑
  selected true
  xpos 1170
- ypos 1249
- addUserKnob {20 tab1 l Write_v4.41}
+ ypos 1314
+ addUserKnob {20 tab1 l Write_v4.42}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
  addUserKnob {26 text1 l 保存时}
@@ -28,6 +28,7 @@ Group {
  addUserKnob {32 bt_first l 首帧 -STARTLINE T "knob use_custom_frame 1\nknob custom_frame \[value root.first_frame] "}
  addUserKnob {32 bt_middle l 中间帧(默认) -STARTLINE T "knob this.use_custom_frame 0"}
  addUserKnob {32 bt_last l 末帧 -STARTLINE T "knob use_custom_frame 1\nknob custom_frame \[value root.last_frame] "}
+ addUserKnob {41 reload -STARTLINE T ReadWrite_JPG_.reload}
  addUserKnob {26 ""}
  addUserKnob {22 bt_render l 渲染MOV T "nukescripts.showRenderDialog(\[nuke.thisNode()], False)" +STARTLINE}
  addUserKnob {32 bt_render_JPG l 渲染单帧 -STARTLINE T "knob this.Write_JPG_1.disable 0\nexecute this.Write_JPG_1 \[value this.knob.frame]"}
@@ -38,9 +39,9 @@ Group {
   first {{root.first_frame}}
   last {{root.last_frame}}
   origset true
-  version 30
+  version 31
   name ReadWrite_JPG_
-  label "输出的单帧\n第 \[value first] 帧\n"
+  label "输出的单帧\n第 \[value first] 帧"
   selected true
   xpos 400
   ypos -304
@@ -75,9 +76,7 @@ Group {
   last {{first}}
   use_limit true
   checkHashOnRead false
-  version 64
-  in_colorspace linear
-  out_colorspace linear
+  version 65
   beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);\n            file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n"
   afterRender "global rsmbList;\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.thisNode()\['disable'].setValue(1);"
   name Write_JPG_1

@@ -140,3 +140,21 @@ def DropDataCallBack_fbx(type, data):
     else:
         return None
 
+def deleteAllUnusedNodes():
+    c = 1
+    while c:
+        for i in nuke.allNodes():
+            if not isUsed(i):
+                nuke.delete(i)
+                c += 1
+            break
+        c -= 1
+        
+def isUsed(n):
+    
+    if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Write', 'Viewer']:
+        return True
+    else:
+        # Deal with dependent list  
+        nodes_dependent_this = filter(lambda n: n.Class() not in ['Viewer'] or n.name().startswith('_') ,n.dependent())
+        return bool(nodes_dependent_this)

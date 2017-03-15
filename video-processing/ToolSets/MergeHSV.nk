@@ -1,0 +1,73 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+push 0
+Group {
+ inputs 2
+ name MergeHSV1
+ tile_color 0x4b5ec6ff
+ label "\[\nset str \"\"\nif \{\[value this.h]\} \{set h red;set str \"\$str Hue\"\} \{set h \" \"\}\nif \{\[value this.s]\} \{set s green;set str \"\$str Sartuation\"\} \{set s \" \"\}\nif \{\[value this.v]\} \{set v blue;set str \"\$str Value\"\} \{set v \" \"\}\nknob this.Merge1.output \"\$h \$s \$v\"\nreturn \"\$str\"\n]"
+ note_font 微软雅黑
+ selected true
+ xpos 1945
+ ypos -8910
+ addUserKnob {20 tab1 l MergeHSV_v0.3}
+ addUserKnob {41 h T Merge1.h}
+ addUserKnob {41 s -STARTLINE T Merge1.s}
+ addUserKnob {41 v -STARTLINE T Merge1.v}
+ addUserKnob {41 mix T Merge1.mix}
+}
+ Input {
+  inputs 0
+  name InputA
+  xpos 521
+  ypos -476
+  number 1
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace3
+  xpos 521
+  ypos -435
+ }
+ Input {
+  inputs 0
+  name InputB
+  xpos 405
+  ypos -527
+ }
+ Colorspace {
+  colorspace_out HSV
+  name Colorspace1
+  xpos 405
+  ypos -488
+ }
+ Merge2 {
+  inputs 2
+  operation copy
+  output {rgba.red rgba.green -rgba.blue}
+  name Merge1
+  note_font 微软雅黑
+  selected true
+  xpos 405
+  ypos -441
+  addUserKnob {20 User}
+  addUserKnob {6 h +STARTLINE}
+  h true
+  addUserKnob {6 s +STARTLINE}
+  s true
+  addUserKnob {6 v +STARTLINE}
+ }
+ Colorspace {
+  colorspace_in HSV
+  bradford_matrix true
+  name Colorspace2
+  xpos 401
+  ypos -385
+ }
+ Output {
+  name Output1
+  xpos 401
+  ypos -286
+ }
+end_group
