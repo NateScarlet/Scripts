@@ -34,4 +34,4 @@ START /WAIT POWERSHELL -command "& '"%~dp0ExecuteContactSheet.bat"'"
 
 XCOPY /Y /D /I "%~dp0ContactSheet*.png" "%TARGET%"
 
-START MSHTA vbscript:msgbox("渲染完成",64,"生成色板后_上传v%VERSION%")(window.close)
+START MSHTA vbscript:msgbox("渲染完成",100,"生成色板后_上传")(window.close)

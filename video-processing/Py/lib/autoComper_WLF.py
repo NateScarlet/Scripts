@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.21
+# Version 0.211
 
 import nuke
 import os
@@ -9,7 +9,7 @@ import re
 
 node_tag_dict = {}
 tag_node_dict = {}
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
 _last_output = ''
 
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
@@ -162,12 +162,17 @@ def mergeDepth():
     copy_node = nuke.nodes.Copy(inputs=[_last_output, merge_node], from0='depth.Z', to0='depth.Z')
     insertNode(copy_node, _last_output)
     return copy_node
-        
+
 def addZDefocus(input_node):
     nodes_zdefocus = getNodesByTag(['BG', 'CH'])
-    zdefocus_node = nuke.nodes.ZDefocus2(inputs=[input_node], math='depth', center=0.00236545, blur_dof=False, disable=True)
+    zdefocus_node = nuke.nodes.ZDefocus2(inputs=[input_node], math='depth', center=0.00234567, blur_dof=False, disable=True)
+    zdefocus_node.setName('_ZDefocus')
     return zdefocus_node
-        
+
+def mergeMP():
+    # TODO
+    pass
+    
 def insertNode(node, input_node):
     # Create dot presents input_node 's output
     input_node.selectOnly()
