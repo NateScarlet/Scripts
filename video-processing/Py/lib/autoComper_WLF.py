@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.3
+# Version 0.4
 
 import nuke
 import os
@@ -14,19 +14,22 @@ toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 class comp(object):
 
     order = lambda self, n: ('_' + self.node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
-    node_tag_dict = {}
-    tag_node_dict = {}
-    bg_node = None
-    bg_ch_nodes = None
     
     def __init__(self):
 
+        self.node_tag_dict = {}
+        self.tag_node_dict = {}
+        self.bg_node = None
+        self.bg_ch_nodes = []
+        self.last_output = None
         for i in nuke.allNodes('Read'):
             tag = self.getFootageTag(i)
             self.node_tag_dict[i] = tag
             self.tag_node_dict[tag] = i            
-
-        self.bg_node = self.getNodesByTag('BG')[0]
+        try:
+            self.bg_node = self.getNodesByTag('BG')[0]
+        except IndexError:
+            self.bg_node = None
         self.bg_ch_nodes = self.getNodesByTag(['BG', 'CH'])
         if self.bg_ch_nodes:
             self.last_output = self.bg_ch_nodes[0]
@@ -36,7 +39,6 @@ class comp(object):
         if not self.node_tag_dict:
             nuke.message('请先将素材拖入Nuke')
             return False
-
         self.main()
     
     def main(self):
@@ -57,11 +59,11 @@ class comp(object):
         self.placeNodes()
         
         # Connect viewer
-        nuke.connectViewer(1, self.last_output)
+        #nuke.connectViewer(1, self.last_output)
         
         # Set framerange
         try:
-            self.setFrameRangeByNode(self.sortNodesByTag(self.getNodesByTag(['CH', 'BG']))[-1])
+            self.setFrameRangeByNode(self.getNodesByTag(['CH', 'BG'])[-1])
         except IndexError:
             nuke.message('没有找到CH或BG\n请手动设置工程帧范围')
 
@@ -83,7 +85,6 @@ class comp(object):
         return result
 
     def getNodesByTag(self, tags):
-        # XXX
         result = []    
         # Convert input param
         if type(tags) is str :
@@ -102,7 +103,11 @@ class comp(object):
         nuke.Root()['lock_range'].setValue(True)
                     
     def mergeOver(self):
+        if len(self.bg_ch_nodes) <= 1:
+            return False
         for i in self.bg_ch_nodes[1:]:
+            if not self.last_output:
+                continue
             merge_node = nuke.nodes.Merge2(inputs=[self.last_output, i], label=self.node_tag_dict[i])
             self.last_output = merge_node
 
@@ -131,8 +136,8 @@ class comp(object):
     def mergeScreen(self):
         try:
             for i in self.getNodesByTag('FOG'):
-                merge_node = nuke.nodes.Merge2(inputs=[bg_node, i], operation='screen', label=self.node_tag_dict[i])
-                insertNode(merge_node, bg_node)
+                merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='screen', label=self.node_tag_dict[i])
+                self.insertNode(merge_node, self.bg_node)
         except IndexError:
             return False
 
@@ -176,31 +181,60 @@ class comp(object):
 
 
 class precomp(comp):
+    shot_pat = re.compile(r'^.+\\.+_sc[^_]+$', flags=re.I)
+    footage_pat = re.compile(r'^.+_sc.+_.+\..+$', flags=re.I)
+    
     dir = ''
     target_dir = ''
+    shot_list = [] # Contain shot dir
+    footage_dict = {}
     
-    def __init__(self, dir, target_dir):
-        self.dir = dir
+    def __init__(self, dir_, target_dir):
+
+        self.dir = dir_
         self.target_dir = target_dir
+
+        # Get shot list
+        if re.match(self.shot_pat, self.dir):
+            self.shot_list = [self.dir]
+        else:
+            dirs = [self.dir + '\\' + x for x in os.listdir(self.dir)]
+            dirs = filter(lambda dir : re.match(self.shot_pat, dir), dirs)
+            self.shot_list = dirs
+
         self.main()
     
+    def importFootage(self, shot_dir):
+        # Get all subdir
+        dirs = [x[0] for x in os.walk(shot_dir)]
+        for d in dirs:
+            # Get footage in subdir
+            footages = nuke.getFileNameList(d)
+            if footages:
+                # Filtring
+                footages = filter(lambda path: re.match(self.footage_pat, path), footages)
+                # Create read node for every footage
+                for f in footages:
+                    nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
+
     def main(self):
-        #TODO
-        return
-        shot_list = getShotList(dir)
-        for i in shot_list:
-            footage_list = getFootageList(i)
-            importFootage(footage_list)
-            main()
-            nuke.scriptSave(target_dir)
+        print('All Shot: {}'.format(self.shot_list))
+        for shot_dir in self.shot_list:
+            shot = os.path.basename(shot_dir)
             nuke.scriptClear()
-        
-        
-        
-    
-        
+            print('Doing : {}'.format(shot))
+            self.importFootage(shot_dir)
+            try:
+                comp()
+            except:
+                print('Error: {}'.format(shot))
+            nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
+            print('Save to :{}'.format(nk_filename))
+            nuke.scriptSave(nk_filename)
+            
 def placeNode(n):
     # TODO
+    return 
     inputNum = n.inputs()
     def _setNodeXY(n):
         n.setXYpos(xpos, ypos)
