@@ -3,9 +3,11 @@
 import nuke
 import comp
 from autolabelCustom import autolabelCustom
+import autoComper_WLF
 
 # Set menu
 comp.addMenu()
+autoComper_WLF.addMenu()
 
 # Custom autolabel
 nuke.addAutolabel( autolabelCustom )

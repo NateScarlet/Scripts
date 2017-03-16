@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.4
+# Version 0.5
 
 import nuke
 import os
@@ -250,7 +250,10 @@ def precompDialog():
     p.show()
     cmd = 'START "precomp" "' + nuke.env['ExecutablePath'] + '" -t "' + os.path.normcase(__file__).rstrip('c') + '" "' + p.value('存放素材的文件夹') + '" "' + p.value('存放至') + '"'
     print(cmd)
-    os.popen(cmd)
+    if os.path.exists(p.value('存放素材的文件夹')):
+        os.popen(cmd)
+    else:
+        nuke.message('素材路径不存在')
     
 def placeNode(n):
     # TODO
@@ -294,5 +297,8 @@ if len(sys.argv) == 3 and __name__ == '__main__':
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
     print('\n'.join([x for x in argv]))
     print('Run precomp')
-    precomp(argv[1], argv[2])
+    if not os.path.exists(argv[2]):
+        os.makedirs(argv[2])
+        print('Created: {}'.format(argv[2]))
     os.system('PAUSE')
+    precomp(argv[1], argv[2])
