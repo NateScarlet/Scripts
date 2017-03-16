@@ -5,4 +5,4 @@ XCOPY /E /Y "%UserDir%\%%i" "%~dp0\%%i\"
 RMDIR /S /Q "%UserDir%\%%i"
 MKLINK /J "%UserDir%\%%i" "%~dp0%%i"
 )
-::PAUSE
+PAUSE
