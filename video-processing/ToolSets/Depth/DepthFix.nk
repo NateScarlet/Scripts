@@ -7,8 +7,9 @@ Group {
  label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 1060
- ypos -7371
+ xpos 1293
+ ypos -7660
+ disable true
  addUserKnob {20 tab1 l DepthFix_v3.61}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
@@ -31,8 +32,8 @@ Group {
   xpos 510
   ypos -749
  }
-set Ne23f6800 [stack 0]
-push $Ne23f6800
+set N3211dc00 [stack 0]
+push $N3211dc00
  Copy {
   inputs 2
   from0 depth.Z
@@ -57,7 +58,7 @@ push $Ne23f6800
   xpos 544
   ypos -601
  }
-set Ndaf13c00 [stack 0]
+set N32106800 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -71,8 +72,8 @@ set Ndaf13c00 [stack 0]
   xpos 620
   ypos -583
  }
-set Ndaf13400 [stack 0]
-push $Ndaf13400
+set N3211cc00 [stack 0]
+push $N3211cc00
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -88,7 +89,7 @@ push $Ndaf13400
   xpos 654
   ypos -486
  }
-set Ndaf12c00 [stack 0]
+set N3211d800 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -109,7 +110,7 @@ set Ndaf12c00 [stack 0]
   xpos 764
   ypos -246
  }
-push $Ndaf12c00
+push $N3211d800
  Dilate {
   channels depth
   size 2
@@ -139,7 +140,7 @@ push $Ndaf12c00
   xpos 654
   ypos -294
  }
-push $Ndaf13c00
+push $N32106800
  ChannelMerge {
   inputs 2+1
   A depth.Z

@@ -68,6 +68,9 @@ class comp(object):
             self.setFrameRangeByNode(self.getNodesByTag(['CH', 'BG'])[-1])
         except IndexError:
             nuke.message('没有找到CH或BG\n请手动设置工程帧范围')
+        
+        # Set project
+        nuke.Root()['project_directory'].setValue('[python {nuke.script_directory()}]')
 
     def getFootageTag(self, n):
         '''
@@ -295,10 +298,11 @@ def placeNode(n):
 
 if len(sys.argv) == 3 and __name__ == '__main__':
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
-    print('\n'.join([x for x in argv]))
+    print('Footage:\t{}\nSave to:\t{}'.format(argv[1], argv[2]))
     print('Run precomp')
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
         print('Created: {}'.format(argv[2]))
     os.system('PAUSE')
     precomp(argv[1], argv[2])
+    os.system('START MSHTA vbscript:msgbox("Finished!",100,"Precomp")(window.close)')
