@@ -6,10 +6,12 @@
 import nuke
 import os
 import re
+import sys
 
 tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
 
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
+
 
 class comp(object):
 
@@ -231,7 +233,25 @@ class precomp(comp):
             nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
             print('Save to :{}'.format(nk_filename))
             nuke.scriptSave(nk_filename)
-            
+
+def addMenu():
+    m = nuke.menu("Nodes")
+    m = m.addMenu('自动合成', icon='autoComper_WLF.png')
+    m.addCommand('自动合成',"autoComper_WLF.comp()",icon='autoComper_WLF.png')
+    m.addCommand('批量合成',"autoComper_WLF.precompDialog()",icon='autoComper_WLF.png')
+
+def precompDialog():
+    # Set panel 
+    p = nuke.Panel('Precomp')
+    p.addFilenameSearch('存放素材的文件夹', 'Z:\SNJYW\Render\EP')
+    p.addFilenameSearch('存放至', 'E:\precomp')
+
+    # Show panel
+    p.show()
+    cmd = 'START "precomp" "' + nuke.env['ExecutablePath'] + '" -t "' + os.path.normcase(__file__).rstrip('c') + '" "' + p.value('存放素材的文件夹') + '" "' + p.value('存放至') + '"'
+    print(cmd)
+    os.popen(cmd)
+    
 def placeNode(n):
     # TODO
     return 
@@ -268,3 +288,11 @@ def placeNode(n):
         input1 = n.input(1).input(0)
         _setNodeXY(input1)
 
+# Deal call with argv
+
+if len(sys.argv) == 3 and __name__ == '__main__':
+    argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
+    print('\n'.join([x for x in argv]))
+    print('Run precomp')
+    precomp(argv[1], argv[2])
+    os.system('PAUSE')
