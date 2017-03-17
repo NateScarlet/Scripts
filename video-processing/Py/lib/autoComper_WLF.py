@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.52
+# Version 0.6
 
 import nuke
 import os
@@ -229,7 +229,19 @@ class precomp(comp):
                 print('Error: {}'.format(shot))
             nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
             print('Save to :{}'.format(nk_filename))
+            nuke.Root()['name'].setValue(nk_filename)
             nuke.scriptSave(nk_filename)
+            # Render Single Frame
+            try:
+                write_node = filter(lambda n: 'Write_JPG' in n.name(), nuke.allNodes('Write' ,group=nuke.toNode('_Write')))
+                if write_node:
+                    write_node = write_node[0]
+                    write_node['disable'].setValue(False)
+                    frame = int(nuke.numvalue('_Write.knob.frame'))
+                    nuke.execute(write_node, frame, frame)
+            except:
+                import traceback
+                traceback.print_exc()
     
     def importFootage(self, shot_dir):
         # Get all subdir
