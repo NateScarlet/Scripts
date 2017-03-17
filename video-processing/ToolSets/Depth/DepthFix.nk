@@ -4,13 +4,12 @@ push $cut_paste_input
 Group {
  name DepthFix1
  tile_color 0x823a7dff
- label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 1293
- ypos -7660
- disable true
- addUserKnob {20 tab1 l DepthFix_v3.61}
+ xpos 620
+ ypos -10
+ addUserKnob {20 tab1 l DepthFix_v3.62}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
  addUserKnob {7 farpoint}
@@ -28,12 +27,18 @@ Group {
 }
  Input {
   inputs 0
-  name Input1
-  xpos 510
-  ypos -749
+  name Input
+  xpos 400
+  ypos -754
  }
-set N3211dc00 [stack 0]
-push $N3211dc00
+ Dot {
+  name Dot2
+  note_font 微软雅黑
+  xpos 434
+  ypos -702
+ }
+set N5a27f000 [stack 0]
+push $N5a27f000
  Copy {
   inputs 2
   from0 depth.Z
@@ -41,7 +46,8 @@ push $N3211dc00
   name Copy2
   note_font 微软雅黑
   xpos 510
-  ypos -710
+  ypos -715
+  disable {{"! parent.Switch1.which"}}
  }
  Grade {
   channels {none none none depth.Z}
@@ -49,20 +55,19 @@ push $N3211dc00
   whitepoint {{parent.farpoint}}
   name Grade1
   note_font 微软雅黑
-  selected true
   xpos 510
-  ypos -669
+  ypos -667
  }
  Dot {
   name Dot3
   xpos 544
-  ypos -601
+  ypos -606
  }
-set N32106800 [stack 0]
+set N78a2f800 [stack 0]
  Dot {
   name Dot1
   xpos 654
-  ypos -601
+  ypos -606
  }
  AddChannels {
   channels alpha
@@ -70,10 +75,10 @@ set N32106800 [stack 0]
   name AddChannels1
   note_font 微软雅黑
   xpos 620
-  ypos -583
+  ypos -571
  }
-set N3211cc00 [stack 0]
-push $N3211cc00
+set N4baeb400 [stack 0]
+push $N4baeb400
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -81,7 +86,7 @@ push $N3211cc00
   name Copy1
   note_font 微软雅黑
   xpos 620
-  ypos -530
+  ypos -523
  }
  Dot {
   name Dot20
@@ -89,7 +94,7 @@ push $N3211cc00
   xpos 654
   ypos -486
  }
-set N3211d800 [stack 0]
+set N2c5dcc00 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -110,7 +115,7 @@ set N3211d800 [stack 0]
   xpos 764
   ypos -246
  }
-push $N3211d800
+push $N2c5dcc00
  Dilate {
   channels depth
   size 2
@@ -140,7 +145,7 @@ push $N3211d800
   xpos 654
   ypos -294
  }
-push $N32106800
+push $N78a2f800
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -177,9 +182,30 @@ push $N32106800
   xpos 510
   ypos -59
  }
+push $N5a27f000
+ Switch {
+  inputs 2
+  which {{"\[string match *depth.Z* \[channels parent.Input]]\n"}}
+  name Switch1
+  note_font 微软雅黑
+  xpos 400
+  ypos -59
+ }
+set N38138d00 [stack 0]
+ Viewer {
+  frame 254
+  frame_range 254-309
+  fps 25
+  input_process false
+  name Viewer1
+  note_font 微软雅黑
+  xpos 620
+  ypos 61
+ }
+push $N38138d00
  Output {
   name Output1
-  xpos 510
-  ypos -10
+  xpos 400
+  ypos 14
  }
 end_group
