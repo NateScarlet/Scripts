@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.6
+# Version 0.71
 
 import nuke
 import os
@@ -193,13 +193,13 @@ class precomp(comp):
 
     footage_filter = lambda self, s: not any(map(lambda excluded_word: excluded_word in s, ['副本', '.lock']))
     
-    dir = ''
-    target_dir = ''
-    shot_list = [] # Contain shot dir
-    footage_dict = {}
-    
     def __init__(self, dir_, target_dir):
 
+        self.dir = ''
+        self.target_dir = ''
+        self.shot_list = [] # Contain shot dir
+        self.footage_dict = {}
+        
         if nuke.env['gui']:
             precompDialog()
             return
@@ -217,32 +217,40 @@ class precomp(comp):
         self.main()
 
     def main(self):
-        print('All Shot: {}'.format(self.shot_list))
+        error_list = []
+        shots_number = len(self.shot_list)
+        print('All Shot:\n{0}\nNumber of shot:\t{1}'.format('\n'.join(self.shot_list), shots_number))
+        os.system('PAUSE')
+        count = 0
         for shot_dir in self.shot_list:
             shot = os.path.basename(shot_dir)
             nuke.scriptClear()
-            print('Doing : {}'.format(shot))
+            count += 1
+            print('\n[{1}/{2}]Doing:\t{0}\n'.format(shot, count, shots_number))
             self.importFootage(shot_dir)
             try:
                 comp()
             except:
-                print('Error: {}'.format(shot))
+                error_list.append(shot)
+                print('**Error**\tCan not comp:\t{}'.format(shot))
             nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
-            print('Save to :{}'.format(nk_filename))
+            print('Save to:\t{}'.format(nk_filename))
             nuke.Root()['name'].setValue(nk_filename)
             nuke.scriptSave(nk_filename)
             # Render Single Frame
             try:
-                write_node = filter(lambda n: 'Write_JPG' in n.name(), nuke.allNodes('Write' ,group=nuke.toNode('_Write')))
+                write_node = nuke.toNode('_Write')
                 if write_node:
-                    write_node = write_node[0]
+                    write_node = write_node.node('Write_JPG_1')
                     write_node['disable'].setValue(False)
                     frame = int(nuke.numvalue('_Write.knob.frame'))
                     nuke.execute(write_node, frame, frame)
             except:
                 import traceback
                 traceback.print_exc()
-    
+        info = 'Error list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
+        print(info)
+            
     def importFootage(self, shot_dir):
         # Get all subdir
         dirs = [x[0] for x in os.walk(shot_dir)]
@@ -287,52 +295,16 @@ return ""
 ]'''
     k = nuke.PyScript_Knob('_script', '_script', 'map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))')
     nuke.nodes.NoOp(label=label_).addKnob(k)
-        
-def placeNode(n):
-    # TODO
-    return 
-    inputNum = n.inputs()
-    def _setNodeXY(n):
-        n.setXYpos(xpos, ypos)
-        nuke.autoplaceSnap(n)
-
-    
-    if inputNum == 0 or n.Class() == 'Dot':
-        return False
-    input0 = n.input(0)
-    xpos = input0.xpos()
-    ypos = input0.ypos()
-    print n.name() + str(xpos)+',' + str(ypos)
-    ypos += 200
-    if inputNum == 1:
-        n.setXYpos(xpos, ypos)
-        nuke.autoplaceSnap(n)
-    elif inputNum == 2:
-        n.setXYpos(xpos, ypos)
-
-        if n.input(1).Class() == 'Dot':\
-            dot = n.input(1)
-
-        else:
-            dot = nuke.nodes.Dot()
-            dot.setInput(0, n.input(1))
-            n.setInput(1, dot)
-            xpos += 100
-            _setNodeXY(dot)
-        xpos -= 50
-        ypos -= 200
-        input1 = n.input(1).input(0)
-        _setNodeXY(input1)
 
 # Deal call with argv
 
 if len(sys.argv) == 3 and __name__ == '__main__':
+    print('-Run precomp-')
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
     print('Footage:\t{}\nSave to:\t{}'.format(argv[1], argv[2]))
-    print('Run precomp')
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
-        print('Created: {}'.format(argv[2]))
+        print('Created:\t{}'.format(argv[2]))
     os.system('PAUSE')
     precomp(argv[1], argv[2])
     os.system('START MSHTA vbscript:msgbox("Finished!",100,"Precomp")(window.close)')
