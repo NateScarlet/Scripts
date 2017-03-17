@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.5
+# Version 0.52
 
 import nuke
 import os
@@ -61,7 +61,8 @@ class comp(object):
         self.placeNodes()
         
         # Connect viewer
-        nuke.connectViewer(1, self.last_output)
+        if nuke.env['gui']:
+            nuke.connectViewer(1, self.last_output)
         
         # Set framerange
         try:
@@ -189,6 +190,8 @@ class comp(object):
 class precomp(comp):
     shot_pat = re.compile(r'^.+\\.+_sc[^_]+$', flags=re.I)
     footage_pat = re.compile(r'^.+_sc.+_.+\..+$', flags=re.I)
+
+    footage_filter = lambda self, s: not any(map(lambda excluded_word: excluded_word in s, ['副本', '.lock']))
     
     dir = ''
     target_dir = ''
@@ -197,6 +200,9 @@ class precomp(comp):
     
     def __init__(self, dir_, target_dir):
 
+        if nuke.env['gui']:
+            precompDialog()
+            return
         self.dir = dir_
         self.target_dir = target_dir
 
@@ -209,19 +215,6 @@ class precomp(comp):
             self.shot_list = dirs
 
         self.main()
-    
-    def importFootage(self, shot_dir):
-        # Get all subdir
-        dirs = [x[0] for x in os.walk(shot_dir)]
-        for d in dirs:
-            # Get footage in subdir
-            footages = nuke.getFileNameList(d)
-            if footages:
-                # Filtring
-                footages = filter(lambda path: re.match(self.footage_pat, path), footages)
-                # Create read node for every footage
-                for f in footages:
-                    nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
 
     def main(self):
         print('All Shot: {}'.format(self.shot_list))
@@ -237,6 +230,21 @@ class precomp(comp):
             nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
             print('Save to :{}'.format(nk_filename))
             nuke.scriptSave(nk_filename)
+    
+    def importFootage(self, shot_dir):
+        # Get all subdir
+        dirs = [x[0] for x in os.walk(shot_dir)]
+        for d in dirs:
+            # Get footage in subdir
+            footages = nuke.getFileNameList(d)
+            footages = filter(self.footage_filter, footages)
+            if footages:
+                # Filtring
+                footages = filter(lambda path: re.match(self.footage_pat, path), footages)
+                # Create read node for every footage
+                for f in footages:
+                    nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
+        
 
 def addMenu():
     m = nuke.menu("Nodes")

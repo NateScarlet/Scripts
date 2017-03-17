@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 
 import nuke
+import os
 
 def addMenu():
     menubar = nuke.menu( "Nuke" )
     m = menubar.addMenu( "合成" )
     m.addCommand( "重命名全部节点", "comp.RenameAll()" )
+    m.addCommand( "根据Backdrop分割nk文件", "comp.splitByBackdrop()" )
     n = m.addMenu( "显示面板" )
     n.addCommand( "ValueCorrect" , "comp.Show( 'ValueCorrect' )", 'F1' )
     m.addCommand( "MaskShuffle" , "comp.MaskShuffle()", 'F2' )
@@ -158,3 +160,34 @@ def MaskShuffle(prefix='PuzzleMatte', n=''):
         if count == 3:
             if  c['to0'].value() == c['to1'].value() == c['to2'].value() == c['to3'].value() == 'none':
                 nuke.delete(c)
+
+def splitByBackdrop():
+    text_saveto = '保存至:'
+    text_ask_if_create_new_folder = '目标文件夹不存在, 是否创建?'
+    
+    # Panel
+    p = nuke.Panel('splitByBackdrop')
+    p.addFilenameSearch(text_saveto, os.getenv('TEMP'))
+    p.show()
+    
+    # Save splited .nk file
+    save_path = p.value(text_saveto).rstrip('\\/')
+    noname_count = 0
+    for i in nuke.allNodes('BackdropNode'):
+        label = repr(i['label'].value()).strip("'").replace('\\', '_').replace('/', '_')
+        if not label:
+            noname_count += 1
+            label = 'noname_{0:03d}'.format(noname_count)
+        if not os.path.exists(save_path):
+            if not nuke.ask(text_ask_if_create_new_folder):
+                return False
+        dir_ = save_path + '/splitnk/'
+        dir_ = os.path.normcase(dir_)
+        if not os.path.exists(dir_):
+            os.makedirs(dir_)
+        filename = dir_ + label + '.nk'
+        i.selectOnly()
+        i.selectNodes()
+        nuke.nodeCopy(filename)
+    os.system('explorer "' + dir_ + '"')   
+    return True

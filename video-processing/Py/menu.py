@@ -5,6 +5,8 @@ import comp
 from autolabelCustom import autolabelCustom
 import autoComper_WLF
 
+nuke.pluginAddPath( 'icons' )
+
 # Set menu
 comp.addMenu()
 autoComper_WLF.addMenu()
