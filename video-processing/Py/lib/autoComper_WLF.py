@@ -250,6 +250,7 @@ class precomp(comp):
                 traceback.print_exc()
         info = 'Error list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
         print(info)
+        os.system('PAUSE')
             
     def importFootage(self, shot_dir):
         # Get all subdir
