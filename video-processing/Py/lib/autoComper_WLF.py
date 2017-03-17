@@ -61,7 +61,7 @@ class comp(object):
         self.placeNodes()
         
         # Connect viewer
-        #nuke.connectViewer(1, self.last_output)
+        nuke.connectViewer(1, self.last_output)
         
         # Set framerange
         try:
@@ -118,7 +118,10 @@ class comp(object):
 
     def addSoftClip(self):
         for i in self.bg_ch_nodes:
-            self.insertNode(nuke.nodes.SoftClip(conversion=3), i)
+            softclip_node = nuke.nodes.SoftClip(conversion=3)
+            self.insertNode(softclip_node, i)
+        if len(self.bg_ch_nodes) == 1:
+            self.last_output = softclip_node
 
     def mergeOCC(self):
         try:
@@ -180,9 +183,7 @@ class comp(object):
         nuke.delete(dot)
      
     def placeNodes(self):
-        # XXX
-        for i in nuke.allNodes():
-            i.autoplace()
+        autoplaceAllNodes()
 
 
 class precomp(comp):
@@ -257,7 +258,16 @@ def precompDialog():
         os.popen(cmd)
     else:
         nuke.message('素材路径不存在')
-    
+
+def autoplaceAllNodes():
+    label_ = '''[
+python [python {nuke.thisNode()['_script'].value()}]
+delete this
+return ""
+]'''
+    k = nuke.PyScript_Knob('_script', '_script', 'map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))')
+    nuke.nodes.NoOp(label=label_).addKnob(k)
+        
 def placeNode(n):
     # TODO
     return 
