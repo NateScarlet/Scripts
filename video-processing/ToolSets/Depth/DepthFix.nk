@@ -7,9 +7,9 @@ Group {
  label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos 620
- ypos -10
- addUserKnob {20 tab1 l DepthFix_v3.62}
+ xpos -370
+ ypos -7416
+ addUserKnob {20 tab1 l DepthFix_v3.63}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
  addUserKnob {7 farpoint}
@@ -18,10 +18,10 @@ Group {
  addUserKnob {7 threshold t alpha小于此值的像素的depth.z值会在处理过程中被忽略}
  threshold 1
  addUserKnob {7 size l "fix size" t 修正的收边系数 R 0 10}
- size 0.4
+ size 1
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
  addUserKnob {7 maxZ l max t 高于此值的深度会被设为此值}
- maxZ 1
+ maxZ 0.05254
  addUserKnob {4 empty_area_depth l "empty area depth" M {0 1 original}}
  empty_area_depth 1
 }
@@ -37,8 +37,8 @@ Group {
   xpos 434
   ypos -702
  }
-set N5a27f000 [stack 0]
-push $N5a27f000
+set N7ef4f800 [stack 0]
+push $N7ef4f800
  Copy {
   inputs 2
   from0 depth.Z
@@ -58,12 +58,13 @@ push $N5a27f000
   xpos 510
   ypos -667
  }
+set N41dfb400 [stack 0]
  Dot {
   name Dot3
   xpos 544
   ypos -606
  }
-set N78a2f800 [stack 0]
+set N41dfa400 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -77,8 +78,8 @@ set N78a2f800 [stack 0]
   xpos 620
   ypos -571
  }
-set N4baeb400 [stack 0]
-push $N4baeb400
+set N86474000 [stack 0]
+push $N86474000
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -94,7 +95,7 @@ push $N4baeb400
   xpos 654
   ypos -486
  }
-set N2c5dcc00 [stack 0]
+set N86475800 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -115,7 +116,7 @@ set N2c5dcc00 [stack 0]
   xpos 764
   ypos -246
  }
-push $N2c5dcc00
+push $N86475800
  Dilate {
   channels depth
   size 2
@@ -145,7 +146,7 @@ push $N2c5dcc00
   xpos 654
   ypos -294
  }
-push $N78a2f800
+push $N41dfa400
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -174,15 +175,13 @@ push $N78a2f800
   xpos 510
   ypos -107
  }
- Crop {
-  box {0 0 1920 1080}
-  crop false
-  name Crop1
+ Dot {
+  name Dot4
   note_font 微软雅黑
-  xpos 510
-  ypos -59
+  xpos 544
+  ypos -54
  }
-push $N5a27f000
+push $N7ef4f800
  Switch {
   inputs 2
   which {{"\[string match *depth.Z* \[channels parent.Input]]\n"}}
@@ -191,21 +190,19 @@ push $N5a27f000
   xpos 400
   ypos -59
  }
-set N38138d00 [stack 0]
+ Output {
+  name Output1
+  xpos 400
+  ypos 14
+ }
+push $N41dfb400
  Viewer {
-  frame 254
-  frame_range 254-309
+  frame_range 120-120
   fps 25
   input_process false
   name Viewer1
   note_font 微软雅黑
   xpos 620
   ypos 61
- }
-push $N38138d00
- Output {
-  name Output1
-  xpos 400
-  ypos 14
  }
 end_group

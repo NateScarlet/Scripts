@@ -1,14 +1,14 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.71
+# Version 0.722
 
 import nuke
 import os
 import re
 import sys
 
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
 
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 
@@ -248,7 +248,7 @@ class precomp(comp):
             except:
                 import traceback
                 traceback.print_exc()
-        info = 'Error list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
+        info = '\nError list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
         print(info)
         os.system('PAUSE')
             
@@ -308,4 +308,4 @@ if len(sys.argv) == 3 and __name__ == '__main__':
         print('Created:\t{}'.format(argv[2]))
     os.system('PAUSE')
     precomp(argv[1], argv[2])
-    os.system('START MSHTA vbscript:msgbox("Finished!",100,"Precomp")(window.close)')
+    os.system( 'EXPLORER "' + argv[2] + '"')

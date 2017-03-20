@@ -158,3 +158,6 @@ def isUsed(n):
         # Deal with dependent list  
         nodes_dependent_this = filter(lambda n: n.Class() not in ['Viewer'] or n.name().startswith('_') ,n.dependent())
         return bool(nodes_dependent_this)
+        
+def setProjectRootByName(path='E:'):
+    nuke.root()['project_directory'].setValue(os.path.dirname(path + '/' + os.path.basename(nuke.scriptName()).split('.')[0].replace('_', '/')))
