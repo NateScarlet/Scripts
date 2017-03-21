@@ -161,3 +161,8 @@ def isUsed(n):
         
 def setProjectRootByName(path='E:'):
     nuke.root()['project_directory'].setValue(os.path.dirname(path + '/' + os.path.basename(nuke.scriptName()).split('.')[0].replace('_', '/')))
+    
+def setRootFormat_SNJYW():
+    if os.path.basename(nuke.scriptName()).startswith('SNJYW_'):
+        nuke.Root()['fps'].setValue(25)
+        nuke.Root()['format'].setValue('HD_1080')

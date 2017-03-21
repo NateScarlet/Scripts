@@ -8,6 +8,7 @@ def addMenu():
     m = menubar.addMenu( "合成" )
     m.addCommand( "重命名全部节点", "comp.RenameAll()" )
     m.addCommand( "根据Backdrop分割nk文件", "comp.splitByBackdrop()" )
+    m.addCommand( "关联ZDefocus", "comp.linkZDefocus()" )
     n = m.addMenu( "显示面板" )
     n.addCommand( "ValueCorrect" , "comp.Show( 'ValueCorrect' )", 'F1' )
     m.addCommand( "MaskShuffle" , "comp.MaskShuffle()", 'F2' )
@@ -190,4 +191,24 @@ def splitByBackdrop():
         i.selectNodes()
         nuke.nodeCopy(filename)
     os.system('explorer "' + dir_ + '"')   
+    return True
+
+def linkZDefocus():
+    _ZDefocus = nuke.toNode('_ZDefocus')
+    if not _ZDefocus:
+        return False
+    for i in nuke.allNodes('ZDefocus2'):
+        if not i.name().startswith('_'):
+            i[ 'size' ].setExpression( '_ZDefocus.size' )
+            i[ 'max_size' ].setExpression( '_ZDefocus.max_size' )
+            i[ 'disable' ].setExpression( '( [ exists _ZDefocus ] ) ? !_ZDefocus.disable : 0')
+            i[ 'center' ].setExpression( '( [exists _ZDefocus] ) ? _ZDefocus.center : 0' )
+            i[ 'dof' ].setExpression( '( [exists _ZDefocus] ) ? _ZDefocus.dof : 0' )
+            i[ 'label' ].setValue( '[\n'
+                                   'set trg parent._ZDefocus\n'
+                                   'if { [ exists $trg ] } {\n'
+                                   '    knob this.math [value $trg.math]\n'
+                                   '    knob this.z_channel [value $trg.z_channel]\n'
+                                   '}\n'
+                                   ']' )
     return True

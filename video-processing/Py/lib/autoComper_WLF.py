@@ -1,17 +1,20 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.722
+# Version 0.75
 
 import nuke
 import os
 import re
 import sys
+import traceback
 
 tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
 
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 
+format = 'HD_1080'
+fps = 25
 
 class comp(object):
 
@@ -36,7 +39,7 @@ class comp(object):
         if self.bg_ch_nodes:
             self.last_output = self.bg_ch_nodes[0]
         else:
-            self.last_output = self.node_tag_dict.keys(0)
+            self.last_output = self.node_tag_dict.keys()[0]
         
         if not self.node_tag_dict:
             nuke.message('请先将素材拖入Nuke')
@@ -50,6 +53,7 @@ class comp(object):
         self.mergeOCC()
         self.mergeShadow()
         self.mergeScreen()
+        self.addGrade()
         self.mergeDepth()
         self.addZDefocus()
         
@@ -63,6 +67,9 @@ class comp(object):
         # Connect viewer
         if nuke.env['gui']:
             nuke.connectViewer(1, self.last_output)
+            _Write = nuke.toNode('_Write')
+            if _Write:
+                nuke.connectViewer(3, _Write)
         
         # Set framerange
         try:
@@ -71,7 +78,10 @@ class comp(object):
             nuke.message('没有找到CH或BG\n请手动设置工程帧范围')
         
         # Set project
-        nuke.Root()['project_directory'].setValue('[python {nuke.script_directory()}]')
+        if not nuke.Root()['project_directory'].value():
+            nuke.Root()['project_directory'].setValue('[python {nuke.script_directory()}]')
+        nuke.Root()['fps'].setValue(fps)
+        nuke.Root()['format'].setValue(format)
 
     def getFootageTag(self, n):
         '''
@@ -169,6 +179,12 @@ class comp(object):
         self.last_output = zdefocus_node
         return zdefocus_node
 
+    def addGrade(self):
+        for i in self.bg_ch_nodes:
+            grade_node = nuke.nodes.Grade()
+            self.insertNode(grade_node, i)
+        return grade_node
+
     def mergeMP(self):
         # TODO
         pass
@@ -212,6 +228,7 @@ class precomp(comp):
         else:
             dirs = [self.dir + '\\' + x for x in os.listdir(self.dir)]
             dirs = filter(lambda dir : re.match(self.shot_pat, dir), dirs)
+            dirs.sort()
             self.shot_list = dirs
 
         self.main()
@@ -223,22 +240,24 @@ class precomp(comp):
         os.system('PAUSE')
         count = 0
         for shot_dir in self.shot_list:
-            shot = os.path.basename(shot_dir)
-            nuke.scriptClear()
-            count += 1
-            print('\n[{1}/{2}]Doing:\t{0}\n'.format(shot, count, shots_number))
-            self.importFootage(shot_dir)
             try:
+                # Show info
+                shot = os.path.basename(shot_dir)
+                count += 1
+                print('\n[{1}/{2}]Doing:\t{0}\n'.format(shot, count, shots_number))
+                
+                # Comp
+                nuke.scriptClear()
+                self.importFootage(shot_dir)
                 comp()
-            except:
-                error_list.append(shot)
-                print('**Error**\tCan not comp:\t{}'.format(shot))
-            nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
-            print('Save to:\t{}'.format(nk_filename))
-            nuke.Root()['name'].setValue(nk_filename)
-            nuke.scriptSave(nk_filename)
-            # Render Single Frame
-            try:
+
+                # Save nk
+                nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
+                print('Save to:\t{}'.format(nk_filename))
+                nuke.Root()['name'].setValue(nk_filename)
+                nuke.scriptSave(nk_filename)
+
+                # Render Single Frame
                 write_node = nuke.toNode('_Write')
                 if write_node:
                     write_node = write_node.node('Write_JPG_1')
@@ -246,7 +265,7 @@ class precomp(comp):
                     frame = int(nuke.numvalue('_Write.knob.frame'))
                     nuke.execute(write_node, frame, frame)
             except:
-                import traceback
+                error_list.append(shot)
                 traceback.print_exc()
         info = '\nError list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
         print(info)
@@ -258,14 +277,14 @@ class precomp(comp):
         for d in dirs:
             # Get footage in subdir
             footages = nuke.getFileNameList(d)
-            footages = filter(self.footage_filter, footages)
             if footages:
                 # Filtring
+                footages = filter(self.footage_filter, footages)
                 footages = filter(lambda path: re.match(self.footage_pat, path), footages)
                 # Create read node for every footage
                 for f in footages:
                     nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
-        
+        print('\nImport footages:\n{}\n'.format('\n'.join(footages)))
 
 def addMenu():
     m = nuke.menu("Nodes")
