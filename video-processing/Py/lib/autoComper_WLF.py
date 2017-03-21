@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.75
+# Version 0.751
 
 import nuke
 import os
@@ -40,7 +40,6 @@ class comp(object):
             self.last_output = self.bg_ch_nodes[0]
         else:
             self.last_output = self.node_tag_dict.keys()[0]
-        
         if not self.node_tag_dict:
             nuke.message('请先将素材拖入Nuke')
             return False
@@ -244,7 +243,7 @@ class precomp(comp):
                 # Show info
                 shot = os.path.basename(shot_dir)
                 count += 1
-                print('\n[{1}/{2}]Doing:\t{0}\n'.format(shot, count, shots_number))
+                print('\n## [{1}/{2}]:\t{0}'.format(shot, count, shots_number))
                 
                 # Comp
                 nuke.scriptClear()
@@ -253,7 +252,7 @@ class precomp(comp):
 
                 # Save nk
                 nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
-                print('Save to:\t{}'.format(nk_filename))
+                print('Save to:\n\t\t\t{}\n'.format(nk_filename))
                 nuke.Root()['name'].setValue(nk_filename)
                 nuke.scriptSave(nk_filename)
 
@@ -274,6 +273,7 @@ class precomp(comp):
     def importFootage(self, shot_dir):
         # Get all subdir
         dirs = [x[0] for x in os.walk(shot_dir)]
+        print('Import footages:')
         for d in dirs:
             # Get footage in subdir
             footages = nuke.getFileNameList(d)
@@ -284,7 +284,7 @@ class precomp(comp):
                 # Create read node for every footage
                 for f in footages:
                     nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
-        print('\nImport footages:\n{}\n'.format('\n'.join(footages)))
+                    print('\t' * 3 + f)
 
 def addMenu():
     m = nuke.menu("Nodes")
