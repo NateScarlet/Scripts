@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.77
+# Version 0.771
 
 import nuke
 import os
@@ -184,6 +184,9 @@ class comp(object):
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
         for i in nodes:
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
+            if getMax(i, 'depth.Z') > 1.1 :
+                depthfix_node['farpoint'].setValue(10000)
+                print('Set far point to 10000')
             insertNode(depthfix_node, i)
         copy_node = nuke.nodes.Copy(inputs=[self.last_output, merge_node], from0='depth.Z', to0='depth.Z')
         insertNode(copy_node, self.last_output)
