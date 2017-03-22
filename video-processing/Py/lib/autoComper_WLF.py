@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.762
+# Version 0.77
 
 import nuke
 import os
@@ -147,7 +147,7 @@ class comp(object):
     def addSoftClip(self):
         for i in self.bg_ch_nodes:
             softclip_node = nuke.nodes.SoftClip(conversion=3)
-            self.insertNode(softclip_node, i)
+            insertNode(softclip_node, i)
         if len(self.bg_ch_nodes) == 1:
             self.last_output = softclip_node
 
@@ -156,7 +156,7 @@ class comp(object):
             merge_node = None
             for i in self.getNodesByTag('OC'):
                 merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='multiply', screen_alpha=True, label='OCC')
-                self.insertNode(merge_node, self.bg_node)
+                insertNode(merge_node, self.bg_node)
             return merge_node
         except IndexError:
             return False
@@ -165,7 +165,7 @@ class comp(object):
         try:
             for i in self.getNodesByTag(['SH', 'SD']):
                 grade_node = nuke.nodes.Grade(inputs=[self.bg_node, i], white="0.08420000225 0.1441999972 0.2041999996 0.0700000003", white_panelDropped=True, label='Shadow')
-                self.insertNode(grade_node, self.bg_node)
+                insertNode(grade_node, self.bg_node)
         except IndexError:
             return False
 
@@ -173,7 +173,7 @@ class comp(object):
         try:
             for i in self.getNodesByTag('FOG'):
                 merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='screen', label=self.node_tag_dict[i])
-                self.insertNode(merge_node, self.bg_node)
+                insertNode(merge_node, self.bg_node)
         except IndexError:
             return False
 
@@ -184,22 +184,22 @@ class comp(object):
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
         for i in nodes:
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
-            self.insertNode(depthfix_node, i)
+            insertNode(depthfix_node, i)
         copy_node = nuke.nodes.Copy(inputs=[self.last_output, merge_node], from0='depth.Z', to0='depth.Z')
-        self.insertNode(copy_node, self.last_output)
+        insertNode(copy_node, self.last_output)
         self.last_output = copy_node
         return copy_node
 
     def addReformat(self):
         for i in self.bg_ch_nodes:
             reformat_node = nuke.nodes.Reformat()
-            self.insertNode(reformat_node, i)
+            insertNode(reformat_node, i)
         return reformat_node
         
     def addZDefocus(self):
         for i in self.bg_ch_nodes:
             zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200"} {return True} else {return False}]}}', selected=True )
-            self.insertNode(zdefocus_node, i)
+            insertNode(zdefocus_node, i)
         return zdefocus_node
         
     def add_ZDefocus(self):
@@ -212,39 +212,27 @@ class comp(object):
     
     def addGrade(self):
         for i in self.bg_ch_nodes:
-            grade_node = nuke.nodes.Grade()
-            self.insertNode(grade_node, i)
+            rgb_max = getMax(i, 'rgb')
+            grade_node = nuke.nodes.Grade(whitepoint=rgb_max, mix=0.3, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
+            insertNode(grade_node, i)
         return grade_node
 
     def addColorCorrect(self):
         for i in self.bg_ch_nodes:
             colorcorrect_node = nuke.nodes.ColorCorrect()
-            self.insertNode(colorcorrect_node, i)
+            insertNode(colorcorrect_node, i)
         return colorcorrect_node
         
     def mergeMP(self):
         read_node = nuke.nodes.Read(file=self.mp)
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
-        self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
+        insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
-        self.insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
-        self.insertNode(nuke.nodes.Grade(), read_node)
-        self.insertNode(nuke.nodes.Transform(), read_node)
-        self.insertNode(nuke.nodes.Reformat(), read_node)
-        
-    def insertNode(self, node, input_node):
-        # Create dot presents input_node 's output
-        input_node.selectOnly()
-        dot = nuke.createNode('Dot')
-        
-        # Set node connection
-        node.setInput(0, input_node)
-        dot.setInput(0, node)
-        
-        # Delete dot
-        nuke.delete(dot)
-        
+        insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
+        insertNode(nuke.nodes.Grade(), read_node)
+        insertNode(nuke.nodes.Transform(), read_node)
+        insertNode(nuke.nodes.Reformat(), read_node)
      
     def placeNodes(self):
         autoplaceAllNodes()
@@ -359,9 +347,46 @@ def precompDialog():
         os.popen(cmd)
     else:
         nuke.message('素材路径不存在')
+        
+def insertNode(node, input_node):
+    # Create dot presents input_node 's output
+    input_node.selectOnly()
+    dot = nuke.createNode('Dot')
+    
+    # Set node connection
+    node.setInput(0, input_node)
+    dot.setInput(0, node)
+    
+    # Delete dot
+    nuke.delete(dot)
 
 def autoplaceAllNodes():
     nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
+
+def getMax( n, channel='depth.Z' ):
+    '''
+    Return themax values of a given node's image at middle frame
+    @parm n: node
+    @parm channel: channel for sample
+    '''
+    # Get middle_frame
+    middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2 
+    
+    # Create nodes
+    invert_node = nuke.nodes.Invert( channels=channel, inputs=[n])
+    mincolor_node = nuke.nodes.MinColor( channels=channel, target=0, inputs=[invert_node] )
+    
+    # Execute
+    nuke.execute( mincolor_node, middle_frame, middle_frame )
+    max_value = mincolor_node['pixeldelta'].value() + 1
+    
+    # Delete created nodes
+    for i in ( mincolor_node, invert_node ):
+        nuke.delete( i )
+    
+    # Output
+    print('Max {} value of {} @ frame {} is {}'.format(channel, os.path.basename(n.metadata('input/filename')), middle_frame, max_value))
+    return max_value
 
 # Deal call with argv
 
