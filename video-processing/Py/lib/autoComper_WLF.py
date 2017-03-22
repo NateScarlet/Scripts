@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.761
+# Version 0.762
 
 import nuke
 import os
@@ -26,7 +26,7 @@ class comp(object):
         self.bg_node = None
         self.bg_ch_nodes = []
         self.last_output = None
-        self.mp = mp
+        self.mp = mp.replace('\\', '/')
         
         # Get dict
         for i in nuke.allNodes('Read'):
@@ -265,6 +265,7 @@ class precomp(comp):
         self.target_dir = ''
         self.shot_list = [] # Contain shot dir
         self.footage_dict = {}
+        self.mp = mp
         
         if nuke.env['gui']:
             precompDialog()
@@ -299,7 +300,7 @@ class precomp(comp):
                 # Comp
                 nuke.scriptClear()
                 self.importFootage(shot_dir)
-                comp()
+                comp(self.mp)
 
                 # Save nk
                 nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
@@ -366,7 +367,7 @@ def autoplaceAllNodes():
 
 if len(sys.argv) == 4 and __name__ == '__main__':
     print('-Run precomp-')
-    argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
+    argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
     print('Footage:\t{}\nSave to:\t{}\nMP:\t\t{}'.format(argv[1], argv[2], argv[3]))
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
