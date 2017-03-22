@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.754
+# Version 0.755
 
 import nuke
 import os
@@ -48,6 +48,7 @@ class comp(object):
     def main(self):
         # Merge
         self.mergeOver()
+        self.addZDefocus()
         self.addSoftClip()
         self.mergeOCC()
         self.mergeShadow()
@@ -56,7 +57,7 @@ class comp(object):
         self.addGrade()
         self.mergeDepth()
         self.addReformat()
-        self.addZDefocus()
+        self.add_ZDefocus()
         
         # Create write node
         self.last_output.selectOnly()
@@ -181,11 +182,22 @@ class comp(object):
         return reformat_node
         
     def addZDefocus(self):
-        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, disable=True)
+        for i in self.bg_ch_nodes:
+            if self.bg_ch_nodes.index(i) == 0:
+                zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200"} {return True} else {return False}]}}' )
+            else:
+                zdefocus_node = nuke.clone(zdefocus_node)
+            self.insertNode(zdefocus_node, i)
+        return zdefocus_node
+        
+    def add_ZDefocus(self):
+        # Use for one-node zdefocus control
+        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置', disable='{{True}}')
         zdefocus_node.setName('_ZDefocus')
         self.last_output = zdefocus_node
         return zdefocus_node
-
+        
+    
     def addGrade(self):
         for i in self.bg_ch_nodes:
             grade_node = nuke.nodes.Grade()
