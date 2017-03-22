@@ -1,7 +1,6 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.755
 
 import nuke
 import os
@@ -9,12 +8,11 @@ import re
 import sys
 import traceback
 
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
-
-toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
-
-format = 'HD_1080'
 fps = 25
+format = 'HD_1080'
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
+toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
+default_mp = 'Z:/SNJYW/MP/EP08/sky.jpg'
 
 class comp(object):
 
@@ -58,6 +56,7 @@ class comp(object):
         self.mergeDepth()
         self.addReformat()
         self.add_ZDefocus()
+        self.mergeMP()
         
         # Create write node
         self.last_output.selectOnly()
@@ -65,13 +64,6 @@ class comp(object):
         
         # Place node
         self.placeNodes()
-        
-        # Connect viewer
-        if nuke.env['gui']:
-            _Write = nuke.toNode('_Write')
-            if _Write:
-                nuke.connectViewer(3, _Write)
-            nuke.connectViewer(1, self.last_output)
         
         # Set framerange
         try:
@@ -85,6 +77,16 @@ class comp(object):
         nuke.Root()['fps'].setValue(fps)
         nuke.Root()['format'].setValue(format)
 
+        # Connect viewer
+        if nuke.env['gui']:
+            _Write = nuke.toNode('_Write')
+            if _Write:
+                nuke.connectViewer(3, _Write)
+            nuke.connectViewer(1, self.last_output)
+        
+        # Show pannel
+        self.showPanels()
+        
     def getFootageTag(self, n):
         '''
         Figure out node footage type
@@ -211,8 +213,15 @@ class comp(object):
         return colorcorrect_node
         
     def mergeMP(self):
-        # TODO
-        pass
+        read_node = nuke.nodes.Read(file=default_mp)
+        merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
+        self.last_output = merge_node
+        self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
+        ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
+        self.insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
+        self.insertNode(nuke.nodes.Grade(), read_node)
+        self.insertNode(nuke.nodes.Transform(), read_node)
+        self.insertNode(nuke.nodes.Reformat(), read_node)
         
     def insertNode(self, node, input_node):
         # Create dot presents input_node 's output
@@ -226,7 +235,10 @@ class comp(object):
      
     def placeNodes(self):
         autoplaceAllNodes()
-
+    
+    def showPanels(self):
+        nuke.nodes.NoOp(label='[\npython {nuke.show(nuke.toNode(\'_ZDefocus\'))}\ndelete this\n]')
+    
 
 class precomp(comp):
     shot_pat = re.compile(r'^.+\\.+_sc[^_]+$', flags=re.I)
