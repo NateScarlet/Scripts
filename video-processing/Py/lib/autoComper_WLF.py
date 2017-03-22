@@ -1,6 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
+# Version 0.761
 
 import nuke
 import os
@@ -18,29 +19,41 @@ class comp(object):
 
     order = lambda self, n: ('_' + self.node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
     
-    def __init__(self):
+    def __init__(self, mp=default_mp):
 
         self.node_tag_dict = {}
         self.tag_node_dict = {}
         self.bg_node = None
         self.bg_ch_nodes = []
         self.last_output = None
+        self.mp = mp
+        
+        # Get dict
         for i in nuke.allNodes('Read'):
             tag = self.getFootageTag(i)
             self.node_tag_dict[i] = tag
-            self.tag_node_dict[tag] = i            
+            self.tag_node_dict[tag] = i
+        if not self.node_tag_dict:
+            nuke.message('请先将素材拖入Nuke')
+            return False
+
+        # Get bg_node
         try:
             self.bg_node = self.getNodesByTag('BG')[0]
         except IndexError:
             self.bg_node = None
+        
+        # Get bg_ch_nodes
         self.bg_ch_nodes = self.getNodesByTag(['BG', 'CH'])
+        
+        # Set default last_output
         if self.bg_ch_nodes:
             self.last_output = self.bg_ch_nodes[0]
         else:
             self.last_output = self.node_tag_dict.keys()[0]
-        if not self.node_tag_dict:
-            nuke.message('请先将素材拖入Nuke')
-            return False
+        
+        
+        # Comp
         self.main()
     
     def main(self):
@@ -61,10 +74,7 @@ class comp(object):
         # Create write node
         self.last_output.selectOnly()
         nuke.loadToolset(toolset + r"\Write.nk")
-        
-        # Place node
-        self.placeNodes()
-        
+              
         # Set framerange
         try:
             self.setFrameRangeByNode(self.getNodesByTag(['CH', 'BG'])[-1])
@@ -84,6 +94,9 @@ class comp(object):
                 nuke.connectViewer(3, _Write)
             nuke.connectViewer(1, self.last_output)
         
+        # Place node
+        self.placeNodes()
+
         # Show pannel
         self.showPanels()
         
@@ -185,10 +198,7 @@ class comp(object):
         
     def addZDefocus(self):
         for i in self.bg_ch_nodes:
-            if self.bg_ch_nodes.index(i) == 0:
-                zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200"} {return True} else {return False}]}}' )
-            else:
-                zdefocus_node = nuke.clone(zdefocus_node)
+            zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200"} {return True} else {return False}]}}', selected=True )
             self.insertNode(zdefocus_node, i)
         return zdefocus_node
         
@@ -213,7 +223,7 @@ class comp(object):
         return colorcorrect_node
         
     def mergeMP(self):
-        read_node = nuke.nodes.Read(file=default_mp)
+        read_node = nuke.nodes.Read(file=self.mp)
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
         self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
@@ -227,11 +237,14 @@ class comp(object):
         # Create dot presents input_node 's output
         input_node.selectOnly()
         dot = nuke.createNode('Dot')
+        
         # Set node connection
         node.setInput(0, input_node)
         dot.setInput(0, node)
+        
         # Delete dot
         nuke.delete(dot)
+        
      
     def placeNodes(self):
         autoplaceAllNodes()
@@ -246,7 +259,7 @@ class precomp(comp):
 
     footage_filter = lambda self, s: not any(map(lambda excluded_word: excluded_word in s, ['副本', '.lock']))
     
-    def __init__(self, dir_, target_dir):
+    def __init__(self, dir_, target_dir, mp=default_mp):
 
         self.dir = ''
         self.target_dir = ''
@@ -335,10 +348,11 @@ def precompDialog():
     p = nuke.Panel('Precomp')
     p.addFilenameSearch('存放素材的文件夹', 'Z:\SNJYW\Render\EP')
     p.addFilenameSearch('存放至', 'E:\precomp')
+    p.addFilenameSearch('指定MP', default_mp)
 
     # Show panel
     p.show()
-    cmd = 'START "precomp" "' + nuke.env['ExecutablePath'] + '" -t "' + os.path.normcase(__file__).rstrip('c') + '" "' + p.value('存放素材的文件夹') + '" "' + p.value('存放至') + '"'
+    cmd = 'START "precomp" "' + nuke.env['ExecutablePath'] + '" -t "' + os.path.normcase(__file__).rstrip('c') + '" "' + p.value('存放素材的文件夹') + '" "' + p.value('存放至') + '" "' + p.value('指定MP') + '"'
     print(cmd)
     if os.path.exists(p.value('存放素材的文件夹')):
         os.popen(cmd)
@@ -346,23 +360,17 @@ def precompDialog():
         nuke.message('素材路径不存在')
 
 def autoplaceAllNodes():
-    label_ = '''[
-python [python {nuke.thisNode()['_script'].value()}]
-delete this
-return ""
-]'''
-    k = nuke.PyScript_Knob('_script', '_script', 'map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))')
-    nuke.nodes.NoOp(label=label_).addKnob(k)
+    nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
 
 # Deal call with argv
 
-if len(sys.argv) == 3 and __name__ == '__main__':
+if len(sys.argv) == 4 and __name__ == '__main__':
     print('-Run precomp-')
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\'), sys.argv))
-    print('Footage:\t{}\nSave to:\t{}'.format(argv[1], argv[2]))
+    print('Footage:\t{}\nSave to:\t{}\nMP:\t\t{}'.format(argv[1], argv[2], argv[3]))
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
         print('Created:\t{}'.format(argv[2]))
     os.system('PAUSE')
-    precomp(argv[1], argv[2])
+    precomp(argv[1], argv[2], argv[3])
     os.system( 'EXPLORER "' + argv[2] + '"')
