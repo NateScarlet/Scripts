@@ -4,10 +4,11 @@ push $cut_paste_input
 Group {
  name ProjectionMP1
  tile_color 0x9c0000ff
+ label "** MP跟踪 **\n导出的摄像机连这个节点"
  note_font 微软雅黑
  selected true
- xpos 81
- ypos -55
+ xpos 37
+ ypos -7301
  addUserKnob {20 tab1 l ProjectionMP_v0.1}
  addUserKnob {41 frame l 基准帧 t 以此帧为投射的基准 T FrameHold_Camera_3DEnv_2.first_frame}
 }
@@ -41,8 +42,8 @@ Group {
   xpos 324
   ypos -368
  }
-set Naa52000 [stack 0]
-push $Naa52000
+set Na3897800 [stack 0]
+push $Na3897800
  FrameHold {
   first_frame {{"int( ( root.first_frame + root.last_frame ) / 2 )"}}
   name FrameHold_Camera_3DEnv_2
@@ -77,7 +78,7 @@ push $Naa52000
   xpos 400
   ypos -285
  }
-push $Naa52000
+push $Na3897800
  Scene {
   inputs 2
   name Scene_MP_1
