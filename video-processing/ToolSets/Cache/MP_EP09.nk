@@ -1,17 +1,16 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
+push $cut_paste_input
 Ramp {
- inputs 0
  cliptype none
- opacity 0.5
  p0 {1190 1074}
  p1 {1140 610}
  type smooth1
  name Ramp_MP_1
  note_font 微软雅黑
  selected true
- xpos 510
- ypos -683
+ xpos 1035
+ ypos 13
 }
 Read {
  inputs 0
@@ -21,15 +20,15 @@ Read {
  name Read_MP_1
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -727
+ xpos 925
+ ypos -31
 }
 Reformat {
  name Reformat_MP_1
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -611
+ xpos 925
+ ypos 85
 }
 Transform {
  translate {446 -14}
@@ -38,31 +37,31 @@ Transform {
  name Transform_MP_1
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -583
+ xpos 925
+ ypos 113
 }
 Grade {
- name Grade2
+ name Grade4
  note_font 微软雅黑
  selected true
- xpos 400
- ypos -555
+ xpos 925
+ ypos 141
 }
 Grade {
  inputs 1+1
- name Grade1
+ name Grade5
  note_font 微软雅黑
  selected true
- xpos 510
- ypos -555
+ xpos 1035
+ ypos 141
 }
 Group {
  name ProjectionMP1
  tile_color 0x9c0000ff
  note_font 微软雅黑
  selected true
- xpos 510
- ypos -527
+ xpos 1035
+ ypos 169
  addUserKnob {20 tab1 l ProjectionMP_v0.1}
  addUserKnob {41 frame l 基准帧 t 以此帧为投射的基准 T FrameHold_Camera_3DEnv_2.first_frame}
 }
@@ -96,8 +95,8 @@ Group {
   xpos 324
   ypos -368
  }
-set Naa52000 [stack 0]
-push $Naa52000
+set N51673800 [stack 0]
+push $N51673800
  FrameHold {
   first_frame {{"int( ( root.first_frame + root.last_frame ) / 2 )"}}
   name FrameHold_Camera_3DEnv_2
@@ -132,7 +131,7 @@ push $Naa52000
   xpos 400
   ypos -285
  }
-push $Naa52000
+push $N51673800
  Scene {
   inputs 2
   name Scene_MP_1
@@ -166,9 +165,9 @@ push 0
 Merge2 {
  inputs 2
  operation under
- name Merge3
+ name Merge4
  note_font 微软雅黑
  selected true
- xpos 510
- ypos -486
+ xpos 1035
+ ypos 210
 }

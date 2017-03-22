@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.751
+# Version 0.754
 
 import nuke
 import os
@@ -52,8 +52,10 @@ class comp(object):
         self.mergeOCC()
         self.mergeShadow()
         self.mergeScreen()
+        self.addColorCorrect()
         self.addGrade()
         self.mergeDepth()
+        self.addReformat()
         self.addZDefocus()
         
         # Create write node
@@ -65,10 +67,10 @@ class comp(object):
         
         # Connect viewer
         if nuke.env['gui']:
-            nuke.connectViewer(1, self.last_output)
             _Write = nuke.toNode('_Write')
             if _Write:
                 nuke.connectViewer(3, _Write)
+            nuke.connectViewer(1, self.last_output)
         
         # Set framerange
         try:
@@ -172,6 +174,12 @@ class comp(object):
         self.last_output = copy_node
         return copy_node
 
+    def addReformat(self):
+        for i in self.bg_ch_nodes:
+            reformat_node = nuke.nodes.Reformat()
+            self.insertNode(reformat_node, i)
+        return reformat_node
+        
     def addZDefocus(self):
         zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, disable=True)
         zdefocus_node.setName('_ZDefocus')
@@ -184,6 +192,12 @@ class comp(object):
             self.insertNode(grade_node, i)
         return grade_node
 
+    def addColorCorrect(self):
+        for i in self.bg_ch_nodes:
+            colorcorrect_node = nuke.nodes.ColorCorrect()
+            self.insertNode(colorcorrect_node, i)
+        return colorcorrect_node
+        
     def mergeMP(self):
         # TODO
         pass
@@ -243,7 +257,7 @@ class precomp(comp):
                 # Show info
                 shot = os.path.basename(shot_dir)
                 count += 1
-                print('\n## [{1}/{2}]:\t{0}'.format(shot, count, shots_number))
+                print('\n## [{1}/{2}]:\t\t{0}'.format(shot, count, shots_number))
                 
                 # Comp
                 nuke.scriptClear()
