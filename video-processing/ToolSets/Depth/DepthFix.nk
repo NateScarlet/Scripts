@@ -4,12 +4,12 @@ push $cut_paste_input
 Group {
  name DepthFix1
  tile_color 0x823a7dff
- label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\} else \{\nreturn \[format \"近点: %d\\n远点: %d\\n修复强度: %.1f\\n输出深度范围为:%.2f~%.2f\" \[value this.closepoint] \[value this.farpoint] \[value this.size] \[value this.minZ] \[value this.maxZ]]\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos -370
- ypos -7416
- addUserKnob {20 tab1 l DepthFix_v3.63}
+ xpos -77
+ ypos 26
+ addUserKnob {20 tab1 l DepthFix_v3.64}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
  addUserKnob {7 farpoint}
@@ -21,7 +21,7 @@ Group {
  size 1
  addUserKnob {7 minZ l min t 低于此值的深度会被设为此值}
  addUserKnob {7 maxZ l max t 高于此值的深度会被设为此值}
- maxZ 0.05254
+ maxZ 1
  addUserKnob {4 empty_area_depth l "empty area depth" M {0 1 original}}
  empty_area_depth 1
 }
@@ -37,8 +37,8 @@ Group {
   xpos 434
   ypos -702
  }
-set N7ef4f800 [stack 0]
-push $N7ef4f800
+set N8a6d0000 [stack 0]
+push $N8a6d0000
  Copy {
   inputs 2
   from0 depth.Z
@@ -58,13 +58,13 @@ push $N7ef4f800
   xpos 510
   ypos -667
  }
-set N41dfb400 [stack 0]
+set N1e83b000 [stack 0]
  Dot {
   name Dot3
   xpos 544
   ypos -606
  }
-set N41dfa400 [stack 0]
+set N8d2c9400 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -78,8 +78,8 @@ set N41dfa400 [stack 0]
   xpos 620
   ypos -571
  }
-set N86474000 [stack 0]
-push $N86474000
+set N90e1bc00 [stack 0]
+push $N90e1bc00
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -95,7 +95,7 @@ push $N86474000
   xpos 654
   ypos -486
  }
-set N86475800 [stack 0]
+set N1e83a800 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -116,7 +116,7 @@ set N86475800 [stack 0]
   xpos 764
   ypos -246
  }
-push $N86475800
+push $N1e83a800
  Dilate {
   channels depth
   size 2
@@ -146,7 +146,7 @@ push $N86475800
   xpos 654
   ypos -294
  }
-push $N41dfa400
+push $N8d2c9400
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -181,7 +181,7 @@ push $N41dfa400
   xpos 544
   ypos -54
  }
-push $N7ef4f800
+push $N8a6d0000
  Switch {
   inputs 2
   which {{"\[string match *depth.Z* \[channels parent.Input]]\n"}}
@@ -195,7 +195,7 @@ push $N7ef4f800
   xpos 400
   ypos 14
  }
-push $N41dfb400
+push $N1e83b000
  Viewer {
   frame_range 120-120
   fps 25

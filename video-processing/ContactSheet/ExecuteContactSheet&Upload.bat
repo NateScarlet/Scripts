@@ -6,7 +6,7 @@ CD /D %~dp0
 CLS
 
 REM Set window title
-SET "VERSION=1.01"
+SET "VERSION=1.02"
 TITLE 生成色板后_上传v%VERSION%
 
 REM Read ini
@@ -35,3 +35,5 @@ START /WAIT POWERSHELL -command "& '"%~dp0ExecuteContactSheet.bat"'"
 XCOPY /Y /D /I "%~dp0ContactSheet*.png" "%TARGET%"
 
 START MSHTA vbscript:msgbox("渲染完成",100,"生成色板后_上传")(window.close)
+
+GOTO :EOF

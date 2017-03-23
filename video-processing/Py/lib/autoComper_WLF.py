@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.771
+# Version 0.772
 
 import nuke
 import os
@@ -96,6 +96,7 @@ class comp(object):
         
         # Place node
         self.placeNodes()
+        zoomToFitAll()
 
         # Show pannel
         self.showPanels()
@@ -365,6 +366,15 @@ def insertNode(node, input_node):
 
 def autoplaceAllNodes():
     nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
+
+def clearNodeSelect():
+    dot = nuke.nodes.Dot()
+    dot.selectOnly()
+    nuke.delete(dot)
+
+def zoomToFitAll():
+    clearNodeSelect()
+    nuke.nodes.NoOp(label='[\npython {nuke.zoomToFitSelected()}\ndelete this\n]')
 
 def getMax( n, channel='depth.Z' ):
     '''
