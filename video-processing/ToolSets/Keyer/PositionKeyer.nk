@@ -3,14 +3,14 @@ version 10.0 v4
 push $cut_paste_input
 add_layer {P P.red P.green P.blue}
 Group {
- name PositionKeyer1
+ name PositionKeyer5
  tile_color 0xff00ff
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos 922
- ypos -454
- addUserKnob {20 tab1 l PositionKeyer_v0.5}
+ xpos 1030
+ ypos -790
+ addUserKnob {20 tab1 l PositionKeyer_v0.51}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show position" +STARTLINE}
  addUserKnob {26 ""}
@@ -26,6 +26,8 @@ Group {
  addUserKnob {12 p1}
  p1 {1214 338}
  addUserKnob {32 bg_apply l Apply T "knob this.position_value.p0.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p1.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p1.x this.knob.p1.y]" +STARTLINE}
+ addUserKnob {41 p0_1 l "point 0" T position_value.p0}
+ addUserKnob {41 p1_1 l "point 1" T position_value.p1}
 }
  Input {
   inputs 0
@@ -38,7 +40,7 @@ Group {
   xpos 544
   ypos -966
  }
-set N7035ec00 [stack 0]
+set N5552d400 [stack 0]
  Dot {
   name Dot5
   note_font 微软雅黑
@@ -58,7 +60,7 @@ set N7035ec00 [stack 0]
   xpos 654
   ypos -894
  }
-set Na4a27400 [stack 0]
+set N5552c800 [stack 0]
  AddChannels {
   channels alpha
   color 1
@@ -128,8 +130,8 @@ set Na4a27400 [stack 0]
   xpos 654
   ypos -414
  }
-set Na4917400 [stack 0]
-push $Na4a27400
+set N4c52f400 [stack 0]
+push $N5552c800
  Dot {
   name Dot3
   note_font 微软雅黑
@@ -150,8 +152,8 @@ push $Na4a27400
   xpos 764
   ypos -270
  }
-push $Na4917400
-push $N7035ec00
+push $N4c52f400
+push $N5552d400
  Copy {
   inputs 2
   from0 rgba.alpha

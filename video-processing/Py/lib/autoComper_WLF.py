@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.772
+# Version 0.774
 
 import nuke
 import os
@@ -11,7 +11,7 @@ import traceback
 
 fps = 25
 format = 'HD_1080'
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_B_OC': 'OCC_CH_B'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = 'Z:/SNJYW/MP/EP08/sky.jpg'
 
@@ -182,7 +182,7 @@ class comp(object):
         nodes = self.bg_ch_nodes
         if len(nodes) == 1:
             return
-        merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth')
+        merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         for i in nodes:
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
             if getMax(i, 'depth.Z') > 1.1 :

@@ -142,14 +142,19 @@ def DropDataCallBack_fbx(type, data):
         return None
 
 def deleteAllUnusedNodes():
-    c = 1
-    while c:
+    c = 0
+    done = False
+    while not done:
+        nodes = []
         for i in nuke.allNodes():
             if not isUsed(i):
-                nuke.delete(i)
+                nodes.append(i)
                 c += 1
-            break
-        c -= 1
+        if nodes:
+            map(lambda n: nuke.delete(n), nodes)
+        else:
+            done = True
+    print('Deleted {} unused nodes.'.format(c))
         
 def isUsed(n):
     

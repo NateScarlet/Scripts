@@ -6,7 +6,7 @@ CD /D %~dp0
 CLS
 
 REM Set window title
-SET "VERSION=1.97"
+SET "VERSION=1.971"
 TITLE 生成色板后_上传v%VERSION%
 
 REM Read ini
@@ -86,7 +86,7 @@ REM Display info
 ECHO 渲染时使用的NUKE路径: %NUKE%
 ECHO 本地缓存时使用的Z盘网络路径: %serverZ%
 ECHO.
-ECHO 提示 - 可以编辑此批处理文件头部来设置路径
+ECHO 提示 - 可以编辑path.ini来设置路径
 ECHO.
 
 REM Ask render size
