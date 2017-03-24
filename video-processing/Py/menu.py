@@ -29,6 +29,7 @@ nuke.knobDefault( "Switch.which", "1" )
 nuke.knobDefault( "Viewer.input_process", "False" )
 nuke.knobDefault( "SoftClip.conversion", "3" )
 nuke.knobDefault( "RolloffContrast.soft_clip", "1" )
+nuke.knobDefault( "ZDefocus2.math", "depth" )
 
 # Add Drop data callback
 nukescripts.addDropDataCallback(assetManager.DropDataCallBack_fbx)
