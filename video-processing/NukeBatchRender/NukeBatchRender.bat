@@ -7,7 +7,7 @@ CLS
 
 REM Set window title
 SET "VERSION=1.971"
-TITLE 生成色板后_上传v%VERSION%
+TITLE Nuke批渲染%VERSION%
 
 REM Read ini
 REM Won't support same variable name in diffrent block
