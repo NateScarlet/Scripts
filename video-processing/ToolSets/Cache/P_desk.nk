@@ -1,31 +1,43 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
+Dot {
+ name Dot4
+ note_font 微软雅黑
+ selected true
+ xpos 104
+ ypos -1256
+}
+set N5085e400 [stack 0]
 add_layer {P P.red P.green P.blue}
 Group {
- name PositionKeyer1
+ name PositionKeyer2
  tile_color 0xff00ff
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos 922
- ypos -454
- addUserKnob {20 tab1 l PositionKeyer_v0.5}
+ xpos 70
+ ypos -1218
+ addUserKnob {20 tab1 l PositionKeyer_v0.4}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show position" +STARTLINE}
+ preview true
  addUserKnob {26 ""}
  addUserKnob {6 x +STARTLINE}
- x true
  addUserKnob {6 invert_x l invert -STARTLINE}
  addUserKnob {6 y +STARTLINE}
  addUserKnob {6 invert_y l invert -STARTLINE}
  addUserKnob {6 z +STARTLINE}
+ z true
  addUserKnob {6 invert_z l invert -STARTLINE}
- addUserKnob {12 p0}
- p0 {1255.5 304.5}
- addUserKnob {12 p1}
- p1 {1214 338}
- addUserKnob {32 bg_apply l Apply T "knob this.position_value.p0.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p1.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p1.x this.knob.p1.y]" +STARTLINE}
+ addUserKnob {18 p0 l "point 0"}
+ p0 {-20.6875 45.8125 -32.0625}
+ addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {18 p1 l "point 1"}
+ p1 {-17.359375 49.8125 -19.765625}
+ addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {6 point1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
 }
  Input {
   inputs 0
@@ -38,7 +50,7 @@ Group {
   xpos 544
   ypos -966
  }
-set N7035ec00 [stack 0]
+set N215ad400 [stack 0]
  Dot {
   name Dot5
   note_font 微软雅黑
@@ -58,7 +70,7 @@ set N7035ec00 [stack 0]
   xpos 654
   ypos -894
  }
-set Na4a27400 [stack 0]
+set N215ac800 [stack 0]
  AddChannels {
   channels alpha
   color 1
@@ -67,46 +79,32 @@ set Na4a27400 [stack 0]
   xpos 620
   ypos -859
  }
- NoOp {
-  name position_value
-  note_font 微软雅黑
-  selected true
-  xpos 620
-  ypos -801
-  addUserKnob {20 User}
-  addUserKnob {18 p0 l "point 0"}
-  p0 {45.75 49.9063 18.9375}
-  addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
-  addUserKnob {18 p1 l "point 1"}
-  p1 {66.125 49.4375 19.4063}
-  addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
- }
  Grade {
   channels {none none none rgba.red}
-  blackpoint {{parent.position_value.p0.r}}
-  whitepoint {{parent.position_value.p1.r}}
+  blackpoint {{parent.p0.r}}
+  whitepoint {{parent.p1.r}}
   name Grade1
   note_font 微软雅黑
   xpos 620
-  ypos -758
+  ypos -691
  }
  Grade {
   channels {none none none rgba.green}
-  blackpoint {{parent.position_value.p0.g}}
-  whitepoint {{parent.position_value.p1.g}}
+  blackpoint {{parent.p0.g}}
+  whitepoint {{parent.p1.g}}
   name Grade2
   note_font 微软雅黑
   xpos 620
-  ypos -703
+  ypos -643
  }
  Grade {
   channels {none none none rgba.blue}
-  blackpoint {{parent.position_value.p0.b}}
-  whitepoint {{parent.position_value.p1.b}}
+  blackpoint {{parent.p0.b}}
+  whitepoint {{parent.p1.b}}
   name Grade3
   note_font 微软雅黑
   xpos 620
-  ypos -633
+  ypos -595
  }
  Expression {
   temp_name0 x
@@ -128,8 +126,8 @@ set Na4a27400 [stack 0]
   xpos 654
   ypos -414
  }
-set Na4917400 [stack 0]
-push $Na4a27400
+set N215e0c00 [stack 0]
+push $N215ac800
  Dot {
   name Dot3
   note_font 微软雅黑
@@ -150,8 +148,8 @@ push $Na4a27400
   xpos 764
   ypos -270
  }
-push $Na4917400
-push $N7035ec00
+push $N215e0c00
+push $N215ad400
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -181,3 +179,15 @@ push $N7035ec00
   ypos -58
  }
 end_group
+push $N5085e400
+add_layer {mask_extra mask_extra.window mask_extra.floor mask_extra.ground mask_extra.desk}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.desk
+ name Copy3
+ note_font 微软雅黑
+ selected true
+ xpos 180
+ ypos -1218
+}

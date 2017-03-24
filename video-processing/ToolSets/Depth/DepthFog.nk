@@ -5,28 +5,31 @@ Dot {
  name Dot9
  note_font 微软雅黑
  selected true
- xpos 3096
- ypos -5952
+ xpos -54
+ ypos -152
 }
-set Nc4480c00 [stack 0]
+set N28e8f400 [stack 0]
 Group {
- name DepthKeyer1
+ name DepthKeyer3
  tile_color 0xff00ff
  label "\[\nif \{! \[value this.selected]\} \{knob this.preview 0\}\nknob_default \[class this].range_gamma 1\nreturn \"输入通道: \[value this.input \"\"]\"\n]"
  note_font 微软雅黑
  selected true
- xpos 3191
- ypos -5924
- addUserKnob {20 tab1 l DepthKeyer_v0.5}
+ xpos 41
+ ypos -124
+ addUserKnob {20 tab1 l DepthKeyer_v0.61}
  addUserKnob {26 Range_div l Range}
  addUserKnob {6 preview +STARTLINE}
- addUserKnob {41 input l "depth channel" T Copy4.from0}
+ addUserKnob {41 input l "depth channel" T Copy.from0}
  addUserKnob {41 range T Keyer1.range}
- addUserKnob {32 avg_range l "Averge Range" T "set A \[value this.range.A]\nset B \[value this.range.B]\nset C \[value this.range.C]\nset D \[value this.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob this.range.B \[expr \$A+\$avg]\nknob this.range.C \[expr \$A+2*\$avg]" +STARTLINE}
- addUserKnob {41 focal_point l "focal point" T ZDefocus1.focal_point}
- addUserKnob {32 bt_close l Close -STARTLINE T "set tg \[value group.ZDefocus1.center]\nknob this.range.A \$tg"}
- addUserKnob {32 bt_far l Far -STARTLINE T "set tg \[value group.ZDefocus1.center]\nknob this.range.D \$tg"}
- addUserKnob {32 bt_middle l Middle -STARTLINE T "set tg \[value group.ZDefocus1.center]\nset a \[value this.range.A]\nset b \[value this.range.B]\nset c \[value this.range.C]\nset d \[value this.range.D]\nknob this.range.B \[expr (\$tg + \$a) / 2.0]\nknob this.range.C \[expr (\$tg + \$d) / 2.0]"}
+ addUserKnob {12 close_point}
+ close_point {496 66}
+ addUserKnob {12 middle_point}
+ middle_point {1204 340}
+ addUserKnob {12 far_point}
+ far_point {1656 584}
+ addUserKnob {32 bt_apply l Apply T "set close \[sample this.Sampler alpha this.knob.close_point.x this.knob.close_point.y]\nset middle \[sample this.Sampler alpha this.knob.middle_point.x this.knob.middle_point.y]\nset far \[sample this.Sampler alpha this.knob.far_point.x this.knob.far_point.y]\nknob this.range.A \$close\nknob this.range.B \[expr (\$middle + \$close) / 2.0]\nknob this.range.C \[expr (\$middle + \$far) / 2.0]\nknob this.range.D \$far" +STARTLINE}
+ addUserKnob {32 bt_averge l Averge -STARTLINE T "set A \[value this.range.A]\nset B \[value this.range.B]\nset C \[value this.range.C]\nset D \[value this.range.D]\nset avg \[expr (\$D - \$A) / 3]\nknob this.range.B \[expr \$A+\$avg]\nknob this.range.C \[expr \$A+2*\$avg]"}
  addUserKnob {18 range_gamma l gamma R 0 4}
  range_gamma 1
  addUserKnob {6 range_gamma_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
@@ -46,40 +49,33 @@ Group {
   xpos 764
   ypos -1518
  }
-set N45b7dc00 [stack 0]
-push $N45b7dc00
+set N2c0c0c00 [stack 0]
+push $N2c0c0c00
  Copy {
   inputs 2
   from0 depth.Z
   to0 rgba.alpha
-  name Copy4
+  name Copy
   label "depth Channel"
+  xpos 728
+  ypos -1489
+ }
+ NoOp {
+  name Sampler
+  note_font 微软雅黑
   xpos 730
-  ypos -1391
+  ypos -1376
  }
  Keyer {
   input alpha
   output none
   operation "red keyer"
-  range {0.009208122268 0.01451340298 0.03698144298 0.05414418504}
+  range {0.00669712 0.00702733 0.00902037 0.0106832}
   name Keyer1
   label "Range Picker"
   note_font 微软雅黑
   xpos 730
-  ypos -1331
- }
- ZDefocus2 {
-  channels none
-  center 0.01981868595
-  focal_point {998 442}
-  blur_dof false
-  legacy_resize_mode false
-  show_legacy_resize_mode false
-  name ZDefocus1
-  label "Depth inViewer Picker"
-  note_font 微软雅黑
-  xpos 730
-  ypos -1251
+  ypos -1303
  }
  Dot {
   name Dot7
@@ -87,14 +83,14 @@ push $N45b7dc00
   xpos 764
   ypos -1110
  }
-set N45b7c800 [stack 0]
+set N2c131c00 [stack 0]
  Dot {
   name Dot8
   note_font 微软雅黑
   xpos 764
   ypos -1038
  }
-set N45b7c400 [stack 0]
+set N2c131800 [stack 0]
  Dot {
   name Dot9
   note_font 微软雅黑
@@ -113,8 +109,8 @@ set N45b7c400 [stack 0]
   xpos 510
   ypos -987
  }
-set N674cbc00 [stack 0]
-push $N45b7c400
+set N2c131000 [stack 0]
+push $N2c131800
  Grade {
   channels alpha
   blackpoint {{parent.Keyer1.range.B}}
@@ -127,8 +123,8 @@ push $N45b7c400
   xpos 510
   ypos -1059
  }
-set N674cb800 [stack 0]
-push $N45b7c800
+set N37969400 [stack 0]
+push $N2c131c00
  Grade {
   channels alpha
   blackpoint {{parent.Keyer1.range.A}}
@@ -141,8 +137,8 @@ push $N45b7c800
   xpos 510
   ypos -1131
  }
-set N674cb400 [stack 0]
-push $N45b7dc00
+set N37969c00 [stack 0]
+push $N2c0c0c00
  Dot {
   name Dot5
   xpos 874
@@ -177,10 +173,10 @@ push $N45b7dc00
   xpos 874
   ypos -222
  }
-push $N674cbc00
+push $N2c131000
 push 0
-push $N674cb800
-push $N674cb400
+push $N37969400
+push $N37969c00
  Merge2 {
   inputs 3+1
   operation plus
@@ -231,7 +227,7 @@ push $N674cb400
   ypos -178
  }
 end_group
-push $Nc4480c00
+push $N28e8f400
 Grade {
  inputs 1+1
  black {0.009 0.025133 0.045 0}
@@ -240,6 +236,6 @@ Grade {
  name Grade12
  label DepthFog
  selected true
- xpos 3062
- ypos -5876
+ xpos -88
+ ypos -76
 }
