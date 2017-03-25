@@ -36,12 +36,18 @@ else
 return
 
 $#2:: 
-Run, PS
-Run, XnView
+;~ Run, PS
+;~ Run, XnView
 return
 
 $#3:: 
-Run, "%USERPROFILE%\Shortcut\txt.lnk"
+IfWinExist, ahk_exe Typora.exe 
+{
+	GroupAdd, G_TYPORA, ahk_exe Typora.exe
+	GroupActivate, G_TYPORA
+}
+else
+    Run, "%USERPROFILE%\Shortcut\txt.lnk"
 return
 
 $#f:: 
