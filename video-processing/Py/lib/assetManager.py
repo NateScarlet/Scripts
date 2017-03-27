@@ -51,19 +51,13 @@ def setFontsPath():
     if k.value() == '':
         k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
 
-def replaceFrame( filename, frame ):
+def replaceFrame(filename, frame):
     '''
     Return a frame mark expaned version of filename, with given frame
     '''
-    def _frame( matchobj ):
-        _num = matchobj.group( 1 )
-        if _num :
-            _num = int( _num )
-            return '%0*d' % ( _num, frame )
-        else :
-            return str( frame )
-    _pat = re.compile( r'%0?(\d*)d' )
-    return re.sub( _pat, _frame , nukescripts.frame.replaceHashes( filename ) )
+    pat = re.compile(r'%0?\d*d')
+    formated_frame = lambda matchobj: matchobj.group(0) % frame
+    return re.sub(pat, formated_frame, nukescripts.frame.replaceHashes(filename))
 
 def getDropFrameRanges( n=nuke.thisNode(), avoid=True):
     '''
