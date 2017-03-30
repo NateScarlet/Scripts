@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.781
+# Version 0.8
 
 import nuke
 import os
@@ -11,7 +11,8 @@ import traceback
 
 fps = 25
 format = 'HD_1080'
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
+regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = 'Z:/SNJYW/MP/EP08/sky.jpg'
 
@@ -61,6 +62,7 @@ class comp(object):
         self.mergeOver()
         self.addZDefocus()
         self.addSoftClip()
+        self.addDepthFog()
         self.mergeOCC()
         self.mergeShadow()
         self.mergeScreen()
@@ -107,7 +109,7 @@ class comp(object):
         '''
         _filename = os.path.normcase(nuke.filename(n))
         _s = os.path.basename(_filename)
-        _pat = re.compile(r'_sc.+?_(.*?)\.')
+        _pat = re.compile(r'_sc.+?_([^.]+)')
         result = re.search(_pat, _s)
         if result:
             result = result.group(1).upper()
@@ -116,6 +118,12 @@ class comp(object):
                 result = tag_convert_dict[result]
         else:
             result = '_OTHER'
+        # Try folder name
+        if result not in regular_tag_list:
+            folder_name = os.path.basename(os.path.dirname((os.path.normcase(nuke.filename(n)))))
+            dir_tag = re.search(_pat, folder_name)
+            if dir_tag and dir_tag.group(1).upper() in regular_tag_list:
+                result = dir_tag.group(1).upper()
         return result
 
     def getNodesByTag(self, tags):
@@ -208,12 +216,10 @@ class comp(object):
         
     def add_ZDefocus(self):
         # Use for one-node zdefocus control
-        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置', disable='{{True}}')
+        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
         zdefocus_node.setName('_ZDefocus')
-        self.last_output = zdefocus_node
         return zdefocus_node
         
-    
     def addGrade(self):
         for i in self.bg_ch_nodes:
             rgb_max = getMax(i, 'rgb')
@@ -223,6 +229,7 @@ class comp(object):
             # Exclude small highlight
             while rgb_max > 1 and erode_size > i.height() / -100.0:
                 erode_node['size'].setValue(erode_size)
+                print('erode_size = {}'.format(erode_size))
                 rgb_max = getMax(erode_node, 'rgb')
                 if rgb_max < 1:
                     if rgb_max < 0.5:
@@ -239,6 +246,23 @@ class comp(object):
             colorcorrect_node = nuke.nodes.ColorCorrect()
             insertNode(colorcorrect_node, i)
         return colorcorrect_node
+        
+    def addDepthFog(self):
+        _DepthFogControl = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
+        _DepthFogControl.setInput(0, self.last_output)
+        _DepthFogControl.setName('_DepthFogControl')
+        _DepthFogControl['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
+        _DepthFogControl['range'].setValue(1)
+        _DepthFogControl.addKnob(nuke.Color_Knob('fog_color', '雾颜色'))
+        _DepthFogControl['fog_color'].setValue((0.009, 0.025133, 0.045))
+        _DepthFogControl.addKnob(nuke.Boolean_Knob('fog_disable', '禁用'))
+        for i in self.bg_ch_nodes:
+            grade_node = nuke.nodes.Grade(black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', label='DepthFog', disable='{_DepthFogControl.fog_disable}')
+            insertNode(grade_node, i)
+            depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
+            depthkeyer_node.setInput(0, i)
+            depthkeyer_node['range'].setExpression('_DepthFogControl.range')
+            grade_node.setInput(1, depthkeyer_node)
         
     def mergeMP(self):
         read_node = nuke.nodes.Read(file=self.mp)
@@ -414,11 +438,10 @@ def getMax( n, channel='depth.Z' ):
     
     # Avoid dark frame
     if max_value < 0.7:
-        nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
+        nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
         max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
     if max_value < 0.7:
-        nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
-        max_value = mincolor_node['pixeldelta'].value() + 1
+        nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
         max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
         
     # Delete created nodes
