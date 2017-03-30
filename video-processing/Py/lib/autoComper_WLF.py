@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.8
+# Version 0.81
 
 import nuke
 import os
@@ -216,7 +216,7 @@ class comp(object):
         
     def add_ZDefocus(self):
         # Use for one-node zdefocus control
-        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
+        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
         zdefocus_node.setName('_ZDefocus')
         return zdefocus_node
         
