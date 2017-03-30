@@ -60,11 +60,15 @@ else
 }
 return
 
-
 $#3:: 
-Run %Shortcut%\txt
+IfWinExist, ahk_exe Typora.exe 
+{
+	GroupAdd, G_TYPORA, ahk_exe Typora.exe
+	GroupActivate, G_TYPORA
+}
+else
+    Run, "%USERPROFILE%\Shortcut\txt.lnk"
 return
-
 
 $#e:: 
 IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe

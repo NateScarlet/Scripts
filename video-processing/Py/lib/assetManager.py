@@ -162,7 +162,12 @@ def isUsed(n):
 def setProjectRootByName(path='E:'):
     nuke.root()['project_directory'].setValue(os.path.dirname(path + '/' + os.path.basename(nuke.scriptName()).split('.')[0].replace('_', '/')))
     
-def setRootFormat_SNJYW():
-    if os.path.basename(nuke.scriptName()).startswith('SNJYW_'):
-        nuke.Root()['fps'].setValue(25)
-        nuke.Root()['format'].setValue('HD_1080')
+def setWrite():
+    _Write = nuke.toNode('_Write')
+    if _Write:
+        try:
+            _Write['is_output_JPG'].setValue(False)
+            _Write['isLockOnSave'].setValue(False)
+            _Write['is_jump_to_frame'].setValue(False)
+        except:
+            nuke.error('EXCEPTION: assetManager.setWrite()')

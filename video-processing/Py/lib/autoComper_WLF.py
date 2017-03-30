@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.774
+# Version 0.781
 
 import nuke
 import os
@@ -35,7 +35,7 @@ class comp(object):
             self.tag_node_dict[tag] = i
         if not self.node_tag_dict:
             nuke.message('请先将素材拖入Nuke')
-            return False
+            raise FootageError
 
         # Get bg_node
         try:
@@ -73,8 +73,8 @@ class comp(object):
         
         # Create write node
         self.last_output.selectOnly()
-        nuke.loadToolset(toolset + r"\Write.nk")
-              
+        _Write = nuke.loadToolset(toolset + r"\Write.nk")
+
         # Set framerange
         try:
             self.setFrameRangeByNode(self.getNodesByTag(['CH', 'BG'])[-1])
@@ -217,7 +217,20 @@ class comp(object):
     def addGrade(self):
         for i in self.bg_ch_nodes:
             rgb_max = getMax(i, 'rgb')
-            grade_node = nuke.nodes.Grade(whitepoint=rgb_max, mix=0.3, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
+            erode_size = 0
+            erode_node = nuke.nodes.Dilate(inputs=[i], size = erode_size)
+            grade_mix = 0.6
+            # Exclude small highlight
+            while rgb_max > 1 and erode_size > i.height() / -100.0:
+                erode_node['size'].setValue(erode_size)
+                rgb_max = getMax(erode_node, 'rgb')
+                if rgb_max < 1:
+                    if rgb_max < 0.5:
+                        grade_mix = 0.3
+                    break
+                erode_size -= 1
+            nuke.delete(erode_node)
+            grade_node = nuke.nodes.Grade(whitepoint=rgb_max, mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
             insertNode(grade_node, i)
         return grade_node
 
@@ -307,6 +320,8 @@ class precomp(comp):
                     write_node['disable'].setValue(False)
                     frame = int(nuke.numvalue('_Write.knob.frame'))
                     nuke.execute(write_node, frame, frame)
+            except FootageError:
+                error_list.append(shot)
             except:
                 error_list.append(shot)
                 traceback.print_exc()
@@ -330,6 +345,10 @@ class precomp(comp):
                     nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
                     print('\t' * 3 + f)
 
+class FootageError(Exception):
+    def __init__(self):
+        print("**ERROR** - FOOTAGE NOT FOUND")
+                    
 def addMenu():
     m = nuke.menu("Nodes")
     m = m.addMenu('自动合成', icon='autoComper_WLF.png')
@@ -393,12 +412,22 @@ def getMax( n, channel='depth.Z' ):
     nuke.execute( mincolor_node, middle_frame, middle_frame )
     max_value = mincolor_node['pixeldelta'].value() + 1
     
+    # Avoid dark frame
+    if max_value < 0.7:
+        nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
+        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+    if max_value < 0.7:
+        nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
+        max_value = mincolor_node['pixeldelta'].value() + 1
+        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+        
     # Delete created nodes
     for i in ( mincolor_node, invert_node ):
         nuke.delete( i )
-    
+
     # Output
-    print('Max {} value of {} @ frame {} is {}'.format(channel, os.path.basename(n.metadata('input/filename')), middle_frame, max_value))
+    print('Max {} value of {} is {}'.format(channel, os.path.basename(n.metadata('input/filename')), max_value))
+    
     return max_value
 
 # Deal call with argv

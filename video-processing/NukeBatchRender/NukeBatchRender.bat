@@ -5,9 +5,6 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 CD /D %~dp0
 CLS
 
-REM Set window title
-SET "VERSION=1.971"
-TITLE Nuke批渲染%VERSION%
 
 REM Read ini
 REM Won't support same variable name in diffrent block
@@ -18,9 +15,14 @@ FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("path.ini") DO (
 )
 
 REM Set other
+SET "VERSION=1.98"
 SET "SWITCH_RENDERING="%~dp0NukeBatchRendering.tmp""
 SET "SWITCH_HIBER="%~dp0HiberAfterNukeBatchRender.tmp""
 SET "CLOSE_ERROR_WINDOW="%~dp0CloseErrorWindow.exe""
+SET "renderTime=%date:~5,2%%date:~8,2%%date:~11,2%_%time:~0,2%%time:~3,2%"
+
+REM Set window title
+TITLE Nuke批渲染_v%VERSION%[%renderTime%]
 
 :CheckEnv
 REM Check if setting is correct
@@ -103,7 +105,6 @@ IF "%ERRORLEVEL%" EQU "1" SET "isLowPriority=TRUE"
 IF "%ERRORLEVEL%" EQU "2" SET "isLowPriority=FALSE"
 
 REM Set render log path
-SET "renderTime=%date:~5,2%%date:~8,2%%date:~11,2%_%time:~0,2%%time:~3,2%"
 IF NOT EXIST "%~dp0RenderLog" (
     MKDIR "%~dp0RenderLog"
 )
