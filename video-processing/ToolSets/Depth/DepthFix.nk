@@ -7,9 +7,9 @@ Group {
  label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\} else \{\nreturn \[format \"近点: %d\\n远点: %d\\n修复强度: %.1f\\n输出深度范围为:%.2f~%.2f\" \[value this.closepoint] \[value this.farpoint] \[value this.size] \[value this.minZ] \[value this.maxZ]]\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
  note_font Verdana
  selected true
- xpos -77
- ypos 26
- addUserKnob {20 tab1 l DepthFix_v3.64}
+ xpos -104
+ ypos -191
+ addUserKnob {20 tab1 l DepthFix_v3.65}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
  addUserKnob {7 farpoint}
@@ -24,6 +24,7 @@ Group {
  maxZ 1
  addUserKnob {4 empty_area_depth l "empty area depth" M {0 1 original}}
  empty_area_depth 1
+ addUserKnob {3 erode_size l erode}
 }
  Input {
   inputs 0
@@ -37,8 +38,8 @@ Group {
   xpos 434
   ypos -702
  }
-set N8a6d0000 [stack 0]
-push $N8a6d0000
+set N3b36800 [stack 0]
+push $N3b36800
  Copy {
   inputs 2
   from0 depth.Z
@@ -58,13 +59,12 @@ push $N8a6d0000
   xpos 510
   ypos -667
  }
-set N1e83b000 [stack 0]
  Dot {
   name Dot3
   xpos 544
   ypos -606
  }
-set N8d2c9400 [stack 0]
+set N34e69800 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -78,8 +78,8 @@ set N8d2c9400 [stack 0]
   xpos 620
   ypos -571
  }
-set N90e1bc00 [stack 0]
-push $N90e1bc00
+set N34f31800 [stack 0]
+push $N34f31800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -95,7 +95,7 @@ push $N90e1bc00
   xpos 654
   ypos -486
  }
-set N1e83a800 [stack 0]
+set N34f31000 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -116,7 +116,7 @@ set N1e83a800 [stack 0]
   xpos 764
   ypos -246
  }
-push $N1e83a800
+push $N34f31000
  Dilate {
   channels depth
   size 2
@@ -146,7 +146,7 @@ push $N1e83a800
   xpos 654
   ypos -294
  }
-push $N8d2c9400
+push $N34e69800
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -173,15 +173,33 @@ push $N8d2c9400
   name Expression4
   note_font 微软雅黑
   xpos 510
-  ypos -107
+  ypos -137
  }
+ Dilate {
+  channels depth
+  size {{parent.erode_size}}
+  name Dilate3
+  xpos 510
+  ypos -109
+ }
+set N382e7000 [stack 0]
+ Viewer {
+  frame_range 100-100
+  fps 25
+  input_process false
+  name Viewer1
+  note_font 微软雅黑
+  xpos 621
+  ypos 60
+ }
+push $N382e7000
  Dot {
   name Dot4
   note_font 微软雅黑
   xpos 544
   ypos -54
  }
-push $N8a6d0000
+push $N3b36800
  Switch {
   inputs 2
   which {{"\[string match *depth.Z* \[channels parent.Input]]\n"}}
@@ -193,16 +211,6 @@ push $N8a6d0000
  Output {
   name Output1
   xpos 400
-  ypos 14
- }
-push $N1e83b000
- Viewer {
-  frame_range 120-120
-  fps 25
-  input_process false
-  name Viewer1
-  note_font 微软雅黑
-  xpos 620
-  ypos 61
+  ypos 89
  }
 end_group
