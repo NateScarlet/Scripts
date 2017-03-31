@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.81
+# Version 0.811
 
 import nuke
 import os
@@ -192,11 +192,13 @@ class comp(object):
             return
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         for i in nodes:
+            print('mergeDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
             if getMax(i, 'depth.Z') > 1.1 :
                 depthfix_node['farpoint'].setValue(10000)
-                print('Set far point to 10000')
+                print('farpoint -> 10000')
             insertNode(depthfix_node, i)
+            print('')
         copy_node = nuke.nodes.Copy(inputs=[self.last_output, merge_node], from0='depth.Z', to0='depth.Z')
         insertNode(copy_node, self.last_output)
         self.last_output = copy_node
@@ -222,6 +224,7 @@ class comp(object):
         
     def addGrade(self):
         for i in self.bg_ch_nodes:
+            print('addGrade(): \t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             rgb_max = getMax(i, 'rgb')
             erode_size = 0
             erode_node = nuke.nodes.Dilate(inputs=[i], size = erode_size)
@@ -239,6 +242,7 @@ class comp(object):
             nuke.delete(erode_node)
             grade_node = nuke.nodes.Grade(whitepoint=rgb_max, mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
             insertNode(grade_node, i)
+            print('')
         return grade_node
 
     def addColorCorrect(self):
@@ -368,6 +372,7 @@ class precomp(comp):
                 for f in footages:
                     nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
                     print('\t' * 3 + f)
+        print('')
 
 class FootageError(Exception):
     def __init__(self):
@@ -449,7 +454,7 @@ def getMax( n, channel='depth.Z' ):
         nuke.delete( i )
 
     # Output
-    print('Max {} value of {} is {}'.format(channel, os.path.basename(n.metadata('input/filename')), max_value))
+    print('getMax({1}, {0}) -> {2}'.format(channel, n.name(), max_value))
     
     return max_value
 
