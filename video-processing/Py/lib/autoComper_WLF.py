@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.811
+# Version 0.814
 
 import nuke
 import os
@@ -58,6 +58,8 @@ class comp(object):
         self.main()
     
     def main(self):
+        self.renameReads()
+        
         # Merge
         self.mergeOver()
         self.addZDefocus()
@@ -190,7 +192,7 @@ class comp(object):
         nodes = self.bg_ch_nodes
         if len(nodes) == 1:
             return
-        merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
+        merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], tile_color=2184871423L, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         for i in nodes:
             print('mergeDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
@@ -252,16 +254,26 @@ class comp(object):
         return colorcorrect_node
         
     def addDepthFog(self):
+        # Add _DepthFogControl node
+        node_color = 596044543
         _DepthFogControl = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
         _DepthFogControl.setInput(0, self.last_output)
         _DepthFogControl.setName('_DepthFogControl')
         _DepthFogControl['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
         _DepthFogControl['range'].setValue(1)
+        _DepthFogControl['gl_color'].setValue(node_color)
+        _DepthFogControl['tile_color'].setValue(node_color)
+        _DepthFogControl.addKnob(nuke.Text_Knob('颜色控制'))
         _DepthFogControl.addKnob(nuke.Color_Knob('fog_color', '雾颜色'))
         _DepthFogControl['fog_color'].setValue((0.009, 0.025133, 0.045))
         _DepthFogControl.addKnob(nuke.Boolean_Knob('fog_disable', '禁用'))
+        k = nuke.Double_Knob('fog_mix', 'mix')
+        k.setValue(1)
+        _DepthFogControl.addKnob(k)
+        
+        # Insert depthfog nodes
         for i in self.bg_ch_nodes:
-            grade_node = nuke.nodes.Grade(black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', label='DepthFog', disable='{_DepthFogControl.fog_disable}')
+            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='DepthFog', disable='{_DepthFogControl.fog_disable}')
             insertNode(grade_node, i)
             depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
             depthkeyer_node.setInput(0, i)
@@ -270,6 +282,7 @@ class comp(object):
         
     def mergeMP(self):
         read_node = nuke.nodes.Read(file=self.mp)
+        read_node.setName('MP')
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
         insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
@@ -278,7 +291,12 @@ class comp(object):
         insertNode(nuke.nodes.Grade(), read_node)
         insertNode(nuke.nodes.Transform(), read_node)
         insertNode(nuke.nodes.Reformat(), read_node)
-     
+    
+    def renameReads(self):
+        for i in nuke.allNodes('Read'):
+            if i in self.node_tag_dict:
+                i.setName(self.node_tag_dict[i], updateExpressions=True)
+    
     def placeNodes(self):
         autoplaceAllNodes()
     
@@ -286,7 +304,7 @@ class comp(object):
         nuke.nodes.NoOp(label='[\npython {nuke.show(nuke.toNode(\'_ZDefocus\'))}\ndelete this\n]')
     
 
-class precomp(comp):
+class precomp(object):
     shot_pat = re.compile(r'^.+\\.+_sc[^_]+$', flags=re.I)
     footage_pat = re.compile(r'^.+_sc.+_.+\..+$', flags=re.I)
 

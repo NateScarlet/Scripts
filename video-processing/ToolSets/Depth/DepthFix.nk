@@ -4,12 +4,12 @@ push $cut_paste_input
 Group {
  name DepthFix1
  tile_color 0x823a7dff
- label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset by \"\[value this.by]\"\nset hasDepth \"\[value this.Switch1.which]\"\nif \{! \[value this.Switch1.which]\} \{\npython \{nuke.error('\{\}: 没有depth.Z通道'.format(nuke.thisNode().name()))\}\nreturn \"没有depth.Z\"\n\} else \{\nreturn \[format \"近点: %d\\n远点: %d\\n修复强度: %.1f\\n输出深度范围为:%.2f~%.2f\" \[value this.closepoint] \[value this.farpoint] \[value this.size] \[value this.minZ] \[value this.maxZ]]\n\}\nif \{\$by != \"none\"\} \{return \"(\[value this.by])\"\}\n]\n"
+ label "\[\nknob_default \[class this].maxZ 1\nknob_default \[class this].threshold 0.95\nknob_default \[class this].farpoint 1\nset hasDepth \[value this.Switch1.which]\nif \{! \$hasDepth\} \{\n    python \{nuke.error('\{\}: 没有\{\}通道'.format(nuke.thisNode().name(), nuke.thisNode()\['depth_channel'].value()))\}\n    return \[format \"没有%s\" \[value this.knob.depth_channel]]\n\} else \{\n    return \[format \"(%s)\\n近点: %d 远点: %d\\n修复强度: %.1f\\n输出:%.2f~%.2f\" \[value this.by] \[value this.closepoint] \[value this.farpoint] \[value this.size] \[value this.minZ] \[value this.maxZ]]\n\}\n]\n"
  note_font Verdana
  selected true
- xpos -104
- ypos -191
- addUserKnob {20 tab1 l DepthFix_v3.65}
+ xpos -19
+ ypos -227
+ addUserKnob {20 tab1 l DepthFix_v3.66}
  addUserKnob {41 depth_channel l "depth channel" T Copy2.from0}
  addUserKnob {7 closepoint}
  addUserKnob {7 farpoint}
@@ -38,8 +38,8 @@ Group {
   xpos 434
   ypos -702
  }
-set N3b36800 [stack 0]
-push $N3b36800
+set N3d00400 [stack 0]
+push $N3d00400
  Copy {
   inputs 2
   from0 depth.Z
@@ -64,7 +64,7 @@ push $N3b36800
   xpos 544
   ypos -606
  }
-set N34e69800 [stack 0]
+set N3d01800 [stack 0]
  Dot {
   name Dot1
   xpos 654
@@ -78,8 +78,8 @@ set N34e69800 [stack 0]
   xpos 620
   ypos -571
  }
-set N34f31800 [stack 0]
-push $N34f31800
+set N2ac17800 [stack 0]
+push $N2ac17800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -95,7 +95,7 @@ push $N34f31800
   xpos 654
   ypos -486
  }
-set N34f31000 [stack 0]
+set N2ac17000 [stack 0]
  Dot {
   name Dot17
   note_font 微软雅黑
@@ -116,7 +116,7 @@ set N34f31000 [stack 0]
   xpos 764
   ypos -246
  }
-push $N34f31000
+push $N2ac17000
  Dilate {
   channels depth
   size 2
@@ -146,7 +146,7 @@ push $N34f31000
   xpos 654
   ypos -294
  }
-push $N34e69800
+push $N3d01800
  ChannelMerge {
   inputs 2+1
   A depth.Z
@@ -182,7 +182,7 @@ push $N34e69800
   xpos 510
   ypos -109
  }
-set N382e7000 [stack 0]
+set N2ac6f800 [stack 0]
  Viewer {
   frame_range 100-100
   fps 25
@@ -192,17 +192,17 @@ set N382e7000 [stack 0]
   xpos 621
   ypos 60
  }
-push $N382e7000
+push $N2ac6f800
  Dot {
   name Dot4
   note_font 微软雅黑
   xpos 544
   ypos -54
  }
-push $N3b36800
+push $N3d00400
  Switch {
   inputs 2
-  which {{"\[string match *depth.Z* \[channels parent.Input]]\n"}}
+  which {{"\[string match *\[value parent.depth_channel]* \[channels parent.Input]]\n"}}
   name Switch1
   note_font 微软雅黑
   xpos 400
