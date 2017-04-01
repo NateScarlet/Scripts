@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.814
+# Version 0.815
 
 import nuke
 import os
@@ -214,7 +214,7 @@ class comp(object):
         
     def addZDefocus(self):
         for i in self.bg_ch_nodes:
-            zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200"} {return True} else {return False}]}}', selected=True )
+            zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200" || [value _ZDefocus.disable]} {return True} else {return False}]}}', selected=True )
             insertNode(zdefocus_node, i)
         return zdefocus_node
         
@@ -266,14 +266,13 @@ class comp(object):
         _DepthFogControl.addKnob(nuke.Text_Knob('颜色控制'))
         _DepthFogControl.addKnob(nuke.Color_Knob('fog_color', '雾颜色'))
         _DepthFogControl['fog_color'].setValue((0.009, 0.025133, 0.045))
-        _DepthFogControl.addKnob(nuke.Boolean_Knob('fog_disable', '禁用'))
         k = nuke.Double_Knob('fog_mix', 'mix')
         k.setValue(1)
         _DepthFogControl.addKnob(k)
         
         # Insert depthfog nodes
         for i in self.bg_ch_nodes:
-            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='DepthFog', disable='{_DepthFogControl.fog_disable}')
+            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='DepthFog', disable='{_DepthFogControl.disable}')
             insertNode(grade_node, i)
             depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
             depthkeyer_node.setInput(0, i)
