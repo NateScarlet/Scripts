@@ -6,9 +6,9 @@ Group {
  tile_color 0xbfbf00ff
  label "\[value root.project_directory]/\n\[subst \[python \{nuke.thisNode().node('Write_MOV_1')\['file'].value()\}]]\n\[subst \[python \{nuke.thisNode().node('Write_JPG_1')\['file'].value()\}]]\n\[\n# Keep single instance\nif \{\[value this.name] != \"_Write\"\} \{\n    \[delete this]\n\}\n\n# Set onScriptSave\nknob root.onScriptSave \{\n# Check project setting\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\n# Lock connections\nb = nuke.toNode('_Write');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\n# Move viewer frame\nif b and b\['is_jump_to_frame'].value():\n    nuke.frame(b\['frame'].value());\n    nuke.Root().setModified(False)\n\}\n\n# Set onScriptClose\nknob root.onScriptClose \{\n# Render single frame\nif not nuke.modified():\n    w = nuke.toNode('_Write.Write_JPG_1');\n    b = nuke.toNode('_Write');\n    if b and b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]"
  selected true
- xpos 400
- ypos 420
- addUserKnob {20 tab1 l Write_v4.43}
+ xpos 730
+ ypos 218
+ addUserKnob {20 tab1 l Write_v4.44}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
  addUserKnob {26 text1 l 保存时}
@@ -31,7 +31,7 @@ Group {
  addUserKnob {26 ""}
  addUserKnob {22 bt_render l 渲染MOV T "nukescripts.showRenderDialog(\[nuke.thisNode()], False)" +STARTLINE}
  addUserKnob {32 bt_render_JPG l 渲染单帧 -STARTLINE T "knob this.Write_JPG_1.disable 0\nexecute this.Write_JPG_1 \[value this.knob.frame]"}
- addUserKnob {22 bt_explorer l 浏览输出文件夹 -STARTLINE T "cmd = 'EXPLORER /select,\"' + os.path.normcase(nuke.value('root.project_directory')) + '\"\\\\images'\nos.system(cmd)"}
+ addUserKnob {22 bt_explorer l 浏览输出文件夹 -STARTLINE T "images_path = os.path.normcase(nuke.value('root.project_directory')) + '\\\\images'\nif os.path.exists(images_path):\n    cmd = 'EXPLORER /select,\"' + images_path + '\"'\n    os.system(cmd)\nelse:\n    nuke.message('输出路径不存在, 请先尝试渲染')"}
 }
  Read {
   inputs 0
@@ -74,7 +74,7 @@ Group {
   last {{first}}
   use_limit true
   checkHashOnRead false
-  version 66
+  version 67
   beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);\n            file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n"
   afterRender "global rsmbList;\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.thisNode()\['disable'].setValue(1);"
   name Write_JPG_1

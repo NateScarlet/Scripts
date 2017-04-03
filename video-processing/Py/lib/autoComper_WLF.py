@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.815
+# Version 0.817
 
 import nuke
 import os
@@ -68,6 +68,7 @@ class comp(object):
         self.mergeOCC()
         self.mergeShadow()
         self.mergeScreen()
+        self.addHueCorrect()
         self.addColorCorrect()
         self.addGrade()
         self.mergeDepth()
@@ -253,6 +254,12 @@ class comp(object):
             insertNode(colorcorrect_node, i)
         return colorcorrect_node
         
+    def addHueCorrect(self):
+        for i in self.bg_ch_nodes:
+            huecorrect_node = nuke.nodes.HueCorrect()
+            insertNode(huecorrect_node, i)
+        return huecorrect_node
+        
     def addDepthFog(self):
         # Add _DepthFogControl node
         node_color = 596044543
@@ -272,7 +279,7 @@ class comp(object):
         
         # Insert depthfog nodes
         for i in self.bg_ch_nodes:
-            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='DepthFog', disable='{_DepthFogControl.disable}')
+            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='深度雾\n由_DepthFogControl控制', disable='{_DepthFogControl.disable}')
             insertNode(grade_node, i)
             depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
             depthkeyer_node.setInput(0, i)
@@ -289,7 +296,7 @@ class comp(object):
         insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
         insertNode(nuke.nodes.Grade(), read_node)
         insertNode(nuke.nodes.Transform(), read_node)
-        insertNode(nuke.nodes.Reformat(), read_node)
+        insertNode(nuke.nodes.Reformat(resize="fill"), read_node)
     
     def renameReads(self):
         for i in nuke.allNodes('Read'):

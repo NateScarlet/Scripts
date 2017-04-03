@@ -2,6 +2,8 @@
 
 import nuke
 import os
+import colorsys
+import random
 
 def addMenu():
     menubar = nuke.menu( "Nuke" )
@@ -236,3 +238,11 @@ def getMinMax( srcNode, channel='depth.Z' ):
     for n in ( MinColor, MaxColor, Inv ):
         nuke.delete( n )
     return minV, maxV
+    
+def randomGlColor(n):
+    if 'gl_color' in list(i.name() for i in n.allKnobs()) and not n['gl_color'].value() and not n.name().startswith('_'):
+        color = colorsys.hsv_to_rgb(random.random(), 0.8, 1)
+        color = tuple(hex(int(i * 255))[2:] for i in color)
+        n['gl_color'].setValue(eval('0x{}{}{}{}'.format(color[0],color[1],color[2],'00')))
+    else:
+        return False
