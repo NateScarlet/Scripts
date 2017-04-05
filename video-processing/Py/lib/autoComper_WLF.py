@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.817
+# Version 0.819
 
 import nuke
 import os
@@ -11,7 +11,7 @@ import traceback
 
 fps = 25
 format = 'HD_1080'
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_ID':'ID_CH', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
 regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = 'Z:/SNJYW/MP/EP08/sky.jpg'
@@ -73,6 +73,7 @@ class comp(object):
         self.addGrade()
         self.mergeDepth()
         self.addReformat()
+        self.addDepth()
         self.add_ZDefocus()
         self.mergeMP()
         
@@ -110,6 +111,11 @@ class comp(object):
         '''
         Figure out node footage type
         '''
+        # Deal with footage that have no alpha
+        if not 'rgba.alpha' in n.channels():
+            return '_OTHER'
+            
+        # Try file name
         _filename = os.path.normcase(nuke.filename(n))
         _s = os.path.basename(_filename)
         _pat = re.compile(r'_sc.+?_([^.]+)')
@@ -247,6 +253,14 @@ class comp(object):
             insertNode(grade_node, i)
             print('')
         return grade_node
+        
+    def addDepth(self):
+        for i in self.bg_ch_nodes:
+            if 'depth.Z' not in i.channels():
+                print('addDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
+                constant_node = nuke.nodes.Constant(channels='depth', color=1, label='**用渲染出的depth层替换这个**\n或者手动指定数值')
+                merge_node = nuke.nodes.Merge2(inputs=[None, constant_node], also_merge='all', label='addDepth')
+                insertNode(merge_node, i)
 
     def addColorCorrect(self):
         for i in self.bg_ch_nodes:
@@ -373,9 +387,9 @@ class precomp(object):
                     frame = int(nuke.numvalue('_Write.knob.frame'))
                     nuke.execute(write_node, frame, frame)
             except FootageError:
-                error_list.append(shot)
+                error_list.append('[NO_FOOTAGE]' + shot)
             except:
-                error_list.append(shot)
+                error_list.append('[UNKOWN_ERROR]' + shot)
                 traceback.print_exc()
         info = '\nError list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
         print(info)
