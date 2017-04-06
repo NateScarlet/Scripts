@@ -1,10 +1,10 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # createContactSheet
-# Version 2.03
+# Version 2.05
 '''
 REM load py script from bat
-@ECHO OFF & CLS
+@ECHO OFF & CHCP 936 & CLS
 CHDIR /D %~dp0
 REM Read ini
 REM Won't support same variable name in diffrent block
@@ -16,7 +16,16 @@ FOR /F "usebackq eol=; tokens=1,* delims==" %%a IN ("%~dp0path.ini") DO (
 
 CALL :getPythonPath %NUKE%
 START "createContactSheet" %PYTHON% %0 %*
-GOTO :EOF
+IF %ERRORLEVEL% == 0 (
+    GOTO :EOF
+) ELSE (
+    ECHO.
+    ECHO **ERROR** - NUKE path in path.ini not Correct.
+    ECHO.
+    EXPLORER path.ini
+    PAUSE & GOTO :EOF
+)
+
 
 :getPythonPath
 SET "PYTHON="%~dp1python.exe""
@@ -58,7 +67,7 @@ except ImportError:
 
 
 # Startup
-VERSION = 2.01
+VERSION = 2.05
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 os.system(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec))
@@ -165,7 +174,7 @@ class createContactSheet(object):
             read_node = nuke.nodes.Read(file=self.image_dir + '/' + i)
             if read_node.hasError():
                 nuke.delete(read_node)
-                print_('不能读取:\t\t{}'.format(i))
+                print_('排除(不能读取):\t\t{}'.format(i))
             else:
                 self.read_nodes.append(read_node)
 
@@ -181,10 +190,11 @@ class createContactSheet(object):
             return False
 
     def getImageList(self, dir='images'):
-        file_list = list(i.decode(prompt_codec).encode(script_codec) for i in os.listdir(dir))
+        image_list = list(i.decode(prompt_codec).encode(script_codec) for i in os.listdir(dir))
+
+        if not image_list:
+            raise FootageError
         
-        image_filter = lambda str: any(str.endswith(i) for i in ['.jpg', '.png', '.mov'])
-        image_list = filter(image_filter, file_list)
         mtime = lambda file: os.stat(dir + '\\' + file.decode(script_codec). encode(prompt_codec)).st_mtime
         image_list.sort(key=mtime, reverse=True)
         
@@ -200,7 +210,7 @@ class createContactSheet(object):
                 image_list.remove(image)
                 print_('排除(较旧):\t\t{}'.format(image))
         image_list.sort()
-        print_('总计有效图像数量:\t{}'.format(len(image_list)))
+        print_('总计图像数量:\t\t{}'.format(len(image_list)))
         return image_list
     
     def mergeBackdrop(self):
@@ -267,6 +277,10 @@ def uploadContactSheet():
     print_('上传文件至:\t\t{}'.format(image_upload_path))
     subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', file_name, image_upload_path])
 
+class FootageError(Exception):
+    def __init__(self):
+        print_('\n**错误** - 在images文件夹中没有可用图像\n')
+
 # Main
 try:
     if isDownload:
@@ -278,6 +292,8 @@ try:
     choice = os.system(u'CHOICE /t 15 /d n /m "打开图像"'.encode(prompt_codec))
     if choice == 1:
         os.system(u'EXPLORER "{}"'.format(image).encode(prompt_codec))
+except FootageError:
+    os.system('PAUSE')
 except:
     import traceback
     traceback.print_exc()
