@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # createContactSheet
-# Version 2.05
+# Version 2.09
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -31,11 +31,16 @@ IF %ERRORLEVEL% == 0 (
 SET "PYTHON="%~dp1python.exe""
 GOTO :EOF
 '''
+if __name__ != '__main__':
+    print('This is a windows tool, need run from windows.')
+    exit()
+
 import os
 import sys
 import re
 import time
 import subprocess
+call = subprocess.call
 
 # Read ini
 os.chdir(os.path.dirname(__file__))
@@ -57,20 +62,24 @@ for line in ini_file.readlines():
         print('{}: {}'.format(var_name, var_value))
 print('')
 
+if EP:
+    EP = 'EP' + EP.lstrip('EP')
+
+# import nuke use ini
 try: 
     import nuke
 except ImportError:
     if not NUKE:
         NUKE = input('请输入正确的Nuke路径')
-    os.system('START "createContactSheet" {} -t {}'.format(NUKE, __file__))
+    call('START "createContactSheet" {} -t {}'.format(NUKE, __file__), shell=True)
     exit()
 
-
 # Startup
-VERSION = 2.05
+VERSION = 2.09
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
-os.system(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec))
+call(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
+
 
 # Define print for prompt
 def print_(obj):
@@ -95,11 +104,12 @@ else:
 print('')
 
 # Display choice
-print_('方案1:\t\t\t仅渲染单帧"{name}"\n'\
-       '方案2:\t\t\t渲染单帧并上传至: {upload_path}\n'\
+print_('方案1:\t\t\t仅渲染单帧"{name}"\n'
+       '方案2:\t\t\t渲染单帧并上传至: {upload_path}\n'
        '方案3:\t\t\t从{download_path}下载单帧然后渲染\n'
-       '方案4:\t\t\t从{download_path}下载单帧然后渲染并上传\n'.format(upload_path=image_upload_path, name=file_name, download_path=image_download_path))
-choice = os.system(u'CHOICE /C 1234 /T 15 /D 1 /M "选择方案"'.encode(prompt_codec))
+       '方案4:\t\t\t从{download_path}下载单帧然后渲染并上传\n'
+       '\nCtrl+C\t直接退出'.format(upload_path=image_upload_path, name=file_name, download_path=image_download_path))
+choice = call(u'CHOICE /C 1234 /T 15 /D 1 /M "选择方案"'.encode(prompt_codec))
 isUpload = False
 isDownload =False
 if choice == 1:
@@ -174,7 +184,7 @@ class createContactSheet(object):
             read_node = nuke.nodes.Read(file=self.image_dir + '/' + i)
             if read_node.hasError():
                 nuke.delete(read_node)
-                print_('排除(不能读取):\t\t{}'.format(i))
+                print_('排除:\t\t\t{} (不能读取)'.format(i))
             else:
                 self.read_nodes.append(read_node)
 
@@ -195,23 +205,25 @@ class createContactSheet(object):
         if not image_list:
             raise FootageError
         
+        # Exclude excess image
         mtime = lambda file: os.stat(dir + '\\' + file.decode(script_codec). encode(prompt_codec)).st_mtime
         image_list.sort(key=mtime, reverse=True)
-        
-        # Exclude excess image
         getShotName = lambda file_name : file_name.split('.')[0].lower()
-        shot_list = list(set(getShotName(i) for i in image_list))
+        shot_list = []
+        result = []
         for image in image_list:
             shot = getShotName(image)
             if shot in shot_list:
-                shot_list.remove(shot)
-                print_('包含:\t\t\t{}'.format(image))
+                print_('排除:\t\t\t{} (较旧)'.format(image))
             else:
-                image_list.remove(image)
-                print_('排除(较旧):\t\t{}'.format(image))
-        image_list.sort()
+                shot_list.append(shot)
+                print_('包含:\t\t\t{}'.format(image))
+                result.append(image)
+        result.sort()
         print_('总计图像数量:\t\t{}'.format(len(image_list)))
-        return image_list
+        print_('总计有效图像:\t\t{}'.format(len(result)))
+        print_('总计镜头数量:\t\t{}'.format(len(shot_list)))
+        return result
     
     def mergeBackdrop(self):
         merge_node = nuke.nodes.Merge2(inputs=[self.backdrop_read_node, self.contactsheet_node])
@@ -281,20 +293,45 @@ class FootageError(Exception):
     def __init__(self):
         print_('\n**错误** - 在images文件夹中没有可用图像\n')
 
+class nuke_chineselizer():
+    # TODO
+    def __enter__(self):
+        sys.stdout = self
+        
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        sys.stdout = sys.__stdout__
+        
+    def write(self, obj):
+        sys.__stdout__.write(self.translate(obj))
+        
+    def translate(self, obj):
+        translate_dict = {'Frame ': u'帧 ', 'done': u'已完成'}
+        if type(obj) == str and any(key in obj for key in translate_dict.keys()):
+            ret = obj
+            for key in translate_dict.keys():
+                ret = ret.replace(key, translate_dict[key])
+            ret = ret.encode(prompt_codec)
+            return ret
+        else:
+            return obj
 # Main
 try:
     if isDownload:
         downlowdImages()
+
     createContactSheet('images')
+
     if isUpload:
         uploadContactSheet()
+
     choice = None
-    choice = os.system(u'CHOICE /t 15 /d n /m "打开图像"'.encode(prompt_codec))
+    choice = call(u'CHOICE /t 15 /d n /m "打开图像"'.encode(prompt_codec))
     if choice == 1:
-        os.system(u'EXPLORER "{}"'.format(image).encode(prompt_codec))
+        call(u'EXPLORER "{}"'.format(image).encode(prompt_codec))
+
 except FootageError:
-    os.system('PAUSE')
+    call('PAUSE', shell=True)
 except:
     import traceback
     traceback.print_exc()
-    os.system('PAUSE')
+    call('PAUSE', shell=True)
