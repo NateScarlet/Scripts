@@ -40,7 +40,7 @@ import sys
 import re
 import time
 import subprocess
-call = subprocess.call
+from subprocess import call
 
 # Read ini
 os.chdir(os.path.dirname(__file__))
