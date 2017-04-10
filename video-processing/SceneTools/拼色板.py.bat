@@ -97,7 +97,7 @@ else:
     image_upload_path = None
 
 if EP and SCENE:
-        file_name = 'ContactSheet_{}_{}.jpg'.format(EP, SCENE)
+    file_name = 'ContactSheet_{}_{}.jpg'.format(EP, SCENE)
 else:
     file_name = 'ContactSheet_{}.jpg'.format(time.strftime('%y%m%d_%H%M'))
     print_('**提示**\t\tpath.ini中场集未设置, 将使用当前时间作为名称, 并且不能下载单帧')
