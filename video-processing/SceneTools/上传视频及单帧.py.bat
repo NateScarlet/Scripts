@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # uploadTool
-# Version 0.1
+# Version 0.11
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -62,7 +62,7 @@ if EP:
     EP = 'EP' + EP.lstrip('EP')
 
 # Startup
-VERSION = 0.1
+VERSION = 0.11
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP 936 & TITLE 上传工具_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -84,9 +84,9 @@ else:
 print('')
 
 # Display choice
-print_('方案1:\t\t\t上传mov至: {video_dest}\n'
+print_('方案1:\t\t\t上传视频至: {video_dest}\n'
        '方案2:\t\t\t上传单帧至: {image_dest}\n'
-       '方案3:\t\t\t上传mov和单帧(默认)\n'
+       '方案3:\t\t\t上传视频和单帧(默认)\n'
        '\nCtrl+C\t直接退出'.format(video_dest=video_dest, image_dest=image_dest))
        
 try:
@@ -130,7 +130,7 @@ try:
         uploadVideo()
     if isUploadImage:
         uploadImage()
-    choice = call(u'CHOICE /t 15 /d y /m "15秒后此窗口自动关闭"'.encode(prompt_codec))
+    choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
     if choice == 2:
         call('PAUSE', shell=True)
     else:
