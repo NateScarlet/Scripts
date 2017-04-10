@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.0
+# Version 2.02
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -70,7 +70,7 @@ def readINI(ini_file='path.ini'):
 readINI()
 
 # Startup
-VERSION = 2.0
+VERSION = 2.02
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP 936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -111,9 +111,17 @@ class nukeBatchRender(object):
             # lock file
             shutil.copyfile(file, locked_file)
             file_archive_folder = 'ArchivedRenderFiles\\' + render_time
+            file_archive_dest = '\\'.join[file_archive_folder, file]
             if not os.path.exists(file_archive_folder):
                 os.makedirs(file_archive_folder)
+            elif os.path.exists(file_archive_dest):
+                time_text = datetime.datetime.fromtimestamp(os.getctime(file_archive_dest)).strftime('%M%S')
+                os.rename(file_archive_dest, file + '.' + time_text)
+            else:
+                pass
             shutil.move(file, file_archive_folder)
+
+            # Render
             if isProxyRender:
                 proxy_switch = '-p'
             else:
