@@ -111,15 +111,13 @@ class nukeBatchRender(object):
             # lock file
             shutil.copyfile(file, locked_file)
             file_archive_folder = 'ArchivedRenderFiles\\' + render_time
-            file_archive_dest = '\\'.join[file_archive_folder, file]
+            file_archive_dest = '\\'.join([file_archive_folder, file])
             if not os.path.exists(file_archive_folder):
                 os.makedirs(file_archive_folder)
-            elif os.path.exists(file_archive_dest):
-                time_text = datetime.datetime.fromtimestamp(os.getctime(file_archive_dest)).strftime('%M%S')
-                os.rename(file_archive_dest, file + '.' + time_text)
-            else:
-                pass
-            shutil.move(file, file_archive_folder)
+            if os.path.exists(file_archive_dest):
+                time_text = datetime.datetime.fromtimestamp(os.path.getctime(file_archive_dest)).strftime('%M%S_%f')
+                os.rename(file_archive_dest, file_archive_dest + '.' + time_text)
+            shutil.move(file, file_archive_dest)
 
             # Render
             if isProxyRender:
