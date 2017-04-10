@@ -1,0 +1,2 @@
+^#Esc::
+ExitApp
