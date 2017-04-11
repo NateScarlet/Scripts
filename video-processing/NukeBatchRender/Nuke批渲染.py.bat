@@ -38,7 +38,8 @@ import logging.handlers
 import shutil
 import time
 import datetime
-from subprocess import call, Popen
+import io
+from subprocess import call, Popen, PIPE
 
 os.chdir(os.path.dirname(__file__))
 
@@ -128,10 +129,14 @@ class nukeBatchRender(object):
                 priority_swith = ''
             else:
                 priority_swith = '-c 8G --priority low'
-            returncode = call(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, '--cont', locked_file] if i), stderr=logfile)
+            proc = Popen(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, '--cont', locked_file] if i), stderr=PIPE)
+            returncode = proc.wait()
             if returncode:
                 logger.error(u'渲染出错')
                 os.rename(locked_file, file)
+            errvalue = proc.stderr.read()
+            if errvalue:
+                logger.error(errvalue)
             else:
                 os.remove(locked_file)
             end_time = datetime.datetime.now()
