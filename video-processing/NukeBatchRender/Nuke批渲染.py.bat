@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.02
+# Version 2.08
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -43,12 +43,46 @@ from subprocess import call, Popen, PIPE
 
 os.chdir(os.path.dirname(__file__))
 
-# Set logger
+# Startup
+VERSION = 2.08
+prompt_codec = 'gbk'
+script_codec = 'UTF-8'
+call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
+render_time = time.strftime('%y%m%d_%H%M')
 LOG_FILENAME = u'Nuke批渲染.log'
+
+# SingleInstance
+call(u'TASKKILL /FI "IMAGENAME eq 自动关闭崩溃提示.exe"'.encode(prompt_codec), stdout=PIPE, stderr=PIPE)
+time.sleep(0.1)
+if os.path.exists(LOG_FILENAME):
+    try:
+        new_name = LOG_FILENAME + render_time
+        os.rename(LOG_FILENAME, new_name)
+        os.rename(new_name, LOG_FILENAME)  
+    except WindowsError:
+        print('**提示** 已经在运行另一个渲染了, 可以直接添加新文件到此文件夹。不要运行多个。'.decode(script_codec).encode(prompt_codec))
+        call('PAUSE', shell=True)
+        exit()
+
+# Set logger
+
+# Rotate log
+if os.path.exists(LOG_FILENAME):
+    if os.stat(LOG_FILENAME).st_size > 10000:
+        logname = os.path.splitext(LOG_FILENAME)[0]
+        if os.path.exists(u'{}.{}.log'.format(logname, 5)):
+            os.remove(u'{}.{}.log'.format(logname, 5))
+        for i in range(5)[:0:-1]:
+            old_name = u'{}.{}.log'.format(logname, i)
+            new_name = u'{}.{}.log'.format(logname, i+1)
+            if os.path.exists(old_name):
+                os.rename(old_name, new_name)
+        os.rename(LOG_FILENAME, u'{}.{}.log'.format(logname, 1))
+
 logfile = open(LOG_FILENAME, 'a')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when='D', backupCount=7)
+handler = logging.FileHandler(LOG_FILENAME)
 formatter = logging.Formatter('[%(asctime)s]\t%(levelname)10s:\t%(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -70,13 +104,6 @@ def readINI(ini_file='path.ini'):
 
 readINI()
 
-# Startup
-VERSION = 2.02
-prompt_codec = 'gbk'
-script_codec = 'UTF-8'
-call(u'CHCP 936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
-render_time = time.strftime('%y%m%d_%H%M')
-
 # Define function
 
 def print_(obj):
@@ -85,9 +112,11 @@ def print_(obj):
 class nukeBatchRender(object):
     def __init__(self, dir=os.getcwd()):
         self.file_list = None
+        self.error_file_list = []
+        self.dir = dir
 
-    def getFileList(self, dir=os.getcwd()):
-        file_list = list(i for i in os.listdir(dir) if i.endswith('.nk'))
+    def getFileList(self):
+        file_list = list(i for i in os.listdir(self.dir) if i.endswith('.nk'))
         self.file_list = file_list
         if file_list:
             print_('将渲染以下文件:')
@@ -102,14 +131,14 @@ class nukeBatchRender(object):
         if not self.file_list:
             logger.warning(u'没有找到可渲染文件')
             return False
-        logger.info(u'<开始批渲染>')
+        logger.info('{:-^50s}'.format('<开始批渲染>'))
         for file in self.file_list:
             print_('## [{}/{}]\t{}'.format(self.file_list.index(file) + 1, len(self.file_list), file))
             start_time = datetime.datetime.now()
             logger.info(u'开始渲染:\t{}'.format(file))
             locked_file = file + '.lock'
             
-            # lock file
+            # Lock file
             shutil.copyfile(file, locked_file)
             file_archive_folder = 'ArchivedRenderFiles\\' + render_time
             file_archive_dest = '\\'.join([file_archive_folder, file])
@@ -117,7 +146,11 @@ class nukeBatchRender(object):
                 os.makedirs(file_archive_folder)
             if os.path.exists(file_archive_dest):
                 time_text = datetime.datetime.fromtimestamp(os.path.getctime(file_archive_dest)).strftime('%M%S_%f')
-                os.rename(file_archive_dest, file_archive_dest + '.' + time_text)
+                alt_file_archive_dest = file_archive_dest + '.' + time_text
+                if os.path.exists(alt_file_archive_dest):
+                    os.remove(file_archive_dest)
+                else:
+                    os.rename(file_archive_dest, alt_file_archive_dest)
             shutil.move(file, file_archive_dest)
 
             # Render
@@ -130,29 +163,59 @@ class nukeBatchRender(object):
             else:
                 priority_swith = '-c 8G --priority low'
             proc = Popen(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, '--cont', locked_file] if i), stderr=PIPE)
+
             returncode = proc.wait()
             if returncode:
-                logger.error(u'渲染出错')
-                os.rename(locked_file, file)
-            errvalue = proc.stderr.read()
-            if errvalue:
-                logger.error(errvalue)
+                self.error_file_list.append(file)
+                count = self.error_file_list.count(file)
+                logger.error('渲染出错:\t{},第{}次出错'.format(file, count))
+                if count >= 3:
+                    logger.error('渲染出错:\t{},连续渲染错误超过3次,不再进行重试。'.format(file))
+                elif os.path.exists(file):
+                    os.remove(locked_file)
+                else:
+                    os.rename(locked_file, file)
+                returncode_text = '退出码: {}'.format(returncode)
             else:
                 os.remove(locked_file)
+                returncode_text = '正常退出'
+
+            errvalue = proc.stderr.read()
+            if errvalue:
+                logger.error('Nuke详细报错内容:\n' + errvalue)
+
             end_time = datetime.datetime.now()
             total_seconds = (end_time-start_time).total_seconds()
             logger.info('总计耗时:\t{}'.format(secondsToStr(total_seconds)))
-            if returncode:
-                returncode_text = '退出码: {}'.format(returncode)
-            else:
-                returncode_text = '正常退出'
             logger.info('结束渲染:\t{}\t{}'.format(file, returncode_text))
         logger.info(u'<结束批渲染>')
-
+    
+    def checkLockFile(self):
+        locked_file = list(i for i in os.listdir(self.dir) if i.endswith('.nk.lock'))
+        if locked_file:
+            print_('**提示** 检测到上次未正常退出所遗留的.nk.lock文件, 将自动解锁') 
+            logger.info('检测到.nk.lock文件')
+            for file in locked_file:
+                unlocked_name = os.path.splitext(file)[0]
+                if not os.path.exists(unlocked_name):
+                    try:
+                        os.rename(file, unlocked_name)
+                        logger.info('解锁: {}'.format(file))
+                    except WindowsError:
+                        print_('**错误** 其他程序占用文件: {}'.format(file))
+                        logger.error('其他程序占用文件: {}'.format(file))
+                        call('PAUSE', shell=True)
+                        logger.info('<退出>')
+                        exit()   
+                else:
+                    os.remove(file)
+                    logger.info('因为有更新的文件, 移除: {}'.format(file))
+            print('')
+    
 def secondsToStr(seconds):
     ret = ''
-    hour = seconds // 3600
-    minute = seconds % 3600 // 60
+    hour = int(seconds // 3600)
+    minute = int(seconds % 3600 // 60)
     seconds = seconds % 60
     if hour:
         ret += '{}小时'.format(hour)
@@ -162,7 +225,9 @@ def secondsToStr(seconds):
     return ret
         
 # Display choice
-logger.info('<启动>')
+logger.info('{:-^100s}'.format('<启动>'))
+BatchRender = nukeBatchRender()
+BatchRender.checkLockFile()
 if not nukeBatchRender().getFileList():
     print_('**警告** 没有可渲染文件')
     logger.info(u'用户尝试在没有可渲染文件的情况下运行')
@@ -206,30 +271,36 @@ else:
 # Main
 try:
     autoclose = Popen(u'自动关闭崩溃提示.exe'.encode(prompt_codec))
-    BatchRender = nukeBatchRender()
+
     while BatchRender.getFileList():
         BatchRender.render(isProxyRender, isLowPriority)
+
     if os.path.exists('afterRender.bat'):
-        call('cmd /c afterRender.bat')
-    autoclose.kill()
-    Popen('EXPLORER {}'.format(LOG_FILENAME.encode(prompt_codec)))
+        call('afterRender.bat')
+
     if isHibernate:
         choice = call(u'CHOICE /t 15 /d y /m "即将自动休眠"'.encode(prompt_codec))
         if choice == 2:
             call('PAUSE', shell=True)
         else:
             logger.info('计算机进入休眠模式')
+            print_('[{}]\t计算机进入休眠模式',format(time.strftime('%H:%M:%S')))
             call(['SHUTDOWN', '/h'])
             call('PAUSE', shell=True)
     else:
         choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
         if choice == 2:
             call('PAUSE', shell=True)
+
     logger.info('<退出>')
     exit()
 except SystemExit as e:
+    Popen('EXPLORER {}'.format(LOG_FILENAME.encode(prompt_codec)))
+    autoclose.kill()
     exit(e)
 except:
     import traceback
     traceback.print_exc()
     call('PAUSE', shell=True)
+    logger.error('本程序报错')
+    traceback.print_exc(file=logfile)

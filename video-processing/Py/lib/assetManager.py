@@ -126,15 +126,29 @@ def checkDropFrames():
     showDropFrames()
     return
     
+def addDropDataCallBack():
+    nukescripts.addDropDataCallback(DropDataCallBack_fbx)
+    nukescripts.addDropDataCallback(DropDataCallBack_vf)
+
 def DropDataCallBack_fbx(type, data):
     # Only deal with nonstyle text
     if type != 'text/plain':
         return None
     # Only deal with fbx
     if data.endswith('.fbx'):
-        # Create camera node
-        camera_node = nuke.nodes.Camera2(read_from_file=True, file=data, frame_rate=25, suppress_dialog=True, label='导入的摄像机：\n[basename [value file]]\n注意选择file -> node name')
+        camera_node = nuke.createNode('Camera2', 'read_from_file True file {data} frame_rate 25 suppress_dialog True label {{导入的摄像机：\n[basename [value file]]\n注意选择file -> node name}}'.format(data=data))
         camera_node.setName('Camera_3DEnv_1')
+        return True
+    else:
+        return None
+
+def DropDataCallBack_vf(type, data):
+    # Only deal with nonstyle text
+    if type != 'text/plain':
+        return None
+    # Only deal with vf
+    if data.endswith('.vf'):
+        nuke.createNode('Vectorfield', 'vfield_file "{data}" file_type vf label {{[value this.vfield_file]}}'.format(data=data))
         return True
     else:
         return None

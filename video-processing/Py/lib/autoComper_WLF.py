@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.819
+# Version 0.820
 
 import nuke
 import os
@@ -190,8 +190,10 @@ class comp(object):
     def mergeScreen(self):
         try:
             for i in self.getNodesByTag('FOG'):
+                reformat_node = nuke.nodes.Reformat()
                 merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='screen', label=self.node_tag_dict[i])
                 insertNode(merge_node, self.bg_node)
+                insertNode(reformat_node, i)
         except IndexError:
             return False
 
