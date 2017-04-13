@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.08
+# Version 2.11
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.08
+VERSION = 2.11
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -162,9 +162,20 @@ class nukeBatchRender(object):
                 priority_swith = ''
             else:
                 priority_swith = '-c 8G --priority low'
-            proc = Popen(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, '--cont', locked_file] if i), stderr=PIPE)
+            if isCont:
+                cont_switch = '--cont'
+            else:
+                cont_switch = ''
+                
+            proc = Popen(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, cont_switch, locked_file] if i), stderr=PIPE)
+            
+            while proc.poll() == None:
+                strerr_data = proc.stderr.readline()
+                if strerr_data:
+                    sys.stderr.write(strerr_data)
+                    logger.error(self.getErrorValue(strerr_data))
 
-            returncode = proc.wait()
+            returncode = proc.returncode
             if returncode:
                 self.error_file_list.append(file)
                 count = self.error_file_list.count(file)
@@ -179,10 +190,6 @@ class nukeBatchRender(object):
             else:
                 os.remove(locked_file)
                 returncode_text = '正常退出'
-
-            errvalue = proc.stderr.read()
-            if errvalue:
-                logger.error('Nuke详细报错内容:\n' + errvalue)
 
             end_time = datetime.datetime.now()
             total_seconds = (end_time-start_time).total_seconds()
@@ -212,6 +219,15 @@ class nukeBatchRender(object):
                     logger.info('因为有更新的文件, 移除: {}'.format(file))
             print('')
     
+    def getErrorValue(self, str):
+        ret = str.strip('\r\n')
+        ret = ret.replace('Read error: No such file or directory', '读取错误: 找不到文件或路径')
+        ret = ret.replace('Missing input channel', '输入通道丢失')
+        match = re.match(r'\[.*\] ERROR: (.*)', ret)
+        if match:
+            ret = match.group(1)
+        return ret
+    
 def secondsToStr(seconds):
     ret = ''
     hour = int(seconds // 3600)
@@ -238,10 +254,10 @@ if not nukeBatchRender().getFileList():
 if os.path.exists('afterRender.bat'):
     print_('**提示** 将在渲染完成后自动运行afterRender.bat\n')
     
-print_('方案1:\t\t\t制作模式(渲染时尽量保证其他程序流畅)(默认)\n'
-       '方案2:\t\t\t午间模式(使用所有资源渲染, 其他程序可能会卡)\n'
-       '方案3:\t\t\t夜间模式(全速渲染完后休眠)\n'
-       '方案4:\t\t\t代理模式(流畅渲染小尺寸视频)\n'
+print_('方案1:\t\t\t制作模式(默认) - 流畅, 出错直接跳过\n'
+       '方案2:\t\t\t午间模式 - 全速, 出错继续渲\n'
+       '方案3:\t\t\t夜间模式 - 全速, 出错继续渲, 完成后休眠\n'
+       '方案4:\t\t\t代理模式 - 流畅, 出错继续渲, 输出代理尺寸\n'
        '\nCtrl+C\t直接退出\n')
        
 try:
@@ -253,15 +269,19 @@ print('')
 isLowPriority = False
 isHibernate = False
 isProxyRender = False
+isCont = False
 if choice == 1:
     isLowPriority = True
     logger.info('用户选择:\t制作模式')
 elif choice == 2:
+    isCont = True
     logger.info('用户选择:\t午间模式')
 elif choice == 3:
+    isCont = True
     isHibernate = True
     logger.info('用户选择:\t夜间模式')
 elif choice == 4:
+    isCont = True
     isProxyRender = True
     isLowPriority = True
     logger.info('用户选择:\t代理模式')
@@ -270,7 +290,9 @@ else:
 
 # Main
 try:
-    autoclose = Popen(u'自动关闭崩溃提示.exe'.encode(prompt_codec))
+    autoclose = None
+    if os.path.exists(u'自动关闭崩溃提示.exe'.encode(prompt_codec)):
+        autoclose = Popen(u'自动关闭崩溃提示.exe'.encode(prompt_codec))
 
     while BatchRender.getFileList():
         BatchRender.render(isProxyRender, isLowPriority)
@@ -296,7 +318,8 @@ try:
     exit()
 except SystemExit as e:
     Popen('EXPLORER {}'.format(LOG_FILENAME.encode(prompt_codec)))
-    autoclose.kill()
+    if autoclose:
+        autoclose.kill()
     exit(e)
 except:
     import traceback

@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.820
+# Version 0.821
 
 import nuke
 import os
@@ -277,8 +277,9 @@ class comp(object):
         return huecorrect_node
         
     def addDepthFog(self):
-        # Add _DepthFogControl node
         node_color = 596044543
+
+        # Add _DepthFogControl node
         _DepthFogControl = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
         _DepthFogControl.setInput(0, self.last_output)
         _DepthFogControl.setName('_DepthFogControl')
@@ -295,18 +296,31 @@ class comp(object):
         
         # Insert depthfog nodes
         for i in self.bg_ch_nodes:
-            grade_node = nuke.nodes.Grade(tile_color=node_color, black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}', label='深度雾\n由_DepthFogControl控制', disable='{_DepthFogControl.disable}')
-            insertNode(grade_node, i)
+            group_node = nuke.nodes.Group(tile_color=node_color, label='深度雾\n由_DepthFogControl控制', disable='{_DepthFogControl.disable}')
+            group_node.setName('DepthFog1')
+            group_node.begin()
+
+            input = nuke.nodes.Input(name='Input')
+
             depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
-            depthkeyer_node.setInput(0, i)
+            depthkeyer_node.setInput(0, input)
             depthkeyer_node['range'].setExpression('_DepthFogControl.range')
-            grade_node.setInput(1, depthkeyer_node)
+
+            grade_node = nuke.nodes.Grade(inputs=[input, depthkeyer_node], black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}')
+
+            output = nuke.nodes.Output(inputs=[grade_node])
+
+            group_node.end()
+
+            insertNode(group_node, i)
         
     def mergeMP(self):
         read_node = nuke.nodes.Read(file=self.mp)
         read_node.setName('MP')
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
+
+        insertNode(nuke.nodes.Defocus(disable=True), read_node)
         insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
         insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
