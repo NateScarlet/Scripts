@@ -1,13 +1,14 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.821
+# Version 0.822
 
 import nuke
 import os
 import re
 import sys
 import traceback
+from subprocess import call
 
 fps = 25
 format = 'HD_1080'
@@ -15,6 +16,11 @@ tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_ID':'ID_CH', 'CH_SD
 regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
+prompt_codec = 'GBK'
+script_codec = 'UTF-8'
+
+def print_(obj):
+    print(str(obj).decode(script_codec).encode(prompt_codec))
 
 class comp(object):
 
@@ -35,7 +41,7 @@ class comp(object):
             self.node_tag_dict[i] = tag
             self.tag_node_dict[tag] = i
         if not self.node_tag_dict:
-            nuke.message('请先将素材拖入Nuke')
+            nuke.message(u'请先将素材拖入Nuke')
             raise FootageError
 
         # Get bg_node
@@ -374,8 +380,9 @@ class precomp(object):
     def main(self):
         error_list = []
         shots_number = len(self.shot_list)
-        print('All Shot:\n{0}\nNumber of shot:\t{1}'.format('\n'.join(self.shot_list), shots_number))
-        os.system('PAUSE')
+        print_('全部镜头:\n{0}\n总计:\t{1}'.format('\n'.join(self.shot_list), shots_number))
+        call('PAUSE', shell=True)
+        print('')
         count = 0
         for shot_dir in self.shot_list:
             try:
@@ -391,7 +398,7 @@ class precomp(object):
 
                 # Save nk
                 nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
-                print('Save to:\n\t\t\t{}\n'.format(nk_filename))
+                print_('保存为:\n\t\t\t{}\n'.format(nk_filename))
                 nuke.Root()['name'].setValue(nk_filename)
                 nuke.scriptSave(nk_filename)
 
@@ -401,20 +408,28 @@ class precomp(object):
                     write_node = write_node.node('Write_JPG_1')
                     write_node['disable'].setValue(False)
                     frame = int(nuke.numvalue('_Write.knob.frame'))
-                    nuke.execute(write_node, frame, frame)
+                    try:
+                        nuke.execute(write_node, frame, frame)
+                    except RuntimeError:
+                        try: nuke.execute(write_node, write_node.firstFrame(), write_node.firstFrame())
+                        except RuntimeError:
+                            try:
+                                nuke.execute(write_node, write_node.lastFrame(), write_node.lastFrame())
+                            except RuntimeError:
+                                error_list.append('{}:\t渲染出错'.format(shot))
             except FootageError:
-                error_list.append('[NO_FOOTAGE]' + shot)
+                error_list.append('{}:\t没有素材'.format(shot))
             except:
-                error_list.append('[UNKOWN_ERROR]' + shot)
+                error_list.append('{}:\t未知错误'.format(shot))
                 traceback.print_exc()
-        info = '\nError list:\n{}\nNumber of error:\t{}'.format('\n'.join(error_list), len(error_list))
-        print(info)
-        os.system('PAUSE')
+        info = '\n错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
+        print_(info)
+        call('PAUSE', shell=True)
             
     def importFootage(self, shot_dir):
         # Get all subdir
         dirs = [x[0] for x in os.walk(shot_dir)]
-        print('Import footages:')
+        print_('导入素材:')
         for d in dirs:
             # Get footage in subdir
             footages = nuke.getFileNameList(d)
@@ -430,7 +445,7 @@ class precomp(object):
 
 class FootageError(Exception):
     def __init__(self):
-        print("**ERROR** - FOOTAGE NOT FOUND")
+        print_("**错误** - 没有找到素材")
                     
 def addMenu():
     m = nuke.menu("Nodes")
@@ -447,7 +462,7 @@ def precompDialog():
 
     # Show panel
     p.show()
-    cmd = 'START "precomp" "' + nuke.env['ExecutablePath'] + '" -t "' + os.path.normcase(__file__).rstrip('c') + '" "' + p.value('存放素材的文件夹') + '" "' + p.value('存放至') + '" "' + p.value('指定MP') + '"'
+    cmd = 'START "precomp" "{nuke}" -t "{script}" "{footage_path}" "{save_path}" "{mp}"'.format(nuke=nuke.env['ExecutablePath'], script=os.path.normcase(__file__).rstrip('c'), footage_path=p.value('存放素材的文件夹'), save_path=p.value('存放至'), mp=p.value('指定MP'))
     print(cmd)
     if os.path.exists(p.value('存放素材的文件夹')):
         os.popen(cmd)
@@ -485,16 +500,22 @@ def getMax( n, channel='depth.Z' ):
     @parm channel: channel for sample
     '''
     # Get middle_frame
-    middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2 
+    middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2
     
     # Create nodes
     invert_node = nuke.nodes.Invert( channels=channel, inputs=[n])
     mincolor_node = nuke.nodes.MinColor( channels=channel, target=0, inputs=[invert_node] )
     
     # Execute
-    nuke.execute( mincolor_node, middle_frame, middle_frame )
-    max_value = mincolor_node['pixeldelta'].value() + 1
-    
+    try:
+        nuke.execute( mincolor_node, middle_frame, middle_frame )
+        max_value = mincolor_node['pixeldelta'].value() + 1
+    except RuntimeError, e:
+        if 'Read error:' in str(e):
+            max_value = -1
+        else:
+            raise RuntimeError, e
+            
     # Avoid dark frame
     if max_value < 0.7:
         nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
@@ -513,14 +534,15 @@ def getMax( n, channel='depth.Z' ):
     return max_value
 
 # Deal call with argv
-
 if len(sys.argv) == 4 and __name__ == '__main__':
-    print('-Run precomp-')
+    call(u'CHCP cp936 & TITLE 批量预合成_吾立方 & CLS'.encode(prompt_codec), shell=True)
+    print_('{:-^50s}'.format('确认设置'))
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
-    print('Footage:\t{}\nSave to:\t{}\nMP:\t\t{}'.format(argv[1], argv[2], argv[3]))
+    print_('素材路径:\t{}\n保存路径:\t{}\nMP:\t\t{}'.format(argv[1], argv[2], argv[3]))
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
         print('Created:\t{}'.format(argv[2]))
-    os.system('PAUSE')
+    call('PAUSE', shell=True)
+    print('')
     precomp(argv[1], argv[2], argv[3])
-    os.system( 'EXPLORER "' + argv[2] + '"')
+    call('EXPLORER "' + argv[2] + '"')
