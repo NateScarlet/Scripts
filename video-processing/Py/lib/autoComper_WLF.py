@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.822
+# Version 0.83
 
 import nuke
 import os
@@ -9,6 +9,7 @@ import re
 import sys
 import traceback
 from subprocess import call
+import time
 
 fps = 25
 format = 'HD_1080'
@@ -381,8 +382,12 @@ class precomp(object):
         error_list = []
         shots_number = len(self.shot_list)
         print_('全部镜头:\n{0}\n总计:\t{1}'.format('\n'.join(self.shot_list), shots_number))
-        call('PAUSE', shell=True)
         print('')
+        for i in range(5)[::-1]:
+            sys.stdout.write('\r\r{:2d}'.format(i+1))
+            time.sleep(1)
+        sys.stdout.write('\r          ')
+        
         count = 0
         for shot_dir in self.shot_list:
             try:
@@ -422,9 +427,16 @@ class precomp(object):
             except:
                 error_list.append('{}:\t未知错误'.format(shot))
                 traceback.print_exc()
-        info = '\n错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
+        info = '错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
+        print('')
         print_(info)
-        call('PAUSE', shell=True)
+        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(prompt_codec), 'w') as log:
+            log.write(info)
+        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(prompt_codec)
+        call(cmd)
+        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
+        if choice == 2:
+            call('PAUSE', shell=True)
             
     def importFootage(self, shot_dir):
         # Get all subdir
@@ -542,7 +554,10 @@ if len(sys.argv) == 4 and __name__ == '__main__':
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
         print('Created:\t{}'.format(argv[2]))
-    call('PAUSE', shell=True)
+    print('')
+    for i in range(5)[::-1]:
+        sys.stdout.write('\r\r{:2d}'.format(i+1))
+        time.sleep(1)
+    sys.stdout.write('\r          ')
     print('')
     precomp(argv[1], argv[2], argv[3])
-    call('EXPLORER "' + argv[2] + '"')
