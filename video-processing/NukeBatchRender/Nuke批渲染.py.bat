@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.11
+# Version 2.12
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.11
+VERSION = 2.12
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -104,11 +104,14 @@ def readINI(ini_file='path.ini'):
 
 readINI()
 
-# Define function
+# Define functions
 
 def print_(obj):
     print(str(obj).decode(script_codec).encode(prompt_codec))
 
+def pause():
+    call('PAUSE', shell=True)
+    
 class nukeBatchRender(object):
     def __init__(self, dir=os.getcwd()):
         self.file_list = None
@@ -211,7 +214,7 @@ class nukeBatchRender(object):
                     except WindowsError:
                         print_('**错误** 其他程序占用文件: {}'.format(file))
                         logger.error('其他程序占用文件: {}'.format(file))
-                        call('PAUSE', shell=True)
+                        pause()
                         logger.info('<退出>')
                         exit()   
                 else:
@@ -247,7 +250,7 @@ BatchRender.checkLockFile()
 if not nukeBatchRender().getFileList():
     print_('**警告** 没有可渲染文件')
     logger.info(u'用户尝试在没有可渲染文件的情况下运行')
-    call('PAUSE', shell=True)
+    pause()
     logger.info('<退出>')
     exit()
 
@@ -303,16 +306,15 @@ try:
     if isHibernate:
         choice = call(u'CHOICE /t 15 /d y /m "即将自动休眠"'.encode(prompt_codec))
         if choice == 2:
-            call('PAUSE', shell=True)
+            pause()
         else:
-            logger.info('计算机进入休眠模式')
-            print_('[{}]\t计算机进入休眠模式',format(time.strftime('%H:%M:%S')))
+            logger.info('<计算机进入休眠模式>')
+            print_('[{}]\t计算机进入休眠模式'.format(time.strftime('%H:%M:%S')))
             call(['SHUTDOWN', '/h'])
-            call('PAUSE', shell=True)
     else:
         choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
         if choice == 2:
-            call('PAUSE', shell=True)
+            pause()
 
     logger.info('<退出>')
     exit()
@@ -324,6 +326,6 @@ except SystemExit as e:
 except:
     import traceback
     traceback.print_exc()
-    call('PAUSE', shell=True)
+    pause()
     logger.error('本程序报错')
     traceback.print_exc(file=logfile)
