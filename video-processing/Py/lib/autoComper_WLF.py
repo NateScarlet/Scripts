@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.83
+# Version 0.832
 
 import nuke
 import os
@@ -99,20 +99,28 @@ class comp(object):
             nuke.Root()['project_directory'].setValue('[python {nuke.script_directory()}]')
         nuke.Root()['fps'].setValue(fps)
         nuke.Root()['format'].setValue(format)
+        
+        self.connectViewer()
+        
+        self.placeNodes()
+        zoomToFitAll()
 
-        # Connect viewer
+        self.showPanels()
+
+    def connectViewer(self):
         if nuke.env['gui']:
             _Write = nuke.toNode('_Write')
             if _Write:
                 nuke.connectViewer(3, _Write)
             nuke.connectViewer(1, self.last_output)
-        
-        # Place node
-        self.placeNodes()
-        zoomToFitAll()
-
-        # Show pannel
-        self.showPanels()
+        else:
+            viewer_node = nuke.toNode('Viewer1')
+            if not viewer_node:
+                viewer_node = nuke.nodes.Viewer()
+            _Write = nuke.toNode('_Write')
+            if _Write:
+                viewer_node.connectInput(3, _Write)
+            viewer_node.connectInput(1, self.last_output)
         
     def getFootageTag(self, n):
         '''
@@ -198,8 +206,14 @@ class comp(object):
         try:
             for i in self.getNodesByTag('FOG'):
                 reformat_node = nuke.nodes.Reformat()
-                merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='screen', label=self.node_tag_dict[i])
-                insertNode(merge_node, self.bg_node)
+                for j in self.bg_ch_nodes:
+                    if j == self.bg_node:
+                        merge_disable = False
+                    else:
+                        merge_disable = True
+                    merge_node = nuke.nodes.Merge2(inputs=[None, i], operation='screen', maskChannelInput='rgba.alpha', label=self.node_tag_dict[i], disable=merge_disable)
+                    insertNode(merge_node, j)
+                insertNode(nuke.nodes.Dot(), i)
                 insertNode(reformat_node, i)
         except IndexError:
             return False
@@ -326,14 +340,18 @@ class comp(object):
         read_node.setName('MP')
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
-
+        
+        mp_width , mp_height = read_node.width(), read_node.height()
+        root_width, root_height = nuke.Root().width(), nuke.Root().height()
+        transform_scale = float(min(root_width, root_height)) / float(min(mp_width, mp_height))
+        
         insertNode(nuke.nodes.Defocus(disable=True), read_node)
         insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
         insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
-        insertNode(nuke.nodes.Grade(), read_node)
-        insertNode(nuke.nodes.Transform(), read_node)
-        insertNode(nuke.nodes.Reformat(resize="fill"), read_node)
+        insertNode(nuke.nodes.ColorCorrect(), read_node)
+        insertNode(nuke.nodes.Reformat(resize='none'), read_node)
+        insertNode(nuke.nodes.Transform(scale=transform_scale, center='{} {}'.format(mp_width / 2.0, mp_height / 2.0), label='**在此调整MP位置**'), read_node)
     
     def renameReads(self):
         for i in nuke.allNodes('Read'):

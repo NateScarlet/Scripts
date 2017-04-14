@@ -170,7 +170,7 @@ def deleteAllUnusedNodes():
         
 def isUsed(n):
     
-    if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Write', 'Viewer']:
+    if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Write', 'Viewer', 'GenerateLUT']:
         return True
     else:
         # Deal with dependent list  
