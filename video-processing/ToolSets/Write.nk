@@ -6,9 +6,9 @@ Group {
  tile_color 0xbfbf00ff
  label "\[value root.project_directory]/\n\[subst \[python \{nuke.thisNode().node('Write_MOV_1')\['file'].value()\}]]\n\[subst \[python \{nuke.thisNode().node('Write_JPG_1')\['file'].value()\}]]\n\[\n# Keep single instance\nif \{\[value this.name] != \"_Write\"\} \{\n    \[delete this]\n\}\n\n# Set onScriptSave\nknob root.onScriptSave \{\n# Check project setting\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\n# Lock connections\nb = nuke.toNode('_Write');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\n# Move viewer frame\nif b and b\['is_jump_to_frame'].value():\n    nuke.frame(b\['frame'].value());\n    nuke.Root().setModified(False)\n\}\n\n# Set onScriptClose\nknob root.onScriptClose \{\n# Render single frame\nif not nuke.modified():\n    w = nuke.toNode('_Write.Write_JPG_1');\n    b = nuke.toNode('_Write');\n    if b and b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]"
  selected true
- xpos 730
- ypos 218
- addUserKnob {20 tab1 l Write_v4.44}
+ xpos -76
+ ypos -186
+ addUserKnob {20 tab1 l Write_v4.45}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
  addUserKnob {26 text1 l 保存时}
@@ -24,9 +24,9 @@ Group {
  custom_frame 1
  addUserKnob {3 frame l INVISIBLE +INVISIBLE}
  frame {{"\[python -execlocal first,\\ last\\ =\\ nuke.numvalue('root.first_frame'),\\ nuke.numvalue('root.last_frame')\\nmiddle\\ =\\ (first\\ +\\ last)//2\\nthisNode\\ =\\ nuke.thisNode()\\nif\\ thisNode\\\['use_custom_frame'\\].value()\\ :\\n\\ \\ \\ \\ ret\\ =\\ thisNode\\\['custom_frame'\\].value()\\nelse:\\n\\ \\ \\ \\ ret\\ =\\ middle]"}}
- addUserKnob {32 bt_first l 首帧 -STARTLINE T "knob use_custom_frame 1\nknob custom_frame \[value root.first_frame] "}
- addUserKnob {32 bt_middle l 中间帧(默认) -STARTLINE T "knob this.use_custom_frame 0"}
- addUserKnob {32 bt_last l 末帧 -STARTLINE T "knob use_custom_frame 1\nknob custom_frame \[value root.last_frame] "}
+ addUserKnob {32 bt_first l 首帧 -STARTLINE T "set first_frame \[value root.first_frame] \nknob use_custom_frame 1\nknob custom_frame \$first_frame\nframe \$first_frame"}
+ addUserKnob {32 bt_middle l 中间帧(默认) -STARTLINE T "knob this.use_custom_frame 0\nframe \[value this.knob.frame]"}
+ addUserKnob {32 bt_last l 末帧 -STARTLINE T "set last_frame \[value root.last_frame] \nknob use_custom_frame 1\nknob custom_frame \$last_frame\nframe \$last_frame"}
  addUserKnob {41 reload -STARTLINE T ReadWrite_JPG_.reload}
  addUserKnob {26 ""}
  addUserKnob {22 bt_render l 渲染MOV T "nukescripts.showRenderDialog(\[nuke.thisNode()], False)" +STARTLINE}
@@ -41,8 +41,8 @@ Group {
   origset true
   version 31
   name ReadWrite_JPG_
+  gl_color 0xb032ff00
   label "输出的单帧\n第 \[value first] 帧"
-  selected true
   xpos 400
   ypos -304
   disable {{"! \[file exist \[value this.file]]"}}
@@ -50,17 +50,20 @@ Group {
  FrameHold {
   first_frame {{parent.knob.frame}}
   name FrameHold1
+  gl_color 0x32aaff00
   xpos 400
   ypos -152
  }
  Dot {
   name Dot2
+  gl_color 0x32ebff00
   xpos 434
   ypos 114
  }
  Input {
   inputs 0
   name Input
+  gl_color 0x4dff3200
   xpos 290
   ypos -418
  }
@@ -74,11 +77,13 @@ Group {
   last {{first}}
   use_limit true
   checkHashOnRead false
-  version 67
-  beforeRender "# Turn off RSMB and CameraShake;\nglobal rsmbList;\nrsmbList = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        if not i\['disable'].value():\n            rsmbList.append(i);\n            i\['disable'].setValue(1);\n            file = nuke.tcl('eval list \{'+nuke.thisNode()\[\"file\"].value()+'\}');\n"
-  afterRender "global rsmbList;\nfor i in rsmbList:\n    if 'rsmb' in i.Class() or 'CameraShake' in i.Class():\n        i\['disable'].setValue(0);\nrsmbList = \[];\nnuke.thisNode()\['disable'].setValue(1);"
+  version 72
+  beforeRender "# Turn off blur effect nodes;\nglobal nodes_with_blur_effect;\nnodes_with_blur_effect = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if any(key for key in \['rsmb', 'CameraShake', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1'] if key in i.Class()):\n        if not i\['disable'].value():\n            nodes_with_blur_effect.append(i);\n            i\['disable'].setValue(1);\n"
+  afterRender "global nodes_with_blur_effect;\nfor i in nodes_with_blur_effect:\n    if any(key for key in \['rsmb', 'CameraShake', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1'] if key in i.Class()):\n        i\['disable'].setValue(0);\nnodes_with_blur_effect = \[];\nnuke.thisNode()\['disable'].setValue(1);"
   name Write_JPG_1
+  gl_color 0xbf32ff00
   label "单帧\n会在退出脚本时自动输出"
+  selected true
   xpos 290
   ypos -252
   disable true
@@ -109,6 +114,7 @@ Group {
   out_colorspace linear
   beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
   name Write_MOV_1
+  gl_color 0xbc32ff00
   xpos 290
   ypos -167
   addUserKnob {20 caravr l CaraVR}
@@ -143,6 +149,7 @@ Group {
   background_opacity 0.3
   background_border_x 20
   name Text2_Write_2
+  gl_color 0x3235ff00
   label "镜头名称\n\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
   xpos 290
   ypos -91
@@ -176,6 +183,7 @@ Group {
   background_opacity 0.3
   background_border_x 20
   name Text2_Write_1
+  gl_color 0x5bff3200
   label "帧编号\n\[knob this.message \{\[x]\}]"
   xpos 290
   ypos -43
@@ -204,6 +212,7 @@ Group {
   out_colorspace linear
   beforeRender "# Create output folder;\ndef mkOutputFolder(knob):\n    if not nuke.Root()\['project_directory'].value():\n        nuke.error('工程目录未设置');\n        nuke.cancel();\n    file = nuke.tcl('eval list \{'+knob.value()+'\}');\n    absolutePath = os.path.splitdrive(file)\[0];\n    project_directory = nuke.tcl('eval list \{'+nuke.root()\[\"project_directory\"].value()+'\}');\n    pathHead = '' if absolutePath else project_directory+'/';\n    target = pathHead+os.path.dirname(file)\n    if os.path.exists(target):\n        pass;\n    else:\n        os.makedirs(target);\n#\nmkOutputFolder(nuke.thisNode()\[\"file\"]);\nmkOutputFolder(nuke.thisNode()\[\"proxy\"]);"
   name Write_MOV_2
+  gl_color 0x32ff4100
   label 带帧编号的MOV
   xpos 290
   ypos 19
@@ -215,11 +224,13 @@ Group {
   inputs 2
   which {{parent.knob.is_output_JPG}}
   name Switch1
+  gl_color 0x61ff3200
   xpos 290
   ypos 109
  }
  Output {
   name Output1
+  gl_color 0x56ff3200
   xpos 290
   ypos 206
  }

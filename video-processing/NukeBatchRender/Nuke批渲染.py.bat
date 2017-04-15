@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.12
+# Version 2.13
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.12
+VERSION = 2.13
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -104,14 +104,11 @@ def readINI(ini_file='path.ini'):
 
 readINI()
 
-# Define functions
+# Define function
 
 def print_(obj):
     print(str(obj).decode(script_codec).encode(prompt_codec))
 
-def pause():
-    call('PAUSE', shell=True)
-    
 class nukeBatchRender(object):
     def __init__(self, dir=os.getcwd()):
         self.file_list = None
@@ -173,10 +170,13 @@ class nukeBatchRender(object):
             proc = Popen(' '.join(i for i in [NUKE, '-x', proxy_switch, priority_swith, cont_switch, locked_file] if i), stderr=PIPE)
             
             while proc.poll() == None:
-                strerr_data = proc.stderr.readline()
-                if strerr_data:
-                    sys.stderr.write(strerr_data)
-                    logger.error(self.getErrorValue(strerr_data))
+                stderr_data = proc.stderr.readline()
+                if stderr_data:
+                    sys.stderr.write(stderr_data)
+                    if re.match(r'\[.*\] Warning: (.*)', stderr_data):
+                        logger.warning(stderr_data)
+                    else:
+                        logger.error(self.getErrorValue(stderr_data))
 
             returncode = proc.returncode
             if returncode:
@@ -214,7 +214,7 @@ class nukeBatchRender(object):
                     except WindowsError:
                         print_('**错误** 其他程序占用文件: {}'.format(file))
                         logger.error('其他程序占用文件: {}'.format(file))
-                        pause()
+                        call('PAUSE', shell=True)
                         logger.info('<退出>')
                         exit()   
                 else:
@@ -226,6 +226,7 @@ class nukeBatchRender(object):
         ret = str.strip('\r\n')
         ret = ret.replace('Read error: No such file or directory', '读取错误: 找不到文件或路径')
         ret = ret.replace('Missing input channel', '输入通道丢失')
+        ret = ret.replace('There are no active Write operators in this script', '此脚本中没有启用任何Write节点')
         match = re.match(r'\[.*\] ERROR: (.*)', ret)
         if match:
             ret = match.group(1)
@@ -250,7 +251,7 @@ BatchRender.checkLockFile()
 if not nukeBatchRender().getFileList():
     print_('**警告** 没有可渲染文件')
     logger.info(u'用户尝试在没有可渲染文件的情况下运行')
-    pause()
+    call('PAUSE', shell=True)
     logger.info('<退出>')
     exit()
 
@@ -299,14 +300,14 @@ try:
 
     while BatchRender.getFileList():
         BatchRender.render(isProxyRender, isLowPriority)
-
+    
     if os.path.exists('afterRender.bat'):
         call('afterRender.bat')
 
     if isHibernate:
         choice = call(u'CHOICE /t 15 /d y /m "即将自动休眠"'.encode(prompt_codec))
         if choice == 2:
-            pause()
+            call('PAUSE', shell=True)
         else:
             logger.info('<计算机进入休眠模式>')
             print_('[{}]\t计算机进入休眠模式'.format(time.strftime('%H:%M:%S')))
@@ -314,7 +315,7 @@ try:
     else:
         choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
         if choice == 2:
-            pause()
+            call('PAUSE', shell=True)
 
     logger.info('<退出>')
     exit()
@@ -326,6 +327,6 @@ except SystemExit as e:
 except:
     import traceback
     traceback.print_exc()
-    pause()
+    call('PAUSE', shell=True)
     logger.error('本程序报错')
     traceback.print_exc(file=logfile)

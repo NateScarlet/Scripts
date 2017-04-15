@@ -189,3 +189,47 @@ def setWrite():
             _Write['is_jump_to_frame'].setValue(False)
         except:
             nuke.error('EXCEPTION: assetManager.setWrite()')
+
+def replaceSequence():
+    # Prepare Panel
+    p = nuke.Panel('单帧替换为序列')
+    render_path_text = '限定只替换此文件夹中的读取节点'
+    p.addFilenameSearch(render_path_text, 'z:/SNJYW/Render/')
+    first_text = '设置工程起始帧'
+    p.addExpressionInput(first_text, int(nuke.Root()['first_frame'].value()))
+    last_text = '设置工程结束帧'
+    p.addExpressionInput(last_text, int(nuke.Root()['last_frame'].value()))
+
+    ok = p.show()
+    if ok:
+        render_path = p.value(render_path_text)
+
+        first = int(p.value(first_text))
+        last = int(p.value(last_text))
+        flag_frame = None
+
+        nuke.Root()['proxy'].setValue(False)
+        nuke.Root()['first_frame'].setValue(first)
+        nuke.Root()['last_frame'].setValue(last)
+
+        for i in nuke.allNodes('Read'):
+            file_path = nuke.filename(i)
+            if file_path.startswith(render_path):
+                search_result = re.search(r'\.([\d]+)\.', file_path)
+                if search_result:
+                    flag_frame = search_result.group(1)
+                file_path = re.sub(r'\.([\d#]+)\.', lambda matchobj: r'.%0{}d.'.format(len(matchobj.group(1))), file_path)
+                i['file'].setValue(file_path)
+                i['format'].setValue('HD_1080')
+                i['first'].setValue(first)
+                i['origfirst'].setValue(first)
+                i['last'].setValue(last)
+                i['origlast'].setValue(last)
+
+        _Write = nuke.toNode('_Write')
+        if _Write:
+            if flag_frame:
+                flag_frame = int(flag_frame)
+                _Write['custom_frame'].setValue(flag_frame)
+                nuke.frame(flag_frame)
+            _Write['use_custom_frame'].setValue(True)

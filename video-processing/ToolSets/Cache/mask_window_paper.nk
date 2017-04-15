@@ -1,0 +1,236 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot5
+ gl_color 0x32ffae00
+ note_font 微软雅黑
+ selected true
+ xpos -552
+ ypos -1131
+}
+set N6b4ba800 [stack 0]
+add_layer {P P.red P.green P.blue}
+Group {
+ name PositionKeyer5
+ tile_color 0xff00ff
+ gl_color 0xb232ff00
+ label "输入通道: \[value in]"
+ note_font 微软雅黑
+ selected true
+ xpos -491
+ ypos -1120
+ addUserKnob {20 tab1 l PositionKeyer_v0.51}
+ addUserKnob {41 in l "Position Layer" T Shuffle2.in}
+ addUserKnob {6 preview l "show position" +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {6 x +STARTLINE}
+ addUserKnob {6 invert_x l invert -STARTLINE}
+ addUserKnob {6 y +STARTLINE}
+ addUserKnob {6 invert_y l invert -STARTLINE}
+ addUserKnob {6 z +STARTLINE}
+ z true
+ addUserKnob {6 invert_z l invert -STARTLINE}
+ addUserKnob {12 p0}
+ p0 {1310.5 599.5}
+ addUserKnob {12 p1}
+ p1 {1337 588.5}
+ addUserKnob {32 bg_apply l Apply T "knob this.position_value.p0.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p1.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p1.x this.knob.p1.y]" +STARTLINE}
+ addUserKnob {41 p0_1 l "point 0" T position_value.p0}
+ addUserKnob {41 p1_1 l "point 1" T position_value.p1}
+}
+ Input {
+  inputs 0
+  name Input
+  gl_color 0x9632ff00
+  xpos 510
+  ypos -1162
+ }
+ Dot {
+  name Dot13
+  gl_color 0x32ffca00
+  xpos 544
+  ypos -966
+ }
+set Nb64e3800 [stack 0]
+ Dot {
+  name Dot5
+  gl_color 0x57ff3200
+  note_font 微软雅黑
+  xpos 654
+  ypos -966
+ }
+ Shuffle {
+  in P
+  in2 rgba
+  name Shuffle2
+  gl_color 0x32ffa100
+  xpos 620
+  ypos -922
+ }
+ Dot {
+  name Dot4
+  gl_color 0xf2ff3200
+  note_font 微软雅黑
+  xpos 654
+  ypos -894
+ }
+set N381dc400 [stack 0]
+ AddChannels {
+  channels alpha
+  color 1
+  name AddChannels1
+  gl_color 0xff32f300
+  note_font 微软雅黑
+  xpos 620
+  ypos -859
+ }
+ NoOp {
+  name position_value
+  gl_color 0xff32f000
+  note_font 微软雅黑
+  selected true
+  xpos 620
+  ypos -801
+  addUserKnob {20 User}
+  addUserKnob {18 p0 l "point 0"}
+  p0 {-10.9141 15.4063 71.5625}
+  addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+  addUserKnob {18 p1 l "point 1"}
+  p1 {-10.4297 15.2109 71.6875}
+  addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ }
+ Grade {
+  channels {none none none rgba.red}
+  blackpoint {{parent.position_value.p0.r}}
+  whitepoint {{parent.position_value.p1.r}}
+  name Grade1
+  gl_color 0xff743200
+  note_font 微软雅黑
+  xpos 620
+  ypos -758
+ }
+ Grade {
+  channels {none none none rgba.green}
+  blackpoint {{parent.position_value.p0.g}}
+  whitepoint {{parent.position_value.p1.g}}
+  name Grade2
+  gl_color 0x32ffbf00
+  note_font 微软雅黑
+  xpos 620
+  ypos -703
+ }
+ Grade {
+  channels {none none none rgba.blue}
+  blackpoint {{parent.position_value.p0.b}}
+  whitepoint {{parent.position_value.p1.b}}
+  name Grade3
+  gl_color 0x7832ff00
+  note_font 微软雅黑
+  xpos 620
+  ypos -633
+ }
+ Expression {
+  temp_name0 x
+  temp_expr0 "( parent.x ) ? ( ( parent.invert_x ) ? ( 1- r ) : r ) : 1"
+  temp_name1 y
+  temp_expr1 "( parent.y ) ? ( ( parent.invert_y ) ? ( 1- g ) : g ) : 1"
+  temp_name2 z
+  temp_expr2 "( parent.z ) ? ( ( parent.invert_z ) ? ( 1- b ) : b ) : 1"
+  channel0 alpha
+  expr0 "x * y * z"
+  name Expression1
+  gl_color 0xbb32ff00
+  note_font 微软雅黑
+  xpos 620
+  ypos -467
+ }
+ Dot {
+  name Dot2
+  gl_color 0x32ffd200
+  note_font 微软雅黑
+  xpos 654
+  ypos -414
+ }
+set N333e6000 [stack 0]
+push $N381dc400
+ Dot {
+  name Dot3
+  gl_color 0xff327c00
+  note_font 微软雅黑
+  xpos 764
+  ypos -894
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy2
+  gl_color 0xd232ff00
+  note_font 微软雅黑
+  xpos 730
+  ypos -427
+ }
+ Dot {
+  name Dot1
+  gl_color 0x3932ff00
+  xpos 764
+  ypos -270
+ }
+push $N333e6000
+push $Nb64e3800
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  gl_color 0x65ff3200
+  note_font 微软雅黑
+  xpos 510
+  ypos -427
+ }
+ Switch {
+  inputs 2
+  which {{parent.preview}}
+  name Switch1
+  gl_color 0xff325a00
+  xpos 510
+  ypos -274
+ }
+ Clamp {
+  channels alpha
+  name Clamp1
+  gl_color 0x3239ff00
+  note_font 微软雅黑
+  xpos 510
+  ypos -235
+ }
+ Output {
+  name Output1
+  gl_color 0x9232ff00
+  xpos 510
+  ypos -58
+ }
+end_group
+Expression {
+ expr3 "clamp(a - window_frame)"
+ name Expression1
+ gl_color 0x3257ff00
+ note_font 微软雅黑
+ selected true
+ xpos -491
+ ypos -1076
+}
+push $N6b4ba800
+add_layer {mask_extra mask_extra.window_frame mask_extra.window_paper}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.window_paper
+ name Copy3
+ gl_color 0x32bdff00
+ note_font 微软雅黑
+ selected true
+ xpos -571
+ ypos -1037
+}
