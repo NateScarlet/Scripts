@@ -4,6 +4,7 @@ import os
 import nuke
 import nukescripts
 import re
+from subprocess import call
 
 dropframes = {}
 dropframes_showed = []
@@ -233,3 +234,15 @@ def replaceSequence():
                 _Write['custom_frame'].setValue(flag_frame)
                 nuke.frame(flag_frame)
             _Write['use_custom_frame'].setValue(True)
+
+def sentToRenderDir():
+    if nuke.Root().modified():
+        return False
+
+    dir = os.getenv('TEMP_RENDER')
+    if dir:
+        cmd = ['XCOPY', '/Y', '/D', '/I', '/V', os.path.normcase(nuke.scriptName()), dir.strip('/\\') + '\\']
+        call(cmd)
+        print(cmd)
+    else:
+        return False

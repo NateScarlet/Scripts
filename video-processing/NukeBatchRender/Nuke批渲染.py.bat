@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.13
+# Version 2.15
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.13
+VERSION = 2.15
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -109,7 +109,7 @@ readINI()
 def print_(obj):
     print(str(obj).decode(script_codec).encode(prompt_codec))
 
-class nukeBatchRender(object):
+class NukeBatchRender(object):
     def __init__(self, dir=os.getcwd()):
         self.file_list = None
         self.error_file_list = []
@@ -118,7 +118,9 @@ class nukeBatchRender(object):
     def getFileList(self):
         file_list = list(i for i in os.listdir(self.dir) if i.endswith('.nk'))
         self.file_list = file_list
+        mtime = lambda file: os.path.getmtime(self.dir + '\\' + file.decode(script_codec). encode(prompt_codec))
         if file_list:
+            file_list.sort(key=mtime, reverse=False)
             print_('将渲染以下文件:')
             for file in file_list:
                 print_('\t\t\t{}'.format(file))
@@ -133,6 +135,8 @@ class nukeBatchRender(object):
             return False
         logger.info('{:-^50s}'.format('<开始批渲染>'))
         for file in self.file_list:
+            if not os.path.exists(file):
+                continue
             print_('## [{}/{}]\t{}'.format(self.file_list.index(file) + 1, len(self.file_list), file))
             start_time = datetime.datetime.now()
             logger.info(u'开始渲染:\t{}'.format(file))
@@ -224,12 +228,13 @@ class nukeBatchRender(object):
     
     def getErrorValue(self, str):
         ret = str.strip('\r\n')
+        ret = re.sub(r'\[.*?\] ERROR: (.+)', r'\1', ret)
         ret = ret.replace('Read error: No such file or directory', '读取错误: 找不到文件或路径')
         ret = ret.replace('Missing input channel', '输入通道丢失')
         ret = ret.replace('There are no active Write operators in this script', '此脚本中没有启用任何Write节点')
-        match = re.match(r'\[.*\] ERROR: (.*)', ret)
-        if match:
-            ret = match.group(1)
+        ret = re.sub(r'(.+?: )Error reading LUT file\. (.+?: )unable to open file\.', r'\1读取LUT文件出错。 \2', ret)
+        ret = re.sub(r'(.+?: )Error reading pixel data from image file (".*")\. Scan line (.+?) is missing\.', r'\1自文件 \2 读取像素数据错误。扫描线 \3 丢失。', ret)
+        ret = re.sub(r'(.+?: )Error reading pixel data from image file (".*")\. Early end of file: read (.+?) out of (.+?) requested bytes.', r'\1自文件 \2 读取像素数据错误。过早的文件结束符: 读取了 \4 数据中的 \3 。', ret)
         return ret
     
 def secondsToStr(seconds):
@@ -246,9 +251,9 @@ def secondsToStr(seconds):
         
 # Display choice
 logger.info('{:-^100s}'.format('<启动>'))
-BatchRender = nukeBatchRender()
+BatchRender = NukeBatchRender()
 BatchRender.checkLockFile()
-if not nukeBatchRender().getFileList():
+if not BatchRender.getFileList():
     print_('**警告** 没有可渲染文件')
     logger.info(u'用户尝试在没有可渲染文件的情况下运行')
     call('PAUSE', shell=True)

@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.832
+# Version 0.833
 
 import nuke
 import os
@@ -341,17 +341,15 @@ class comp(object):
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
         self.last_output = merge_node
         
-        mp_width , mp_height = read_node.width(), read_node.height()
         root_width, root_height = nuke.Root().width(), nuke.Root().height()
-        transform_scale = float(min(root_width, root_height)) / float(min(mp_width, mp_height))
         
         insertNode(nuke.nodes.Defocus(disable=True), read_node)
         insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
         insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
         insertNode(nuke.nodes.ColorCorrect(), read_node)
-        insertNode(nuke.nodes.Reformat(resize='none'), read_node)
-        insertNode(nuke.nodes.Transform(scale=transform_scale, center='{} {}'.format(mp_width / 2.0, mp_height / 2.0), label='**在此调整MP位置**'), read_node)
+        insertNode(nuke.nodes.Transform(center='{} {}'.format(root_width / 2.0, root_height / 2.0), label='**在此调整MP位置**'), read_node)
+        insertNode(nuke.nodes.Reformat(resize='fill'), read_node)
     
     def renameReads(self):
         for i in nuke.allNodes('Read'):

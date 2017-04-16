@@ -18,6 +18,8 @@ nuke.addAutolabel( autolabelCustom )
 nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
 nuke.addOnScriptSave( assetManager.showDropFrames)
 
+nuke.addOnScriptClose(assetManager.sentToRenderDir)
+
 # Set knob Default
 nuke.knobDefault( "LayerContactSheet.showLayerNames", "1" )
 nuke.knobDefault( "note_font", u"微软雅黑".encode('utf8') )
