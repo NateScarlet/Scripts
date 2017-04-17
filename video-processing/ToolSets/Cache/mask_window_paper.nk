@@ -6,20 +6,20 @@ Dot {
  gl_color 0x32ffae00
  note_font 微软雅黑
  selected true
- xpos -552
- ypos -1131
+ xpos -257
+ ypos -850
 }
-set N6b4ba800 [stack 0]
+set Nffedf000 [stack 0]
 add_layer {P P.red P.green P.blue}
 Group {
- name PositionKeyer5
+ name PositionKeyer1
  tile_color 0xff00ff
  gl_color 0xb232ff00
  label "输入通道: \[value in]"
  note_font 微软雅黑
  selected true
- xpos -491
- ypos -1120
+ xpos -196
+ ypos -839
  addUserKnob {20 tab1 l PositionKeyer_v0.51}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l "show position" +STARTLINE}
@@ -32,9 +32,9 @@ Group {
  z true
  addUserKnob {6 invert_z l invert -STARTLINE}
  addUserKnob {12 p0}
- p0 {1310.5 599.5}
+ p0 {1330.800049 665}
  addUserKnob {12 p1}
- p1 {1337 588.5}
+ p1 {1327.400024 692.2000122}
  addUserKnob {32 bg_apply l Apply T "knob this.position_value.p0.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p1.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p1.x this.knob.p1.y]" +STARTLINE}
  addUserKnob {41 p0_1 l "point 0" T position_value.p0}
  addUserKnob {41 p1_1 l "point 1" T position_value.p1}
@@ -52,7 +52,7 @@ Group {
   xpos 544
   ypos -966
  }
-set Nb64e3800 [stack 0]
+set Nffede800 [stack 0]
  Dot {
   name Dot5
   gl_color 0x57ff3200
@@ -75,7 +75,7 @@ set Nb64e3800 [stack 0]
   xpos 654
   ypos -894
  }
-set N381dc400 [stack 0]
+set Nff559800 [stack 0]
  AddChannels {
   channels alpha
   color 1
@@ -94,10 +94,10 @@ set N381dc400 [stack 0]
   ypos -801
   addUserKnob {20 User}
   addUserKnob {18 p0 l "point 0"}
-  p0 {-10.9141 15.4063 71.5625}
+  p0 {-78.4375 13.7734 71.625}
   addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p1 l "point 1"}
-  p1 {-10.4297 15.2109 71.6875}
+  p1 {-78.75 14.6328 71.6875}
   addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
  Grade {
@@ -152,8 +152,8 @@ set N381dc400 [stack 0]
   xpos 654
   ypos -414
  }
-set N333e6000 [stack 0]
-push $N381dc400
+set N891af400 [stack 0]
+push $Nff559800
  Dot {
   name Dot3
   gl_color 0xff327c00
@@ -177,8 +177,8 @@ push $N381dc400
   xpos 764
   ypos -270
  }
-push $N333e6000
-push $Nb64e3800
+push $N891af400
+push $Nffede800
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -212,16 +212,7 @@ push $Nb64e3800
   ypos -58
  }
 end_group
-Expression {
- expr3 "clamp(a - window_frame)"
- name Expression1
- gl_color 0x3257ff00
- note_font 微软雅黑
- selected true
- xpos -491
- ypos -1076
-}
-push $N6b4ba800
+push $Nffedf000
 add_layer {mask_extra mask_extra.window_frame mask_extra.window_paper}
 Copy {
  inputs 2
@@ -231,6 +222,6 @@ Copy {
  gl_color 0x32bdff00
  note_font 微软雅黑
  selected true
- xpos -571
- ypos -1037
+ xpos -276
+ ypos -756
 }

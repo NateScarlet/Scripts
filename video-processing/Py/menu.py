@@ -19,6 +19,7 @@ nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), node
 nuke.addOnScriptSave( assetManager.showDropFrames)
 
 nuke.addOnScriptClose(assetManager.sentToRenderDir)
+nuke.addOnScriptClose(assetManager.createContactsheet)
 
 # Set knob Default
 nuke.knobDefault( "LayerContactSheet.showLayerNames", "1" )

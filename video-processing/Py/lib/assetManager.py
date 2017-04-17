@@ -246,3 +246,13 @@ def sentToRenderDir():
         print(cmd)
     else:
         return False
+
+def createContactsheet():
+    if nuke.Root().modified():
+        return False
+
+    bat_file =  os.path.join(os.path.dirname(nuke.scriptName()), '拼色板.py.bat'.decode('UTF-8').encode('gbk'))
+    if os.path.exists(bat_file):
+        call([bat_file, '1'])
+    else:
+        return False
