@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.15
+# Version 2.16
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.15
+VERSION = 2.16
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -139,7 +139,7 @@ class NukeBatchRender(object):
                 continue
             print_('## [{}/{}]\t{}'.format(self.file_list.index(file) + 1, len(self.file_list), file))
             start_time = datetime.datetime.now()
-            logger.info(u'开始渲染:\t{}'.format(file))
+            logger.info(u'{}: 开始渲染'.format(file))
             locked_file = file + '.lock'
             
             # Lock file
@@ -186,9 +186,9 @@ class NukeBatchRender(object):
             if returncode:
                 self.error_file_list.append(file)
                 count = self.error_file_list.count(file)
-                logger.error('渲染出错:\t{},第{}次出错'.format(file, count))
+                logger.error('{}: 渲染出错 第{}次'.format(file, count))
                 if count >= 3:
-                    logger.error('渲染出错:\t{},连续渲染错误超过3次,不再进行重试。'.format(file))
+                    logger.error('{}: 连续渲染错误超过3次,不再进行重试。'.format(file))
                 elif os.path.exists(file):
                     os.remove(locked_file)
                 else:
@@ -200,9 +200,8 @@ class NukeBatchRender(object):
 
             end_time = datetime.datetime.now()
             total_seconds = (end_time-start_time).total_seconds()
-            logger.info('总计耗时:\t{}'.format(secondsToStr(total_seconds)))
-            logger.info('结束渲染:\t{}\t{}'.format(file, returncode_text))
-        logger.info(u'<结束批渲染>')
+            logger.info('{}: 结束渲染 耗时 {} {}'.format(file, secondsToStr(total_seconds),  returncode_text))
+        logger.info('<结束批渲染>')
     
     def checkLockFile(self):
         locked_file = list(i for i in os.listdir(self.dir) if i.endswith('.nk.lock'))
@@ -232,7 +231,7 @@ class NukeBatchRender(object):
         ret = ret.replace('Read error: No such file or directory', '读取错误: 找不到文件或路径')
         ret = ret.replace('Missing input channel', '输入通道丢失')
         ret = ret.replace('There are no active Write operators in this script', '此脚本中没有启用任何Write节点')
-        ret = re.sub(r'(.+?: )Error reading LUT file\. (.+?: )unable to open file\.', r'\1读取LUT文件出错。 \2', ret)
+        ret = re.sub(r'(.+?: )Error reading LUT file\. (.+?: )unable to open file\.', r'\1读取LUT文件出错。 \2 无法打开文件', ret)
         ret = re.sub(r'(.+?: )Error reading pixel data from image file (".*")\. Scan line (.+?) is missing\.', r'\1自文件 \2 读取像素数据错误。扫描线 \3 丢失。', ret)
         ret = re.sub(r'(.+?: )Error reading pixel data from image file (".*")\. Early end of file: read (.+?) out of (.+?) requested bytes.', r'\1自文件 \2 读取像素数据错误。过早的文件结束符: 读取了 \4 数据中的 \3 。', ret)
         return ret

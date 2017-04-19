@@ -8,6 +8,8 @@ from subprocess import call
 
 dropframes = {}
 dropframes_showed = []
+script_codec = 'UTF-8'
+prompt_codec = 'GBK'
 
 def createOutDirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
@@ -239,11 +241,12 @@ def sentToRenderDir():
     if nuke.Root().modified():
         return False
 
-    dir = os.getenv('TEMP_RENDER')
-    if dir:
-        cmd = ['XCOPY', '/Y', '/D', '/I', '/V', os.path.normcase(nuke.scriptName()), dir.strip('/\\') + '\\']
+    if os.getenv('TEMP_RENDER'):
+        src = '"{}"'.format(os.path.normcase(nuke.scriptName()))
+        dst = '"{}\\"'.format(os.getenv('TEMP_RENDER').strip('"').rstrip('/\\'))
+        cmd = ' '.join(['XCOPY', '/Y', '/D', '/I', '/V', src, dst])
+        print(repr(cmd))
         call(cmd)
-        print(cmd)
     else:
         return False
 
@@ -253,6 +256,6 @@ def createContactsheet():
 
     bat_file =  os.path.join(os.path.dirname(nuke.scriptName()), '拼色板.py.bat'.decode('UTF-8').encode('gbk'))
     if os.path.exists(bat_file):
-        call([bat_file, '1'])
+        call([bat_file, '4'])
     else:
         return False

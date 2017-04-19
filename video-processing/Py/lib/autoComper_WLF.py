@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.833
+# Version 0.836
 
 import nuke
 import os
@@ -13,7 +13,7 @@ import time
 
 fps = 25
 format = 'HD_1080'
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_ID':'ID_CH', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
+tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_ID':'ID_CH', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_OC': 'OCC_CH', 'CH_OCC': 'OCC_CH', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
 regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
@@ -23,17 +23,17 @@ script_codec = 'UTF-8'
 def print_(obj):
     print(str(obj).decode(script_codec).encode(prompt_codec))
 
-class comp(object):
+class Comp(object):
 
     order = lambda self, n: ('_' + self.node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
     
     def __init__(self, mp=default_mp):
 
+        self.last_output = None
         self.node_tag_dict = {}
         self.tag_node_dict = {}
         self.bg_node = None
         self.bg_ch_nodes = []
-        self.last_output = None
         self.mp = mp.replace('\\', '/')
         
         # Get dict
@@ -59,12 +59,8 @@ class comp(object):
             self.last_output = self.bg_ch_nodes[0]
         else:
             self.last_output = self.node_tag_dict.keys()[0]
-        
-        
-        # Comp
-        self.main()
     
-    def main(self):
+    def __Call__(self):
         self.renameReads()
         
         # Merge
@@ -75,12 +71,15 @@ class comp(object):
         self.mergeOCC()
         self.mergeShadow()
         self.mergeScreen()
+        self.addPremult()
         self.addHueCorrect()
         self.addColorCorrect()
+        self.addUnremult()
         self.addGrade()
         self.mergeDepth()
         self.addReformat()
         self.addDepth()
+        self.setSSS_alpha()
         self.add_ZDefocus()
         self.mergeMP()
         
@@ -272,7 +271,7 @@ class comp(object):
                     break
                 erode_size -= 1
             nuke.delete(erode_node)
-            grade_node = nuke.nodes.Grade(whitepoint=rgb_max, mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
+            grade_node = nuke.nodes.Grade(whitepoint=rgb_max, unpremult='rgba.alpha', mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
             insertNode(grade_node, i)
             print('')
         return grade_node
@@ -287,7 +286,12 @@ class comp(object):
 
     def addColorCorrect(self):
         for i in self.bg_ch_nodes:
-            colorcorrect_node = nuke.nodes.ColorCorrect()
+            if 'SSS.alpha' in i.channels():
+                colorcorrect_node = nuke.nodes.ColorCorrect(label='SSS调整', maskChannelInput='SSS.alpha')
+                insertNode(colorcorrect_node, i)
+            colorcorrect_node = nuke.nodes.ColorCorrect(label='颜色调整', mix_luminance=1)
+            insertNode(colorcorrect_node, i)
+            colorcorrect_node = nuke.nodes.ColorCorrect(label='亮度调整')
             insertNode(colorcorrect_node, i)
         return colorcorrect_node
         
@@ -296,7 +300,23 @@ class comp(object):
             huecorrect_node = nuke.nodes.HueCorrect()
             insertNode(huecorrect_node, i)
         return huecorrect_node
-        
+    
+    def addPremult(self):
+        premult_node = False
+        for i in self.bg_ch_nodes:
+            if 'rgba.alpha' in i.channels():
+                premult_node = nuke.nodes.Premult()
+                insertNode(premult_node, i)
+        return premult_node
+
+    def addUnremult(self):
+        unpremult_node = False
+        for i in self.bg_ch_nodes:
+            if 'rgba.alpha' in i.channels():
+                unpremult_node = nuke.nodes.Unpremult()
+                insertNode(unpremult_node, i)
+        return unpremult_node    
+
     def addDepthFog(self):
         node_color = 596044543
 
@@ -334,7 +354,15 @@ class comp(object):
             group_node.end()
 
             insertNode(group_node, i)
-        
+    
+    def setSSS_alpha(self):
+        keyer_node = False
+        for i in self.bg_ch_nodes:
+            if 'SSS.alpha' in i.channels():
+                keyer_node = nuke.nodes.Keyer(input='SSS', output='SSS.alpha', operation='luminance key', range='0 0.007297795507 1 1')
+                insertNode(keyer_node, i)
+        return keyer_node
+
     def mergeMP(self):
         read_node = nuke.nodes.Read(file=self.mp)
         read_node.setName('MP')
@@ -478,7 +506,7 @@ class FootageError(Exception):
 def addMenu():
     m = nuke.menu("Nodes")
     m = m.addMenu('自动合成', icon='autoComper_WLF.png')
-    m.addCommand('自动合成',"autoComper_WLF.comp()",icon='autoComper_WLF.png')
+    m.addCommand('自动合成',"autoComper_WLF.Comp()()",icon='autoComper_WLF.png')
     m.addCommand('批量合成',"autoComper_WLF.precompDialog()",icon='autoComper_WLF.png')
 
 def precompDialog():
