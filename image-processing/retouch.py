@@ -31,7 +31,7 @@ class CommandLineUI(object):
     def showInfo(self):
         print('dir:\t{}'.format(self.working_dir))
     
-    def askImageJoin(self):
+    def askImageJoint(self):
         not_done = True
         while not_done:
             user_input = input('需要合页拼图的图像中编号较低的那张:')
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     do = MangaProcessing()
     do.backupRaw()
     do.renameImages()
-    do.askImageJoin()
+    do.askImageJoint()
     do.convertToPNG()
     do.jointImage()
     do.desarturationGreyImages()
