@@ -1,6 +1,6 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# Version 0.21
+# Version 0.3
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
 import os, sys
@@ -10,7 +10,10 @@ from shutil import move, copy2
 from subprocess import call
 
 prompt_codec = 'GBK'
-nconvert = r'"C:\Program Files\nconvert.exe"'
+nconvert = r'C:\Program Files\nconvert.exe'
+autocrop = os.path.join(os.path.dirname(__file__), '智能裁边.exe')
+filtering = os.path.join(os.path.dirname(__file__), '黑白图修图(无视RGB模式图像).exe')
+createzip = os.path.join(os.path.dirname(__file__), '压缩修图文件夹.bat')
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class CommandLineUI(object):
@@ -32,8 +35,7 @@ class CommandLineUI(object):
         print('dir:\t{}'.format(self.working_dir))
     
     def askImageJoint(self):
-        not_done = True
-        while not_done:
+        while True:
             user_input = input('需要合页拼图的图像中编号较低的那张:')
             if user_input:
                 try:
@@ -44,9 +46,10 @@ class CommandLineUI(object):
                 except ValueError:
                     print('**错误** 输入内容应该为索引数字')
             else:
-                not_done = False
+                break
         print(self.joint_images)
- 
+    
+        
     def pause():
         call('PAUSE', shell=True)
 
@@ -61,8 +64,44 @@ class MangaProcessing(CommandLineUI):
             os.mkdir('raw')
 
     def __call__(self):
-        pass
-    
+        self.backupRaw()
+        self.showOption()
+        
+    def showOption(self):
+        try:
+            while True:
+                print('\n'
+                      '建议先用Camera Raw自动旋转\n'
+                      '1.重命名转换格式拼图\n'
+                      '2.智能裁剪自动对比度\n'
+                      '3.过滤镜\n'
+                      '4.压缩为zip\n\n'
+                      'CTRL+C 退出\n')
+                choice = call('CHOICE /C 1234 /M "选择方案"', shell=True)
+                if choice == 1:
+                    self.backupVersion()
+                    self.renameImages()
+                    self.askImageJoint()
+                    self.convertToPNG()
+                    self.jointImage()
+                    self.desarturationGreyImages()
+                    print('现在应去手动调整合页拼图的位置(不补中缝)')
+                elif choice == 2:
+                    self.smartcrop()
+                    self.autocontrastImages()
+                    print('现在应去手动补中缝去广告调色阶')
+                elif choice == 3:
+                    self.filtering()
+                elif choice == 4:
+                    call('"{}" "{}"'.format(createzip, dir))
+        except KeyboardInterrupt:
+            exit()
+
+    def smartcrop(self):
+        for image in self.image_list:
+            print('{}: 智能裁剪'.format(image))
+            call('"{}" "{}"'.format(autocrop, os.path.abspath(image)))
+
     def getWhitepoint(self):
         pass
 
@@ -72,10 +111,15 @@ class MangaProcessing(CommandLineUI):
     def grade(self):
         pass
     
+    def filtering(self):
+        for image in self.image_list:
+            print('{}: 过滤镜'.format(image))
+            call('"{}" "{}"'.format(filtering, os.path.abspath(image)))
+    
     def convertToPNG(self):
         print('## 转为PNG格式')
         try:
-            call('{} -out png -D {}'.format(nconvert, ' '.join(self.image_list)))
+            call('"{}" -out png -D {}'.format(nconvert, ' '.join(self.image_list)))
             self.image_list = list(map(lambda file_name: os.path.splitext(file_name)[0] + '.png', self.image_list)) 
             print('使用nconvert转换了全部文件')
         except FileNotFoundError:
@@ -94,6 +138,19 @@ class MangaProcessing(CommandLineUI):
             dst = os.path.join('raw', image)
             if not os.path.exists(dst):
                 copy2(src, dst)
+    
+    def backupVersion(self):
+        version = 1
+        while True:
+            dst_folder = 'v{:02d}'.format(version)
+            if not os.path.exists(dst_folder):
+                os.mkdir(dst_folder)
+                break
+            version += 1
+        for image in self.image_list:
+            src = image
+            dst = os.path.join(dst_folder, image)
+            copy2(src, dst)
 
     def jointImage(self):
         print('## 合页拼图')
@@ -108,6 +165,7 @@ class MangaProcessing(CommandLineUI):
                     sizeR = imageR_object.size
                     modeL = imageL_object.mode
                     modeR = imageR_object.mode
+
                     new_size = (sizeL[0] + sizeR[0] + gap, max(sizeL[1], sizeR[1]) + gap * 2)
                     if modeL == modeR == 'L':
                         new_mode = 'L'
@@ -116,10 +174,14 @@ class MangaProcessing(CommandLineUI):
                         new_mode = 'RGB'
                         bg_color = (255, 255, 255)
                     new_image = Image.new(mode=new_mode, size=new_size, color=bg_color)
-                    new_image.paste(imageL_object, box = (0, gap))
-                    new_image.paste(imageR_object, box = (sizeL[0] + gap, gap))
+
+                    avoid_smartcrop = lambda value : 254 if value == 255 else value
+                    new_image.paste(Image.eval(imageL_object, avoid_smartcrop), box = (0, gap))
+                    new_image.paste(Image.eval(imageR_object, avoid_smartcrop), box = (sizeL[0] + gap, gap))
+
                     new_name = '{:02d}-{:02d}{}'.format(imageR + 1, imageL + 1, os.path.splitext(imageL_file)[1])
                     new_image.save(new_name)
+
             self.image_list[imageL] = new_name
             self.image_list[imageR] = None
             os.remove(imageL_file)
@@ -137,7 +199,7 @@ class MangaProcessing(CommandLineUI):
         return saturation
 
     def getImageList(self, dir=None):
-        self.image_list = list(i for i in os.listdir() if os.path.isfile(i) and i.endswith('.jpg'))
+        self.image_list = list(i for i in os.listdir() if os.path.isfile(i) and any(format for format in ['.jpg', '.png'] if i.lower().endswith(format)))
         return self.image_list
     
     def renameImages(self):
@@ -173,12 +235,4 @@ class MangaProcessing(CommandLineUI):
             print('{}: 自动对比度...'.format(image))
 
 if __name__ == '__main__':
-    do = MangaProcessing()
-    do.backupRaw()
-    do.renameImages()
-    do.askImageJoint()
-    do.convertToPNG()
-    do.jointImage()
-    do.desarturationGreyImages()
-    do.autocontrastImages()
-    
+    MangaProcessing()()
