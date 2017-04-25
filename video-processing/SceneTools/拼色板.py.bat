@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # createContactSheet
-# Version 2.11
+# Version 2.12
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -43,7 +43,7 @@ import subprocess
 from subprocess import call
 
 argvs = sys.argv
-VERSION = 2.11
+VERSION = 2.12
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 file_name = None
@@ -121,7 +121,7 @@ class createContactSheet(object):
         # Exclude excess image
         mtime = lambda file: os.stat(dir + '\\' + file.decode(script_codec). encode(prompt_codec)).st_mtime
         image_list.sort(key=mtime, reverse=True)
-        getShotName = lambda file_name : file_name.split('.')[0].lower()
+        getShotName = lambda file_name : file_name.split('.')[0].rstrip('_proxy').lower()
         shot_list = []
         result = []
         for image in image_list:

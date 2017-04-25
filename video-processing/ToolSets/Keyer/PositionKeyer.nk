@@ -3,183 +3,182 @@ version 10.0 v4
 push $cut_paste_input
 add_layer {P P.red P.green P.blue}
 Group {
- name PositionKeyer5
+ name PositionKeyer1
  tile_color 0xff00ff
- label "输入通道: \[value in]"
+ label "输入通道: \[value in]\n"
  note_font 微软雅黑
  selected true
- xpos 1030
- ypos -790
- addUserKnob {20 tab1 l PositionKeyer_v0.51}
+ xpos -164
+ ypos -47
+ addUserKnob {20 tab1 l PositionKeyer_v0.7}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
- addUserKnob {6 preview l "show position" +STARTLINE}
- addUserKnob {26 ""}
- addUserKnob {6 x +STARTLINE}
- x true
- addUserKnob {6 invert_x l invert -STARTLINE}
- addUserKnob {6 y +STARTLINE}
- addUserKnob {6 invert_y l invert -STARTLINE}
- addUserKnob {6 z +STARTLINE}
- addUserKnob {6 invert_z l invert -STARTLINE}
+ addUserKnob {6 preview l preview(预览) +STARTLINE}
+ addUserKnob {26 sample_point l 取样位置}
  addUserKnob {12 p0}
- p0 {1255.5 304.5}
+ p0 {902 646}
  addUserKnob {12 p1}
- p1 {1214 338}
- addUserKnob {32 bg_apply l Apply T "knob this.position_value.p0.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p0.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p0.x this.knob.p0.y]\nknob this.position_value.p1.r \[sample \[input this 0] \[value this.knob.in].red this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.g \[sample \[input this 0] \[value this.knob.in].green this.knob.p1.x this.knob.p1.y]\nknob this.position_value.p1.b \[sample \[input this 0] \[value this.knob.in].blue this.knob.p1.x this.knob.p1.y]" +STARTLINE}
- addUserKnob {41 p0_1 l "point 0" T position_value.p0}
- addUserKnob {41 p1_1 l "point 1" T position_value.p1}
+ p1 {1418 138}
+ addUserKnob {26 horizontal l Horizontal(水平方向)}
+ addUserKnob {6 x l enable(启用) +STARTLINE}
+ x true
+ addUserKnob {6 invert_x l invert(反转) -STARTLINE}
+ addUserKnob {7 rotation l rotation(旋转) R 0 180}
+ addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(0)\n\np0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)"}
+ addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\np0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)"}
+ addUserKnob {26 vertical l Vertical(垂直方向)}
+ addUserKnob {6 y l enable(启用) +STARTLINE}
+ addUserKnob {6 invert_y l invert(反转) -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {22 bt_apply l Apply(应用) T "p0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)" +STARTLINE}
+ addUserKnob {22 bt_enable_auto_refresh l "Enable Auto Refresh(启用自动刷新)" -STARTLINE T "def refreshRotation():\n    p0 = nuke.thisNode()\['p0'].value()\n    p1 = nuke.thisNode()\['p1'].value()\n\n    sampler = nuke.thisNode().node('Sampler')\n\n    blackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\n    whitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\n    sampler\['p0'].setValue(blackpoint)\n    sampler\['p1'].setValue(whitepoint)\n\nnuke.callbacks.addKnobChanged(refreshRotation, node=nuke.thisNode())"}
+ addUserKnob {26 result l Result}
+ addUserKnob {41 p0_1 l "point 0" T Sampler.p0}
+ addUserKnob {41 p1_1 l "point 1" T Sampler.p1}
 }
  Input {
   inputs 0
   name Input
-  xpos 510
-  ypos -1162
+  gl_color 0x327fff00
+  xpos 290
+  ypos -1234
  }
- Dot {
-  name Dot13
-  xpos 544
-  ypos -966
- }
-set N5552d400 [stack 0]
- Dot {
-  name Dot5
-  note_font 微软雅黑
-  xpos 654
-  ypos -966
- }
+set N38472000 [stack 0]
  Shuffle {
   in P
   in2 rgba
   name Shuffle2
-  xpos 620
-  ypos -922
+  gl_color 0x3282ff00
+  xpos 290
+  ypos -1208
  }
- Dot {
-  name Dot4
+set N1cfff000 [stack 0]
+ Expression {
+  temp_name0 rotation
+  temp_expr0 radians(this.rotation)
+  temp_name1 Px
+  temp_expr1 red
+  temp_name2 Py
+  temp_expr2 green
+  temp_name3 Pz
+  temp_expr3 blue
+  expr0 "cos(rotation) * Px - sin(rotation) * Pz"
+  expr2 "cos(rotation) * Pz + sin(rotation) * Px"
+  name Expression2
+  gl_color 0x32ff9a00
+  label "Rotate Positon Layer\n旋转P层"
   note_font 微软雅黑
-  xpos 654
-  ypos -894
+  selected true
+  xpos 290
+  ypos -1170
+  addUserKnob {20 User}
+  addUserKnob {7 rotation R 0 360}
+  rotation {{parent.knob.rotation}}
  }
-set N5552c800 [stack 0]
  AddChannels {
   channels alpha
   color 1
   name AddChannels1
+  gl_color 0xff323f00
   note_font 微软雅黑
-  xpos 620
-  ypos -859
+  xpos 290
+  ypos -1110
  }
  NoOp {
-  name position_value
+  name Sampler
+  gl_color 0x32ffc700
+  label 取样器
   note_font 微软雅黑
-  selected true
-  xpos 620
-  ypos -801
-  addUserKnob {20 User}
+  xpos 290
+  ypos -1066
+  addUserKnob {20 Result}
   addUserKnob {18 p0 l "point 0"}
-  p0 {45.75 49.9063 18.9375}
+  p0 {111.9375 116.3125 -1851}
   addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p1 l "point 1"}
-  p1 {66.125 49.4375 19.4063}
+  p1 {134.875 104.375 -1839}
   addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
  Grade {
   channels {none none none rgba.red}
-  blackpoint {{parent.position_value.p0.r}}
-  whitepoint {{parent.position_value.p1.r}}
+  blackpoint {{parent.Sampler.p0.r}}
+  whitepoint {{parent.Sampler.p1.r}}
   name Grade1
+  gl_color 0xff32a400
+  label x
   note_font 微软雅黑
-  xpos 620
-  ypos -758
+  xpos 290
+  ypos -1022
  }
  Grade {
   channels {none none none rgba.green}
-  blackpoint {{parent.position_value.p0.g}}
-  whitepoint {{parent.position_value.p1.g}}
+  blackpoint {{parent.Sampler.p0.g}}
+  whitepoint {{parent.Sampler.p1.g}}
   name Grade2
+  gl_color 0x32ffa000
+  label y
   note_font 微软雅黑
-  xpos 620
-  ypos -703
- }
- Grade {
-  channels {none none none rgba.blue}
-  blackpoint {{parent.position_value.p0.b}}
-  whitepoint {{parent.position_value.p1.b}}
-  name Grade3
-  note_font 微软雅黑
-  xpos 620
-  ypos -633
+  xpos 290
+  ypos -962
  }
  Expression {
   temp_name0 x
   temp_expr0 "( parent.x ) ? ( ( parent.invert_x ) ? ( 1- r ) : r ) : 1"
   temp_name1 y
   temp_expr1 "( parent.y ) ? ( ( parent.invert_y ) ? ( 1- g ) : g ) : 1"
-  temp_name2 z
-  temp_expr2 "( parent.z ) ? ( ( parent.invert_z ) ? ( 1- b ) : b ) : 1"
   channel0 alpha
-  expr0 "x * y * z"
+  expr0 "x * y"
   name Expression1
+  gl_color 0xffdf3200
   note_font 微软雅黑
-  xpos 620
-  ypos -467
+  xpos 290
+  ypos -902
  }
- Dot {
-  name Dot2
+ Clamp {
+  channels alpha
+  name Clamp1
+  gl_color 0x9032ff00
   note_font 微软雅黑
-  xpos 654
-  ypos -414
+  xpos 290
+  ypos -874
  }
-set N4c52f400 [stack 0]
-push $N5552c800
- Dot {
-  name Dot3
-  note_font 微软雅黑
-  xpos 764
-  ypos -894
- }
+set N989cc00 [stack 0]
+push $N1cfff000
  Copy {
   inputs 2
   from0 rgba.alpha
   to0 rgba.alpha
   name Copy2
+  gl_color 0xff326f00
   note_font 微软雅黑
-  xpos 730
-  ypos -427
+  xpos 510
+  ypos -877
  }
- Dot {
-  name Dot1
-  xpos 764
-  ypos -270
- }
-push $N4c52f400
-push $N5552d400
+push $N989cc00
+push $N38472000
  Copy {
   inputs 2
   from0 rgba.alpha
   to0 rgba.alpha
   name Copy1
+  gl_color 0x32ffb200
   note_font 微软雅黑
-  xpos 510
-  ypos -427
+  xpos 400
+  ypos -825
  }
  Switch {
   inputs 2
-  which {{parent.preview}}
+  which {{parent.knob.preview}}
   name Switch1
-  xpos 510
-  ypos -274
- }
- Clamp {
-  channels alpha
-  name Clamp1
+  gl_color 0x32ffc800
+  label "Preview\n预览"
   note_font 微软雅黑
   xpos 510
-  ypos -235
+  ypos -833
  }
  Output {
   name Output1
+  gl_color 0x3288ff00
   xpos 510
-  ypos -58
+  ypos -773
  }
 end_group

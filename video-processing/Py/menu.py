@@ -16,7 +16,8 @@ nuke.addAutolabel( autolabelCustom )
 
 # Add dropframe check
 nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
-nuke.addOnScriptSave( assetManager.showDropFrames)
+nuke.addOnScriptSave(assetManager.showDropFrames)
+nuke.addOnScriptSave(comp.enableRSMB, kwargs={'prefix': '_'})
 
 nuke.addOnScriptClose(assetManager.sentToRenderDir)
 nuke.addOnScriptClose(assetManager.createContactsheet)

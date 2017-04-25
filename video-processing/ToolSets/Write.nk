@@ -6,9 +6,9 @@ Group {
  tile_color 0xbfbf00ff
  label "\[value root.project_directory]/\n\[subst \[python \{nuke.thisNode().node('Write_MOV_1')\['file'].value()\}]]\n\[subst \[python \{nuke.thisNode().node('Write_JPG_1')\['file'].value()\}]]\n\[\n# Keep single instance\nif \{\[value this.name] != \"_Write\"\} \{\n    \[delete this]\n\}\n\n# Set onScriptSave\nknob root.onScriptSave \{\n# Check project setting\nif not nuke.Root()\['project_directory'].value():\n    nuke.message('工程目录未设置');\n# Lock connections\nb = nuke.toNode('_Write');\nif b and b\['isLockOnSave'].value():\n    nuke.Root()\['lock_connections'].setValue(1);\n# Move viewer frame\nif b and b\['is_jump_to_frame'].value():\n    nuke.frame(b\['frame'].value());\n    nuke.Root().setModified(False)\n\}\n\n# Set onScriptClose\nknob root.onScriptClose \{\n# Render single frame\nif not nuke.modified():\n    w = nuke.toNode('_Write.Write_JPG_1');\n    b = nuke.toNode('_Write');\n    if b and b\['isRenderSingleFrame'].value() and w:\n        nuke.root()\['proxy'].setValue(0);\n        w\['disable'].setValue(0);\n        nuke.render(w);\n\}\n]"
  selected true
- xpos -76
+ xpos -338
  ypos -186
- addUserKnob {20 tab1 l Write_v4.45}
+ addUserKnob {20 tab1 l Write_v4.49}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
  addUserKnob {26 text1 l 保存时}
@@ -69,7 +69,7 @@ Group {
  }
  Write {
   file "images/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
-  proxy "images/\[lindex \[split \[basename \[value root.name]] .] 0]_proxy.%04d.jpg"
+  proxy "images/proxy/\[lindex \[split \[basename \[value root.name]] .] 0].%04d.jpg"
   file_type jpeg
   _jpeg_quality 1
   render_order 2
@@ -78,12 +78,11 @@ Group {
   use_limit true
   checkHashOnRead false
   version 72
-  beforeRender "# Turn off blur effect nodes;\nglobal nodes_with_blur_effect;\nnodes_with_blur_effect = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if any(key for key in \['rsmb', 'CameraShake', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1'] if key in i.Class()):\n        if not i\['disable'].value():\n            nodes_with_blur_effect.append(i);\n            i\['disable'].setValue(1);\n"
-  afterRender "global nodes_with_blur_effect;\nfor i in nodes_with_blur_effect:\n    if any(key for key in \['rsmb', 'CameraShake', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1'] if key in i.Class()):\n        i\['disable'].setValue(0);\nnodes_with_blur_effect = \[];\nnuke.thisNode()\['disable'].setValue(1);"
+  beforeRender "# Force full mode render;\nglobal last_render_mode;\nproxy = nuke.Root()\['proxy'];\nlast_render_mode = proxy.value();\nproxy.setValue(False);\n# Turn off blur effect nodes;\nglobal nodes_with_blur_effect;\nnodes_with_blur_effect = \[];\nfor i in nuke.allNodes(group=nuke.Root()):\n    if any(key for key in \['rsmb', 'CameraShake', 'VectorBlur', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1', 'MotionBlur'] if key in i.Class()):\n        if not i\['disable'].value():\n            nodes_with_blur_effect.append(i);\n            i\['disable'].setValue(1);\n"
+  afterRender "proxy.setValue(last_render_mode);\n\nfor i in nodes_with_blur_effect:\n    if any(key for key in \['rsmb', 'CameraShake', 'OFXcom.genarts.sapphire.blursharpen.s_blurdirectional_v1'] if key in i.Class()):\n        i\['disable'].setValue(0);\nnodes_with_blur_effect = \[];\nnuke.thisNode()\['disable'].setValue(1);"
   name Write_JPG_1
   gl_color 0xbf32ff00
   label "单帧\n会在退出脚本时自动输出"
-  selected true
   xpos 290
   ypos -252
   disable true
@@ -127,9 +126,7 @@ Group {
   font_height_toolbar 100
   opacity 0.3
   message "\[lindex \[split \[basename \[value root.name]] .] 0]"
-  old_message {{83 78 74 89 87 95 69 80 48 56 95 48 54 95 115 99 49 56 55}
-    }
-  old_expression_markers {{0 18}
+  old_expression_markers {{0 -1}
     }
   box {20 20 1000 75}
   transforms {{0 2}
@@ -152,7 +149,7 @@ Group {
   gl_color 0x3235ff00
   label "镜头名称\n\[knob this.message \{\[lindex \[split \[basename \[value root.name]] .] 0]\}]"
   xpos 290
-  ypos -91
+  ypos -90
  }
  Text2 {
   font_size_toolbar 100
@@ -160,9 +157,9 @@ Group {
   font_height_toolbar 100
   opacity 0.34
   message "\[x]"
-  old_message {{52 56 56}
+  old_message {{49}
     }
-  old_expression_markers {{0 2}
+  old_expression_markers {{0 0}
     }
   box {1700 20 1900 75}
   xjustify right

@@ -1,0 +1,73 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push 0
+Dot {
+ name Dot6
+ gl_color 0xc732ff00
+ note_font 微软雅黑
+ selected true
+ xpos 196
+ ypos -323
+}
+Shuffle {
+ in none
+ red black
+ out mask
+ name Shuffle2
+ gl_color 0xae32ff00
+ note_font 微软雅黑
+ selected true
+ xpos 216
+ ypos -303
+}
+push $cut_paste_input
+Dot {
+ name Dot5
+ gl_color 0xff325900
+ note_font 微软雅黑
+ selected true
+ xpos 439
+ ypos -316
+}
+set Nbfef1800 [stack 0]
+Dot {
+ name Dot4
+ gl_color 0xff9c3200
+ note_font 微软雅黑
+ selected true
+ xpos 365
+ ypos -283
+}
+Shuffle {
+ in none
+ red white
+ out mask
+ name Shuffle1
+ gl_color 0xae32ff00
+ note_font 微软雅黑
+ selected true
+ xpos 318
+ ypos -288
+}
+ZMerge {
+ inputs 2
+ name ZMerge1
+ gl_color 0xff963200
+ note_font 微软雅黑
+ selected true
+ xpos 270
+ ypos -235
+}
+push $Nbfef1800
+Multiply {
+ inputs 1+1
+ value 0
+ maskChannelMask mask.a
+ invert_mask true
+ name Multiply1
+ gl_color 0xff9e3200
+ note_font 微软雅黑
+ selected true
+ xpos 408
+ ypos -211
+}

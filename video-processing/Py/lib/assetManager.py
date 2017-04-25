@@ -151,7 +151,7 @@ def DropDataCallBack_vf(type, data):
         return None
     # Only deal with vf
     if data.endswith('.vf'):
-        nuke.createNode('Vectorfield', 'vfield_file "{data}" file_type vf label {{[value this.vfield_file]}}'.format(data=data))
+        vectorfield_node = nuke.createNode('Vectorfield', 'vfield_file "{data}" file_type vf label {{[value this.vfield_file]}}'.format(data=data))
         return True
     else:
         return None
@@ -238,7 +238,7 @@ def replaceSequence():
             _Write['use_custom_frame'].setValue(True)
 
 def sentToRenderDir():
-    if nuke.Root().modified():
+    if nuke.Root().modified() or not nuke.Root()['name'].value():
         return False
 
     if os.getenv('TEMP_RENDER'):

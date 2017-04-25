@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # Nuke Batch Render
-# Version 2.16
+# Version 2.18
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -44,7 +44,7 @@ from subprocess import call, Popen, PIPE
 os.chdir(os.path.dirname(__file__))
 
 # Startup
-VERSION = 2.16
+VERSION = 2.18
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP cp936 & TITLE Nuke批渲染_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -195,7 +195,8 @@ class NukeBatchRender(object):
                     os.rename(locked_file, file)
                 returncode_text = '退出码: {}'.format(returncode)
             else:
-                os.remove(locked_file)
+                if not isProxyRender:
+                    os.remove(locked_file)
                 returncode_text = '正常退出'
 
             end_time = datetime.datetime.now()
@@ -206,7 +207,7 @@ class NukeBatchRender(object):
     def checkLockFile(self):
         locked_file = list(i for i in os.listdir(self.dir) if i.endswith('.nk.lock'))
         if locked_file:
-            print_('**提示** 检测到上次未正常退出所遗留的.nk.lock文件, 将自动解锁') 
+            print_('**提示** 检测到上次遗留的.nk.lock文件, 将自动解锁') 
             logger.info('检测到.nk.lock文件')
             for file in locked_file:
                 unlocked_name = os.path.splitext(file)[0]
@@ -247,7 +248,75 @@ def secondsToStr(seconds):
         ret += '{}分钟'.format(minute)
     ret += '{}秒'.format(seconds)
     return ret
+
+
+class CommandLineUI(object):
+    EP = None
+    IMAGE_FOLDER = None
+    NUKE = None
+    PROJECT = None
+    SCENE = None
+    SERVER = None
+
+    isLowPriority = False
+    isHibernate = False
+    isProxyRender = False
+    isCont = False
+    
+    def __init__(self):
+        call(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
+
+    def showChoice(self):    
+        print_('方案1:\t\t\t制作模式(默认) - 流畅, 出错直接跳过\n'
+               '方案2:\t\t\t午间模式 - 全速, 出错继续渲\n'
+               '方案3:\t\t\t夜间模式 - 全速, 出错继续渲, 完成后休眠\n'
+               '方案4:\t\t\t代理模式 - 流畅, 出错继续渲, 输出代理尺寸\n'
+               '\nCtrl+C\t直接退出\n')
+               
+        try:
+            choice = call(u'CHOICE /C 1234 /T 15 /D 1 /M "选择方案"'.encode(prompt_codec))
+        except KeyboardInterrupt:
+            exit()
+        self.setStatus(choice)
+
         
+    def setStatus(self, choice):
+        if choice == 1:
+            pass
+        elif choice == 2:
+            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
+                self.isUpload = True
+            else:
+                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
+        elif choice == 3:
+            if self.image_download_path and os.path.exists(self.image_download_path):
+                self.isDownload = True
+            else:
+                print_('**提示**\t\t没有可下载文件')
+        elif choice == 4:
+            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
+                self.isUpload = True
+            else:
+                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
+            if self.image_download_path and os.path.exists(self.image_download_path):
+                self.isDownload = True
+            else:
+                print_('**提示**\t\t没有可下载文件')
+        else:
+            exit()
+        print('')
+        
+    def readIni(self, ini_file='path.ini'):
+        with open(ini_file, 'r') as ini_file:
+            for line in ini_file.readlines():
+                result = re.match('^([^;].*)=(.*)', line)
+                if result:
+                    var_name = result.group(1)
+                    var_value = result.group(2)
+                    globals()[var_name] = var_value
+                    logger.debug('{}: {}'.format(var_name, var_value))
+        print('')
+
 # Display choice
 logger.info('{:-^100s}'.format('<启动>'))
 BatchRender = NukeBatchRender()

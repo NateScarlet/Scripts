@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.836
+# Version 0.840
 
 import nuke
 import os
@@ -19,9 +19,6 @@ toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
 prompt_codec = 'GBK'
 script_codec = 'UTF-8'
-
-def print_(obj):
-    print(str(obj).decode(script_codec).encode(prompt_codec))
 
 class Comp(object):
 
@@ -60,7 +57,7 @@ class Comp(object):
         else:
             self.last_output = self.node_tag_dict.keys()[0]
     
-    def __Call__(self):
+    def __call__(self):
         self.renameReads()
         
         # Merge
@@ -79,7 +76,7 @@ class Comp(object):
         self.mergeDepth()
         self.addReformat()
         self.addDepth()
-        self.setSSS_alpha()
+        self.addKeyer()
         self.add_ZDefocus()
         self.mergeMP()
         
@@ -92,6 +89,8 @@ class Comp(object):
             self.setFrameRangeByNode(self.getNodesByTag(['CH', 'BG'])[-1])
         except IndexError:
             nuke.message('没有找到CH或BG\n请手动设置工程帧范围')
+        first, last = nuke.Root()['first_frame'].value(), nuke.Root()['last_frame'].value()
+        nuke.frame((first + last) // 2.0)
         
         # Set project
         if not nuke.Root()['project_directory'].value():
@@ -101,25 +100,21 @@ class Comp(object):
         
         self.connectViewer()
         
-        self.placeNodes()
-        zoomToFitAll()
+        self.autoplaceAllNodes()
+        self.zoomToFitAll()
 
         self.showPanels()
 
     def connectViewer(self):
-        if nuke.env['gui']:
-            _Write = nuke.toNode('_Write')
-            if _Write:
-                nuke.connectViewer(3, _Write)
-            nuke.connectViewer(1, self.last_output)
-        else:
-            viewer_node = nuke.toNode('Viewer1')
-            if not viewer_node:
-                viewer_node = nuke.nodes.Viewer()
-            _Write = nuke.toNode('_Write')
-            if _Write:
-                viewer_node.connectInput(3, _Write)
-            viewer_node.connectInput(1, self.last_output)
+        viewer_node = nuke.toNode('Viewer1')
+        if not viewer_node:
+            viewer_node = nuke.nodes.Viewer()
+        _Write = nuke.toNode('_Write')
+        viewer_node.connectInput(0, self.last_output)
+        viewer_node.connectInput(1, self.last_output)
+        viewer_node.connectInput(2, self.last_output)
+        if _Write:
+            viewer_node.connectInput(3, _Write)
         
     def getFootageTag(self, n):
         '''
@@ -176,19 +171,12 @@ class Comp(object):
             merge_node = nuke.nodes.Merge2(inputs=[self.last_output, i], label=self.node_tag_dict[i])
             self.last_output = merge_node
 
-    def addSoftClip(self):
-        for i in self.bg_ch_nodes:
-            softclip_node = nuke.nodes.SoftClip(conversion=3)
-            insertNode(softclip_node, i)
-        if len(self.bg_ch_nodes) == 1:
-            self.last_output = softclip_node
-
     def mergeOCC(self):
         try:
             merge_node = None
             for i in self.getNodesByTag('OC'):
                 merge_node = nuke.nodes.Merge2(inputs=[self.bg_node, i], operation='multiply', screen_alpha=True, label='OCC')
-                insertNode(merge_node, self.bg_node)
+                self.insertNode(merge_node, self.bg_node)
             return merge_node
         except IndexError:
             return False
@@ -197,7 +185,7 @@ class Comp(object):
         try:
             for i in self.getNodesByTag(['SH', 'SD']):
                 grade_node = nuke.nodes.Grade(inputs=[self.bg_node, i], white="0.08420000225 0.1441999972 0.2041999996 0.0700000003", white_panelDropped=True, label='Shadow')
-                insertNode(grade_node, self.bg_node)
+                self.insertNode(grade_node, self.bg_node)
         except IndexError:
             return False
 
@@ -211,9 +199,9 @@ class Comp(object):
                     else:
                         merge_disable = True
                     merge_node = nuke.nodes.Merge2(inputs=[None, i], operation='screen', maskChannelInput='rgba.alpha', label=self.node_tag_dict[i], disable=merge_disable)
-                    insertNode(merge_node, j)
-                insertNode(nuke.nodes.Dot(), i)
-                insertNode(reformat_node, i)
+                    self.insertNode(merge_node, j)
+                self.insertNode(nuke.nodes.Dot(), i)
+                self.insertNode(reformat_node, i)
         except IndexError:
             return False
 
@@ -225,26 +213,26 @@ class Comp(object):
         for i in nodes:
             print('mergeDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
-            if getMax(i, 'depth.Z') > 1.1 :
+            if self.getMax(i, 'depth.Z') > 1.1 :
                 depthfix_node['farpoint'].setValue(10000)
                 print('farpoint -> 10000')
-            insertNode(depthfix_node, i)
+            self.insertNode(depthfix_node, i)
             print('')
         copy_node = nuke.nodes.Copy(inputs=[self.last_output, merge_node], from0='depth.Z', to0='depth.Z')
-        insertNode(copy_node, self.last_output)
+        self.insertNode(copy_node, self.last_output)
         self.last_output = copy_node
         return copy_node
 
     def addReformat(self):
         for i in self.bg_ch_nodes:
             reformat_node = nuke.nodes.Reformat()
-            insertNode(reformat_node, i)
+            self.insertNode(reformat_node, i)
         return reformat_node
         
     def addZDefocus(self):
         for i in self.bg_ch_nodes:
             zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200" || [value _ZDefocus.disable]} {return True} else {return False}]}}', selected=True )
-            insertNode(zdefocus_node, i)
+            self.insertNode(zdefocus_node, i)
         return zdefocus_node
         
     def add_ZDefocus(self):
@@ -256,7 +244,7 @@ class Comp(object):
     def addGrade(self):
         for i in self.bg_ch_nodes:
             print('addGrade(): \t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
-            rgb_max = getMax(i, 'rgb')
+            rgb_max = self.getMax(i, 'rgb')
             erode_size = 0
             erode_node = nuke.nodes.Dilate(inputs=[i], size = erode_size)
             grade_mix = 0.6
@@ -264,7 +252,7 @@ class Comp(object):
             while rgb_max > 1 and erode_size > i.height() / -100.0:
                 erode_node['size'].setValue(erode_size)
                 print('erode_size = {}'.format(erode_size))
-                rgb_max = getMax(erode_node, 'rgb')
+                rgb_max = self.getMax(erode_node, 'rgb')
                 if rgb_max < 1:
                     if rgb_max < 0.5:
                         grade_mix = 0.3
@@ -272,7 +260,7 @@ class Comp(object):
                 erode_size -= 1
             nuke.delete(erode_node)
             grade_node = nuke.nodes.Grade(whitepoint=rgb_max, unpremult='rgba.alpha', mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
-            insertNode(grade_node, i)
+            self.insertNode(grade_node, i)
             print('')
         return grade_node
         
@@ -282,23 +270,23 @@ class Comp(object):
                 print('addDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
                 constant_node = nuke.nodes.Constant(channels='depth', color=1, label='**用渲染出的depth层替换这个**\n或者手动指定数值')
                 merge_node = nuke.nodes.Merge2(inputs=[None, constant_node], also_merge='all', label='addDepth')
-                insertNode(merge_node, i)
+                self.insertNode(merge_node, i)
 
     def addColorCorrect(self):
         for i in self.bg_ch_nodes:
             if 'SSS.alpha' in i.channels():
                 colorcorrect_node = nuke.nodes.ColorCorrect(label='SSS调整', maskChannelInput='SSS.alpha')
-                insertNode(colorcorrect_node, i)
+                self.insertNode(colorcorrect_node, i)
             colorcorrect_node = nuke.nodes.ColorCorrect(label='颜色调整', mix_luminance=1)
-            insertNode(colorcorrect_node, i)
+            self.insertNode(colorcorrect_node, i)
             colorcorrect_node = nuke.nodes.ColorCorrect(label='亮度调整')
-            insertNode(colorcorrect_node, i)
+            self.insertNode(colorcorrect_node, i)
         return colorcorrect_node
         
     def addHueCorrect(self):
         for i in self.bg_ch_nodes:
             huecorrect_node = nuke.nodes.HueCorrect()
-            insertNode(huecorrect_node, i)
+            self.insertNode(huecorrect_node, i)
         return huecorrect_node
     
     def addPremult(self):
@@ -306,7 +294,7 @@ class Comp(object):
         for i in self.bg_ch_nodes:
             if 'rgba.alpha' in i.channels():
                 premult_node = nuke.nodes.Premult()
-                insertNode(premult_node, i)
+                self.insertNode(premult_node, i)
         return premult_node
 
     def addUnremult(self):
@@ -314,7 +302,7 @@ class Comp(object):
         for i in self.bg_ch_nodes:
             if 'rgba.alpha' in i.channels():
                 unpremult_node = nuke.nodes.Unpremult()
-                insertNode(unpremult_node, i)
+                self.insertNode(unpremult_node, i)
         return unpremult_node    
 
     def addDepthFog(self):
@@ -353,17 +341,32 @@ class Comp(object):
 
             group_node.end()
 
-            insertNode(group_node, i)
-    
-    def setSSS_alpha(self):
+            self.insertNode(group_node, i)
+
+    def addSoftClip(self):
+        for i in self.bg_ch_nodes:
+            softclip_node = nuke.nodes.SoftClip(conversion=3)
+            self.insertNode(softclip_node, i)
+        if len(self.bg_ch_nodes) == 1:
+            self.last_output = softclip_node
+
+    def addKeyer(self):
         keyer_node = False
         for i in self.bg_ch_nodes:
             if 'SSS.alpha' in i.channels():
                 keyer_node = nuke.nodes.Keyer(input='SSS', output='SSS.alpha', operation='luminance key', range='0 0.007297795507 1 1')
-                insertNode(keyer_node, i)
+                self.insertNode(keyer_node, i)
         return keyer_node
 
+    def addCrop(self): 
+        #TODO
+        pass
+        
+    def addVectorField(self):
+        pass
+        
     def mergeMP(self):
+        #TODO:add lut;crop
         read_node = nuke.nodes.Read(file=self.mp)
         read_node.setName('MP')
         merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
@@ -371,45 +374,105 @@ class Comp(object):
         
         root_width, root_height = nuke.Root().width(), nuke.Root().height()
         
-        insertNode(nuke.nodes.Defocus(disable=True), read_node)
-        insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
+        self.insertNode(nuke.nodes.Defocus(disable=True), read_node)
+        self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
-        insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
-        insertNode(nuke.nodes.ColorCorrect(), read_node)
-        insertNode(nuke.nodes.Transform(center='{} {}'.format(root_width / 2.0, root_height / 2.0), label='**在此调整MP位置**'), read_node)
-        insertNode(nuke.nodes.Reformat(resize='fill'), read_node)
+        self.insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
+        self.insertNode(nuke.nodes.ColorCorrect(), read_node)
+        self.insertNode(nuke.nodes.Transform(center='{} {}'.format(root_width / 2.0, root_height / 2.0), label='**在此调整MP位置**'), read_node)
+        self.insertNode(nuke.nodes.Reformat(resize='fill'), read_node)
     
     def renameReads(self):
         for i in nuke.allNodes('Read'):
             if i in self.node_tag_dict:
                 i.setName(self.node_tag_dict[i], updateExpressions=True)
-    
-    def placeNodes(self):
-        autoplaceAllNodes()
-    
+
     def showPanels(self):
         nuke.nodes.NoOp(label='[\npython {nuke.show(nuke.toNode(\'_ZDefocus\'))}\ndelete this\n]')
-    
 
-class precomp(object):
+    def insertNode(self, node, input_node):
+        # Create dot presents input_node 's output
+        input_node.selectOnly()
+        dot = nuke.createNode('Dot')
+        
+        # Set node connection
+        node.setInput(0, input_node)
+        dot.setInput(0, node)
+        
+        # Delete dot
+        nuke.delete(dot)
+
+    def autoplaceAllNodes(self):
+        nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
+
+    def clearNodeSelect(self):
+        dot = nuke.nodes.Dot()
+        dot.selectOnly()
+        nuke.delete(dot)
+
+    def zoomToFitAll(self):
+        self.clearNodeSelect()
+        nuke.nodes.NoOp(label='[\npython {nuke.zoomToFitSelected()}\ndelete this\n]')
+
+    def getMax(self, n, channel='depth.Z' ):
+        '''
+        Return themax values of a given node's image at middle frame
+        @parm n: node
+        @parm channel: channel for sample
+        '''
+        # Get middle_frame
+        middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2
+        
+        # Create nodes
+        invert_node = nuke.nodes.Invert( channels=channel, inputs=[n])
+        mincolor_node = nuke.nodes.MinColor( channels=channel, target=0, inputs=[invert_node] )
+        
+        # Execute
+        try:
+            nuke.execute( mincolor_node, middle_frame, middle_frame )
+            max_value = mincolor_node['pixeldelta'].value() + 1
+        except RuntimeError, e:
+            if 'Read error:' in str(e):
+                max_value = -1
+            else:
+                raise RuntimeError, e
+                
+        # Avoid dark frame
+        if max_value < 0.7:
+            nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
+            max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+        if max_value < 0.7:
+            nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
+            max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+            
+        # Delete created nodes
+        for i in ( mincolor_node, invert_node ):
+            nuke.delete( i )
+
+        # Output
+        print('getMax({1}, {0}) -> {2}'.format(channel, n.name(), max_value))
+        
+        return max_value
+
+class Precomp(object):
     shot_pat = re.compile(r'^.+\\.+_sc[^_]+$', flags=re.I)
     footage_pat = re.compile(r'^.+_sc.+_.+\..+$', flags=re.I)
 
     footage_filter = lambda self, s: not any(map(lambda excluded_word: excluded_word in s, ['副本', '.lock']))
     
-    def __init__(self, dir_, target_dir, mp=default_mp):
+    def __init__(self, dir_=None, target_dir=None, mp=default_mp, footage_pat=r'^.+_sc.+_.+\..+$', dir_pat=r'.+',):
 
         self.dir = ''
         self.target_dir = ''
         self.shot_list = [] # Contain shot dir
         self.footage_dict = {}
         self.mp = mp
-        
-        if nuke.env['gui']:
-            precompDialog()
-            return
         self.dir = dir_
         self.target_dir = target_dir
+        self.footage_pat = re.compile(footage_pat, flags=re.I)
+        self.dir_pat = re.compile(dir_pat, flags=re.I)
+
+    def __call__(self):
 
         # Get shot list
         if re.match(self.shot_pat, self.dir):
@@ -420,33 +483,46 @@ class precomp(object):
             dirs.sort()
             self.shot_list = dirs
 
-        self.main()
 
-    def main(self):
-        error_list = []
-        shots_number = len(self.shot_list)
-        print_('全部镜头:\n{0}\n总计:\t{1}'.format('\n'.join(self.shot_list), shots_number))
+        self.shots_number = len(self.shot_list)
+        print_('全部镜头:\n{0}\n总计:\t{1}'.format('\n'.join(self.shot_list), self.shots_number))
         print('')
         for i in range(5)[::-1]:
             sys.stdout.write('\r\r{:2d}'.format(i+1))
             time.sleep(1)
         sys.stdout.write('\r          ')
         
+        self.compAll()
+        
+        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(prompt_codec)
+        call(cmd)
+        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
+        if choice == 2:
+            call('PAUSE', shell=True)
+    
+    def compAll(self):  
+        error_list = []
+
         count = 0
         for shot_dir in self.shot_list:
+            shot = os.path.basename(shot_dir)
+            nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
+
+            count += 1
+            print('\n## [{1}/{2}]:\t\t{0}'.format(shot, count, self.shots_number))
+            
+            if os.path.exists(nk_filename):
+                print_('**提示** 已存在{}, 将直接跳过\n'.format(nk_filename))
+                continue
+
             try:
-                # Show info
-                shot = os.path.basename(shot_dir)
-                count += 1
-                print('\n## [{1}/{2}]:\t\t{0}'.format(shot, count, shots_number))
                 
                 # Comp
                 nuke.scriptClear()
                 self.importFootage(shot_dir)
-                comp(self.mp)
+                Comp(self.mp)()
 
                 # Save nk
-                nk_filename = (self.target_dir + '/' + shot + '.nk').replace('\\', '/')
                 print_('保存为:\n\t\t\t{}\n'.format(nk_filename))
                 nuke.Root()['name'].setValue(nk_filename)
                 nuke.scriptSave(nk_filename)
@@ -475,20 +551,41 @@ class precomp(object):
         print('')
         print_(info)
         with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(prompt_codec), 'w') as log:
+            log.write('总计镜头数量:\t{}\n'.format(self.shots_number))
             log.write(info)
-        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(prompt_codec)
-        call(cmd)
-        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
-        if choice == 2:
-            call('PAUSE', shell=True)
-            
+
+    def showDialog(self):
+        # Set panel 
+        p = nuke.Panel('Precomp')
+        p.addFilenameSearch('存放素材的文件夹', 'Z:\SNJYW\Render\EP')
+        p.addFilenameSearch('存放至', 'E:\precomp')
+        p.addFilenameSearch('指定MP', default_mp)
+        p.addSingleLineInput('素材名正则', r'^.+_sc.+_.+\..+$')
+        p.addSingleLineInput('文件夹名正则', r'^.*[^\\]{8,}$')
+
+        # Show panel
+        ok = p.show()
+        if ok:
+            cmd = 'START "precomp" "{nuke}" -t "{script}" "{footage_path}" "{save_path}" "{mp}" "{footage_pat}" "{dir_pat}"'.format(nuke=nuke.env['ExecutablePath'], script=os.path.normcase(__file__).rstrip('c'), footage_path=p.value('存放素材的文件夹'), save_path=p.value('存放至'), mp=p.value('指定MP'), footage_pat=p.value('素材名正则'), dir_pat=p.value('文件夹名正则'))
+            print(cmd)
+            if os.path.exists(p.value('存放素材的文件夹')):
+                call(cmd, shell=True)
+            else:
+                nuke.message('素材路径不存在')
+        else:
+            return False
+
     def importFootage(self, shot_dir):
         # Get all subdir
         dirs = [x[0] for x in os.walk(shot_dir)]
         print_('导入素材:')
         for d in dirs:
             # Get footage in subdir
+            print_('文件夹 {}:'.format(d))
             footages = nuke.getFileNameList(d)
+            if not re.match(self.dir_pat, d):
+                print_('\t\t\t不匹配文件夹正则, 跳过\n'.format(d))
+                continue
             if footages:
                 # Filtring
                 footages = filter(self.footage_filter, footages)
@@ -497,8 +594,12 @@ class precomp(object):
                 for f in footages:
                     nuke.createNode( 'Read', "file {" + d + '/' + f + "}") 
                     print('\t' * 3 + f)
+            print('')
         print('')
 
+    def importCamera(self):
+        pass
+        
 class FootageError(Exception):
     def __init__(self):
         print_("**错误** - 没有找到素材")
@@ -507,101 +608,26 @@ def addMenu():
     m = nuke.menu("Nodes")
     m = m.addMenu('自动合成', icon='autoComper_WLF.png')
     m.addCommand('自动合成',"autoComper_WLF.Comp()()",icon='autoComper_WLF.png')
-    m.addCommand('批量合成',"autoComper_WLF.precompDialog()",icon='autoComper_WLF.png')
+    m.addCommand('批量合成',"autoComper_WLF.Precomp().showDialog()",icon='autoComper_WLF.png')
 
-def precompDialog():
-    # Set panel 
-    p = nuke.Panel('Precomp')
-    p.addFilenameSearch('存放素材的文件夹', 'Z:\SNJYW\Render\EP')
-    p.addFilenameSearch('存放至', 'E:\precomp')
-    p.addFilenameSearch('指定MP', default_mp)
+def print_(obj):
+    print(str(obj).decode(script_codec).encode(prompt_codec))
 
-    # Show panel
-    p.show()
-    cmd = 'START "precomp" "{nuke}" -t "{script}" "{footage_path}" "{save_path}" "{mp}"'.format(nuke=nuke.env['ExecutablePath'], script=os.path.normcase(__file__).rstrip('c'), footage_path=p.value('存放素材的文件夹'), save_path=p.value('存放至'), mp=p.value('指定MP'))
-    print(cmd)
-    if os.path.exists(p.value('存放素材的文件夹')):
-        os.popen(cmd)
-    else:
-        nuke.message('素材路径不存在')
-        
-def insertNode(node, input_node):
-    # Create dot presents input_node 's output
-    input_node.selectOnly()
-    dot = nuke.createNode('Dot')
-    
-    # Set node connection
-    node.setInput(0, input_node)
-    dot.setInput(0, node)
-    
-    # Delete dot
-    nuke.delete(dot)
-
-def autoplaceAllNodes():
-    nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
-
-def clearNodeSelect():
-    dot = nuke.nodes.Dot()
-    dot.selectOnly()
-    nuke.delete(dot)
-
-def zoomToFitAll():
-    clearNodeSelect()
-    nuke.nodes.NoOp(label='[\npython {nuke.zoomToFitSelected()}\ndelete this\n]')
-
-def getMax( n, channel='depth.Z' ):
-    '''
-    Return themax values of a given node's image at middle frame
-    @parm n: node
-    @parm channel: channel for sample
-    '''
-    # Get middle_frame
-    middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2
-    
-    # Create nodes
-    invert_node = nuke.nodes.Invert( channels=channel, inputs=[n])
-    mincolor_node = nuke.nodes.MinColor( channels=channel, target=0, inputs=[invert_node] )
-    
-    # Execute
-    try:
-        nuke.execute( mincolor_node, middle_frame, middle_frame )
-        max_value = mincolor_node['pixeldelta'].value() + 1
-    except RuntimeError, e:
-        if 'Read error:' in str(e):
-            max_value = -1
-        else:
-            raise RuntimeError, e
-            
-    # Avoid dark frame
-    if max_value < 0.7:
-        nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
-        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
-    if max_value < 0.7:
-        nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
-        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
-        
-    # Delete created nodes
-    for i in ( mincolor_node, invert_node ):
-        nuke.delete( i )
-
-    # Output
-    print('getMax({1}, {0}) -> {2}'.format(channel, n.name(), max_value))
-    
-    return max_value
-
-# Deal call with argv
-if len(sys.argv) == 4 and __name__ == '__main__':
-    call(u'CHCP cp936 & TITLE 批量预合成_吾立方 & CLS'.encode(prompt_codec), shell=True)
-    print_('{:-^50s}'.format('确认设置'))
+if __name__ == '__main__' and  len(sys.argv) == 6:
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
-    print_('素材路径:\t{}\n保存路径:\t{}\nMP:\t\t{}'.format(argv[1], argv[2], argv[3]))
+
+    call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(prompt_codec), shell=True)
+    print_('{:-^50s}'.format('确认设置'))
+    print_('素材路径:\t\t{0[1]}\n保存路径:\t\t{0[2]}\nMP:\t\t\t{0[3]}\n素材名正则匹配:\t\t{0[4]}\n文件夹名正则匹配:\t{0[5]}'.format(argv))
+
     if not os.path.exists(argv[2]):
         os.makedirs(argv[2])
         print('Created:\t{}'.format(argv[2]))
     print('')
     for i in range(5)[::-1]:
-        sys.stdout.write('\r\r{:2d}'.format(i+1))
+        sys.stdout.write('\r{:2d}'.format(i+1))
         time.sleep(1)
     sys.stdout.write('\r          ')
     print('')
-    precomp(argv[1], argv[2], argv[3])
+
+    Precomp(argv[1], argv[2], argv[3], argv[4], argv[5])()

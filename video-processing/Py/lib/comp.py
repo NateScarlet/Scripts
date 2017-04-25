@@ -246,3 +246,9 @@ def randomGlColor(n):
         n['gl_color'].setValue(eval('0x{}{}{}{}'.format(color[0],color[1],color[2],'00')))
     else:
         return False
+        
+def enableRSMB(prefix='_'):
+    for i in nuke.allNodes('OFXcom.revisionfx.rsmb_v3'):
+        if i.name().startswith(prefix):
+            i['disable'].setValue(False)
+        

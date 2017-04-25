@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # uploadTool
-# Version 0.11
+# Version 0.12
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -34,6 +34,7 @@ import os
 import sys
 import re
 from subprocess import call
+from shutil import copy2
 
 # Read ini
 os.chdir(os.path.dirname(__file__))
@@ -111,8 +112,16 @@ def uploadVideo():
     if os.path.exists(os.path.dirname(video_dest)):
         if not os.path.exists(video_dest):
             os.mkdir(video_dest)
-        call(['XCOPY', '/Y', '/D', '/I', '/V', 'mov\\*.mov', video_dest])
-        call(['XCOPY', '/Y', '/D', '/I', '/V', 'mov\\burn-in\\*.mov', video_dest+'\\burn-in'])
+        for i in os.listdir('mov'):
+            ext = os.path.splitext(i)[1].lower()
+            if ext == '.mov':
+                src = 'mov\\' + i
+                dst = os.path.join(video_dest, i)
+                if os.path.exists(dst) and os.path.getmtime(src) == os.path.getmtime(dst):
+                    print_('{}: 服务器文件和本地修改日期相同, 跳过'.format(src))
+                    continue
+                else:
+                    call(['XCOPY', '/Y', '/I', '/V', 'mov\\*.mov', video_dest])
     else:
         print_('**错误** 视频上传文件夹不存在, 将不会上传。')
 

@@ -1,0 +1,27 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push 0
+push $cut_paste_input
+MotionBlur3D {
+ inputs 2
+ uv motion
+ math far=1
+ distance 1.#INF
+ shutteroffset centred
+ name MotionBlur3D1
+ gl_color 0x39ff3200
+ note_font 微软雅黑
+ selected true
+ xpos 514
+ ypos -428
+}
+VectorBlur2 {
+ uv motion
+ scale 1
+ name VectorBlur2_1
+ gl_color 0x323fff00
+ note_font 微软雅黑
+ selected true
+ xpos 514
+ ypos -400
+}
