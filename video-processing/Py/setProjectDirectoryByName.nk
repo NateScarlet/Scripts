@@ -1,7 +1,0 @@
-import re
-
-script_name = os.path.splitext(os.path.basename(nuke.scriptName()))[0]
-name_pat = re.compile(r'^SNJYW_(.+?)_(.+?)_(.+)')
-result = re.search(name_pat, script_name,)
-if result:
-    nuke.Root()['project_directory'].setValue('E:/SNJYW/' + result.group(1) + '/' + result.group(2))
