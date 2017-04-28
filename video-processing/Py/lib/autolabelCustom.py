@@ -2,8 +2,6 @@
 
 import nuke
 from autolabel import autolabel
-import assetManager
-#from assetManager import getDropFrameRanges
 
 def autolabelCustom(enable_text_style=True) :
     '''

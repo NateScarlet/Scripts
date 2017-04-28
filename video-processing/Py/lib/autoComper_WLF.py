@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.840
+# Version 0.85
 
 import nuke
 import os
@@ -62,6 +62,7 @@ class Comp(object):
         
         # Merge
         self.mergeOver()
+        self.addCrop()
         self.addZDefocus()
         self.addSoftClip()
         self.addDepthFog()
@@ -359,8 +360,10 @@ class Comp(object):
         return keyer_node
 
     def addCrop(self): 
-        #TODO
-        pass
+        for i in self.bg_ch_nodes:
+            crop_node = nuke.nodes.Crop(box='0 0 {root.width} {root.height}')
+            self.insertNode(crop_node, i)
+        return crop_node
         
     def addVectorField(self):
         pass
