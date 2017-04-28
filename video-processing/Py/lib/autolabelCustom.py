@@ -3,7 +3,7 @@
 import nuke
 from autolabel import autolabel
 import assetManager
-from assetManager import getDropFrameRanges
+#from assetManager import getDropFrameRanges
 
 def autolabelCustom(enable_text_style=True) :
     '''
@@ -16,21 +16,22 @@ def autolabelCustom(enable_text_style=True) :
     if this.Class() == 'Keyer' :
         s = '输入通道 : ' + nuke.value( 'this.input' )
     elif this.Class() == 'Read' :
-        filename = nuke.filename(this)
-        df = ''
-        dropframes = assetManager.dropframes
-        if filename in dropframes.keys():
-            df = str(dropframes[filename])
-        print df
+        try:
+            df = this['dropframes'].value()
+        except NameError:
+            df = ''
+
         if df :
             if not this['disable'].value():
-                nuke.warning( '[缺帧]' + this.name() + ' ' + filename + ' ' + df )
+                nuke.warning( '{}: [缺帧]{}'.format(this.name(), df))
+
             if enable_text_style:
                 df = '\n<span style=\"color:red\">缺帧:' + df + '</span>'
             else:
                 df = '\n缺帧:' + df
         else :
             df = ''
+
         if enable_text_style:
             s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
                 '<span style=\"color:red\">' + nuke.value( 'this.first' ) + ' - ' + nuke.value( 'this.last' ) + '</span>'\

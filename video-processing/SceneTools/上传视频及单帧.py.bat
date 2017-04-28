@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 # uploadTool
-# Version 0.12
+# Version 0.13
 '''
 REM load py script from bat
 @ECHO OFF & CHCP 936 & CLS
@@ -63,7 +63,7 @@ if EP:
     EP = 'EP' + EP.lstrip('EP')
 
 # Startup
-VERSION = 0.11
+VERSION = 0.13
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 call(u'CHCP 936 & TITLE 上传工具_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
@@ -121,7 +121,7 @@ def uploadVideo():
                     print_('{}: 服务器文件和本地修改日期相同, 跳过'.format(src))
                     continue
                 else:
-                    call(['XCOPY', '/Y', '/I', '/V', 'mov\\*.mov', video_dest])
+                    call(['XCOPY', '/Y', '/I', '/V', src, dst])
     else:
         print_('**错误** 视频上传文件夹不存在, 将不会上传。')
 

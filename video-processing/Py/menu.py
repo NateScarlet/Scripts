@@ -15,8 +15,11 @@ autoComper_WLF.addMenu()
 nuke.addAutolabel( autolabelCustom )
 
 # Add dropframe check
-nuke.addOnCreate(lambda : assetManager.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
-nuke.addOnScriptSave(assetManager.showDropFrames)
+dropframe_check = assetManager.DropFrameCheck()
+dropframe_check.addCallBack()
+dropframe_check.addMenu()
+
+#
 nuke.addOnScriptSave(comp.enableRSMB, kwargs={'prefix': '_'})
 
 nuke.addOnScriptClose(assetManager.sentToRenderDir)

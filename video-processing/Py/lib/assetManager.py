@@ -11,6 +11,96 @@ dropframes_showed = []
 script_codec = 'UTF-8'
 prompt_codec = 'GBK'
 
+class DropFrameCheck(object):
+    dropframes_dict = {}
+    dropframes_showed = []
+
+    def __call__(self, ):
+        self.dropframes_showed = []
+        for node in nuke.allNodes(group=nuke.Root()):
+            self.getDropFrameRanges(node)
+        self.show()
+        
+    def getDropFrameRanges(self, n=nuke.thisNode(), avoid=True):
+        '''
+        Return frameRanges of footage drop frame.
+        
+        @param n: node
+        @param avoid: Avoid node that name endswith '_' for special use.
+        @return frameranges
+        '''
+        # Avoid special node
+        if avoid and n.name().endswith('_'):
+            return None
+        
+        # Get dropframe ranges
+        if n.Class() != 'Read' :
+            return  False
+
+        dropframe_list = []
+        filename = nuke.filename(n)
+        first = int(n['first'].value())
+        last = int(n['last'].value())
+        for frame in range(first, last + 1):
+            filepath = self.getFileAtFrame(filename, frame)
+            if not os.path.exists(filepath):
+                dropframe_list.append(frame)
+        
+        frameranges = nuke.FrameRanges(dropframe_list)
+        frameranges.compact()
+        
+        try:
+            n['dropframes'].setValue(str(frameranges))
+        except NameError:
+            k = nuke.Text_Knob('dropframes', 'dropframes', str(frameranges))
+            k.setFlag(nuke.INVISIBLE)
+            n.addKnob(k)
+
+        if not n['disable'].value() :
+            self.dropframes_dict[filename] = frameranges
+
+        return frameranges
+        
+    def getFileAtFrame(self, filename, frame):
+        '''
+        Return a frame mark expaned version of filename, with given frame
+        '''
+        pat = re.compile(r'%0?\d*d')
+        formated_frame = lambda matchobj: matchobj.group(0) % frame
+        return re.sub(pat, formated_frame, nukescripts.frame.replaceHashes(filename))
+
+    def show(self, ):
+        '''
+        Show a dialog display all drop frames.
+        '''
+        if not nuke.env[ 'gui' ] :
+            raise RuntimeWarning('this fucntion only work on gui mode')
+        
+        message_str = ''
+        for file in self.dropframes_dict.keys() :
+            frameranges = str(self.dropframes_dict[file])
+            if frameranges and file not in self.dropframes_showed:
+                self.dropframes_showed.append(file)
+                message_str += '<tr><td>{}</td><td><span style=\"color:red\">{}</span></td></tr>'.format(file, frameranges)
+        if message_str != '':
+            message_str = '<style>td{padding:8px;}</style>'\
+                          '<table>'\
+                          '<tr><th>素材</th><th>缺帧</th></tr>'\
+                          + message_str + \
+                          '</table>'
+            nuke.message(message_str)
+        
+    def addCallBack(self):
+        nuke.addOnCreate(lambda : self.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
+        nuke.addOnScriptSave(self.show)
+        
+    def addMenu(self, menu=None):
+        if not nuke.env['gui']:
+            return False
+        if not menu:
+            menu = nuke.menu('Nuke').addMenu("检查缺帧")
+        menu.addCommand("检查缺帧", "assetManager.DropFrameCheck()()")
+
 def createOutDirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
     if not os.path.isdir( trgDir ):
@@ -57,77 +147,6 @@ def setFontsPath():
     k = nuke.Root()['free_type_font_path']
     if k.value() == '':
         k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
-
-def replaceFrame(filename, frame):
-    '''
-    Return a frame mark expaned version of filename, with given frame
-    '''
-    pat = re.compile(r'%0?\d*d')
-    formated_frame = lambda matchobj: matchobj.group(0) % frame
-    return re.sub(pat, formated_frame, nukescripts.frame.replaceHashes(filename))
-
-def getDropFrameRanges( n=nuke.thisNode(), avoid=True):
-    '''
-    Return frameRanges of footage drop frame.
-    
-    @param n: node
-    @param avoid: Avoid node that name endswith '_' for special use.
-    @return frameranges
-    '''
-    # Avoid special node
-    if avoid and n.name().endswith('_'):
-        return None
-    
-    # Get dropframe ranges
-    if n.Class() != 'Read' :
-        return  False
-    L = []
-    filename = nuke.filename(n)
-    for f in range( int( n['first'].value() ), int( n['last'].value() ) + 1 ):
-        pth = replaceFrame(filename, f)
-        if not os.path.exists( pth ):
-            L.append( f )
-    fgs = nuke.FrameRanges( L )
-    fgs.compact()
-    if not n['disable'].value() :
-        dropframes[filename] = fgs
-    return fgs
-
-def showDropFrames():
-    '''
-    Show a dialog display all drop frames.
-    '''
-    if not nuke.env[ 'gui' ] :
-        return 'this fucntion only work on gui mode'
-    _D = dropframes
-    _S = ''
-    for i in _D.keys() :
-        frmrgs = str(_D[i])
-        if frmrgs and i not in dropframes_showed:
-            dropframes_showed.append(i)
-            _S += '<tr><td>' + i + '</td><td><span style=\"color:red\">' + frmrgs + '</span></td></tr>'
-    if _S != '':
-        _S = '<style>td{padding:8px;}</style>'\
-             '<table>'\
-             '<tr><th>素材</th><th>缺帧</th></tr>'\
-             + _S + \
-             '</table>'
-        nuke.message( _S )
-
-def allDropFrames():
-    _D = dropframes
-    _S = '\n'.join(_D.keys())
-    return _S
-
-def checkDropFrames():
-    global dropframes
-    global dropframes_showed
-    dropframes = {}
-    dropframes_showed = []
-    for i in nuke.allNodes(group=nuke.Root()):
-        getDropFrameRanges(i)
-    showDropFrames()
-    return
     
 def addDropDataCallBack():
     nukescripts.addDropDataCallback(DropDataCallBack_fbx)
@@ -194,6 +213,9 @@ def setWrite():
             nuke.error('EXCEPTION: assetManager.setWrite()')
 
 def replaceSequence():
+    '''
+    Replace all read node to specified frame range sequence.
+    '''
     # Prepare Panel
     p = nuke.Panel('单帧替换为序列')
     render_path_text = '限定只替换此文件夹中的读取节点'
