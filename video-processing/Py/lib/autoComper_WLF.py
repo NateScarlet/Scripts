@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.851
+# Version 0.86
 
 import nuke
 import os
@@ -39,7 +39,7 @@ class Comp(object):
             self.node_tag_dict[i] = tag
             self.tag_node_dict[tag] = i
         if not self.node_tag_dict:
-            nuke.message(u'请先将素材拖入Nuke')
+            nuke.message('请先将素材拖入Nuke')
             raise FootageError
 
         # Get bg_node
@@ -164,13 +164,16 @@ class Comp(object):
         nuke.Root()['lock_range'].setValue(True)
                     
     def mergeOver(self):
-        if len(self.bg_ch_nodes) <= 1:
+        if len(self.bg_ch_nodes) == 0:
             return False
-        for i in self.bg_ch_nodes[1:]:
-            if not self.last_output:
-                continue
-            merge_node = nuke.nodes.Merge2(inputs=[self.last_output, i], label=self.node_tag_dict[i])
-            self.last_output = merge_node
+        elif len(self.bg_ch_nodes) == 1:
+            self.last_output = nuke.nodes.Dot(inputs=[self.bg_ch_nodes[0]])
+        else:
+            for i in self.bg_ch_nodes[1:]:
+                if not self.last_output:
+                    continue
+                merge_node = nuke.nodes.Merge2(inputs=[self.last_output, i], label=self.node_tag_dict[i])
+                self.last_output = merge_node
 
     def mergeOCC(self):
         try:
@@ -348,8 +351,6 @@ class Comp(object):
         for i in self.bg_ch_nodes:
             softclip_node = nuke.nodes.SoftClip(conversion=3)
             self.insertNode(softclip_node, i)
-        if len(self.bg_ch_nodes) == 1:
-            self.last_output = softclip_node
 
     def addKeyer(self):
         keyer_node = False
@@ -365,8 +366,6 @@ class Comp(object):
             self.insertNode(crop_node, i)
         return crop_node
         
-    def addVectorField(self):
-        pass
         
     def mergeMP(self):
         #TODO:add lut;crop
@@ -376,12 +375,33 @@ class Comp(object):
         self.last_output = merge_node
         
         root_width, root_height = nuke.Root().width(), nuke.Root().height()
-        
+
+        self.insertNode(nuke.nodes.Crop(box='0 0 {root.width} {root.height}'), read_node)
         self.insertNode(nuke.nodes.Defocus(disable=True), read_node)
         self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
         self.insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
         self.insertNode(nuke.nodes.ColorCorrect(), read_node)
+
+        try:
+            filename = nuke.filename(self.bg_ch_nodes[0])
+            print(filename)
+            lut_dir = re.match(r'(.+/\d{2}).+', filename).group(1) + '/lut'
+            if os.path.exists(lut_dir):
+                lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
+                lut = lut_dir + '/' + lut_list[0]
+            else:
+                lut = None
+        except IndexError:
+            lut = None
+        except:
+            print('MergeMP(): ')
+            traceback.print_exc()
+            print('')
+        
+        if lut:
+            print('MergeMP(): {}'.format(lut))
+            self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
         self.insertNode(nuke.nodes.Transform(center='{} {}'.format(root_width / 2.0, root_height / 2.0), label='**在此调整MP位置**'), read_node)
         self.insertNode(nuke.nodes.Reformat(resize='fill'), read_node)
     
