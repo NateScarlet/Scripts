@@ -5,12 +5,13 @@ add_layer {P P.red P.green P.blue}
 Group {
  name PositionKeyer1
  tile_color 0xff00ff
+ gl_color 0xd3ff3200
  label "输入通道: \[value in]\n"
  note_font 微软雅黑
  selected true
- xpos -164
- ypos -47
- addUserKnob {20 tab1 l PositionKeyer_v0.7}
+ xpos -49
+ ypos -191
+ addUserKnob {20 tab1 l PositionKeyer_v0.8}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l preview(预览) +STARTLINE}
  addUserKnob {26 sample_point l 取样位置}
@@ -18,19 +19,19 @@ Group {
  p0 {902 646}
  addUserKnob {12 p1}
  p1 {1418 138}
- addUserKnob {26 horizontal l Horizontal(水平方向)}
- addUserKnob {6 x l enable(启用) +STARTLINE}
+ addUserKnob {26 div_preset l Preset(预设)}
+ addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(0)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {22 bt_y l Y -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {26 div_setting l Setting(详细设置)}
+ addUserKnob {6 x +STARTLINE}
  x true
  addUserKnob {6 invert_x l invert(反转) -STARTLINE}
- addUserKnob {7 rotation l rotation(旋转) R 0 180}
- addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(0)\n\np0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)"}
- addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\np0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)"}
- addUserKnob {26 vertical l Vertical(垂直方向)}
- addUserKnob {6 y l enable(启用) +STARTLINE}
+ addUserKnob {6 y +STARTLINE}
  addUserKnob {6 invert_y l invert(反转) -STARTLINE}
- addUserKnob {26 ""}
- addUserKnob {22 bt_apply l Apply(应用) T "p0 = nuke.thisNode()\['p0'].value()\np1 = nuke.thisNode()\['p1'].value()\n\nsampler = nuke.thisNode().node('Sampler')\n\nblackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\nwhitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\nsampler\['p0'].setValue(blackpoint)\nsampler\['p1'].setValue(whitepoint)" +STARTLINE}
- addUserKnob {22 bt_enable_auto_refresh l "Enable Auto Refresh(启用自动刷新)" -STARTLINE T "def refreshRotation():\n    p0 = nuke.thisNode()\['p0'].value()\n    p1 = nuke.thisNode()\['p1'].value()\n\n    sampler = nuke.thisNode().node('Sampler')\n\n    blackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\n    whitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\n    sampler\['p0'].setValue(blackpoint)\n    sampler\['p1'].setValue(whitepoint)\n\nnuke.callbacks.addKnobChanged(refreshRotation, node=nuke.thisNode())"}
+ addUserKnob {7 rotation l rotation(旋转) R 0 180}
+ rotation {0}
+ addUserKnob {22 bt_apply l INVISIBLE +INVISIBLE T "def refreshRotation():\n    p0 = nuke.thisNode()\['p0'].value()\n    p1 = nuke.thisNode()\['p1'].value()\n\n    sampler = nuke.thisNode().node('Sampler')\n\n    blackpoint = (sampler.sample('rgba.red', p0\[0],  p0\[1]), sampler.sample('rgba.green', p0\[0],  p0\[1]), sampler.sample('rgba.blue', p0\[0],  p0\[1]))\n    whitepoint = (sampler.sample('rgba.red', p1\[0],  p1\[1]), sampler.sample('rgba.green', p1\[0],  p1\[1]), sampler.sample('rgba.blue', p1\[0],  p1\[1]))\n\n    sampler\['p0'].setValue(blackpoint)\n    sampler\['p1'].setValue(whitepoint)\n\nnuke.callbacks.addKnobChanged(refreshRotation, node=nuke.thisNode())" +STARTLINE}
  addUserKnob {26 result l Result}
  addUserKnob {41 p0_1 l "point 0" T Sampler.p0}
  addUserKnob {41 p1_1 l "point 1" T Sampler.p1}
@@ -42,7 +43,7 @@ Group {
   xpos 290
   ypos -1234
  }
-set N38472000 [stack 0]
+set N52f0f000 [stack 0]
  Shuffle {
   in P
   in2 rgba
@@ -51,7 +52,7 @@ set N38472000 [stack 0]
   xpos 290
   ypos -1208
  }
-set N1cfff000 [stack 0]
+set N52f0ec00 [stack 0]
  Expression {
   temp_name0 rotation
   temp_expr0 radians(this.rotation)
@@ -92,10 +93,10 @@ set N1cfff000 [stack 0]
   ypos -1066
   addUserKnob {20 Result}
   addUserKnob {18 p0 l "point 0"}
-  p0 {111.9375 116.3125 -1851}
+  p0 {49.90625 16.046875 139.25}
   addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p1 l "point 1"}
-  p1 {134.875 104.375 -1839}
+  p1 {49.875 4.91015625 127.4375}
   addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
  Grade {
@@ -141,8 +142,8 @@ set N1cfff000 [stack 0]
   xpos 290
   ypos -874
  }
-set N989cc00 [stack 0]
-push $N1cfff000
+set N9154800 [stack 0]
+push $N52f0ec00
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -153,8 +154,8 @@ push $N1cfff000
   xpos 510
   ypos -877
  }
-push $N989cc00
-push $N38472000
+push $N9154800
+push $N52f0f000
  Copy {
   inputs 2
   from0 rgba.alpha
