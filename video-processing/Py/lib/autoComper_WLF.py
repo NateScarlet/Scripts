@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.85
+# Version 0.851
 
 import nuke
 import os
@@ -213,7 +213,7 @@ class Comp(object):
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], tile_color=2184871423L, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         for i in nodes:
             print('mergeDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
-            depthfix_node = nuke.loadToolset(toolset + r'\Depth\Depthfix.nk')
+            depthfix_node = nuke.loadToolset(toolset + r'\Depthfix.nk')
             if self.getMax(i, 'depth.Z') > 1.1 :
                 depthfix_node['farpoint'].setValue(10000)
                 print('farpoint -> 10000')
@@ -310,7 +310,7 @@ class Comp(object):
         node_color = 596044543
 
         # Add _DepthFogControl node
-        _DepthFogControl = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
+        _DepthFogControl = nuke.loadToolset(toolset + '/Keyer/DepthKeyer.nk')
         _DepthFogControl.setInput(0, self.last_output)
         _DepthFogControl.setName('_DepthFogControl')
         _DepthFogControl['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
@@ -332,7 +332,7 @@ class Comp(object):
 
             input = nuke.nodes.Input(name='Input')
 
-            depthkeyer_node = nuke.loadToolset(toolset + '/Depth/DepthKeyer.nk')
+            depthkeyer_node = nuke.loadToolset(toolset + '/Keyer/DepthKeyer.nk')
             depthkeyer_node.setInput(0, input)
             depthkeyer_node['range'].setExpression('_DepthFogControl.range')
 
