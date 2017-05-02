@@ -1,6 +1,6 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# Version 0.3
+# Version 0.31
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
 import os, sys
@@ -8,6 +8,9 @@ import statistics
 import colorsys
 from shutil import move, copy2
 from subprocess import call
+import zipfile
+import io
+import datetime
 
 prompt_codec = 'GBK'
 nconvert = r'C:\Program Files\nconvert.exe'
@@ -50,8 +53,10 @@ class CommandLineUI(object):
         print(self.joint_images)
     
         
-    def pause():
+    def pause(self):
         call('PAUSE', shell=True)
+        
+        
 
 class MangaProcessing(CommandLineUI):
 
@@ -87,15 +92,28 @@ class MangaProcessing(CommandLineUI):
                     self.desarturationGreyImages()
                     print('现在应去手动调整合页拼图的位置(不补中缝)')
                 elif choice == 2:
+                    self.backupVersion()
                     self.smartcrop()
                     self.autocontrastImages()
                     print('现在应去手动补中缝去广告调色阶')
                 elif choice == 3:
+                    self.backupVersion
                     self.filtering()
                 elif choice == 4:
-                    call('"{}" "{}"'.format(createzip, dir))
+                    self.backupVersion
+                    self.createZip()
         except KeyboardInterrupt:
             exit()
+
+    def createZip(self):
+        dir_basename = os.path.basename(self.working_dir)
+        with zipfile.ZipFile('{}.zip'.format('[修图]' + dir_basename), 'w') as zip_file:
+            for i in self.image_list:
+                zip_file.write(i, arcname=os.path.join(dir_basename, i))
+            info = '修图:Nate Scarlet 邮箱：NateScarlet@Gmail.com\n'\
+                   '\t\t非工作日乐意承接任何无偿漫画修图 通常于收到24小时内完成\n'\
+                   '\t\t\t\t\t\t\t\t{time}'.format(time=datetime.datetime.now().strftime('%x %X'))
+            zip_file.writestr(os.path.join(dir_basename, '修图 Nate.txt'), info)
 
     def smartcrop(self):
         for image in self.image_list:
