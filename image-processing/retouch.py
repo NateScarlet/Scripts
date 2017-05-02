@@ -1,6 +1,6 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# Version 0.31
+# Version 0.4
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
 import os, sys
@@ -16,7 +16,6 @@ prompt_codec = 'GBK'
 nconvert = r'C:\Program Files\nconvert.exe'
 autocrop = os.path.join(os.path.dirname(__file__), '智能裁边.exe')
 filtering = os.path.join(os.path.dirname(__file__), '黑白图修图(无视RGB模式图像).exe')
-createzip = os.path.join(os.path.dirname(__file__), '压缩修图文件夹.bat')
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class CommandLineUI(object):
@@ -69,38 +68,42 @@ class MangaProcessing(CommandLineUI):
             os.mkdir('raw')
 
     def __call__(self):
-        self.backupRaw()
         self.showOption()
         
     def showOption(self):
         try:
             while True:
                 print('\n'
-                      '建议先用Camera Raw自动旋转\n'
-                      '1.重命名转换格式拼图\n'
-                      '2.智能裁剪自动对比度\n'
-                      '3.过滤镜\n'
-                      '4.压缩为zip\n\n'
+                      '1. 文件格式优化\n'
+                      '2. 重命名;拼图;转换格式\n'
+                      '3. 智能裁剪;自动对比度\n'
+                      '4. 过滤镜;压缩为zip\n'
+                      '5. 压缩为zip\n\n'
                       'CTRL+C 退出\n')
                 choice = call('CHOICE /C 1234 /M "选择方案"', shell=True)
                 if choice == 1:
-                    self.backupVersion()
+                    self.backupRaw()
+                    self.nconvert()
+                    self.desarturationGreyImages()
+                    self.avoidSmartcrop()
+                    print('↓接下来应该手动 Camera Raw自动旋转\n')
+                elif choice == 2:
+                    self.getImageList()
                     self.renameImages()
                     self.askImageJoint()
-                    self.convertToPNG()
                     self.jointImage()
-                    self.desarturationGreyImages()
-                    print('现在应去手动调整合页拼图的位置(不补中缝)')
-                elif choice == 2:
+                    self.convertToPNG()
+                    print('↓接下来应该手动 调整合页拼图位置(不补中缝)\n')
+                elif choice == 3:
                     self.backupVersion()
                     self.smartcrop()
                     self.autocontrastImages()
-                    print('现在应去手动补中缝去广告调色阶')
-                elif choice == 3:
-                    self.backupVersion
-                    self.filtering()
+                    print('↓接下来应该手动 补中缝;去广告;调色阶\n')
                 elif choice == 4:
-                    self.backupVersion
+                    self.backupVersion()
+                    self.filtering()
+                    self.createZip()
+                elif choice == 5:
                     self.createZip()
         except KeyboardInterrupt:
             exit()
@@ -126,8 +129,11 @@ class MangaProcessing(CommandLineUI):
     def resize(self):
         pass
 
-    def grade(self):
-        pass
+    def grade(self, image, blackpoint, whitepoint):
+        with Image.open(image) as image_object:
+            grade_ = lambda value: (value / 255.0) * (whitepoint - blackpoint) + blackpoint
+            image_object = Image.eval(image_object, grade_)
+            image_object.save(image)
     
     def filtering(self):
         for image in self.image_list:
@@ -136,19 +142,29 @@ class MangaProcessing(CommandLineUI):
     
     def convertToPNG(self):
         print('## 转为PNG格式')
+        for index, image in enumerate(self.image_list):
+            with Image.open(image) as image_object:
+                new_name = os.path.splitext(image)[0] + '.png'
+                image_object.save(new_name)
+            if new_name != image:
+                os.remove(image)
+            self.image_list[index] = new_name
+            print('{} -> {}'.format(image, new_name))
+    
+    def nconvert(self):
+        print('## nconvert')
         try:
-            call('"{}" -out png -D {}'.format(nconvert, ' '.join(self.image_list)))
-            self.image_list = list(map(lambda file_name: os.path.splitext(file_name)[0] + '.png', self.image_list)) 
+            for image in self.image_list:
+                ext = os.path.splitext(image)[1]
+                format = ext[1:].lower()
+                format_dict = {'jpg': 'jpeg', }
+                if format in format_dict.keys():
+                    format = format_dict[format]
+                call('"{}" -out {} -D {}'.format(nconvert, format, image))
+            self.getImageList()
             print('使用nconvert转换了全部文件')
         except FileNotFoundError:
             print('推荐下载nconvert放在C:\Program Files中\n脚本自带转换不稳定')
-            for index, image in enumerate(self.image_list):
-                with Image.open(image) as image_object:
-                    new_name = os.path.splitext(image)[0] + '.png'
-                    image_object.save(new_name)
-                os.remove(image)
-                self.image_list[index] = new_name
-                print('{} -> {}'.format(image, new_name))
 
     def backupRaw(self):
         for image in self.image_list:
@@ -169,6 +185,7 @@ class MangaProcessing(CommandLineUI):
             src = image
             dst = os.path.join(dst_folder, image)
             copy2(src, dst)
+        print('## 版本备份: {}'.format(version))
 
     def jointImage(self):
         print('## 合页拼图')
@@ -193,9 +210,8 @@ class MangaProcessing(CommandLineUI):
                         bg_color = (255, 255, 255)
                     new_image = Image.new(mode=new_mode, size=new_size, color=bg_color)
 
-                    avoid_smartcrop = lambda value : 254 if value == 255 else value
-                    new_image.paste(Image.eval(imageL_object, avoid_smartcrop), box = (0, gap))
-                    new_image.paste(Image.eval(imageR_object, avoid_smartcrop), box = (sizeL[0] + gap, gap))
+                    new_image.paste(imageL_object, box = (0, gap))
+                    new_image.paste(imageR_object, box = (sizeL[0] + gap, gap))
 
                     new_name = '{:02d}-{:02d}{}'.format(imageR + 1, imageL + 1, os.path.splitext(imageL_file)[1])
                     new_image.save(new_name)
@@ -205,7 +221,14 @@ class MangaProcessing(CommandLineUI):
             os.remove(imageL_file)
             os.remove(imageR_file)
         self.image_list = list(filter(lambda i: i, self.image_list))
-
+    
+    def avoidSmartcrop(self):
+        avoid_smartcrop = lambda value : 254 if value == 255 else value
+        for image in self.image_list:
+            with Image.open(image) as image_object:
+                Image.eval(image_object, avoid_smartcrop).save(image)
+            print('{}: 255白设为254白(用于智能裁剪检测)'.format(image))
+    
     def getSartuation(self, image):
         
         with Image.open(image) as image_object:
