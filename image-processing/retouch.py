@@ -1,6 +1,6 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# Version 0.4
+# Version 0.41
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
 import os, sys
@@ -26,6 +26,7 @@ class CommandLineUI(object):
     def __init__(self):
         self.getDir()
         os.chdir(self.working_dir)
+        call('TITLE 漫画修图: {}'.format(os.path.basename(self.working_dir)), shell=True)
 
     def getDir(self):
         try:
@@ -80,7 +81,7 @@ class MangaProcessing(CommandLineUI):
                       '4. 过滤镜;压缩为zip\n'
                       '5. 压缩为zip\n\n'
                       'CTRL+C 退出\n')
-                choice = call('CHOICE /C 1234 /M "选择方案"', shell=True)
+                choice = call('CHOICE /C 12345 /M "选择方案"', shell=True)
                 if choice == 1:
                     self.backupRaw()
                     self.nconvert()
