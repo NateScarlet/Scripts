@@ -5,13 +5,12 @@ add_layer {P P.red P.green P.blue}
 Group {
  name PositionKeyer1
  tile_color 0xff00ff
- gl_color 0xd3ff3200
  label "输入通道: \[value in]\n"
  note_font 微软雅黑
  selected true
- xpos 37
- ypos -184
- addUserKnob {20 tab1 l PositionKeyer_v0.81}
+ xpos -741
+ ypos -296
+ addUserKnob {20 tab1 l PositionKeyer_v0.82}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l preview(预览) +STARTLINE}
  addUserKnob {26 sample_point l 取样位置}
@@ -20,9 +19,9 @@ Group {
  addUserKnob {12 p1}
  p1 {1418 138}
  addUserKnob {26 div_base l Base(基本设置)}
- addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(0)\n\nnuke.thisNode()\['bt_apply'].execute()"}
- addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
- addUserKnob {22 bt_y l Y -STARTLINE T "nuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['x'].setValue(True)\nnuke.thisNode()\['y'].setValue(False)\nnuke.thisNode()\['rotation'].setValue(0)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['x'].setValue(True)\nnuke.thisNode()\['y'].setValue(False)\nnuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
+ addUserKnob {22 bt_y l Y -STARTLINE T "nuke.thisNode()\['x'].setValue(False)\nnuke.thisNode()\['y'].setValue(True)\n\nnuke.thisNode()\['bt_apply'].execute()"}
  addUserKnob {26 div_detail l Detail(详细设置)}
  addUserKnob {6 x +STARTLINE}
  x true
@@ -42,7 +41,7 @@ Group {
   xpos 290
   ypos -1234
  }
-set N919a000 [stack 0]
+set Nb323d400 [stack 0]
  Shuffle {
   in P
   in2 rgba
@@ -51,7 +50,7 @@ set N919a000 [stack 0]
   xpos 290
   ypos -1208
  }
-set N919a400 [stack 0]
+set Nb323d000 [stack 0]
  Expression {
   temp_name0 rotation
   temp_expr0 radians(this.rotation)
@@ -92,10 +91,10 @@ set N919a400 [stack 0]
   ypos -1066
   addUserKnob {20 Result}
   addUserKnob {18 p0 l "point 0"}
-  p0 {49.90625 11.1484375 151.125}
+  p0 {0 0 0}
   addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p1 l "point 1"}
-  p1 {49.875 4.91015625 127.4375}
+  p1 {0 0 0}
   addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
  Grade {
@@ -141,8 +140,8 @@ set N919a400 [stack 0]
   xpos 290
   ypos -874
  }
-set N85517000 [stack 0]
-push $N919a400
+set Nb2a70c00 [stack 0]
+push $Nb323d000
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -153,8 +152,8 @@ push $N919a400
   xpos 510
   ypos -877
  }
-push $N85517000
-push $N919a000
+push $Nb2a70c00
+push $Nb323d400
  Copy {
   inputs 2
   from0 rgba.alpha
