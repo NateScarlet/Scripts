@@ -1,7 +1,5 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# createContactSheet
-# Version 2.12
 
 import os
 import sys
@@ -9,17 +7,22 @@ import re
 import time
 import subprocess
 from subprocess import call
+import nuke
+
+VERSION = 2.12
 
 argvs = sys.argv
-VERSION = 2.12
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
 file_name = None
 
 def print_(obj):
     print(str(obj).decode(script_codec).encode(prompt_codec))
-    
-class createContactSheet(object):
+
+def pause():
+    call('PAUSE', shell=True)
+
+class Contactsheet(object):
 
     last_output = None
     backdrop_read_node = None
@@ -40,10 +43,11 @@ class createContactSheet(object):
         image = self.jpg_output
         
     def main(self):
+
         nuke.Root()['project_directory'].setValue(os.getcwd().replace('\\', '/'))
 
         self.createReadNodes()
-        self.createContactSheet()
+        self.Contactsheet()
         self.createBackdrop('灯光合成模板_底板.jpg')
         self.mergeBackdrop()
         self.modifyShot()
@@ -52,11 +56,11 @@ class createContactSheet(object):
         self.writeJPG()
         return 
 
-    def createContactSheet(self):
-        contactsheet_node = nuke.nodes.ContactSheet(inputs=self.read_nodes, width='{rows*shot_format.w+gap*(rows+1)}', height='{columns*shot_format.h+gap*(columns+1)}', rows='{{ceil(pow([inputs this], 0.5))}}', columns='{rows}', gap=50, roworder='TopBottom')
+    def Contactsheet(self):
+        contactsheet_node = nuke.nodes.Csheet(inputs=self.read_nodes, width='{rows*shot_format.w+gap*(rows+1)}', height='{columns*shot_format.h+gap*(columns+1)}', rows='{{ceil(pow([inputs this], 0.5))}}', columns='{rows}', gap=50, roworder='TopBottom')
         contactsheet_node.addKnob(nuke.WH_Knob('shot_format'))
         contactsheet_node['shot_format'].setValue([self.contactsheet_shot_width, self.contactsheet_shot_height])
-        contactsheet_node.setName('_ContactSheet')
+        contactsheet_node.setName('_Csheet')
         self.contactsheet_node = contactsheet_node
         return contactsheet_node
     
@@ -108,7 +112,7 @@ class createContactSheet(object):
     
     def mergeBackdrop(self):
         merge_node = nuke.nodes.Merge2(inputs=[self.backdrop_read_node, self.contactsheet_node])
-        _reformat_backdrop_node = nuke.nodes.Reformat(type='scale', scale='{_ContactSheet.width/input.width*backdrop_scale}')
+        _reformat_backdrop_node = nuke.nodes.Reformat(type='scale', scale='{_Csheet.width/input.width*backdrop_scale}')
         k = nuke.Double_Knob('backdrop_scale', '背板缩放')
         k.setValue(1.13365)
         _reformat_backdrop_node.addKnob(k)
@@ -148,103 +152,6 @@ class createContactSheet(object):
         self.jpg_output = os.path.abspath(file_name)
         return file_name
 
-class CommandLineUI(object):
-    isUpload = False
-    isDownload =False
-
-    EP = None
-    IMAGE_FOLDER = None
-    NUKE = None
-    PROJECT = None
-    SCENE = None
-    SERVER = None
-
-    image_download_path = None
-    image_upload_path = None
-    file_name = None
-    
-    def __init__(self):
-        call(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
-
-    def showChoice(self):
-        if not self.EP or not self.SCENE:
-            print_('**提示**\t\tpath.ini中场集未设置, 将使用当前时间作为名称, 并且不能下载单帧\n')
-        print_('方案1:\t\t\t仅渲染单帧"{name}"\n'
-               '方案2:\t\t\t渲染单帧并上传至: {upload_path}\n'
-               '方案3:\t\t\t从{download_path}下载单帧然后渲染\n'
-               '方案4:\t\t\t从{download_path}下载单帧然后渲染并上传\n'
-               '\nCtrl+C\t直接退出'.format(upload_path=self.image_upload_path, name=self.file_name, download_path=self.image_download_path))
-        choice = call(u'CHOICE /C 1234 /T 15 /D 1 /M "选择方案"'.encode(prompt_codec))
-        self.setStatus(choice)
-
-        
-    def setStatus(self, choice):
-        if choice == 1:
-            pass
-        elif choice == 2:
-            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
-                self.isUpload = True
-            else:
-                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
-        elif choice == 3:
-            if self.image_download_path and os.path.exists(self.image_download_path):
-                self.isDownload = True
-            else:
-                print_('**提示**\t\t没有可下载文件')
-        elif choice == 4:
-            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
-                self.isUpload = True
-            else:
-                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
-            if self.image_download_path and os.path.exists(self.image_download_path):
-                self.isDownload = True
-            else:
-                print_('**提示**\t\t没有可下载文件')
-        else:
-            exit()
-        print('')
-        
-    def readIni(self):
-        os.chdir(os.path.dirname(__file__))
-        ini_file = open('path.ini', 'r')
-        for line in ini_file.readlines():
-            result = re.match('^([^;].*)=(.*)', line)
-            if result:
-                var_name = result.group(1)
-                var_value = result.group(2)
-                if var_name == 'EP':
-                    var_value = 'EP' + var_value.lstrip('EP')
-                setattr(self, var_name, var_value)
-                globals()[var_name] = var_value
-                print('{}: {}'.format(var_name, var_value))
-        print('')
-
-        if SERVER and PROJECT and IMAGE_FOLDER:
-            self.image_upload_path = '\\'.join([SERVER, PROJECT, IMAGE_FOLDER, time.strftime('%m%d')])
-            if EP and SCENE:
-                self.image_download_path = '\\'.join([SERVER, PROJECT, IMAGE_FOLDER, EP, SCENE])
-
-        if EP and SCENE:
-            self.file_name = 'ContactSheet_{}_{}.jpg'.format(EP, SCENE)
-        else:
-            self.file_name = 'ContactSheet_{}.jpg'.format(time.strftime('%y%m%d_%H%M'))
-        print('')
-        
-        global file_name
-        file_name = self.file_name
-
-    def downlowdImages(self):
-        if self.isDownload:
-            print_('下载文件自:\t\t{}'.format(self.image_download_path))
-            subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.image_download_path, 'images'])
-
-    def uploadContactSheet(self):
-        if self.isUpload:
-            if not os.path.exists(self.image_upload_path):
-                os.mkdir(self.image_upload_path)
-            print_('上传文件至:\t\t{}'.format(self.image_upload_path))
-            subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.file_name, self.image_upload_path])
-
 def insertNode(node, input_node):
     # Create dot presents input_node 's output
     input_node.selectOnly()
@@ -261,62 +168,47 @@ class FootageError(Exception):
     def __init__(self):
         print_('\n**错误** - 在images文件夹中没有可用图像\n')
 
-class nuke_chineselizer():
-    # TODO
-    def __enter__(self):
-        sys.stdout = self
-        
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        sys.stdout = sys.__stdout__
-        
-    def write(self, obj):
-        sys.__stdout__.write(self.translate(obj))
-        
-    def translate(self, obj):
-        translate_dict = {'Frame ': u'帧 ', 'done': u'已完成'}
-        if type(obj) == str and any(key in obj for key in translate_dict.keys()):
-            ret = obj
-            for key in translate_dict.keys():
-                ret = ret.replace(key, translate_dict[key])
-            ret = ret.encode(prompt_codec)
-            return ret
-        else:
-            return obj
+def downlowdImages():
+    if self.isDownload:
+        print_('下载文件自:\t\t{}'.format(self.image_download_path))
+        subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.image_download_path, 'images'])
 
-# Main
-if __name__ == '__main__':
-    UI = CommandLineUI()
-    UI.readIni()
+def uploadCsheet():
+    if self.isUpload:
+        if not os.path.exists(self.image_upload_path):
+            os.mkdir(self.image_upload_path)
+        print_('上传文件至:\t\t{}'.format(self.image_upload_path))
+        subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.file_name, self.image_upload_path])
 
-    # import nuke use ini
+def main(config=None):
     try: 
-        import nuke
+        try:
+            dir = sys.argv[1]
+        except IndexError:
+            dir = 'images'
+        Contactsheet('images')
     except ImportError:
-        if not NUKE:
-            NUKE = input('请输入正确的Nuke路径')
-        call('START "createContactSheet" {} -t {}'.format(NUKE, __file__), shell=True)
-        exit()
-        print_('# 生成色板_v{}'.format(VERSION))
+        call('CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION), shell=True)
 
-    call('CLS', shell=True)
-    if len(argvs) >= 2 and argvs[1] in ['1', '2', '3', '4']:
-        UI.setStatus(int(argvs[1]))
-    else:
-        UI.showChoice()
+        downlowdImages()
+        Contactsheet('images')
+        uploadCsheet()
 
-    try:
-        UI.downlowdImages()
-        createContactSheet('images')
-        UI.uploadContactSheet()
-
-        choice = None
-        choice = call(u'CHOICE /t 15 /d n /m "打开图像"'.encode(prompt_codec))
-        if choice == 1:
+        if config['isCsheetOpen']:
             call(u'EXPLORER "{}"'.format(image).encode(prompt_codec))
 
+        if not config:
+            from config import Config
+            config = Config().config
+        call('"{}" -t "{}"'.format(config['NUKE'], __file__), shell=True)
+
+
+if __name__ == '__main__':
+    try:
+        main()
     except FootageError:
-        call('PAUSE', shell=True)
+        pause()
     except:
         import traceback
         traceback.print_exc()
-        call('PAUSE', shell=True)
+        pause()

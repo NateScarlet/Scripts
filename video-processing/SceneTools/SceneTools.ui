@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>场集工具v0.2</string>
+   <string>场集工具</string>
   </property>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
@@ -60,7 +60,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -82,7 +82,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -190,18 +190,31 @@
      </size>
     </property>
    </widget>
-   <widget class="QCheckBox" name="csheetUp_check">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>50</x>
       <y>50</y>
-      <width>107</width>
-      <height>16</height>
+      <width>109</width>
+      <height>40</height>
      </rect>
     </property>
-    <property name="text">
-     <string>创建后上传色板</string>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QCheckBox" name="csheetUp_check">
+       <property name="text">
+        <string>创建后上传色板</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="csheetOpen_check">
+       <property name="text">
+        <string>创建后打开图像</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_3">
@@ -229,7 +242,7 @@
      <string>同步</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -291,18 +304,21 @@
      </item>
     </layout>
    </widget>
+   <zorder>layoutWidget</zorder>
    <zorder>uploadButton</zorder>
-   <zorder>videoUp_check</zorder>
-   <zorder>imageUp_check</zorder>
-   <zorder>uploadButton</zorder>
-   <zorder>imageDown_check</zorder>
-   <zorder>imageUp_check</zorder>
-   <zorder></zorder>
-   <zorder>imageUp_check</zorder>
-   <zorder>videoUp_check</zorder>
-   <zorder>videoDown_check</zorder>
-   <zorder>imageDown_check</zorder>
-   <zorder></zorder>
+  </widget>
+  <widget class="QLabel" name="version_label">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>390</y>
+     <width>54</width>
+     <height>12</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>version</string>
+   </property>
   </widget>
  </widget>
  <resources/>

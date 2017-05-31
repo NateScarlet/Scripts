@@ -7,7 +7,7 @@ import re
 from subprocess import call
 from shutil import copy2
 
-version = 0.2
+VERSION = 0.2
 EP = None
 IMAGE_FOLDER = None
 NUKE = None
@@ -122,3 +122,4 @@ if __name__ == '__main__':
         import traceback
         traceback.print_exc()
         call('PAUSE', shell=True)
+
