@@ -6,39 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>433</width>
-    <height>300</height>
+    <width>488</width>
+    <height>407</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>场集工具v0.2</string>
   </property>
-  <widget class="QPushButton" name="sheetButton">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>220</y>
-     <width>131</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>创建色板</string>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>16</width>
-     <height>16</height>
-    </size>
-   </property>
-  </widget>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>60</x>
      <y>20</y>
      <width>351</width>
-     <height>121</height>
+     <height>161</height>
     </rect>
    </property>
    <property name="locale">
@@ -47,65 +28,18 @@
    <property name="title">
     <string>设置</string>
    </property>
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>60</y>
-      <width>309</width>
-      <height>42</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Nuke路径</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLineEdit" name="nukeFileEdit">
-         <property name="dragEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="nukeFileButton">
-         <property name="text">
-          <string>浏览</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit_3">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>158</width>
-      <height>20</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>210</x>
       <y>20</y>
-      <width>111</width>
+      <width>122</width>
       <height>22</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="epEdit"/>
      </item>
      <item>
       <widget class="QLabel" name="label">
@@ -115,7 +49,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_2"/>
+      <widget class="QLineEdit" name="scEdit"/>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
@@ -126,16 +60,248 @@
      </item>
     </layout>
    </widget>
-   <zorder>spinBox_2</zorder>
-   <zorder>spinBox</zorder>
-   <zorder>nukeFileEdit</zorder>
-   <zorder>nukeFileButton</zorder>
-   <zorder>label</zorder>
-   <zorder>label_2</zorder>
-   <zorder>nukeFileEdit</zorder>
-   <zorder>label_3</zorder>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>165</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>工程</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="projectEdit"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>60</y>
+      <width>321</width>
+      <height>92</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_nuke">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Nuke路径</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLineEdit" name="nukeEdit">
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="nukeButton">
+           <property name="text">
+            <string>浏览</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_nuke_2">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>服务器路径</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLineEdit" name="serverEdit">
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="serverButton">
+           <property name="text">
+            <string>浏览</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_2">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>190</y>
+     <width>221</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>生成色板</string>
+   </property>
+   <widget class="QPushButton" name="sheetButton">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>110</y>
+      <width>150</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>创建色板</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="csheetUp_check">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>50</y>
+      <width>107</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>创建后上传色板</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_3">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>190</y>
+     <width>221</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>上传下载视频/单帧</string>
+   </property>
+   <widget class="QPushButton" name="uploadButton">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>110</y>
+      <width>150</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>同步</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>20</y>
+      <width>104</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>上传</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QCheckBox" name="videoUp_check">
+         <property name="text">
+          <string>视频</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="imageUp_check">
+         <property name="text">
+          <string>单帧</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>下载</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <item>
+        <widget class="QCheckBox" name="videoDown_check">
+         <property name="text">
+          <string>视频</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="imageDown_check">
+         <property name="text">
+          <string>单帧</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <zorder>uploadButton</zorder>
+   <zorder>videoUp_check</zorder>
+   <zorder>imageUp_check</zorder>
+   <zorder>uploadButton</zorder>
+   <zorder>imageDown_check</zorder>
+   <zorder>imageUp_check</zorder>
    <zorder></zorder>
-   <zorder>lineEdit_3</zorder>
+   <zorder>imageUp_check</zorder>
+   <zorder>videoUp_check</zorder>
+   <zorder>videoDown_check</zorder>
+   <zorder>imageDown_check</zorder>
    <zorder></zorder>
   </widget>
  </widget>

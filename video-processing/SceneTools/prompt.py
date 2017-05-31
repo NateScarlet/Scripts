@@ -14,5 +14,5 @@ def readIni(ini_file= os.path.join(dp0, 'path.ini')):
             if result:
                 var_name = result.group(1)
                 var_value = result.group(2)
-                ini_dict[var_name] = var_value
+                ini_dict[var_name] = var_value.strip('"')
                 print(var_name, var_value)
