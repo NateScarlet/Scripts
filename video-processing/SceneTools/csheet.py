@@ -3,13 +3,16 @@
 
 import os
 import sys
-import re
 import time
-import subprocess
-from subprocess import call
 import nuke
+from subprocess import call
+from config import Config
 
 VERSION = 2.12
+USAGE = '''
+        USAGE::
+        @argv1: config file path
+        '''
 
 argvs = sys.argv
 prompt_codec = 'gbk'
@@ -22,7 +25,7 @@ def print_(obj):
 def pause():
     call('PAUSE', shell=True)
 
-class Contactsheet(object):
+class Contactsheet(Config):
 
     last_output = None
     backdrop_read_node = None
@@ -30,13 +33,12 @@ class Contactsheet(object):
     shot_width, shot_height = 1920, 1080
     contactsheet_shot_width, contactsheet_shot_height = 1920, 1160
 
-    def __init__(self, image_dir='images'):
-
-        self.image_list = self.getImageList(image_dir)
-        self.image_dir = image_dir.replace('\\', '/')
+    def __init__(self):
+        Config.__init__(self)
+        self.image_dir = self.config['csheet_footagedir'].replace('\\', '/')
+        self.image_list = self.getImageList(self.image_dir)
         self.read_nodes = []
         self.jpg_output = None
-
         self.main()
         
         global image
@@ -57,7 +59,7 @@ class Contactsheet(object):
         return 
 
     def Contactsheet(self):
-        contactsheet_node = nuke.nodes.Csheet(inputs=self.read_nodes, width='{rows*shot_format.w+gap*(rows+1)}', height='{columns*shot_format.h+gap*(columns+1)}', rows='{{ceil(pow([inputs this], 0.5))}}', columns='{rows}', gap=50, roworder='TopBottom')
+        contactsheet_node = nuke.nodes.ContactSheet(inputs=self.read_nodes, width='{rows*shot_format.w+gap*(rows+1)}', height='{columns*shot_format.h+gap*(columns+1)}', rows='{{ceil(pow([inputs this], 0.5))}}', columns='{rows}', gap=50, roworder='TopBottom')
         contactsheet_node.addKnob(nuke.WH_Knob('shot_format'))
         contactsheet_node['shot_format'].setValue([self.contactsheet_shot_width, self.contactsheet_shot_height])
         contactsheet_node.setName('_Csheet')
@@ -133,6 +135,8 @@ class Contactsheet(object):
             insertNode(reformat_node, i)
         
     def modifyBackdrop(self):
+        EP = self.config['EP']
+        SCENE = self.config['SCENE']
         nuke.addFormat('11520 6480 backdrop')
         reformat_node = nuke.nodes.Reformat(format='backdrop')
         if EP:
@@ -146,6 +150,7 @@ class Contactsheet(object):
         insertNode(reformat_node, self.backdrop_read_node)
         
     def writeJPG(self):
+        file_name = self.config['csheet'].replace('\\', '/')
         write_node = nuke.nodes.Write(inputs=[self.last_output], file=file_name, file_type='jpg', _jpeg_quality='1', _jpeg_sub_sampling='4:4:4')
         print_('输出色板:\t\t{}'.format(file_name))
         nuke.render(write_node, 1, 1)
@@ -168,40 +173,8 @@ class FootageError(Exception):
     def __init__(self):
         print_('\n**错误** - 在images文件夹中没有可用图像\n')
 
-def downlowdImages():
-    if self.isDownload:
-        print_('下载文件自:\t\t{}'.format(self.image_download_path))
-        subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.image_download_path, 'images'])
-
-def uploadCsheet():
-    if self.isUpload:
-        if not os.path.exists(self.image_upload_path):
-            os.mkdir(self.image_upload_path)
-        print_('上传文件至:\t\t{}'.format(self.image_upload_path))
-        subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.file_name, self.image_upload_path])
-
-def main(config=None):
-    try: 
-        try:
-            dir = sys.argv[1]
-        except IndexError:
-            dir = 'images'
-        Contactsheet('images')
-    except ImportError:
-        call('CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION), shell=True)
-
-        downlowdImages()
-        Contactsheet('images')
-        uploadCsheet()
-
-        if config['isCsheetOpen']:
-            call(u'EXPLORER "{}"'.format(image).encode(prompt_codec))
-
-        if not config:
-            from config import Config
-            config = Config().config
-        call('"{}" -t "{}"'.format(config['NUKE'], __file__), shell=True)
-
+def main():
+    Contactsheet()
 
 if __name__ == '__main__':
     try:

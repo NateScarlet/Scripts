@@ -1,18 +1,35 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
-# SceneTool
 
 import os, sys
+import re
+
+from subprocess import call
+from config import Config
+from sync import Sync
 import PySide.QtCore, PySide.QtGui
 from PySide.QtGui import QDialog, QApplication, QFileDialog
 from ui_SceneTools import Ui_Dialog
-import csheet
-import sync
-from config import Config
+VERSION = 0.3
 
-VERSION = 0.2
+def pause():
+    call('PAUSE', shell=True)
 
-class Dialog(QDialog, Ui_Dialog, Config):
+class CSheet(Config):
+    def createCSheet(self):
+        cfg = self.config
+        script = os.path.join(os.path.dirname(__file__), 'csheet.py')
+
+        cmd = '"{NUKE}" -t "{script}"'.format(NUKE=cfg['NUKE'], script=script)
+        print(cmd)
+        call(cmd)
+
+    def openCSheet(self):
+        csheet = self.config['csheet']
+        if os.path.exists(self.config['csheet']):
+            call(u'EXPLORER "{}"'.format(csheet))
+        
+class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
@@ -20,15 +37,65 @@ class Dialog(QDialog, Ui_Dialog, Config):
         self.setupUi(self)
         self.version_label.setText('v{}'.format(VERSION))
 
-        self.edits_key = {self.nukeEdit: 'NUKE', self.serverEdit: 'SERVER', self.projectEdit: 'PROJECT', self.epEdit: 'EP', self.scEdit: 'SCENE', self.imageUp_check: 'isImageUp', self.imageDown_check: 'isImageDown', self.videoUp_check: 'isVideoUp', self.videoDown_check: 'isVideoDown', self.csheetUp_check: 'isCsheetUp'}
+        self.edits_key = {
+                            self.serverEdit: 'SERVER', 
+                            self.videoFolderEdit: 'SVIDEO_FOLDER', 
+                            self.imageFolderEdit: 'SIMAGE_FOLDER', 
+                            self.nukeEdit: 'NUKE', 
+                            self.dirEdit: 'DIR', 
+                            self.projectEdit: 'PROJECT', 
+                            self.epEdit: 'EP', 
+                            self.scEdit: 'SCENE', 
+                            self.csheetFFNameEdit: 'CSHEET_FFNAME', 
+                            self.csheetPrefixEdit: 'CSHEET_PREFIX', 
+                            self.imageFNameEdit: 'IMAGE_FNAME', 
+                            self.videoFNameEdit: 'VIDEO_FNAME', 
+                            self.videoDestEdit: 'video_dest', 
+                            self.imageDestEdit: 'image_dest', 
+                            self.csheetNameEdit: 'csheet_name', 
+                            self.csheetDestEdit: 'csheet_dest',
+                            self.imageUpCheck: 'isImageUp', 
+                            self.imageDownCheck: 'isImageDown', 
+                            self.videoUpCheck: 'isVideoUp', 
+                            self.videoDownCheck: 'isVideoDown', 
+                            self.csheetUpCheck: 'isCSheetUp', 
+                            self.csheetOpenCheck: 'isCSheetOpen',
+                         }
         self.update()
 
-        self.sheetButton.clicked.connect(self.createCsheet)
-        self.nukeButton.clicked.connect(self.selectNuke)
-
-        self.connectEdits()    
+        self.connectButtons()
+        self.connectEdits()
     
+    def connectButtons(self):
+        self.nukeButton.clicked.connect(self.execNukeBt)
+        self.sheetButton.clicked.connect(self.execCSheetBt)
+        self.openCSheetButton.clicked.connect(self.execOpenCSheetBt)
+        self.syncButton.clicked.connect(self.execSyncBt)
+        self.dirButton.clicked.connect(self.execDirBt)
+
+    def connectEdits(self):
+        self.epEdit.textChanged.connect(lambda text: self.setDirByConfig(text, self.config['EP']))
+        self.scEdit.textChanged.connect(lambda text: self.setDirByConfig(text, self.config['SCENE']))
+
+        for edit, key in self.edits_key.iteritems():
+            if type(edit) == PySide.QtGui.QLineEdit:
+                edit.textChanged.connect(lambda text, k=key: self.editConfig(k, text))
+                edit.textChanged.connect(self.update)
+            elif type(edit) == PySide.QtGui.QCheckBox:
+                edit.stateChanged.connect(lambda state, k=key: self.editConfig(k, state))
+            else:
+                print(u'待处理的控件: {} {}'.format(type(edit), edit))
+
     def update(self):
+        dir = self.config['DIR']
+        if os.path.exists(dir):
+            os.chdir(dir)
+            self.sheetButton.setEnabled(True)
+            self.syncButton.setEnabled(True)
+        else:
+            self.sheetButton.setEnabled(False)
+            self.syncButton.setEnabled(False)
+
         for q, k in self.edits_key.iteritems():
             try:
                 if type(q) == PySide.QtGui.QLineEdit:
@@ -38,92 +105,82 @@ class Dialog(QDialog, Ui_Dialog, Config):
             except KeyError as e:
                 print(e)
         self.updateConfig()
+        self.setOpenBtEnabled()
+        self.getFileList()
+        self.updateList()
+        
+    def setOpenBtEnabled(self):
+        if os.path.exists(self.config['csheet']):
+            self.openCSheetButton.setEnabled(True)
+        else:
+            self.openCSheetButton.setEnabled(False)
 
-    def createCsheet(self):
-        csheet.main(self.config)
-    
     def syncFiles(self):
         sync.main(self.config)
     
-    def selectNuke(self):
+    def execNukeBt(self):
         fileDialog = QFileDialog()
         fileNames, selectedFilter = fileDialog.getOpenFileName(dir=os.getenv('ProgramFiles'), filter='*.exe')
         if fileNames:
             self.config['NUKE'] = fileNames
             self.update()
             
-    def connectEdits(self):
-        for edit, key in self.edits_key.iteritems():
-            if type(edit) == PySide.QtGui.QLineEdit:
-                edit.textChanged.connect(lambda text, k=key: self.editConfig(k, text))
-            elif type(edit) == PySide.QtGui.QCheckBox:
-                edit.stateChanged.connect(lambda state, k=key: self.editConfig(k, state))
-            else:
-                print(u'待处理的控件: {} {}'.format(type(edit), edit))
+    def updateList(self):
+        list = self.listWidget
+        cfg = self.config
+        list.clear()
+        for item in cfg['image_list'] + cfg['video_list']:
+            list.addItem(u'将上传: {}'.format(item))
+        
+    def execCSheetBt(self):
+        list = self.listWidget
+        csheet = self.config['csheet']
 
-class CommandLineUI(object):
-    isUpload = False
-    isDownload =False
+        list.clear()
+        self.createCSheet()
+        list.addItem(csheet)
+        if os.path.exists(csheet):
+            self.openCSheetButton.setEnabled(True)
+        if self.config['isCSheetOpen']:
+            self.openCSheet()
 
-    EP = None
-    IMAGE_FOLDER = None
-    NUKE = None
-    PROJECT = None
-    SCENE = None
-    SERVER = None
-
-    image_download_path = None
-    image_upload_path = None
-    file_name = None
+    def execOpenCSheetBt(self):
+        call('EXPLORER "{}"'. format(self.config['csheet']))
     
-    def __init__(self):
-        call(u'CHCP 936 & TITLE 生成色板_v{} & CLS'.format(VERSION).encode(prompt_codec), shell=True)
+    def execDirBt(self):
+        fileDialog = QFileDialog()
+        dir = fileDialog.getExistingDirectory(dir=os.path.dirname(self.config['DIR']))
+        if dir:
+            self.config['DIR'] = dir
+            self.setConfigByDir()
+            self.update()
         
-    def setStatus(self, choice):
-        if choice == 1:
-            pass
-        elif choice == 2:
-            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
-                self.isUpload = True
-            else:
-                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
-        elif choice == 3:
-            if self.image_download_path and os.path.exists(self.image_download_path):
-                self.isDownload = True
-            else:
-                print_('**提示**\t\t没有可下载文件')
-        elif choice == 4:
-            if self.image_upload_path and os.path.exists(os.path.dirname(self.image_upload_path)):
-                self.isUpload = True
-            else:
-                print_('**警告**\t\t图像上传路径不可用, 将不会上传')
-            if self.image_download_path and os.path.exists(self.image_download_path):
-                self.isDownload = True
-            else:
-                print_('**提示**\t\t没有可下载文件')
-        else:
-            exit()
-        print('')
-        
-    def setConfig(self):
-        if SERVER and PROJECT and IMAGE_FOLDER:
-            self.image_upload_path = '\\'.join([SERVER, PROJECT, IMAGE_FOLDER, time.strftime('%m%d')])
-            if EP and SCENE:
-                self.image_download_path = '\\'.join([SERVER, PROJECT, IMAGE_FOLDER, EP, SCENE])
+    def setDirByConfig(self, text, config):
+        cfg = self.config
+        dir = os.path.normcase(cfg['DIR'] + '\\')
+        config = '\\{}\\'.format(os.path.normcase(config))
+        if config in dir:
+            cfg['DIR'] = dir.replace(config, '\\{}\\'.format(text))[:-1]
+                
+    def setConfigByDir(self):
+        cfg = self.config
+        pat = re.compile(r'.*\\(ep.*?)\\.*\\(.+)', flags=re.I)
+        match = pat.match(cfg['DIR'])
+        if match:
+            cfg['EP'], cfg['SCENE'] = match.groups()
 
-        if EP and SCENE:
-            self.file_name = 'ContactSheet_{}_{}.jpg'.format(EP, SCENE)
-        else:
-            self.file_name = 'ContactSheet_{}.jpg'.format(time.strftime('%y%m%d_%H%M'))
-        print('')
-        
-        global file_name
-        file_name = self.file_name
-
-
-
-if __name__ == '__main__':
+def main():
+    call(u'CHCP 936 & TITLE 场集工具_v{} & CLS'.format(VERSION).encode('GBK'), shell=True)
     app = QApplication(sys.argv)
     frame = Dialog()
     frame.show()
     sys.exit(app.exec_())
+  
+if __name__ == '__main__':
+    try:
+        main()
+    except SystemExit as e:
+        exit(e)
+    except:
+        import traceback
+        traceback.print_exc()
