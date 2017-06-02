@@ -2,10 +2,16 @@
 # -*- coding=UTF-8 -*-
 
 import os
-import shutil
 from config import Config
+from subprocess import call
+
+sys_codec = 'GBK'
+def copy(src, dst):
+    cmd = u'XCOPY /Y /V "{}" "{}"'.format(unicode(src), unicode(dst)).encode(sys_codec)
+    call(cmd)
 
 class Sync(Config):
+
     def getFileList(self):
         cfg = self.config
         image_dir = cfg['IMAGE_FNAME']
@@ -18,48 +24,80 @@ class Sync(Config):
             cfg['video_list'] = list(i for i in os.listdir(video_dir) if i.endswith('.mov'))
         else:
             cfg['video_list'] = []
+        self.getIgnoreList()
+        self.updateConfig()
+            
+    def getIgnoreList(self):
+        cfg = self.config
+        cfg['ignore_list'] = []
 
-    def uploadVideo():
+        if cfg['isVideoUp']:
+            video_list = list(cfg['video_list'])
+            for i in video_list:
+                src = os.path.join(cfg['VIDEO_FNAME'], i)
+                dst = os.path.join(cfg['video_dest'], i)
+                if os.path.exists(dst) and os.path.getmtime(src) == os.path.getmtime(dst):
+                    cfg['ignore_list'].append(i)
+                    cfg['video_list'].remove(i)
+
+        if cfg['isImageUp']:
+            image_list = list(cfg['image_list'])
+            for i in image_list:
+                src = os.path.join(cfg['IMAGE_FNAME'], i)
+                dst = os.path.join(cfg['image_dest'], i)
+                if os.path.exists(dst) and os.path.getmtime(src) <= os.path.getmtime(dst):
+                    cfg['ignore_list'].append(i)
+                    cfg['image_list'].remove(i)
+
+    def uploadVideos(self):
+        cfg = self.config
+        video_dest = unicode(cfg['video_dest'])
+
         if os.path.exists(os.path.dirname(video_dest)):
             if not os.path.exists(video_dest):
                 os.mkdir(video_dest)
-            for i in os.listdir('mov'):
-                ext = os.path.splitext(i)[1].lower()
-                if ext == '.mov':
-                    src = 'mov\\' + i
-                    dst = os.path.join(video_dest, i)
-                    if os.path.exists(dst) and os.path.getmtime(src) == os.path.getmtime(dst):
-                        print_('{}: 服务器文件和本地修改日期相同, 跳过'.format(src))
-                        continue
-                    else:
-                        call(['XCOPY', '/Y', '/I', '/V', src, dst])
         else:
-            print_('**错误** 视频上传文件夹不存在, 将不会上传。')
+            print(u'**错误** 视频上传文件夹不存在, 将不会上传。')
+            return False
 
-    def downloadVideo():
+        for i in cfg['video_list']:
+            src = os.path.join(cfg['VIDEO_FNAME'], i)
+            dst = video_dest
+            copy(src, dst)
+
+    def downloadVideos():
         pass
 
-    def uploadImage():
-        dest = self.config['image_dest']
+    def uploadImages(self):
+        cfg = self.config
+        dest = unicode(cfg['image_dest'])
         if os.path.exists(os.path.dirname(dest)):
-            if not os.path.exists(image_dest):
-                os.mkdir(image_dest)
-            call(['XCOPY', '/Y', '/D', '/I', '/V', 'images\\*.jpg', dest])
-        else:
-            print_('**错误** 图片上传文件夹不存在, 将不会上传。')
-
-    def downlowdImages():
-        if self.config['imageDownCheck']:
-            print_('下载文件自:\t\t{}'.format(self.image_download_path))
-            subprocess.call(['XCOPY', '/Y', '/D', '/I', '/V', self.image_download_path, 'images'])
-
-    def uploadCSheet():
-        dest = self.config['csheet_dest']
-        if self.config['csheetUpCheck']:
             if not os.path.exists(dest):
                 os.mkdir(dest)
-            print(u'上传文件至:\t\t{}'.format(dest))
-            call(' '.join(['XCOPY', '/Y', '/D', '/I', '/V', config['csheet'], dest]))
-    
-    def execSyncBt(self):
-        pass
+        else:
+            print(u'**错误** 图片上传文件夹不存在, 将不会上传。')
+            return False
+
+        for i in cfg['image_list']:
+            src = os.path.join(cfg['IMAGE_FNAME'], i)
+            dst = dest
+            copy(src, dst)
+
+    def downloadImages(self):
+        cfg = self.config
+        src = cfg['image_dest']
+        dst = cfg['IMAGE_FNAME']
+        print(u'## 下载单帧: {} -> {}'.format(src, dst))
+        call(' '.join(['XCOPY', '/Y', '/D', '/I', '/V', src, dst]))
+
+    def uploadCSheet(self):
+        dest = self.config['csheet_dest']
+
+        if not os.path.exists(os.path.dirname(dest)):
+            return False
+            print(u'**错误** 色板上传文件夹不存在, 将不会上传。')
+
+        if not os.path.exists(dest):
+            os.mkdir(dest)
+
+        copy(self.config['csheet'], dest)

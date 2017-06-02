@@ -5,12 +5,17 @@ import os, sys
 import re
 
 from subprocess import call
-from config import Config
-from sync import Sync
 import PySide.QtCore, PySide.QtGui
 from PySide.QtGui import QDialog, QApplication, QFileDialog
 from ui_SceneTools import Ui_Dialog
-VERSION = 0.3
+
+from config import Config
+from sync import Sync
+
+VERSION = 0.41
+
+sys_codec = 'GBK'
+script_codec = 'UTF-8'
 
 def pause():
     call('PAUSE', shell=True)
@@ -18,16 +23,18 @@ def pause():
 class CSheet(Config):
     def createCSheet(self):
         cfg = self.config
-        script = os.path.join(os.path.dirname(__file__), 'csheet.py')
+        script = os.path.join(os.path.dirname(unicode(sys.argv[0], sys_codec)), 'csheet.py')
 
-        cmd = '"{NUKE}" -t "{script}"'.format(NUKE=cfg['NUKE'], script=script)
+        cmd = u'"{NUKE}" -t "{script}"'.format(NUKE=cfg['NUKE'], script=script)
         print(cmd)
-        call(cmd)
+        call(cmd.encode(sys_codec))
 
     def openCSheet(self):
         csheet = self.config['csheet']
         if os.path.exists(self.config['csheet']):
-            call(u'EXPLORER "{}"'.format(csheet))
+            cmd = u'EXPLORER "{}"'.format(csheet)
+            cmd = unicode(cmd).encode(sys_codec)
+            call(cmd)
         
 class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
 
@@ -60,11 +67,14 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
                             self.videoDownCheck: 'isVideoDown', 
                             self.csheetUpCheck: 'isCSheetUp', 
                             self.csheetOpenCheck: 'isCSheetOpen',
+                            self.backDropBox: 'backdrop_name'
                          }
+        self.initBackdrop()
         self.update()
 
         self.connectButtons()
         self.connectEdits()
+        
     
     def connectButtons(self):
         self.nukeButton.clicked.connect(self.execNukeBt)
@@ -72,6 +82,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         self.openCSheetButton.clicked.connect(self.execOpenCSheetBt)
         self.syncButton.clicked.connect(self.execSyncBt)
         self.dirButton.clicked.connect(self.execDirBt)
+        self.serverButton.clicked.connect(self.execServerBt)
 
     def connectEdits(self):
         self.epEdit.textChanged.connect(lambda text: self.setDirByConfig(text, self.config['EP']))
@@ -83,6 +94,9 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
                 edit.textChanged.connect(self.update)
             elif type(edit) == PySide.QtGui.QCheckBox:
                 edit.stateChanged.connect(lambda state, k=key: self.editConfig(k, state))
+                edit.stateChanged.connect(self.update)
+            elif type(edit) == PySide.QtGui.QComboBox:
+                edit.editTextChanged.connect(lambda text, k=key: self.editConfig(k, text))
             else:
                 print(u'待处理的控件: {} {}'.format(type(edit), edit))
 
@@ -90,11 +104,6 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         dir = self.config['DIR']
         if os.path.exists(dir):
             os.chdir(dir)
-            self.sheetButton.setEnabled(True)
-            self.syncButton.setEnabled(True)
-        else:
-            self.sheetButton.setEnabled(False)
-            self.syncButton.setEnabled(False)
 
         for q, k in self.edits_key.iteritems():
             try:
@@ -104,19 +113,25 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
                     q.setCheckState(PySide.QtCore.Qt.CheckState(self.config[k]))
             except KeyError as e:
                 print(e)
+
         self.updateConfig()
-        self.setOpenBtEnabled()
-        self.getFileList()
+        self.setBtEnabled()
         self.updateList()
         
-    def setOpenBtEnabled(self):
+    def setBtEnabled(self):
+        dir = self.config['DIR']
+        if os.path.exists(dir):
+            os.chdir(dir)
+            self.sheetButton.setEnabled(True)
+            self.syncButton.setEnabled(True)
+        else:
+            self.sheetButton.setEnabled(False)
+            self.syncButton.setEnabled(False)
+
         if os.path.exists(self.config['csheet']):
             self.openCSheetButton.setEnabled(True)
         else:
             self.openCSheetButton.setEnabled(False)
-
-    def syncFiles(self):
-        sync.main(self.config)
     
     def execNukeBt(self):
         fileDialog = QFileDialog()
@@ -124,28 +139,47 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         if fileNames:
             self.config['NUKE'] = fileNames
             self.update()
-            
+
+    def execNukeBt(self):
+        fileDialog = QFileDialog()
+        fileNames, selectedFilter = fileDialog.getOpenFileName(dir=os.getenv('ProgramFiles'), filter='*.exe')
+        if fileNames:
+            self.config['NUKE'] = fileNames
+            self.update()
+
     def updateList(self):
         list = self.listWidget
         cfg = self.config
+
+        self.getFileList()
         list.clear()
-        for item in cfg['image_list'] + cfg['video_list']:
-            list.addItem(u'将上传: {}'.format(item))
+        for i in (cfg['image_list'] if cfg['isImageUp'] else []) + (cfg['video_list'] if cfg['isVideoUp'] else []):
+            list.addItem(u'将上传: {}'.format(i))
+        for i in cfg['ignore_list']:
+            list.addItem(u'无需上传: {}'.format(i))
+            
+    def initBackdrop(self):
+        self.config['BACKDROP_DIR'] = unicode(os.path.join(os.path.dirname(unicode(sys.argv[0], sys_codec)), u'Backdrops'))
+        dir = self.config['BACKDROP_DIR']
+        box = self.backDropBox
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+        bd_list = os.listdir(dir)
+        for item in bd_list:
+            box.addItem(item)
+        self.config['backdrop_name'] = box.currentText()
         
     def execCSheetBt(self):
-        list = self.listWidget
         csheet = self.config['csheet']
-
-        list.clear()
         self.createCSheet()
-        list.addItem(csheet)
-        if os.path.exists(csheet):
-            self.openCSheetButton.setEnabled(True)
         if self.config['isCSheetOpen']:
             self.openCSheet()
+        if self.config['isCSheetUp']:
+            self.uploadCSheet()
+        self.update()
 
     def execOpenCSheetBt(self):
-        call('EXPLORER "{}"'. format(self.config['csheet']))
+        self.openCSheet()
     
     def execDirBt(self):
         fileDialog = QFileDialog()
@@ -154,7 +188,24 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             self.config['DIR'] = dir
             self.setConfigByDir()
             self.update()
-        
+
+    def execServerBt(self):
+        fileDialog = QFileDialog()
+        dir = fileDialog.getExistingDirectory(dir=os.path.dirname(self.config['SERVER']))
+        if dir:
+            self.config['SERVER'] = dir
+            self.update()
+      
+    def execSyncBt(self):
+        cfg = self.config
+        if cfg['isImageDown']:
+            self.downloadImages()
+        if cfg['isImageUp']:
+            self.uploadImages()
+        if cfg['isVideoUp']:
+            self.uploadVideos()
+        self.update()
+
     def setDirByConfig(self, text, config):
         cfg = self.config
         dir = os.path.normcase(cfg['DIR'] + '\\')
@@ -170,7 +221,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             cfg['EP'], cfg['SCENE'] = match.groups()
 
 def main():
-    call(u'CHCP 936 & TITLE 场集工具_v{} & CLS'.format(VERSION).encode('GBK'), shell=True)
+    call(u'CHCP 936 & TITLE SceneTools_v{} & CLS'.format(VERSION).encode('GBK'), shell=True)
     app = QApplication(sys.argv)
     frame = Dialog()
     frame.show()

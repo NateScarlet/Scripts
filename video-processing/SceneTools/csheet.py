@@ -6,6 +6,8 @@ import sys
 import time
 import nuke
 from subprocess import call
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from config import Config
 
 VERSION = 2.12
@@ -17,6 +19,7 @@ USAGE = '''
 argvs = sys.argv
 prompt_codec = 'gbk'
 script_codec = 'UTF-8'
+nuke_codec = 'UTF-8'
 file_name = None
 
 def print_(obj):
@@ -50,7 +53,7 @@ class Contactsheet(Config):
 
         self.createReadNodes()
         self.Contactsheet()
-        self.createBackdrop('灯光合成模板_底板.jpg')
+        self.createBackdrop()
         self.mergeBackdrop()
         self.modifyShot()
         self.modifyBackdrop()
@@ -68,18 +71,21 @@ class Contactsheet(Config):
     
     def createReadNodes(self):
         for i in self.image_list:
-            read_node = nuke.nodes.Read(file=self.image_dir + '/' + i)
+            file = unicode(os.path.join(self.image_dir ,i).replace('\\', '/').encode(nuke_codec))
+            read_node = nuke.nodes.Read(file=file)
             if read_node.hasError():
                 nuke.delete(read_node)
                 print_('排除:\t\t\t{} (不能读取)'.format(i))
             else:
                 self.read_nodes.append(read_node)
 
-    def createBackdrop(self, image='灯光合成模板_底板.jpg'):
-        if os.path.exists(os.path.abspath(image.decode(script_codec).encode(prompt_codec))):
-            read_node = nuke.nodes.Read(file=image)
+    def createBackdrop(self, image=None):
+        if not image:
+            image = unicode(self.config['backdrop'])
+        if os.path.exists(image):
+            print(u'使用背板:\t\t{}'.format(image))
+            read_node = nuke.nodes.Read(file=image.encode('UTF-8').replace('\\', '/'))
             self.backdrop_read_node = read_node
-            print_('使用背板:\t\t{}'.format(image))
             return read_node
         else:
             self.backdrop_read_node = nuke.nodes.Constant()
@@ -150,9 +156,9 @@ class Contactsheet(Config):
         insertNode(reformat_node, self.backdrop_read_node)
         
     def writeJPG(self):
-        file_name = self.config['csheet'].replace('\\', '/')
-        write_node = nuke.nodes.Write(inputs=[self.last_output], file=file_name, file_type='jpg', _jpeg_quality='1', _jpeg_sub_sampling='4:4:4')
-        print_('输出色板:\t\t{}'.format(file_name))
+        file_name = unicode(self.config['csheet']).replace('\\', '/')
+        write_node = nuke.nodes.Write(inputs=[self.last_output], file=file_name.encode('UTF-8'), file_type='jpg', _jpeg_quality='1', _jpeg_sub_sampling='4:4:4')
+        print(u'输出色板:\t\t{}'.format(file_name))
         nuke.render(write_node, 1, 1)
         self.jpg_output = os.path.abspath(file_name)
         return file_name

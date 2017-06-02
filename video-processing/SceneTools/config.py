@@ -1,7 +1,7 @@
 # usr/bin/env python
 # -*- coding=UTF-8 -*-
 
-import os
+import os, sys
 import json
 import time
 
@@ -25,7 +25,12 @@ class Config(object):
                 'isVideoDown': 0, 
                 'isCSheetUp': 0, 
                 'isCSheetOpen': 2, 
-                'csheet': ''
+                'csheet': '',
+                'BACKDROP_DIR': '',
+                'backdrop_name': '',
+                'image_list': [],
+                'video_list': [],
+                'ignore_list': [],
              }
     cfgfile_path = os.path.join(os.getenv('UserProfile'), 'SceneTools_WLF.json')
 
@@ -36,6 +41,7 @@ class Config(object):
     def updateConfig(self):
         self.setSyncPath()
         self.setCSheetPath()
+        self.setBackDropPath()
         with open(self.cfgfile_path, 'w') as file:
             json.dump(self.config, file, indent=4, sort_keys=True)
     
@@ -47,7 +53,7 @@ class Config(object):
                 self.config.update(json.loads(last_config))
 
     def editConfig(self, key, value):
-        print(u'设置{}: {}'.format(key, value))
+        #print(u'设置{}: {}'.format(key, value))
         self.config[key] = value
         self.updateConfig()
 
@@ -64,3 +70,7 @@ class Config(object):
         cfg['csheet'] = os.path.join(cfg['DIR'], cfg['csheet_name'])
         cfg['csheet_dest'] = os.path.join(cfg['SERVER'], cfg['PROJECT'], cfg['SIMAGE_FOLDER'], time.strftime('%m%d'))
         cfg['csheet_footagedir'] = os.path.join(cfg['DIR'], cfg['CSHEET_FFNAME'])
+
+    def setBackDropPath(self):
+        cfg = self.config
+        cfg['backdrop'] = os.path.join(cfg['BACKDROP_DIR'], cfg['backdrop_name'])

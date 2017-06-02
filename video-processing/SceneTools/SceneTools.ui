@@ -100,6 +100,13 @@
         </layout>
        </item>
        <item>
+        <widget class="Line" name="line_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="label_6">
          <property name="text">
           <string>本地工程目录</string>
@@ -279,6 +286,16 @@
            <item row="1" column="1">
             <widget class="QLineEdit" name="csheetPrefixEdit"/>
            </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>色板底板</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="backDropBox"/>
+           </item>
           </layout>
          </item>
          <item>
@@ -291,7 +308,7 @@
          <item>
           <widget class="QCheckBox" name="csheetOpenCheck">
            <property name="text">
-            <string>创建后打开图像</string>
+            <string>创建后打开色板</string>
            </property>
           </widget>
          </item>

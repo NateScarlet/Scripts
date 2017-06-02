@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\Users\zhouxuan.WLF\CloudSync\Scripts\video-processing\SceneTools\SceneTools.ui'
 #
-# Created: Thu Jun 01 16:57:04 2017
+# Created: Fri Jun 02 16:25:12 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -65,6 +65,11 @@ class Ui_Dialog(object):
         self.nukeButton.setObjectName("nukeButton")
         self.horizontalLayout_2.addWidget(self.nukeButton)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.line_5 = QtGui.QFrame(Dialog)
+        self.line_5.setFrameShape(QtGui.QFrame.HLine)
+        self.line_5.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line_5.setObjectName("line_5")
+        self.verticalLayout.addWidget(self.line_5)
         self.label_6 = QtGui.QLabel(Dialog)
         self.label_6.setObjectName("label_6")
         self.verticalLayout.addWidget(self.label_6)
@@ -167,6 +172,12 @@ class Ui_Dialog(object):
         self.csheetPrefixEdit = QtGui.QLineEdit(Dialog)
         self.csheetPrefixEdit.setObjectName("csheetPrefixEdit")
         self.formLayout_4.setWidget(1, QtGui.QFormLayout.FieldRole, self.csheetPrefixEdit)
+        self.label_12 = QtGui.QLabel(Dialog)
+        self.label_12.setObjectName("label_12")
+        self.formLayout_4.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_12)
+        self.backDropBox = QtGui.QComboBox(Dialog)
+        self.backDropBox.setObjectName("backDropBox")
+        self.formLayout_4.setWidget(2, QtGui.QFormLayout.FieldRole, self.backDropBox)
         self.verticalLayout_2.addLayout(self.formLayout_4)
         self.csheetUpCheck = QtGui.QCheckBox(Dialog)
         self.csheetUpCheck.setObjectName("csheetUpCheck")
@@ -266,8 +277,9 @@ class Ui_Dialog(object):
         self.label_20.setText(QtGui.QApplication.translate("Dialog", "色板上传至", None, QtGui.QApplication.UnicodeUTF8))
         self.label_11.setText(QtGui.QApplication.translate("Dialog", "色板素材文件夹", None, QtGui.QApplication.UnicodeUTF8))
         self.label_19.setText(QtGui.QApplication.translate("Dialog", "色板名称前缀", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_12.setText(QtGui.QApplication.translate("Dialog", "色板底板", None, QtGui.QApplication.UnicodeUTF8))
         self.csheetUpCheck.setText(QtGui.QApplication.translate("Dialog", "创建后上传色板", None, QtGui.QApplication.UnicodeUTF8))
-        self.csheetOpenCheck.setText(QtGui.QApplication.translate("Dialog", "创建后打开图像", None, QtGui.QApplication.UnicodeUTF8))
+        self.csheetOpenCheck.setText(QtGui.QApplication.translate("Dialog", "创建后打开色板", None, QtGui.QApplication.UnicodeUTF8))
         self.sheetButton.setText(QtGui.QApplication.translate("Dialog", "创建色板", None, QtGui.QApplication.UnicodeUTF8))
         self.openCSheetButton.setText(QtGui.QApplication.translate("Dialog", "打开色板", None, QtGui.QApplication.UnicodeUTF8))
         self.label_14.setText(QtGui.QApplication.translate("Dialog", "视频文件夹名称", None, QtGui.QApplication.UnicodeUTF8))
