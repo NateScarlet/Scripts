@@ -3,6 +3,7 @@
 
 import os, sys
 import re
+import locale
 
 from subprocess import call
 import PySide.QtCore, PySide.QtGui
@@ -12,9 +13,9 @@ from ui_SceneTools import Ui_Dialog
 from config import Config
 from sync import Sync
 
-VERSION = 0.41
+VERSION = 0.411
 
-sys_codec = 'GBK'
+sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 
 def pause():
