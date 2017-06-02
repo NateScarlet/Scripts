@@ -109,7 +109,7 @@
        <item>
         <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>本地工程目录</string>
+          <string>工作目录</string>
          </property>
         </widget>
        </item>

@@ -2,7 +2,6 @@
 # -*- coding=UTF-8 -*-
 
 import os, sys
-import re
 import locale
 
 from subprocess import call
@@ -13,7 +12,7 @@ from ui_SceneTools import Ui_Dialog
 from config import Config
 from sync import Sync
 
-VERSION = 0.411
+VERSION = 0.43
 
 sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
@@ -70,6 +69,9 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
                             self.csheetOpenCheck: 'isCSheetOpen',
                             self.backDropBox: 'backdrop_name'
                          }
+        self.changeDir(self.config['DIR'])
+        self.readProjectSettings()
+
         self.initBackdrop()
         self.update()
 
@@ -86,8 +88,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         self.serverButton.clicked.connect(self.execServerBt)
 
     def connectEdits(self):
-        self.epEdit.textChanged.connect(lambda text: self.setDirByConfig(text, self.config['EP']))
-        self.scEdit.textChanged.connect(lambda text: self.setDirByConfig(text, self.config['SCENE']))
+        self.dirEdit.textChanged.connect(lambda dir: self.changeDir(dir))
 
         for edit, key in self.edits_key.iteritems():
             if type(edit) == PySide.QtGui.QLineEdit:
@@ -101,11 +102,13 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             else:
                 print(u'待处理的控件: {} {}'.format(type(edit), edit))
 
-    def update(self):
-        dir = self.config['DIR']
-        if os.path.exists(dir):
-            os.chdir(dir)
 
+    def update(self):
+        self.setEdits()
+        self.setBtEnabled()
+        self.setListWidget()
+
+    def setEdits(self):
         for q, k in self.edits_key.iteritems():
             try:
                 if type(q) == PySide.QtGui.QLineEdit:
@@ -115,10 +118,13 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             except KeyError as e:
                 print(e)
 
-        self.updateConfig()
-        self.setBtEnabled()
-        self.updateList()
-        
+    def changeDir(self, dir):
+        if os.path.exists(dir) and dir != self.config['DIR']:
+            os.chdir(dir)
+            print(u'工作目录改为: {}'.format(os.getcwd()))
+            self.readProjectSettings()
+            self.update()
+    
     def setBtEnabled(self):
         dir = self.config['DIR']
         if os.path.exists(dir):
@@ -148,7 +154,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             self.config['NUKE'] = fileNames
             self.update()
 
-    def updateList(self):
+    def setListWidget(self):
         list = self.listWidget
         cfg = self.config
 
@@ -186,8 +192,8 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         fileDialog = QFileDialog()
         dir = fileDialog.getExistingDirectory(dir=os.path.dirname(self.config['DIR']))
         if dir:
+            self.changeDir(dir)
             self.config['DIR'] = dir
-            self.setConfigByDir()
             self.update()
 
     def execServerBt(self):
@@ -206,20 +212,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         if cfg['isVideoUp']:
             self.uploadVideos()
         self.update()
-
-    def setDirByConfig(self, text, config):
-        cfg = self.config
-        dir = os.path.normcase(cfg['DIR'] + '\\')
-        config = '\\{}\\'.format(os.path.normcase(config))
-        if config in dir:
-            cfg['DIR'] = dir.replace(config, '\\{}\\'.format(text))[:-1]
                 
-    def setConfigByDir(self):
-        cfg = self.config
-        pat = re.compile(r'.*\\(ep.*?)\\.*\\(.+)', flags=re.I)
-        match = pat.match(cfg['DIR'])
-        if match:
-            cfg['EP'], cfg['SCENE'] = match.groups()
 
 def main():
     call(u'CHCP 936 & TITLE SceneTools_v{} & CLS'.format(VERSION).encode('GBK'), shell=True)

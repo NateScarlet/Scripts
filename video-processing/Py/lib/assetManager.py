@@ -4,17 +4,19 @@ import os
 import nuke
 import nukescripts
 import re
+import locale
 from subprocess import call
 
 dropframes = {}
 dropframes_showed = []
 script_codec = 'UTF-8'
-prompt_codec = 'GBK'
+nuke_codec = 'UTF-8'
+sys_codec = locale.getdefaultlocale()[1]
 
 class DropFrameCheck(object):
     dropframes_dict = {}
     dropframes_showed = []
-
+`
     def __call__(self, ):
         self.dropframes_showed = []
         for node in nuke.allNodes(group=nuke.Root()):

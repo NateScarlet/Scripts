@@ -5,25 +5,17 @@ import os
 import sys
 import time
 import nuke
+import locale
 from subprocess import call
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from config import Config
 
-VERSION = 2.12
-USAGE = '''
-        USAGE::
-        @argv1: config file path
-        '''
+VERSION = 2.2
 
-argvs = sys.argv
-prompt_codec = 'gbk'
+sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 nuke_codec = 'UTF-8'
-file_name = None
-
-def print_(obj):
-    print(str(obj).decode(script_codec).encode(prompt_codec))
 
 def pause():
     call('PAUSE', shell=True)
@@ -75,7 +67,7 @@ class Contactsheet(Config):
             read_node = nuke.nodes.Read(file=file)
             if read_node.hasError():
                 nuke.delete(read_node)
-                print_('排除:\t\t\t{} (不能读取)'.format(i))
+                print(u'排除:\t\t\t{} (不能读取)'.format(i))
             else:
                 self.read_nodes.append(read_node)
 
@@ -89,17 +81,17 @@ class Contactsheet(Config):
             return read_node
         else:
             self.backdrop_read_node = nuke.nodes.Constant()
-            print_('**提示**\t\t找不到背板文件,将用纯黑代替')
+            print(u'**提示**\t\t找不到背板文件,将用纯黑代替')
             return False
 
     def getImageList(self, dir='images'):
-        image_list = list(i.decode(prompt_codec).encode(script_codec) for i in os.listdir(dir))
+        image_list = list(i.decode(sys_codec).encode(script_codec) for i in os.listdir(dir))
 
         if not image_list:
             raise FootageError
         
         # Exclude excess image
-        mtime = lambda file: os.stat(dir + '\\' + file.decode(script_codec). encode(prompt_codec)).st_mtime
+        mtime = lambda file: os.stat(dir + '\\' + file.decode(script_codec). encode(sys_codec)).st_mtime
         image_list.sort(key=mtime, reverse=True)
         getShotName = lambda file_name : file_name.split('.')[0].rstrip('_proxy').lower()
         shot_list = []
@@ -107,15 +99,15 @@ class Contactsheet(Config):
         for image in image_list:
             shot = getShotName(image)
             if shot in shot_list:
-                print_('排除:\t\t\t{} (较旧)'.format(image))
+                print(u'排除:\t\t\t{} (较旧)'.format(image))
             else:
                 shot_list.append(shot)
-                print_('包含:\t\t\t{}'.format(image))
+                print(u'包含:\t\t\t{}'.format(image))
                 result.append(image)
         result.sort()
-        print_('总计图像数量:\t\t{}'.format(len(image_list)))
-        print_('总计有效图像:\t\t{}'.format(len(result)))
-        print_('总计镜头数量:\t\t{}'.format(len(shot_list)))
+        print(u'总计图像数量:\t\t{}'.format(len(image_list)))
+        print(u'总计有效图像:\t\t{}'.format(len(result)))
+        print(u'总计镜头数量:\t\t{}'.format(len(shot_list)))
         return result
     
     def mergeBackdrop(self):
@@ -177,7 +169,7 @@ def insertNode(node, input_node):
 
 class FootageError(Exception):
     def __init__(self):
-        print_('\n**错误** - 在images文件夹中没有可用图像\n')
+        print(u'\n**错误** - 在images文件夹中没有可用图像\n')
 
 def main():
     Contactsheet()

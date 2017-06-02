@@ -2,10 +2,12 @@
 # -*- coding=UTF-8 -*-
 
 import os
+import locale
 from config import Config
 from subprocess import call
 
-sys_codec = 'GBK'
+sys_codec = locale.getdefaultlocale()[1]
+
 def copy(src, dst):
     cmd = u'XCOPY /Y /V "{}" "{}"'.format(unicode(src), unicode(dst)).encode(sys_codec)
     call(cmd)

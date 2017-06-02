@@ -4,6 +4,7 @@
 import os, sys
 import json
 import time
+import re
 
 class Config(object):
     config = {
@@ -33,6 +34,7 @@ class Config(object):
                 'ignore_list': [],
              }
     cfgfile_path = os.path.join(os.getenv('UserProfile'), 'SceneTools_WLF.json')
+    psetting_bname = '.projectsettings.json'
 
     def __init__(self):
         self.readConfig()            
@@ -52,10 +54,31 @@ class Config(object):
             if last_config:
                 self.config.update(json.loads(last_config))
 
+    def readProjectSettings(self):
+        if os.path.exists(self.psetting_bname):
+            with open(self.psetting_bname) as file:
+                last_config = file.read()
+            if last_config:
+                self.config.update(json.loads(last_config))
+                
+    def updateProjectSettings(self):
+        if not os.path.exists(self.psetting_bname):
+            self.setConfigByDir()
+        try:
+            with open(self.psetting_bname, 'w') as file:
+                settings = ['PROJECT', 'EP', 'SCENE', 'VIDEO_FNAME', 'IMAGE_FNAME']
+                psettings = {}
+                for i in settings:
+                    psettings[i] = self.config[i]
+                json.dump(psettings, file, indent=4, sort_keys=True)
+        except IOError as e:
+            pass
+
     def editConfig(self, key, value):
         #print(u'设置{}: {}'.format(key, value))
         self.config[key] = value
         self.updateConfig()
+        self.updateProjectSettings()
 
     def setSyncPath(self):
         cfg = self.config
@@ -74,3 +97,10 @@ class Config(object):
     def setBackDropPath(self):
         cfg = self.config
         cfg['backdrop'] = os.path.join(cfg['BACKDROP_DIR'], cfg['backdrop_name'])
+        
+    def setConfigByDir(self):
+        cfg = self.config
+        pat = re.compile(r'.*\\(ep.*?)\\.*\\(.+)', flags=re.I)
+        match = pat.match(cfg['DIR'])
+        if match:
+            cfg['EP'], cfg['SCENE'] = match.groups()
