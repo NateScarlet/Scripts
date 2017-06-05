@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\Users\zhouxuan.WLF\CloudSync\Scripts\video-processing\SceneTools\SceneTools.ui'
 #
-# Created: Fri Jun 02 16:25:12 2017
+# Created: Fri Jun 02 18:58:34 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -266,7 +266,7 @@ class Ui_Dialog(object):
         self.label_10.setText(QtGui.QApplication.translate("Dialog", "服务器单帧文件夹", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("Dialog", "Nuke路径", None, QtGui.QApplication.UnicodeUTF8))
         self.nukeButton.setText(QtGui.QApplication.translate("Dialog", "浏览", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("Dialog", "本地工程目录", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(QtGui.QApplication.translate("Dialog", "工作目录", None, QtGui.QApplication.UnicodeUTF8))
         self.dirButton.setText(QtGui.QApplication.translate("Dialog", "浏览", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("Dialog", "工程名", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dialog", "集", None, QtGui.QApplication.UnicodeUTF8))

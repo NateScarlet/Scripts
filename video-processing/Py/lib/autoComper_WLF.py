@@ -1,7 +1,7 @@
 #
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.86
+# Version 0.861
 
 import nuke
 import os
@@ -10,14 +10,36 @@ import sys
 import traceback
 from subprocess import call
 import time
+import locale
 
 fps = 25
 format = 'HD_1080'
-tag_convert_dict = {'BG_FOG': 'FOG_BG', 'BG_ID':'ID_BG', 'CH_ID':'ID_CH', 'CH_SD': 'SH_CH', 'CH_SH': 'SH_CH', 'CH_OC': 'OCC_CH', 'CH_AO': 'OCC_CH', 'CH_A_SH': 'SH_CH_A', 'CH_B_SH': 'SH_CH_B', 'CH_C_SH': 'SH_CH_C', 'CH_D_SH': 'SH_CH_D', 'CH_OC': 'OCC_CH', 'CH_OCC': 'OCC_CH', 'CH_A_OC': 'OCC_CH_A', 'CH_A_OCC': 'OCC_CH_A', 'CH_B_OC': 'OCC_CH_B', 'CH_B_OCC': 'OCC_CH_B', 'CH_C_OC': 'OCC_CH_C', 'CH_C_OCC': 'OCC_CH_C', 'CH_D_OC': 'OCC_CH_D', 'CH_D_OCC': 'OCC_CH_D'}
+tag_convert_dict = {
+                    'BG_FOG': 'FOG_BG',
+                    'BG_ID':'ID_BG',
+                    'CH_ID':'ID_CH',
+                    'CH_SD': 'SH_CH',
+                    'CH_SH': 'SH_CH',
+                    'CH_A_SH': 'SH_CH_A',
+                    'CH_B_SH': 'SH_CH_B',
+                    'CH_C_SH': 'SH_CH_C',
+                    'CH_D_SH': 'SH_CH_D',
+                    'CH_AO': 'OCC_CH',
+                    'CH_OC': 'OCC_CH',
+                    'CH_OCC': 'OCC_CH',
+                    'CH_A_OC': 'OCC_CH_A',
+                    'CH_A_OCC': 'OCC_CH_A',
+                    'CH_B_OC': 'OCC_CH_B',
+                    'CH_B_OCC': 'OCC_CH_B',
+                    'CH_C_OC': 'OCC_CH_C',
+                    'CH_C_OCC': 'OCC_CH_C',
+                    'CH_D_OC': 'OCC_CH_D',
+                    'CH_D_OCC': 'OCC_CH_D',
+                   }
 regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
-prompt_codec = 'GBK'
+sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 
 class Comp(object):
@@ -517,9 +539,9 @@ class Precomp(object):
         
         self.compAll()
         
-        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(prompt_codec)
+        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(sys_codec)
         call(cmd)
-        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(prompt_codec))
+        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(sys_codec))
         if choice == 2:
             call('PAUSE', shell=True)
     
@@ -573,7 +595,7 @@ class Precomp(object):
         info = '错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
         print('')
         print_(info)
-        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(prompt_codec), 'w') as log:
+        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(sys_codec), 'w') as log:
             log.write('总计镜头数量:\t{}\n'.format(self.shots_number))
             log.write(info)
 
@@ -634,12 +656,12 @@ def addMenu():
     m.addCommand('批量合成',"autoComper_WLF.Precomp().showDialog()",icon='autoComper_WLF.png')
 
 def print_(obj):
-    print(str(obj).decode(script_codec).encode(prompt_codec))
+    print(str(obj).decode(script_codec).encode(sys_codec))
 
 if __name__ == '__main__' and  len(sys.argv) == 6:
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
 
-    call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(prompt_codec), shell=True)
+    call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(sys_codec), shell=True)
     print_('{:-^50s}'.format('确认设置'))
     print_('素材路径:\t\t{0[1]}\n保存路径:\t\t{0[2]}\nMP:\t\t\t{0[3]}\n素材名正则匹配:\t\t{0[4]}\n文件夹名正则匹配:\t{0[5]}'.format(argv))
 
