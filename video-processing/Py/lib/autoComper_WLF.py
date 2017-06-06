@@ -1,16 +1,17 @@
-#
+#! usr/bin/env python
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
 # Version 0.861
 
-import nuke
 import os
-import re
 import sys
-import traceback
-from subprocess import call
+import re
 import time
 import locale
+import traceback
+from subprocess import call
+
+import nuke
 
 fps = 25
 format = 'HD_1080'
@@ -41,6 +42,7 @@ toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
 default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
 sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
+
 
 class Comp(object):
 
@@ -658,7 +660,7 @@ def addMenu():
 def print_(obj):
     print(str(obj).decode(script_codec).encode(sys_codec))
 
-if __name__ == '__main__' and  len(sys.argv) == 6:
+def main():
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
 
     call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(sys_codec), shell=True)
@@ -676,3 +678,12 @@ if __name__ == '__main__' and  len(sys.argv) == 6:
     print('')
 
     Precomp(argv[1], argv[2], argv[3], argv[4], argv[5])()
+
+if __name__ == '__main__' and  len(sys.argv) == 6:
+    try:
+        main()
+    except SystemExit as e:
+        exit(e)
+    except:
+        import traceback
+        traceback.print_exc()

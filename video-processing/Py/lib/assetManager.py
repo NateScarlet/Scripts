@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import nuke
-import nukescripts
 import re
 import locale
 from subprocess import call
+
+import nuke
+import nukescripts
 
 dropframes = {}
 dropframes_showed = []
@@ -16,7 +17,7 @@ sys_codec = locale.getdefaultlocale()[1]
 class DropFrameCheck(object):
     dropframes_dict = {}
     dropframes_showed = []
-`
+
     def __call__(self, ):
         self.dropframes_showed = []
         for node in nuke.allNodes(group=nuke.Root()):

@@ -4,11 +4,19 @@ Shortcut = %UserProfile%\Shortcut
 
 
 Loop {
+	PrevWin := CurrentWin
+    WinGet, CurrentWin, ID, A
+	If (CurrentWin != PrevWin) {
+	    OnWinChange()
+	}
+}
+
+OnWinChange()
+{
     IfWinExist, ahk_exe WerFault.exe,
         WinClose,
 	IfWinExist, ahk_exe CrashReporterNuke.exe,
 		WinClose,
-	Sleep, 1000
 }
 
 $#f:: Run %Shortcut%\Everything

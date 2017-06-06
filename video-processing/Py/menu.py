@@ -1,16 +1,19 @@
 # -*- coding: UTF-8 -*-
 
 import nuke
-import comp
 from autolabelCustom import autolabelCustom
+
+import comp
 import autoComper_WLF
+import cgteamwork
 
 nuke.pluginAddPath( 'icons' )
 
 # Set menu
 comp.addMenu()
 autoComper_WLF.addMenu()
-
+cgteamwork.addMenu()
+cgteamwork.addCallBack()
 # Custom autolabel
 nuke.addAutolabel( autolabelCustom )
 
