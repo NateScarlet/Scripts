@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\Users\zhouxuan.WLF\CloudSync\Scripts\video-processing\CGTeamWorkTool\CGTeamWorkTool.ui'
 #
-# Created: Tue Jun 06 18:09:36 2017
+# Created: Wed Jun 07 12:58:51 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(473, 600)
+        MainWindow.resize(449, 600)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -67,7 +67,8 @@ class Ui_MainWindow(object):
         self.listWidget = QtGui.QListWidget(self.centralwidget)
         self.listWidget.setObjectName("listWidget")
         self.verticalLayout.addWidget(self.listWidget)
-        self.downloadButton = QtGui.QCommandLinkButton(self.centralwidget)
+        self.downloadButton = QtGui.QPushButton(self.centralwidget)
+        self.downloadButton.setMinimumSize(QtCore.QSize(0, 100))
         self.downloadButton.setObjectName("downloadButton")
         self.verticalLayout.addWidget(self.downloadButton)
         self.versionLabel = QtGui.QLabel(self.centralwidget)
@@ -76,14 +77,22 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.versionLabel)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 473, 23))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 449, 23))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.toolBar = QtGui.QToolBar(MainWindow)
+        self.toolBar.setObjectName("toolBar")
+        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        self.actionDownload = QtGui.QAction(MainWindow)
+        self.actionDownload.setCheckable(False)
+        self.actionDownload.setChecked(False)
+        self.actionDownload.setObjectName("actionDownload")
 
         self.retranslateUi(MainWindow)
+        QtCore.QObject.connect(self.downloadButton, QtCore.SIGNAL("clicked()"), self.actionDownload.trigger)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -95,6 +104,9 @@ class Ui_MainWindow(object):
         self.label_4.setText(QtGui.QApplication.translate("MainWindow", "镜头前缀", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("MainWindow", "项目数据库名", None, QtGui.QApplication.UnicodeUTF8))
         self.label_6.setText(QtGui.QApplication.translate("MainWindow", "数据库模块名", None, QtGui.QApplication.UnicodeUTF8))
-        self.downloadButton.setText(QtGui.QApplication.translate("MainWindow", "下载提交的文件", None, QtGui.QApplication.UnicodeUTF8))
-        self.versionLabel.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.downloadButton.setText(QtGui.QApplication.translate("MainWindow", "下载服务器上的提交文件", None, QtGui.QApplication.UnicodeUTF8))
+        self.versionLabel.setText(QtGui.QApplication.translate("MainWindow", "version", None, QtGui.QApplication.UnicodeUTF8))
+        self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionDownload.setText(QtGui.QApplication.translate("MainWindow", "下载", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionDownload.setWhatsThis(QtGui.QApplication.translate("MainWindow", "1", None, QtGui.QApplication.UnicodeUTF8))
 

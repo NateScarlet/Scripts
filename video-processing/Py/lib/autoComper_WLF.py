@@ -1,7 +1,6 @@
 #! usr/bin/env python
 # -*- coding=UTF-8 -*-
 # WuLiFang Studio AutoComper
-# Version 0.861
 
 import os
 import sys
@@ -15,6 +14,8 @@ import nuke
 
 fps = 25
 format = 'HD_1080'
+VERSION = 0.87
+
 tag_convert_dict = {
                     'BG_FOG': 'FOG_BG',
                     'BG_ID':'ID_BG',
@@ -252,16 +253,20 @@ class Comp(object):
         return copy_node
 
     def addReformat(self):
+        ret = None
         for i in self.bg_ch_nodes:
             reformat_node = nuke.nodes.Reformat()
             self.insertNode(reformat_node, i)
-        return reformat_node
+            ret = reformat_node
+        return ret
         
     def addZDefocus(self):
+        ret = None
         for i in self.bg_ch_nodes:
             zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200" || [value _ZDefocus.disable]} {return True} else {return False}]}}', selected=True )
             self.insertNode(zdefocus_node, i)
-        return zdefocus_node
+            ret = zdefocus_node
+        return ret
         
     def add_ZDefocus(self):
         # Use for one-node zdefocus control
@@ -270,6 +275,7 @@ class Comp(object):
         return zdefocus_node
         
     def addGrade(self):
+        ret = None
         for i in self.bg_ch_nodes:
             print('addGrade(): \t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             rgb_max = self.getMax(i, 'rgb')
@@ -290,7 +296,8 @@ class Comp(object):
             grade_node = nuke.nodes.Grade(whitepoint=rgb_max, unpremult='rgba.alpha', mix=grade_mix, label='最亮值: {}\n混合:[value this.mix]\n使亮度范围靠近0-1'.format(rgb_max))
             self.insertNode(grade_node, i)
             print('')
-        return grade_node
+            ret = grade_node
+        return ret
         
     def addDepth(self):
         for i in self.bg_ch_nodes:
@@ -301,6 +308,7 @@ class Comp(object):
                 self.insertNode(merge_node, i)
 
     def addColorCorrect(self):
+        ret = None
         for i in self.bg_ch_nodes:
             if 'SSS.alpha' in i.channels():
                 colorcorrect_node = nuke.nodes.ColorCorrect(label='SSS调整', maskChannelInput='SSS.alpha')
@@ -309,13 +317,16 @@ class Comp(object):
             self.insertNode(colorcorrect_node, i)
             colorcorrect_node = nuke.nodes.ColorCorrect(label='亮度调整')
             self.insertNode(colorcorrect_node, i)
-        return colorcorrect_node
+            ret = colorcorrect_node
+        return ret
         
     def addHueCorrect(self):
+        ret = None
         for i in self.bg_ch_nodes:
             huecorrect_node = nuke.nodes.HueCorrect()
             self.insertNode(huecorrect_node, i)
-        return huecorrect_node
+            ret = huecorrect_node
+        return ret
     
     def addPremult(self):
         premult_node = False
@@ -385,10 +396,12 @@ class Comp(object):
         return keyer_node
 
     def addCrop(self): 
+        ret = None
         for i in self.bg_ch_nodes:
             crop_node = nuke.nodes.Crop(box='0 0 {root.width} {root.height}')
             self.insertNode(crop_node, i)
-        return crop_node
+            ret = crop_node
+        return ret
         
         
     def mergeMP(self):

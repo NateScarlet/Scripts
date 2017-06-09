@@ -15,7 +15,7 @@ SYS_CODEC = locale.getdefaultlocale()[1]
 
 def copy(src, dst):
     cmd = u'XCOPY /Y /V /D "{}" "{}"'.format(os.path.normcase(unicode(src)), unicode(dst)).encode(SYS_CODEC)
-    print(cmd)
+    #print(cmd)
     call(cmd)
 
 class Sync(Config):

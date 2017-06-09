@@ -14,7 +14,7 @@ from config import Config
 from sync import Sync
 from sync import LoginError
 
-VERSION = 0.1
+VERSION = 0.11
 SYS_CODEC = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
 
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
 
     def connect_buttons(self):
         self.destButton.clicked.connect(self.exec_dest_button)
-        self.downloadButton.clicked.connect(self.exec_downlowd_button)
+        self.actionDownload.triggered.connect(self.downlowd)
 
     def connect_edits(self):
         for edit, key in self.edits_key.iteritems():
@@ -65,6 +65,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
     def update(self):
         self.set_edits()
         self.set_list_widget()
+        self.set_button_enabled()
 
     def set_edits(self):
         for q, k in self.edits_key.iteritems():
@@ -92,12 +93,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
             self.config['DEST'] = dir
             self.update()
 
-    def exec_downlowd_button(self):
+    def downlowd(self):
         self.download_videos()
-
+        
+    def set_button_enabled(self):
+        self.downloadButton.setEnabled(bool(self.config['DEST']))
 
 def main():
-    call(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(VERSION).encode('GBK'), shell=True)
+    call(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(VERSION).encode(SYS_CODEC), shell=True)
     app = QApplication(sys.argv)
     frame = MainWindow()
     frame.show()

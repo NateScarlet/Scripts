@@ -1,0 +1,7 @@
+python("import menu;");
+
+SGautoRunScript;
+SGToolsMenu;
+WLF_Mune;
+menuWindow;bonusToolsMenu;
+Menu_setupMel;
