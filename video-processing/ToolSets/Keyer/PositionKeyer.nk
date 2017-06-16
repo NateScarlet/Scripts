@@ -1,23 +1,23 @@
 set cut_paste_input [stack 0]
 version 10.0 v4
 push $cut_paste_input
-add_layer {P P.red P.green P.blue}
+add_layer {P P.X P.Y P.Z P.red P.green P.blue}
 Group {
  name PositionKeyer1
  tile_color 0xff00ff
  label "输入通道: \[value in]\n"
  note_font 微软雅黑
  selected true
- xpos -741
- ypos -296
- addUserKnob {20 tab1 l PositionKeyer_v0.82}
+ xpos -84
+ ypos -147
+ addUserKnob {20 tab_positionkeyer l PositionKeyer_v0.9}
  addUserKnob {41 in l "Position Layer" T Shuffle2.in}
  addUserKnob {6 preview l preview(预览) +STARTLINE}
  addUserKnob {26 sample_point l 取样位置}
  addUserKnob {12 p0}
- p0 {432 436}
+ p0 {576 234}
  addUserKnob {12 p1}
- p1 {1418 138}
+ p1 {1148 586}
  addUserKnob {26 div_base l Base(基本设置)}
  addUserKnob {22 bt_rotation_0 l 0 -STARTLINE T "nuke.thisNode()\['x'].setValue(True)\nnuke.thisNode()\['y'].setValue(False)\nnuke.thisNode()\['rotation'].setValue(0)\n\nnuke.thisNode()\['bt_apply'].execute()"}
  addUserKnob {22 bt_rotation_90 l 90 -STARTLINE T "nuke.thisNode()\['x'].setValue(True)\nnuke.thisNode()\['y'].setValue(False)\nnuke.thisNode()\['rotation'].setValue(90)\n\nnuke.thisNode()\['bt_apply'].execute()"}
@@ -38,110 +38,69 @@ Group {
   inputs 0
   name Input
   gl_color 0x327fff00
-  xpos 290
+  xpos 180
   ypos -1234
  }
-set Nb323d400 [stack 0]
+set N3d7e800 [stack 0]
  Shuffle {
   in P
-  in2 rgba
   name Shuffle2
   gl_color 0x3282ff00
   xpos 290
   ypos -1208
  }
-set Nb323d000 [stack 0]
- Expression {
-  temp_name0 rotation
-  temp_expr0 radians(this.rotation)
-  temp_name1 Px
-  temp_expr1 red
-  temp_name2 Py
-  temp_expr2 green
-  temp_name3 Pz
-  temp_expr3 blue
-  expr0 "cos(rotation) * Px - sin(rotation) * Pz"
-  expr2 "cos(rotation) * Pz + sin(rotation) * Px"
-  name Expression2
-  gl_color 0x32ff9a00
-  label "Rotate Positon Layer\n旋转P层"
-  note_font 微软雅黑
-  selected true
-  xpos 290
-  ypos -1170
-  addUserKnob {20 User}
-  addUserKnob {7 rotation R 0 360}
-  rotation {{parent.knob.rotation}}
- }
- AddChannels {
-  channels alpha
-  color 1
-  name AddChannels1
-  gl_color 0xff323f00
-  note_font 微软雅黑
-  xpos 290
-  ypos -1110
- }
+set N3d7e400 [stack 0]
  NoOp {
   name Sampler
   gl_color 0x32ffc700
   label 取样器
   note_font 微软雅黑
   xpos 290
-  ypos -1066
+  ypos -1170
   addUserKnob {20 Result}
   addUserKnob {18 p0 l "point 0"}
-  p0 {0 0 0}
+  p0 {-22.96875 5.483627319e-006 16.265625}
   addUserKnob {6 p0_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
   addUserKnob {18 p1 l "point 1"}
-  p1 {0 0 0}
+  p1 {67.4375 23.40625 31.421875}
   addUserKnob {6 p1_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
  }
- Grade {
-  channels {none none none rgba.red}
-  blackpoint {{parent.Sampler.p0.r}}
-  whitepoint {{parent.Sampler.p1.r}}
-  name Grade1
-  gl_color 0xff32a400
-  label x
+ BlinkScript {
+  recompileCount 21
+  ProgramGroup 1
+  KernelDescription "2 \"PositionKeyer\" iterate pixelWise 6e90de464584890be55f964a012456f6f54088a206aec83ddc6e5dcd4010eb68 2 \"position\" Read Point \"dst\" Write Point 7 \"invert_x\" Bool 1 AA== \"invert_y\" Bool 1 AA== \"enable_x\" Bool 1 AA== \"enable_y\" Bool 1 AA== \"rotate_y\" Float 1 AAAAAA== \"p0_color\" Float 4 AAAAAAAAAAAAAAAAAAAAAA== \"p1_color\" Float 4 AAAAAAAAAAAAAAAAAAAAAA== 7 \"invert_x\" 1 1 \"invert_y\" 1 1 \"enable_x\" 1 1 \"enable_y\" 1 1 \"rotate_y\" 1 1 \"p0_color\" 4 1 \"p1_color\" 4 1 0"
+  kernelSource "// PositionKeyerKernel\n// VERSION: 0.1\nkernel PositionKeyer : ImageComputationKernel<ePixelWise> \{\n  Image<eRead, eAccessPoint, eEdgeClamped> position;\n  Image<eWrite, eAccessPoint> dst;\n\nparam:\n    \n  bool invert_x;\n  bool invert_y;\n  bool enable_x;\n  bool enable_y;\n  float rotate_y;\n  float4 p0_color;\n  float4 p1_color;\n\n  void process() \{\n    const float x = position()\[0];\n    const float y = position()\[1];\n    const float z = position()\[2];\n    \n    float rotated_x = cos(rotate_y) * x - sin(rotate_y) * z;\n    float rotated_z = cos(rotate_y) * z + sin(rotate_y) * x;\n    \n    float4 result;\n    result\[0] = (rotated_x - p0_color\[0]) / p1_color\[0];\n    result\[1] = (y - p0_color\[1]) / p1_color\[1];\n    result\[2] = (rotated_z - p0_color\[2]) / p1_color\[2];\n    result = clamp(result, float4(0.0f), float4(1.0f));\n    \n    result\[0] = invert_x ? (1 - result\[0]) : result\[0];\n    result\[1] = invert_y ? (1 - result\[1]) : result\[1];\n    result\[3] = (enable_x ? result\[0] : 1) * (enable_y ? result\[1] : 1);\n    dst() = result;\n  \}\n\};"
+  rebuild ""
+  PositionKeyer_invert_x {{parent.invert_x}}
+  PositionKeyer_invert_y {{parent.invert_y}}
+  PositionKeyer_enable_x {{parent.x}}
+  PositionKeyer_enable_y {{parent.y}}
+  PositionKeyer_rotate_y {{radians(parent.knob.rotation)}}
+  PositionKeyer_p0_color {{parent.Sampler.p0} {parent.Sampler.p0} {parent.Sampler.p0} {parent.Sampler.p0}}
+  PositionKeyer_p1_color {{parent.Sampler.p1} {parent.Sampler.p1} {parent.Sampler.p1} {parent.Sampler.p1}}
+  rebuild_finalise ""
+  name BlinkScript1
+  gl_color 0x3332ff00
   note_font 微软雅黑
   xpos 290
-  ypos -1022
+  ypos -1126
  }
- Grade {
-  channels {none none none rgba.green}
-  blackpoint {{parent.Sampler.p0.g}}
-  whitepoint {{parent.Sampler.p1.g}}
-  name Grade2
-  gl_color 0x32ffa000
-  label y
+ Dot {
+  name Dot1
+  gl_color 0x32ff6c00
   note_font 微软雅黑
-  xpos 290
-  ypos -962
+  xpos 324
+  ypos -1082
  }
- Expression {
-  temp_name0 x
-  temp_expr0 "( parent.x ) ? ( ( parent.invert_x ) ? ( 1- r ) : r ) : 1"
-  temp_name1 y
-  temp_expr1 "( parent.y ) ? ( ( parent.invert_y ) ? ( 1- g ) : g ) : 1"
-  channel0 alpha
-  expr0 "x * y"
-  name Expression1
-  gl_color 0xffdf3200
+set N3d7f800 [stack 0]
+push $N3d7e400
+ Dot {
+  name Dot3
+  gl_color 0x8cff3200
   note_font 微软雅黑
-  xpos 290
-  ypos -902
+  xpos 434
+  ypos -1170
  }
- Clamp {
-  channels alpha
-  name Clamp1
-  gl_color 0x9032ff00
-  note_font 微软雅黑
-  xpos 290
-  ypos -874
- }
-set Nb2a70c00 [stack 0]
-push $Nb323d000
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -149,11 +108,18 @@ push $Nb323d000
   name Copy2
   gl_color 0xff326f00
   note_font 微软雅黑
-  xpos 510
-  ypos -877
+  xpos 400
+  ypos -1095
  }
-push $Nb2a70c00
-push $Nb323d400
+push $N3d7f800
+push $N3d7e800
+ Dot {
+  name Dot2
+  gl_color 0xffce3200
+  note_font 微软雅黑
+  xpos 214
+  ypos -1051
+ }
  Copy {
   inputs 2
   from0 rgba.alpha
@@ -161,8 +127,8 @@ push $Nb323d400
   name Copy1
   gl_color 0x32ffb200
   note_font 微软雅黑
-  xpos 400
-  ypos -825
+  xpos 290
+  ypos -1043
  }
  Switch {
   inputs 2
@@ -171,13 +137,14 @@ push $Nb323d400
   gl_color 0x32ffc800
   label "Preview\n预览"
   note_font 微软雅黑
-  xpos 510
-  ypos -833
+  xpos 400
+  ypos -1051
  }
  Output {
   name Output1
-  gl_color 0x3288ff00
-  xpos 510
-  ypos -773
+  gl_color 0x32ff4100
+  note_font 微软雅黑
+  xpos 400
+  ypos -991
  }
 end_group

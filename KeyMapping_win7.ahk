@@ -33,24 +33,13 @@ else
 return
 
 $#2:: 
-IfWinNotExist, ahk_exe NxNManagerClient.exe
-{
-	Run, %Shortcut%\NxN
-	WinWait, ahk_class #32770 ahk_exe NxNManagerClient.exe, , 3,
-	WinClose,
-	WinWaitActive, NXN alienbrain Manager Client ahk_exe NxNManagerClient.exe, , 3,
-	WinMaximize
-}
-IfWinExist, ahk_class QWidget ahk_exe Nuke10.0.exe, , Hiero
-{
-	GroupAdd, G_WORK, ahk_class QWidget ahk_exe Nuke10.0.exe, , , Hiero
-	GroupAdd, G_WORK, ahk_class ATL:0046DEB0 ahk_exe NxNManagerClient.exe
-	GroupActivate, G_WORK
-}
-else
-{
-	WinActivate, ahk_class ATL:0046DEB0 ahk_exe NxNManagerClient.exe
-}
+IfWinNotExist, ahk_exe CgTeamWork.exe
+	{
+	Run, CGTeamWork 
+	}
+GroupAdd, G_WORK, ahk_class QWidget ahk_exe Nuke10.0.exe, , , Hiero
+GroupAdd, G_WORK, ahk_class Qt5QWindowIcon ahk_exe CgTeamWork.exe
+GroupActivate, G_WORK
 return
 
 $^#2:: 

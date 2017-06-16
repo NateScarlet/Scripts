@@ -18,12 +18,18 @@ def addShelf():
     deleteShelf()
     setParent('MayaWindow|toolBar2|MainShelfLayout|formLayout14|ShelfLayout')
     shelfLayout(SHELF_NAME)
-    shelfButton(annotation=u'Link资产',
-        image1="channelBox.png",
+    shelfButton(
+        annotation=u'Link资产',
+        image="",
         command='import wlf.cgteamwork\nwlf.cgteamwork.CGTeamWork().call_script()',
         imageOverlayLabel=u"联资产",
     )
-
+    shelfButton(
+        annotation=u'设置工程',
+        image="",
+        command='import wlf.cgteamwork\nwlf.cgteamwork.CGTeamWork.show_window()',
+        imageOverlayLabel=u"设置",
+    )
 
 def deleteShelf():
     shelf = 'MayaWindow|toolBar2|MainShelfLayout|formLayout14|ShelfLayout|' + SHELF_NAME

@@ -4,7 +4,7 @@ homepage: https://github.com/dbr/tabtabtab-nuke
 license: http://unlicense.org/
 """
 
-__version__ = "1.8-dev"
+__version__ = "1.8-dev.unicode_fixed"
 
 import os
 import sys
@@ -20,7 +20,6 @@ except ImportError:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtCore import Qt
     QtCore.Signal = QtCore.pyqtSignal
-
 
 def find_menu_items(menu, _path = None):
     """Extracts items from a given Nuke menu
@@ -96,7 +95,7 @@ def nonconsec_find(needle, haystack, anchored = False):
     >>> nonconsec_find(" ov", "matchmove", anchored = False)
     True
     """
-
+    needle = unicode(needle).encode('UTF-8')
     if "[" not in needle:
         haystack = haystack.rpartition(" [")[0]
 

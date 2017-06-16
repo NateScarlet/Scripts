@@ -14,12 +14,21 @@ import nuke
 
 fps = 25
 format = 'HD_1080'
-VERSION = 0.87
+VERSION = 0.871
 
 tag_convert_dict = {
                     'BG_FOG': 'FOG_BG',
-                    'BG_ID':'ID_BG',
-                    'CH_ID':'ID_CH',
+                    'BG_ID': 'ID_BG',
+                    'BG_CO': 'BG',
+                    'BG_RGB': 'ID_BG',
+                    'BG_RGB1': 'ID_BG1',
+                    'BG_KEY_LIGHT': 'LIGHT_KEY_BG',
+                    'BG_FILL_LIGHT': 'LIGHT_FILL_BG',
+                    'BG_OCC': 'OCC_BG',
+                    'CH_CO': 'CH',
+                    'CH_RGB': 'ID_CH',
+                    'CH_KEY_LIGHT': 'LIGHT_KEY_CH',
+                    'CH_ID': 'ID_CH',
                     'CH_SD': 'SH_CH',
                     'CH_SH': 'SH_CH',
                     'CH_A_SH': 'SH_CH_A',
@@ -40,7 +49,7 @@ tag_convert_dict = {
                    }
 regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
 toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
-default_mp = "Z:/SNJYW/MP/EP09/sky_01_v4.jpg"
+default_mp = r"\\192.168.1.4\f\QQFC_2015\Render\mp\Brooklyn-Bridge-Panorama.tga"
 sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 
@@ -51,7 +60,7 @@ class Comp(object):
     
     def __init__(self, mp=default_mp):
 
-        self.last_output = None
+        self._last_output = None
         self.node_tag_dict = {}
         self.tag_node_dict = {}
         self.bg_node = None
@@ -76,38 +85,38 @@ class Comp(object):
         # Get bg_ch_nodes
         self.bg_ch_nodes = self.getNodesByTag(['BG', 'CH'])
         
-        # Set default last_output
+        # Set default _last_output
         if self.bg_ch_nodes:
-            self.last_output = self.bg_ch_nodes[0]
+            self._last_output = self.bg_ch_nodes[0]
         else:
-            self.last_output = self.node_tag_dict.keys()[0]
+            self._last_output = self.node_tag_dict.keys()[0]
     
     def __call__(self):
-        self.renameReads()
+        self.rename_read_nodes()
         
         # Merge
-        self.mergeOver()
-        self.addCrop()
-        self.addZDefocus()
-        self.addSoftClip()
-        self.addDepthFog()
-        self.mergeOCC()
-        self.mergeShadow()
-        self.mergeScreen()
-        self.addPremult()
-        self.addHueCorrect()
-        self.addColorCorrect()
-        self.addUnremult()
-        self.addGrade()
-        self.mergeDepth()
-        self.addReformat()
-        self.addDepth()
-        self.addKeyer()
-        self.add_ZDefocus()
-        self.mergeMP()
+        self.merge_over()
+        self.add_crop()
+        self.add_zdefocus()
+        self.add_softclip()
+        self.add_depthfog()
+        self.merge_occ()
+        self.merge_shadow()
+        self.merge_screen()
+        self.add_premult()
+        self.add_huecorrect()
+        self.add_colorcorrect()
+        self.add_unremult()
+        self.add_grade()
+        self.merge_depth()
+        self.add_reformat()
+        self.add_depth()
+        self.add_keyer()
+        self.add_zdefocus_control()
+        self.merge_mp()
         
         # Create write node
-        self.last_output.selectOnly()
+        self._last_output.selectOnly()
         _Write = nuke.loadToolset(toolset + r"\Write.nk")
 
         # Set framerange
@@ -136,9 +145,9 @@ class Comp(object):
         if not viewer_node:
             viewer_node = nuke.nodes.Viewer()
         _Write = nuke.toNode('_Write')
-        viewer_node.connectInput(0, self.last_output)
-        viewer_node.connectInput(1, self.last_output)
-        viewer_node.connectInput(2, self.last_output)
+        viewer_node.connectInput(0, self._last_output)
+        viewer_node.connectInput(1, self._last_output)
+        viewer_node.connectInput(2, self._last_output)
         if _Write:
             viewer_node.connectInput(3, _Write)
         
@@ -149,11 +158,14 @@ class Comp(object):
         # Deal with footage that have no alpha
         if not 'rgba.alpha' in n.channels():
             return '_OTHER'
-            
+        
+        if n['name'].value() in tag_convert_dict.values() + regular_tag_list:
+            return n['name'].value()
+        
         # Try file name
         _filename = os.path.normcase(nuke.filename(n))
         _s = os.path.basename(_filename)
-        _pat = re.compile(r'_sc.+?_([^.]+)')
+        _pat = re.compile(r'sc.+?_([^.]+)', flags=re.I)
         result = re.search(_pat, _s)
         if result:
             result = result.group(1).upper()
@@ -188,19 +200,19 @@ class Comp(object):
         nuke.Root()['last_frame'].setValue(n['last'].value())
         nuke.Root()['lock_range'].setValue(True)
                     
-    def mergeOver(self):
+    def merge_over(self):
         if len(self.bg_ch_nodes) == 0:
             return False
         elif len(self.bg_ch_nodes) == 1:
-            self.last_output = nuke.nodes.Dot(inputs=[self.bg_ch_nodes[0]])
+            self._last_output = nuke.nodes.Dot(inputs=[self.bg_ch_nodes[0]])
         else:
             for i in self.bg_ch_nodes[1:]:
-                if not self.last_output:
+                if not self._last_output:
                     continue
-                merge_node = nuke.nodes.Merge2(inputs=[self.last_output, i], label=self.node_tag_dict[i])
-                self.last_output = merge_node
+                merge_node = nuke.nodes.Merge2(inputs=[self._last_output, i], label=self.node_tag_dict[i])
+                self._last_output = merge_node
 
-    def mergeOCC(self):
+    def merge_occ(self):
         try:
             merge_node = None
             for i in self.getNodesByTag('OC'):
@@ -210,7 +222,7 @@ class Comp(object):
         except IndexError:
             return False
             
-    def mergeShadow(self):
+    def merge_shadow(self):
         try:
             for i in self.getNodesByTag(['SH', 'SD']):
                 grade_node = nuke.nodes.Grade(inputs=[self.bg_node, i], white="0.08420000225 0.1441999972 0.2041999996 0.0700000003", white_panelDropped=True, label='Shadow')
@@ -218,7 +230,7 @@ class Comp(object):
         except IndexError:
             return False
 
-    def mergeScreen(self):
+    def merge_screen(self):
         try:
             for i in self.getNodesByTag('FOG'):
                 reformat_node = nuke.nodes.Reformat()
@@ -234,25 +246,25 @@ class Comp(object):
         except IndexError:
             return False
 
-    def mergeDepth(self):
+    def merge_depth(self):
         nodes = self.bg_ch_nodes
         if len(nodes) == 1:
             return
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], tile_color=2184871423L, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         for i in nodes:
-            print('mergeDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
+            print('merge_depth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             depthfix_node = nuke.loadToolset(toolset + r'\Depthfix.nk')
             if self.getMax(i, 'depth.Z') > 1.1 :
                 depthfix_node['farpoint'].setValue(10000)
                 print('farpoint -> 10000')
             self.insertNode(depthfix_node, i)
             print('')
-        copy_node = nuke.nodes.Copy(inputs=[self.last_output, merge_node], from0='depth.Z', to0='depth.Z')
-        self.insertNode(copy_node, self.last_output)
-        self.last_output = copy_node
+        copy_node = nuke.nodes.Copy(inputs=[self._last_output, merge_node], from0='depth.Z', to0='depth.Z')
+        self.insertNode(copy_node, self._last_output)
+        self._last_output = copy_node
         return copy_node
 
-    def addReformat(self):
+    def add_reformat(self):
         ret = None
         for i in self.bg_ch_nodes:
             reformat_node = nuke.nodes.Reformat()
@@ -260,7 +272,7 @@ class Comp(object):
             ret = reformat_node
         return ret
         
-    def addZDefocus(self):
+    def add_zdefocus(self):
         ret = None
         for i in self.bg_ch_nodes:
             zdefocus_node = nuke.nodes.ZDefocus2(math=nuke.value('_ZDefocus.math', 'depth'), center='{{[value _ZDefocus.center curve]}}', focal_point='inf inf', dof='{{[value _ZDefocus.dof curve]}}', blur_dof='{{[value _ZDefocus.blur_dof curve]}}', size='{{[value _ZDefocus.size curve]}}', max_size='{{[value _ZDefocus.max_size curve]}}', label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return "由_ZDefocus控制"} else {return "需要_ZDefocus节点"}\n]', disable='{{[if {[value _ZDefocus.focal_point "200 200"] == "200 200" || [value _ZDefocus.disable]} {return True} else {return False}]}}', selected=True )
@@ -268,16 +280,16 @@ class Comp(object):
             ret = zdefocus_node
         return ret
         
-    def add_ZDefocus(self):
+    def add_zdefocus_control(self):
         # Use for one-node zdefocus control
-        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self.last_output], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
+        zdefocus_node = nuke.nodes.ZDefocus2(inputs=[self._last_output], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
         zdefocus_node.setName('_ZDefocus')
         return zdefocus_node
         
-    def addGrade(self):
+    def add_grade(self):
         ret = None
         for i in self.bg_ch_nodes:
-            print('addGrade(): \t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
+            print('add_grade(): \t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
             rgb_max = self.getMax(i, 'rgb')
             erode_size = 0
             erode_node = nuke.nodes.Dilate(inputs=[i], size = erode_size)
@@ -299,15 +311,15 @@ class Comp(object):
             ret = grade_node
         return ret
         
-    def addDepth(self):
+    def add_depth(self):
         for i in self.bg_ch_nodes:
             if 'depth.Z' not in i.channels():
-                print('addDepth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
+                print('add_depth():\t\t{}'.format(os.path.basename(i.metadata('input/filename'))))
                 constant_node = nuke.nodes.Constant(channels='depth', color=1, label='**用渲染出的depth层替换这个**\n或者手动指定数值')
-                merge_node = nuke.nodes.Merge2(inputs=[None, constant_node], also_merge='all', label='addDepth')
+                merge_node = nuke.nodes.Merge2(inputs=[None, constant_node], also_merge='all', label='add_depth')
                 self.insertNode(merge_node, i)
 
-    def addColorCorrect(self):
+    def add_colorcorrect(self):
         ret = None
         for i in self.bg_ch_nodes:
             if 'SSS.alpha' in i.channels():
@@ -320,7 +332,7 @@ class Comp(object):
             ret = colorcorrect_node
         return ret
         
-    def addHueCorrect(self):
+    def add_huecorrect(self):
         ret = None
         for i in self.bg_ch_nodes:
             huecorrect_node = nuke.nodes.HueCorrect()
@@ -328,7 +340,7 @@ class Comp(object):
             ret = huecorrect_node
         return ret
     
-    def addPremult(self):
+    def add_premult(self):
         premult_node = False
         for i in self.bg_ch_nodes:
             if 'rgba.alpha' in i.channels():
@@ -336,7 +348,7 @@ class Comp(object):
                 self.insertNode(premult_node, i)
         return premult_node
 
-    def addUnremult(self):
+    def add_unremult(self):
         unpremult_node = False
         for i in self.bg_ch_nodes:
             if 'rgba.alpha' in i.channels():
@@ -344,12 +356,12 @@ class Comp(object):
                 self.insertNode(unpremult_node, i)
         return unpremult_node    
 
-    def addDepthFog(self):
+    def add_depthfog(self):
         node_color = 596044543
 
         # Add _DepthFogControl node
         _DepthFogControl = nuke.loadToolset(toolset + '/Keyer/DepthKeyer.nk')
-        _DepthFogControl.setInput(0, self.last_output)
+        _DepthFogControl.setInput(0, self._last_output)
         _DepthFogControl.setName('_DepthFogControl')
         _DepthFogControl['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
         _DepthFogControl['range'].setValue(1)
@@ -382,12 +394,12 @@ class Comp(object):
 
             self.insertNode(group_node, i)
 
-    def addSoftClip(self):
+    def add_softclip(self):
         for i in self.bg_ch_nodes:
             softclip_node = nuke.nodes.SoftClip(conversion=3)
             self.insertNode(softclip_node, i)
 
-    def addKeyer(self):
+    def add_keyer(self):
         keyer_node = False
         for i in self.bg_ch_nodes:
             if 'SSS.alpha' in i.channels():
@@ -395,7 +407,7 @@ class Comp(object):
                 self.insertNode(keyer_node, i)
         return keyer_node
 
-    def addCrop(self): 
+    def add_crop(self): 
         ret = None
         for i in self.bg_ch_nodes:
             crop_node = nuke.nodes.Crop(box='0 0 {root.width} {root.height}')
@@ -404,12 +416,12 @@ class Comp(object):
         return ret
         
         
-    def mergeMP(self):
+    def merge_mp(self):
         #TODO:add lut;crop
         read_node = nuke.nodes.Read(file=self.mp)
         read_node.setName('MP')
-        merge_node = nuke.nodes.Merge(inputs=[self.last_output, read_node], operation='under', label='MP')
-        self.last_output = merge_node
+        merge_node = nuke.nodes.Merge(inputs=[self._last_output, read_node], operation='under', label='MP')
+        self._last_output = merge_node
         
         root_width, root_height = nuke.Root().width(), nuke.Root().height()
 
@@ -440,9 +452,9 @@ class Comp(object):
             print('MergeMP(): {}'.format(lut))
             self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
         self.insertNode(nuke.nodes.Transform(center='{} {}'.format(root_width / 2.0, root_height / 2.0), label='**在此调整MP位置**'), read_node)
-        self.insertNode(nuke.nodes.Reformat(resize='fill'), read_node)
+        self.insertNode(nuke.nodes.Reformat(resize='fit'), read_node)
     
-    def renameReads(self):
+    def rename_read_nodes(self):
         for i in nuke.allNodes('Read'):
             if i in self.node_tag_dict:
                 i.setName(self.node_tag_dict[i], updateExpressions=True)

@@ -1,21 +1,29 @@
 # -*- coding: UTF-8 -*-
 
-import nuke
 import os
 import colorsys
 import random
 
-def addMenu():
-    menubar = nuke.menu( "Nuke" )
-    m = menubar.addMenu( "合成" )
+import nuke
+
+VERSION = 1.0
+
+def add_menu(menu=None):
+    if not menu:
+        menubar = nuke.menu( "Nuke" )
+        m = menubar.addMenu( "合成" )
+    else:
+        m = menu
     m.addCommand( "重命名全部节点", "comp.RenameAll()" )
     m.addCommand( "根据Backdrop分割nk文件", "comp.splitByBackdrop()" )
     m.addCommand( "关联ZDefocus", "comp.linkZDefocus()" )
     n = m.addMenu( "显示面板" )
-    n.addCommand( "ValueCorrect" , "comp.Show( 'ValueCorrect' )", 'F1' )
+    m.addCommand( "修正错误的读取节点" , "comp.fix_error_read()", 'F1')
     m.addCommand( "MaskShuffle" , "comp.MaskShuffle()", 'F2' )
     n = m.addMenu( "工具集更新" )
     n.addCommand( "DepthFix" , "comp.UpdateToolsets( 'DepthFix', r'C:\Users\zhouxuan.WLF\.nuke\ToolSets\Depth\DepthFix.nk' )" )
+
+addMenu = add_menu
 
 def allKnobsName( n ):
     l1 = n.allKnobs()
@@ -251,4 +259,20 @@ def enableRSMB(prefix='_'):
     for i in nuke.allNodes('OFXcom.revisionfx.rsmb_v3'):
         if i.name().startswith(prefix):
             i['disable'].setValue(False)
-        
+
+
+def fix_error_read():
+    while True:
+        _created_node = []
+        for i in filter(lambda x : x.hasError(), nuke.allNodes('Read')):
+            _filename = nuke.filename(i)
+            if os.path.basename(_filename).lower() == 'thumbs.db':
+                nuke.delete(i)
+            if os.path.isdir(_filename):
+                _filename_list = nuke.getFileNameList(_filename)
+                for file in _filename_list:
+                    _read = nuke.createNode('Read', 'file "{}"'.format('/'.join([_filename, file])))
+                    _created_node.append(_read)
+                nuke.delete(i)
+        if not _created_node:
+            break

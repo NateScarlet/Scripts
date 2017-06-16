@@ -16,7 +16,7 @@ else:
     nuke.error(u'CGTeamWork路径不存在: {}'.format(CGTW_PATH).encode('UTF-8'))
 
 
-VERSION = 0.2
+VERSION = 0.21
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 def copy(src, dst):
@@ -36,7 +36,10 @@ def addMenu():
     m.addCommand(u'上传单帧'.encode('UTF-8'),"cgteamwork.Shot().upload_image()")
 
 def addCallBack():
-    nuke.addOnScriptClose(lambda: Shot().upload_image())
+    def on_close_callback():
+        if os.path.basename(nuke.scriptName()).startswith('SNJYW'):
+            Shot().upload_image()
+    nuke.addOnScriptClose(on_close_callback)
 
 class CGTeamWork(object):
     database = u'proj_big'

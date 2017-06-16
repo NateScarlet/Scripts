@@ -13,6 +13,7 @@ dropframes_showed = []
 script_codec = 'UTF-8'
 nuke_codec = 'UTF-8'
 sys_codec = locale.getdefaultlocale()[1]
+VESION = 1.01
 
 class DropFrameCheck(object):
     dropframes_dict = {}
@@ -152,31 +153,38 @@ def setFontsPath():
         k.setValue( '//SERVER/scripts/NukePlugins/Fonts' )
     
 def addDropDataCallBack():
-    nukescripts.addDropDataCallback(DropDataCallBack_fbx)
-    nukescripts.addDropDataCallback(DropDataCallBack_vf)
+    DropDataCallBack.add()
+    
+class DropDataCallBack(object):
+    @staticmethod
+    def add():
+        nukescripts.addDropDataCallback(DropDataCallBack.fbx)
+        nukescripts.addDropDataCallback(DropDataCallBack.vf)
+        nukescripts.addDropDataCallback(DropDataCallBack.db)
 
-def DropDataCallBack_fbx(type, data):
-    # Only deal with nonstyle text
-    if type != 'text/plain':
-        return None
-    # Only deal with fbx
-    if data.endswith('.fbx'):
-        camera_node = nuke.createNode('Camera2', 'read_from_file True file {data} frame_rate 25 suppress_dialog True label {{导入的摄像机：\n[basename [value file]]\n注意选择file -> node name}}'.format(data=data))
-        camera_node.setName('Camera_3DEnv_1')
-        return True
-    else:
-        return None
+    @staticmethod
+    def db(type, data):
+        if type == 'text/plain' and os.path.basename(data).lower() == 'thumbs.db':
+            return True
+        else:
+            return None
 
-def DropDataCallBack_vf(type, data):
-    # Only deal with nonstyle text
-    if type != 'text/plain':
-        return None
-    # Only deal with vf
-    if data.endswith('.vf'):
-        vectorfield_node = nuke.createNode('Vectorfield', 'vfield_file "{data}" file_type vf label {{[value this.vfield_file]}}'.format(data=data))
-        return True
-    else:
-        return None
+    @staticmethod
+    def fbx(type, data):
+        if type == 'text/plain' and data.endswith('.fbx'):
+            camera_node = nuke.createNode('Camera2', 'read_from_file True file {data} frame_rate 25 suppress_dialog True label {{导入的摄像机：\n[basename [value file]]\n注意选择file -> node name}}'.format(data=data))
+            camera_node.setName('Camera_3DEnv_1')
+            return True
+        else:
+            return None
+
+    @staticmethod
+    def vf(type, data):
+        if type == 'text/plain' and data.endswith('.vf'):
+            vectorfield_node = nuke.createNode('Vectorfield', 'vfield_file "{data}" file_type vf label {{[value this.vfield_file]}}'.format(data=data))
+            return True
+        else:
+            return None
 
 def deleteAllUnusedNodes():
     c = 0
