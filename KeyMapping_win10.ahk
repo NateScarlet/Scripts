@@ -36,7 +36,7 @@ else
 return
 
 $#2:: 
-;~ Run, PS
+Run, Krita
 ;~ Run, XnView
 return
 
