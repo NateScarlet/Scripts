@@ -108,7 +108,7 @@ class AssetsLink(object):
 
     def link_asset(self):
         self._link.link_asset([self._config['shot_task_id']], self._config['asset_id_list'])
-        print(u'模块 {module} 中的 [{num}/{total}]个资产Link至镜头: {shot}'.format(
+        print(u'模块 {module} 中的\n[{num}/{total}]个资产Link至镜头: {shot}'.format(
             module=self._config['ASSET_MODULE'],
             shot=self._config['SHOT'], 
             num=len(self._config['asset_id_list']), 
