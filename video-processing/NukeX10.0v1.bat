@@ -1,1 +1,0 @@
-@"C:\Program Files\Nuke10.0v1\Nuke10.0.exe" -nukex "%~1"
