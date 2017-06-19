@@ -1,5 +1,5 @@
 // PositionKeyerKernel
-// VERSION: 0.3
+// VERSION: 0.31
 kernel PositionKeyer : ImageComputationKernel<ePixelWise> {
   Image<eRead, eAccessPoint, eEdgeClamped> position;
   Image<eWrite, eAccessPoint> dst;
@@ -19,9 +19,9 @@ kernel PositionKeyer : ImageComputationKernel<ePixelWise> {
 
   float4 pos_rotate_y(float4 pos, float ry) {
     float4 ret;
-    ret[0] = cos(ry) * pos[0] - sin(ry) * pos[2];
+    ret[0] = cos(ry) * pos[2] - sin(ry) * pos[0];
     ret[1] = pos[1];
-    ret[2] = cos(ry) * pos[2] + sin(ry) * pos[2];
+    ret[2] = cos(ry) * pos[0] + sin(ry) * pos[2];
     return ret;
   }
   

@@ -12,7 +12,7 @@ from ui_SceneTools import Ui_Dialog
 from config import Config
 from sync import Sync
 
-VERSION = 0.43
+VERSION = 0.44
 
 sys_codec = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
@@ -24,8 +24,9 @@ class CSheet(Config):
     def createCSheet(self):
         cfg = self.config
         script = os.path.join(os.path.dirname(unicode(sys.argv[0], sys_codec)), 'csheet.py')
-
-        cmd = u'"{NUKE}" -t "{script}"'.format(NUKE=cfg['NUKE'], script=script)
+        psetting = os.path.join(cfg['DIR'], Config.psetting_bname)
+        
+        cmd = u'"{NUKE}" -t "{script}" "{json}"'.format(NUKE=cfg['NUKE'], script=script, json=psetting)
         print(cmd)
         call(cmd.encode(sys_codec))
 
@@ -91,17 +92,16 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         self.dirEdit.textChanged.connect(lambda dir: self.changeDir(dir))
 
         for edit, key in self.edits_key.iteritems():
-            if type(edit) == PySide.QtGui.QLineEdit:
+            if isinstance(edit, PySide.QtGui.QLineEdit):
                 edit.textChanged.connect(lambda text, k=key: self.editConfig(k, text))
                 edit.textChanged.connect(self.update)
-            elif type(edit) == PySide.QtGui.QCheckBox:
+            elif isinstance(edit, PySide.QtGui.QCheckBox):
                 edit.stateChanged.connect(lambda state, k=key: self.editConfig(k, state))
                 edit.stateChanged.connect(self.update)
-            elif type(edit) == PySide.QtGui.QComboBox:
-                edit.editTextChanged.connect(lambda text, k=key: self.editConfig(k, text))
+            elif isinstance(edit, PySide.QtGui.QComboBox):
+                edit.currentIndexChanged.connect(lambda index, e=edit, k=key: self.editConfig(k, e.itemText(index)))
             else:
                 print(u'待处理的控件: {} {}'.format(type(edit), edit))
-
 
     def update(self):
         self.setEdits()
@@ -111,10 +111,12 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
     def setEdits(self):
         for q, k in self.edits_key.iteritems():
             try:
-                if type(q) == PySide.QtGui.QLineEdit:
+                if isinstance(q, PySide.QtGui.QLineEdit):
                     q.setText(self.config[k])
-                if type(q) == PySide.QtGui.QCheckBox:
+                elif isinstance(q, PySide.QtGui.QCheckBox):
                     q.setCheckState(PySide.QtCore.Qt.CheckState(self.config[k]))
+                elif isinstance(q, PySide.QtGui.QComboBox):
+                    q.setCurrentIndex(q.findText(self.config[k]))
             except KeyError as e:
                 print(e)
 
@@ -139,13 +141,6 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
             self.openCSheetButton.setEnabled(True)
         else:
             self.openCSheetButton.setEnabled(False)
-    
-    def execNukeBt(self):
-        fileDialog = QFileDialog()
-        fileNames, selectedFilter = fileDialog.getOpenFileName(dir=os.getenv('ProgramFiles'), filter='*.exe')
-        if fileNames:
-            self.config['NUKE'] = fileNames
-            self.update()
 
     def execNukeBt(self):
         fileDialog = QFileDialog()
@@ -175,6 +170,7 @@ class Dialog(QDialog, Ui_Dialog, CSheet, Sync, Config):
         for item in bd_list:
             box.addItem(item)
         self.config['backdrop_name'] = box.currentText()
+        box.addItem(u'纯黑')
         
     def execCSheetBt(self):
         csheet = self.config['csheet']

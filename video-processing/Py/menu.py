@@ -6,6 +6,7 @@ from autolabelCustom import autolabelCustom
 import comp
 import autoComper_WLF
 import cgteamwork
+import csheet
 
 nuke.pluginAddPath( 'icons' )
 
@@ -26,7 +27,7 @@ dropframe_check.addMenu()
 nuke.addOnScriptSave(comp.enableRSMB, kwargs={'prefix': '_'})
 
 nuke.addOnScriptClose(assetManager.sentToRenderDir)
-nuke.addOnScriptClose(assetManager.createContactsheet)
+nuke.addOnScriptClose(csheet.create_csheet)
 
 # Set knob Default
 nuke.knobDefault( "LayerContactSheet.showLayerNames", "1" )

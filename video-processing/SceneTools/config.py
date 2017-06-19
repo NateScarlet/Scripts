@@ -32,6 +32,7 @@ class Config(object):
                 'image_list': [],
                 'video_list': [],
                 'ignore_list': [],
+                'csheet_footagedir': '',
              }
     cfgfile_path = os.path.join(os.getenv('UserProfile'), 'SceneTools_WLF.json')
     psetting_bname = '.projectsettings.json'
@@ -66,7 +67,7 @@ class Config(object):
             self.setConfigByDir()
         try:
             with open(self.psetting_bname, 'w') as file:
-                settings = ['PROJECT', 'EP', 'SCENE', 'VIDEO_FNAME', 'IMAGE_FNAME']
+                settings = ['PROJECT', 'EP', 'SCENE', 'VIDEO_FNAME', 'IMAGE_FNAME', 'backdrop_name', 'csheet_footagedir', 'backdrop', 'csheet']
                 psettings = {}
                 for i in settings:
                     psettings[i] = self.config[i]
