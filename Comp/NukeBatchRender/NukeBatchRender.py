@@ -15,12 +15,14 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
 from ui_NukeBatchRender import Ui_MainWindow
 
-VERSION = 0.1
+VERSION = 0.2
 SYS_CODEC = locale.getdefaultlocale()[1]
 TIME = datetime.datetime.now().strftime('%y%m%d_%H%M')
+reload(sys)
+sys.setdefaultencoding('UTF-8')
 
 def print_(str):
-    print(unicode(str).encode(SYS_CODEC))
+    print(unicode(str))
 
 class Config(dict):
     default = {
@@ -60,7 +62,7 @@ class Config(dict):
 
 class SingleInstanceException(Exception):
     def __str__(self):
-        return u'已经有另一个实例在运行了'.encode(SYS_CODEC)
+        return u'已经有另一个实例在运行了'
         
 class SingleInstance(object):
     def __init__(self):
@@ -79,7 +81,7 @@ class SingleInstance(object):
 
 class NukeBatchRender(object):
     LOG_FILENAME = u'Nuke批渲染.log'
-    LOG_LEVEL = logging.INFO
+    LOG_LEVEL = logging.DEBUG
 
     def __init__(self):
         self.rotate_log()
@@ -119,8 +121,9 @@ class NukeBatchRender(object):
                         os.rename(old_name, new_name)
                 os.rename(self.LOG_FILENAME, u'{}.{}.log'.format(logname, 1))
 
-    def get_files(self):
-        _files = list(i for i in os.listdir(os.getcwd()) if i.endswith('.nk'))
+    @staticmethod
+    def get_files():
+        _files = list(unicode(i, SYS_CODEC) for i in os.listdir(os.getcwd()) if i.endswith('.nk'))
         _files.sort(key=lambda file: os.path.getmtime(file), reverse=False)
 
         return _files
@@ -128,7 +131,7 @@ class NukeBatchRender(object):
     def batch_render(self):
         print_(u'将渲染以下文件:')
         for file in self._files:
-            print_('\t\t\t{}'.format(file))
+            print_(u'\t\t\t{}'.format(file))
             self._logger.debug (u'发现文件:\t{}'.format(file))
         print_(u'总计:\t{}\n'.format(len(self._files)))
         self._logger.debug(u'总计:\t{}'.format(len(self._files)))
@@ -140,24 +143,6 @@ class NukeBatchRender(object):
         self._logger.info('{:-^50s}'.format('<开始批渲染>'))
         for file in self._files:
             _rtcode = self.render(file)
-            if _rtcode:
-                # Exited with error.
-                self._error_files.append(file)
-                _count = self._error_files.count(file)
-                self._logger.error(u'{}: 渲染出错 第{}次'.format(file, _count))
-                if _count >= 3:
-                    # Not retry.
-                    self._logger.error(u'{}: 连续渲染错误超过3次,不再进行重试。'.format(file))
-                elif os.path.exists(file):
-                    # Retry, use new version.
-                    os.remove(_file)
-                else:
-                    # Retry, use this version.
-                    os.rename(_file, file)
-            else:
-                # Normal exit.
-                if not self._config['PROXY']:
-                    os.remove(_file)
 
         self._logger.info('<结束批渲染>')
 
@@ -169,6 +154,7 @@ class NukeBatchRender(object):
         print_(u'## [{}/{}]\t{}'.format(self._files.index(file) + 1, len(self._files), file))
         
         ret = self.call_nuke(file)
+        print(u'')
 
         return ret
 
@@ -179,14 +165,13 @@ class NukeBatchRender(object):
         _proxy = '-p' if self._config['PROXY'] else '-f'
         _priority = '-c 8G --priority low' if self._config['LOW_PRIORITY'] else ''
         _cont = '--cont' if self._config['CONTINUE'] else ''
-
-        cmd = ' '.join([self._config['NUKE'], '-x', _proxy, _priority, _cont, '"{}"'.format(_file)])
+        cmd = u' '.join([u'"{}"'.format(self._config['NUKE']), '-x', _proxy, _priority, _cont, u'"{}"'.format(_file)])
         self._logger.debug(u'命令: {}'.format(cmd))
         proc = Popen(cmd, stderr=PIPE)
         _stderr = proc.communicate()[1]
         _stderr = self.convert_error_value(_stderr)
         if _stderr:
-            sys.stderr.write(_stderr.encode(SYS_CODEC))
+            sys.stderr.write(_stderr)
             if re.match(r'\[.*\] Warning: (.*)', _stderr):
                 self._logger.warning(_stderr)
             else:
@@ -195,11 +180,30 @@ class NukeBatchRender(object):
         _rtcode = proc.returncode
 
         # Logging total time.
-        self._logger.info('{}: 结束渲染 耗时 {} {}'.format(
+        self._logger.info(u'{}: 结束渲染 耗时 {} {}'.format(
             file,
             self.format_seconds((datetime.datetime.now() - _time).total_seconds()),
-            '退出码: {}'.format(_rtcode) if _rtcode else '正常退出',
+            u'退出码: {}'.format(_rtcode) if _rtcode else u'正常退出',
         ))
+
+        if _rtcode:
+            # Exited with error.
+            self._error_files.append(file)
+            _count = self._error_files.count(file)
+            self._logger.error(u'{}: 渲染出错 第{}次'.format(file, _count))
+            if _count >= 3:
+                # Not retry.
+                self._logger.error(u'{}: 连续渲染错误超过3次,不再进行重试。'.format(file))
+            elif os.path.isfile(file):
+                # Retry, use new version.
+                os.remove(_file)
+            else:
+                # Retry, use this version.
+                os.rename(_file, file)
+        else:
+            # Normal exit.
+            if not self._config['PROXY']:
+                os.remove(_file)
 
         return _rtcode
 
@@ -209,6 +213,7 @@ class NukeBatchRender(object):
         file_archive_dest = os.path.join(file_archive_folder, file)
 
         shutil.copyfile(file, locked_file)
+        print(locked_file)
         if not os.path.exists(file_archive_folder):
             os.makedirs(file_archive_folder)
         if os.path.exists(file_archive_dest):
@@ -222,7 +227,7 @@ class NukeBatchRender(object):
         return locked_file
     
     def unlock_files(self):
-        _locked_file = list(i for i in os.listdir(os.getcwd()) if i.endswith('.nk.lock'))
+        _locked_file = list(unicode(i, SYS_CODEC) for i in os.listdir(os.getcwd()) if i.endswith('.nk.lock'))
         for f in _locked_file:
             self.unlock_file(f)
             
@@ -273,8 +278,10 @@ class NukeBatchRender(object):
             r'\1自文件 \2 读取像素数据错误。过早的文件结束符: 读取了 \4 数据中的 \3 。',
             ret
         )
-        
-        ret = unicode(ret, 'UTF-8')
+        try:
+            ret = unicode(ret, 'UTF-8')
+        except UnicodeDecodeError:
+            ret = unicode(ret, SYS_CODEC)
         return ret
             
     def hiber(self):
@@ -292,15 +299,15 @@ class NukeBatchRender(object):
                 pause()
 
     def format_seconds(self, seconds):
-        ret = ''
+        ret = u''
         hour = int(seconds // 3600)
         minute = int(seconds % 3600 // 60)
         seconds = seconds % 60
         if hour:
-            ret += '{}小时'.format(hour)
+            ret += u'{}小时'.format(hour)
         if minute:
-            ret += '{}分钟'.format(minute)
-        ret += '{}秒'.format(seconds)
+            ret += u'{}分钟'.format(minute)
+        ret += u'{}秒'.format(seconds)
         return ret
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -363,8 +370,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def set_list_widget(self):
         list = self.listWidget
         list.clear()
-        for i in NukeBatchRender().get_files():
-            list.addItem(u'将渲染: {}'.format(i))
+        for i in NukeBatchRender.get_files():
+            list.addItem(u'{}'.format(i))
                 
     def ask_dir(self):
         _fileDialog = QFileDialog()
@@ -386,7 +393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 def main():
     SingleInstance()
-    call(u'CHCP 936 & TITLE NukeBatchRender{} & CLS'.format(VERSION).encode(SYS_CODEC), shell=True)
+    call(u'CHCP 936 & TITLE NukeBatchRender{} & CLS'.format(VERSION), shell=True)
     app = QApplication(sys.argv)
     frame = MainWindow()
     frame.show()
