@@ -15,14 +15,14 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
 from ui_NukeBatchRender import Ui_MainWindow
 
-VERSION = 0.2
+VERSION = 0.21
 SYS_CODEC = locale.getdefaultlocale()[1]
 TIME = datetime.datetime.now().strftime('%y%m%d_%H%M')
-reload(sys)
-sys.setdefaultencoding('UTF-8')
+
 
 def print_(str):
     print(unicode(str))
+
 
 class Config(dict):
     default = {
@@ -52,7 +52,7 @@ class Config(dict):
     def write(self):
         with open(self.path, 'w') as f:
             json.dump(self, f, indent=4, sort_keys=True)
-    
+
     def read(self):
         if os.path.isfile(self.path):
             with open(self.path) as f:
@@ -60,10 +60,12 @@ class Config(dict):
             if last_config:
                 self.update(json.loads(last_config))
 
+
 class SingleInstanceException(Exception):
     def __str__(self):
         return u'已经有另一个实例在运行了'
-        
+
+
 class SingleInstance(object):
     def __init__(self):
         PID = Config()['PID']
@@ -79,6 +81,7 @@ class SingleInstance(object):
             print(_stdout)
             return '"{}"'.format(pid) in _stdout
 
+
 class NukeBatchRender(object):
     LOG_FILENAME = u'Nuke批渲染.log'
     LOG_LEVEL = logging.DEBUG
@@ -87,7 +90,7 @@ class NukeBatchRender(object):
         self.rotate_log()
         self.set_logger()
         self.unlock_files()
-        
+
         self._config = Config()
         self._error_files = []
         self._files = self.get_files()        
@@ -104,7 +107,6 @@ class NukeBatchRender(object):
         formatter = logging.Formatter('[%(asctime)s]\t%(levelname)10s:\t%(message)s')
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
-        
 
     def rotate_log(self):
         if os.path.isfile(self.LOG_FILENAME):
@@ -152,7 +154,7 @@ class NukeBatchRender(object):
 
         self._logger.info(u'{}: 开始渲染'.format(file))
         print_(u'## [{}/{}]\t{}'.format(self._files.index(file) + 1, len(self._files), file))
-        
+
         ret = self.call_nuke(file)
         print(u'')
 
@@ -162,12 +164,18 @@ class NukeBatchRender(object):
         _time = datetime.datetime.now()
         _file = self.lock_file(file)
 
-        _proxy = '-p' if self._config['PROXY'] else '-f'
-        _priority = '-c 8G --priority low' if self._config['LOW_PRIORITY'] else ''
-        _cont = '--cont' if self._config['CONTINUE'] else ''
-        cmd = u' '.join([u'"{}"'.format(self._config['NUKE']), '-x', _proxy, _priority, _cont, u'"{}"'.format(_file)])
+        _proxy = '-p ' if self._config['PROXY'] else '-f '
+        _priority = '-c 8G --priority low ' if self._config['LOW_PRIORITY'] else ''
+        _cont = '--cont ' if self._config['CONTINUE'] else ''
+        cmd = u'"{NUKE}" -x {}{}{} "{file}"'.format(
+            _proxy,
+            _priority,
+            _cont,
+            NUKE=self._config['NUKE'],
+            file=_file,
+        )
         self._logger.debug(u'命令: {}'.format(cmd))
-        proc = Popen(cmd, stderr=PIPE)
+        proc = Popen(cmd.encode('UTF-8'), stderr=PIPE)
         _stderr = proc.communicate()[1]
         _stderr = self.convert_error_value(_stderr)
         if _stderr:
@@ -225,12 +233,12 @@ class NukeBatchRender(object):
                 os.rename(file_archive_dest, alt_file_archive_dest)
         shutil.move(file, file_archive_dest)
         return locked_file
-    
+
     def unlock_files(self):
         _locked_file = list(unicode(i, SYS_CODEC) for i in os.listdir(os.getcwd()) if i.endswith('.nk.lock'))
         for f in _locked_file:
             self.unlock_file(f)
-            
+
     def unlock_file(self, file):
         _unlocked_name = os.path.splitext(file)[0]
         if os.path.isfile(_unlocked_name):
@@ -283,7 +291,7 @@ class NukeBatchRender(object):
         except UnicodeDecodeError:
             ret = unicode(ret, SYS_CODEC)
         return ret
-            
+
     def hiber(self):
         if self.isHibernate:
             choice = call(u'CHOICE /t 15 /d y /m "即将自动休眠"'.encode(prompt_codec))
@@ -310,6 +318,7 @@ class NukeBatchRender(object):
         ret += u'{}秒'.format(seconds)
         return ret
 
+
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self, parent=None):
@@ -328,9 +337,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connect_edits()
 
     def change_dir(self, dir):
-        if os.path.isdir(dir) and dir != os.getcwd():
+        _dir = unicode(os.getcwd(), SYS_CODEC)
+        if os.path.isdir(dir) and dir != _dir:
             os.chdir(dir)
-            print(u'工作目录改为: {}'.format(os.getcwd()))
+            print_(u'工作目录改为: {}'.format(dir))
             self.update()
 
     def connect_actions(self):
@@ -350,7 +360,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif isinstance(edit, PySide.QtGui.QComboBox):
                 edit.currentIndexChanged.connect(lambda index, e=edit, k=key: self._config.__setitem__(k, e.itemText(index)))
             else:
-                print(u'待处理的控件: {} {}'.format(type(edit), edit))
+                print_(u'待处理的控件: {} {}'.format(type(edit), edit))
 
     def update(self):
         self.set_edits()
@@ -372,7 +382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         list.clear()
         for i in NukeBatchRender.get_files():
             list.addItem(u'{}'.format(i))
-                
+
     def ask_dir(self):
         _fileDialog = QFileDialog()
         _dir = _fileDialog.getExistingDirectory(dir=os.path.dirname(self._config['DIR']))
@@ -387,9 +397,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except KeyboardInterrupt as e:
             print(e)
         self.show()
-        
+
     def set_button_enabled(self):
         self.renderButton.setEnabled(bool(self._config['DIR']))
+
 
 def main():
     SingleInstance()
@@ -399,13 +410,19 @@ def main():
     frame.show()
     sys.exit(app.exec_())
 
+
+def pause():
+    call('PAUSE', shell=True)
+
+
 if __name__ == '__main__':
     try:
         main()
     except SystemExit as e:
         exit(e)
     except SingleInstanceException as e:
-        print(e)
+        print_(e)
+        pause()
     except:
         import traceback
         traceback.print_exc()
