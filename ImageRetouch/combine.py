@@ -9,7 +9,7 @@ SYS_CODEC = locale.getdefaultlocale()[1]
 class Combine(object):
     def __init__(self):
         nuke.scriptClear()
-        os.chdir(r'E:\Porojects\handwriting\0619')
+        os.chdir(r'E:\Porojects\handwriting\0620')
         self._files = self.get_files()
         self._tags = self.get_tags()
         self.create_all()
@@ -40,7 +40,7 @@ class Combine(object):
             self.set_project()
             self.create_combine(_tag)
             #break
-            nuke.scriptSaveAndClear(''.join([_tag, u'.nk']).encode('UTF-8'))
+            nuke.scriptSaveAndClear(u'{num}#{tag}.nk'.format(tag=_tag, num=len(self._tags[_tag])).encode('UTF-8'))
 
     def create_combine(self, tag):
         _outputs = []
