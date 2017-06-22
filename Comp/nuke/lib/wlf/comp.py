@@ -6,7 +6,7 @@ import random
 
 import nuke
 
-VERSION = 1.0
+VERSION = 1.01
 
 def allKnobsName( n ):
     l1 = n.allKnobs()
@@ -15,19 +15,16 @@ def allKnobsName( n ):
         l2.append( m.name() )
     return l2
 
-def RenameAll():
-    for i in nuke.allNodes():
-        if i.Class() == 'BackdropNode':
-            if i['label'].value() == 'MP_SNJYW_EP05_01_sc063 v2.2':
-                i['label'].setValue('MP v2.2\nSNJYW_EP05_01_sc063');
-            list0 = i.getNodes();
-            j = i['label'].value().split('\n')[0].split(' ')[0];
-            for k in list0:
-                if k.Class() == 'Group' and not '_' in k.name() and not (k['disable'].value()):
-                    m = k.name().rstrip('0123456789');
-                    k.setName(m + '_' + j + '_1', updateExpressions=True);
-                elif  not '_' in k.name() and (not nuke.exists(k.name() + '.disable') or not (k['disable'].value())):
-                    k.setName(k.Class() + '_' + j + '_1', updateExpressions=True);
+def rename_all_nodes():
+    for i in nuke.allNodes('BackdropNode'):
+        _nodes = i.getNodes();
+        j = i['label'].value().split('\n')[0].split(' ')[0];
+        for k in _nodes:
+            if k.Class() == 'Group' and not '_' in k.name() and not (k['disable'].value()):
+                m = k.name().rstrip('0123456789');
+                k.setName(m + '_' + j + '_1', updateExpressions=True);
+            elif  not '_' in k.name() and (not nuke.exists(k.name() + '.disable') or not (k['disable'].value())):
+                k.setName(k.Class() + '_' + j + '_1', updateExpressions=True);
 
 def SwapKnobValue( ka, kb ):
     va, vb = ka.value(), kb.value()
@@ -63,11 +60,9 @@ def UpdateToolsets( s , path ):
                    n[ kn ].setValue( i[ kn ].value() )
            nuke.delete( i )
 
-def MaskShuffle(prefix='PuzzleMatte', n=''):
+def channels_rename(prefix='PuzzleMatte'):
 
-    # Defaut node value, not use function default feature becuse may not selecting a node.
-    if not n:
-        n = nuke.selectedNode()
+    n = nuke.selectedNode()
 
     # Record viewer status
     n_vw = nuke.activeViewer()
@@ -260,28 +255,27 @@ def fix_error_read():
         if not _created_node:
             break
 
-def delete_unused_nodes():
-    def isUsed(n):
-        
-        if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Write', 'Viewer', 'GenerateLUT']:
+def delete_unused_nodes(message=False):
+    def _is_used(n):
+        if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Read', 'Write', 'Viewer', 'GenerateLUT']:
             return True
-        else:
-            # Deal with dependent list  
-            nodes_dependent_this = filter(lambda n: n.Class() not in ['Viewer'] or n.name().startswith('_') ,n.dependent())
-            return bool(nodes_dependent_this)
+
+        nodes_dependent_this = filter(lambda n: n.Class() not in [''] or n.name().startswith('_') ,n.dependent())
+        return bool(nodes_dependent_this)
+
     c = 0
-    done = False
-    while not done:
-        nodes = []
+    while True:
         for i in nuke.allNodes():
-            if not isUsed(i):
-                nodes.append(i)
+            if not _is_used(i):
+                nuke.delete(i)
                 c += 1
-        if nodes:
-            map(lambda n: nuke.delete(n), nodes)
+                break
         else:
-            done = True
+            break
+            
     print('Deleted {} unused nodes.'.format(c))
+    if message:
+        nuke.message('<font size=5>删除了 {} 个未使用的节点。</font>\n<i>名称以"_"(下划线)开头的节点及其上游节点将不会被删除</i>'.format(c))
 
 def replace_sequence():
     '''

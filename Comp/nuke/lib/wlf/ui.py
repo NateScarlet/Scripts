@@ -18,14 +18,14 @@ def add_menu():
         m.addCommand('选中节点:使用相对路径', 'wlf.comp.nodes_to_relpath(nuke.selectedNodes())', 'F2', icon="utilitiesfolder.png")
         m.addCommand("选中节点:分离rgba","wlf.comp.shuffle_rgba(nuke.selectedNode())")
         m.addCommand('选中节点:分离所有通道', 'wlf.comp.split_layers(nuke.selectedNode())', 'F3',icon="SplitLayers.png")
-        m.addCommand("选中节点:重命名PuzzleMatte","wlf.comp.MaskShuffle(prefix='PuzzleMatte')","F4")
+        m.addCommand("选中节点:重命名PuzzleMatte","wlf.comp.channels_rename(prefix='PuzzleMatte')","F4")
         m.addSeparator()
         m.addCommand("所有读取节点:修正错误" , "wlf.comp.fix_error_read()", 'F6')
         m.addCommand("所有读取节点:检查缺帧", "wlf.dropframe.DropFrameCheck()()")
         m.addCommand("所有读取节点:序列替单帧", "wlf.comp.replace_sequence()")
         m.addSeparator()
-        m.addCommand("所有节点:删除无用节点","wlf.comp.delete_unused_nodes()")
-        m.addCommand("所有节点:根据背板重命名", "wlf.comp.RenameAll()" )
+        m.addCommand("所有节点:删除未使用的节点","wlf.comp.delete_unused_nodes(message=True)")
+        m.addCommand("所有节点:根据背板重命名", "wlf.comp.rename_all_nodes()" )
         m.addCommand("所有节点:根据背板分割文件", "wlf.comp.splitByBackdrop()")
 
     def _autocomp(menu):
