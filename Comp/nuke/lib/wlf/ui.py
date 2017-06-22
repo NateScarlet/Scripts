@@ -21,7 +21,7 @@ def add_menu():
         m.addCommand("选中节点:重命名PuzzleMatte","wlf.comp.channels_rename(prefix='PuzzleMatte')","F4")
         m.addSeparator()
         m.addCommand("所有读取节点:修正错误" , "wlf.comp.fix_error_read()", 'F6')
-        m.addCommand("所有读取节点:检查缺帧", "wlf.dropframe.DropFrameCheck()()")
+        m.addCommand("所有读取节点:检查缺帧", "wlf.asset.DropFrameCheck()()")
         m.addCommand("所有读取节点:序列替单帧", "wlf.comp.replace_sequence()")
         m.addSeparator()
         m.addCommand("所有节点:删除未使用的节点","wlf.comp.delete_unused_nodes(message=True)")
