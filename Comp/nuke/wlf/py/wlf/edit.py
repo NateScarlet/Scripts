@@ -398,3 +398,35 @@ def nodes_to_relpath(nodes):
             origPath = rNode.knob('file').getValue()
             newPath = origPath.replace(projDir,perfix)
             rNode.knob('file').setValue(newPath)
+
+def nodes_add_dots(nodes=None):
+    if not nodes:
+        nodes = nuke.selectedNodes()
+    
+    def _add_dot(output_node, input_num):
+        input_node = output_node.input(input_num)
+        if not input_node or input_node.Class() in ['Dot'] or abs(output_node.xpos() - input_node.xpos())<output_node.screenWidth() or abs(output_node.ypos() - input_node.ypos())<=output_node.screenHeight():
+            return None
+        if output_node.Class() in ['Viewer'] or output_node['hide_input'].value():
+            return None
+
+        _dot = nuke.nodes.Dot(inputs=[input_node])
+        output_node.setInput(input_num, _dot)
+        _dot.setXYpos(
+            input_node.xpos()+input_node.screenWidth()/2-_dot.screenWidth()/2,
+            output_node.ypos()+output_node.screenHeight()/2-_dot.screenHeight()/2 - (_dot.screenHeight()+5)*input_num
+        )
+        
+    def _all_input_add_dot(node):
+        for input_num in range(node.inputs()):
+            _add_dot(node, input_num)
+
+    for n in nodes:
+        if n.Class() in ['Dot']:
+            continue
+        _all_input_add_dot(n)
+
+
+if __name__ == '__main__':
+    pass
+    nodes_add_dots(nuke.allNodes())

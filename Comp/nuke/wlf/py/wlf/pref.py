@@ -35,7 +35,8 @@ def add_preferences():
     k = nuke.Tab_Knob('wlf_tab', '吾立方')
     p.addKnob(k)
     def _add_knob(k):
-        if nuke.exists('preferences.{}'.format(k.name())):
+        _knob_tcl_name = 'preferences.{}'.format(k.name())
+        if nuke.exists(_knob_tcl_name):
             k.setValue(p[k.name()].value())
             p.removeKnob(p[k.name()])
         k.setFlag(nuke.ALWAYS_SAVE)
@@ -44,19 +45,16 @@ def add_preferences():
     k = nuke.Text_Knob('wlf_on_script_save', '保存时')
     _add_knob(k)
 
-    k = nuke.Boolean_Knob('wlf_lock_connection', '锁定节点连接')
+    k = nuke.Boolean_Knob('wlf_lock_connections', '锁定节点连接')
     k.setFlag(nuke.STARTLINE)
-    k.setValue(True)
     _add_knob(k)
 
     k = nuke.Boolean_Knob('wlf_jump_frame', '跳至_Write节点指定的帧')
     k.setFlag(nuke.STARTLINE)
-    k.setValue(True)
     _add_knob(k)
 
     k = nuke.Boolean_Knob('wlf_render_jpg', '渲染_Write节点单帧')
     k.setFlag(nuke.STARTLINE)
-    k.setValue(True)
     _add_knob(k)
 
     k = nuke.Text_Knob('wlf_on_script_close', '保存并退出时')
@@ -64,7 +62,6 @@ def add_preferences():
 
     k = nuke.Boolean_Knob('wlf_send_to_dir', '发送至渲染文件夹')
     k.setFlag(nuke.STARTLINE)
-    k.setValue(True)
     _add_knob(k)
 
     k = nuke.File_Knob('wlf_render_dir', '')
@@ -73,10 +70,13 @@ def add_preferences():
 
     k = nuke.Boolean_Knob('wlf_create_csheet', '生成色板')
     k.setFlag(nuke.STARTLINE)
-    k.setValue(True)
     _add_knob(k)
 
     def _remove_old():
-        p.removeKnob(p['wlf_tab'])
+        try:
+            p.removeKnob(p['wlf_lock_connection'])
+            p.removeKnob(p['wlf_tab'])
+        except NameError:
+            pass
 
     _remove_old()

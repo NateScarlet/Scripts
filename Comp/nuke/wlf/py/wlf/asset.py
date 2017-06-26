@@ -44,7 +44,7 @@ class DropFrameCheck(object):
         first = int(n['first'].value())
         last = int(n['last'].value())
         for frame in range(first, last + 1):
-            filepath = self.getFileAtFrame(filename, frame)
+            filepath = self.getFileAtFrame(filename, frame).encode(SYS_CODEC)
             if not os.path.exists(filepath):
                 dropframe_list.append(frame)
         

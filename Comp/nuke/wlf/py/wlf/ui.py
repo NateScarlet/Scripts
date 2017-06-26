@@ -19,6 +19,7 @@ def add_menu():
         m.addCommand("选中节点:分离rgba","wlf.edit.shuffle_rgba(nuke.selectedNode())")
         m.addCommand('选中节点:分离所有通道', 'wlf.edit.split_layers(nuke.selectedNode())', 'F3',icon="SplitLayers.png")
         m.addCommand("选中节点:重命名PuzzleMatte","wlf.edit.channels_rename(prefix='PuzzleMatte')","F4")
+        m.addCommand("选中节点:添加Dots变成90度","wlf.edit.nodes_add_dots(nuke.selectedNodes())")
         m.addSeparator()
         m.addCommand("所有读取节点:修正错误" , "wlf.edit.fix_error_read()", 'F6')
         m.addCommand("所有读取节点:检查缺帧", "wlf.asset.DropFrameCheck()()")
@@ -27,6 +28,7 @@ def add_menu():
         m.addCommand("所有节点:删除未使用的节点","wlf.edit.delete_unused_nodes(message=True)")
         m.addCommand("所有节点:根据背板重命名", "wlf.edit.rename_all_nodes()" )
         m.addCommand("所有节点:根据背板分割文件", "wlf.edit.splitByBackdrop()")
+        m.addCommand("所有节点:添加Dots变成90度","wlf.edit.nodes_add_dots(nuke.allNodes())")
 
     def _comp(menu):
         m = menu.addMenu('合成')
@@ -50,7 +52,7 @@ def add_menu():
         os.chdir(os.path.dirname(__file__))
         
         create_menu_by_dir(m, _plugin_path)
-        m.addCommand("吾立方", "nukescripts.start('http://www.wlf-studio.com/')")
+        m.addCommand("吾立方网站", "nukescripts.start('http://www.wlf-studio.com/')")
 
     _menubar = nuke.menu("Nuke")
 

@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+import locale
 
 import nuke
 import nukescripts
@@ -7,6 +8,9 @@ import nukescripts
 import edit
 import csheet
 import asset
+import pref
+
+SYS_CODEC = locale.getdefaultlocale()[1]
 
 def add_callback():
     def _cgtw():
@@ -30,7 +34,7 @@ def add_callback():
             nuke.message('工程目录未设置')
 
     def _lock_connections():
-        if nuke.numvalue('preferences.wlf_lock_connection', 0.0):
+        if nuke.numvalue('preferences.wlf_lock_connections', 0.0):
             nuke.Root()['lock_connections'].setValue(1);
             nuke.Root().setModified(False)
 
