@@ -1,0 +1,3 @@
+import loadAllMamoworldTools
+loadAllMamoworldTools.load()
+    
