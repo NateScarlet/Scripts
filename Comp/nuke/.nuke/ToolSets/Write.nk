@@ -4,10 +4,10 @@ push $cut_paste_input
 Group {
  name _Write
  tile_color 0xbfbf00ff
- label "\[value root.project_directory]/\n\[subst \[python \{nuke.thisNode().node('Write_MOV_1')\['file'].value()\}]]\n\[subst \[python \{nuke.thisNode().node('Write_JPG_1')\['file'].value()\}]]"
+ label "\[value root.project_directory]/\n\[subst \[python \{nuke.thisNode().node('Write_MOV_1')\['file'].value()\}]]\n\[subst \[python \{nuke.thisNode().node('Write_JPG_1')\['file'].value()\}]]\n\[\n# Keep single instance\nif \{\[value this.name] != \"_Write\"\} \{\n    \[delete this]\n\}\n]"
  selected true
- xpos 12
- ypos -247
+ xpos -193
+ ypos -145
  addUserKnob {20 tab1 l Write_v4.5}
  addUserKnob {6 is_output_JPG l 显示输出的单帧(如果有) +STARTLINE}
  is_output_JPG true
