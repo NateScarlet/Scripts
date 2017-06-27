@@ -64,7 +64,7 @@ DEFAULT_MP = r"\\192.168.1.4\f\QQFC_2015\Render\mp\Brooklyn-Bridge-Panorama.tga"
 SYS_CODEC = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 
-def comp_wlf(mp=DEFAULT_MP):
+def comp_wlf(mp=DEFAULT_MP, autograde=True):
     if not nuke.allNodes('Read'):
         raise FootageError('没有读取节点')
 
@@ -147,26 +147,171 @@ def comp_wlf(mp=DEFAULT_MP):
         raise FootageError('BG', 'CH')
 
     # Create nodes.
-    for i, n in enumerate(_bg_ch_nodes):
-        if 'SSS.alpha' in n.channels():
-            _bg_ch_nodes[i] = nuke.nodes.Keyer(
-                inputs=[_bg_ch_nodes[i]],
-                input='SSS',
-                output='SSS.alpha',
-                operation='luminance key',
-                range='0 0.007297795507 1 1'
-            )
+    def _autograde_get_max(n):
+        rgb_max = get_max(n, 'rgb')
+        erode_size = 0
+        erode_node = nuke.nodes.Dilate(inputs=[n], size = erode_size)
+        # Exclude small highlight
+        while rgb_max > 1 and erode_size > n.height() / -100.0:
+            erode_node['size'].setValue(erode_size)
+            rgb_max = get_max(erode_node, 'rgb')
+            if rgb_max < 1:
+                break
+            erode_size -= 1
+        nuke.delete(erode_node)
+        
+        return rgb_max
 
-        _bg_ch_nodes[i] = nuke.nodes.Crop(
-            inputs=[_bg_ch_nodes[i]],
-            box='0 0 {root.width} {root.height}'
+    def _merge_depth(nodes):
+        if len(nodes) < 2:
+            return
+
+        merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], tile_color=2184871423L, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
+        copy_node = nuke.nodes.Copy(inputs=[None, merge_node], from0='depth.Z', to0='depth.Z')
+        return copy_node
+
+    _depth_copy_node = _merge_depth(_bg_ch_nodes)
+        
+    for i, _read_node in enumerate(_bg_ch_nodes):
+        _read_node.selectOnly()
+        if 'SSS.alpha' in _read_node.channels():
+            n = nuke.createNode('Keyer', '''
+                    input SSS
+                    output SSS.alpha
+                    operation "luminance key"
+                    range {0 0.007297795507 1 1}
+                '''
+            )
+        n = nuke.createNode('Reformat', 'resize fit')
+        n = nuke.createNode('DepthFix')
+        if get_max(_read_node, 'depth.Z') > 1.1 :
+            n['farpoint'].setValue(10000)
+
+        n = nuke.createNode('Grade', '''
+                unpremult rgba.alpha
+                label "白点: \[value this.whitepoint]\n混合:\[value this.mix]\n使亮度范围靠近0-1"
+            '''
+        )
+        if autograde:
+            _max = _autograde_get_max(_read_node)
+            if _max < 0.5:
+                _mix = 0.3
+            else:
+                _mix = 0.6
+            n['whitepoint'].setValue(_max)
+            n['mix'].setValue(_mix)
+
+        n = nuke.createNode('Unpremult')
+        n = nuke.createNode('ColorCorrect', 'label 亮度调整')
+        n = nuke.createNode('ColorCorrect', 'mix_luminance 1 label 颜色调整')
+        if 'SSS.alpha' in _read_node.channels():
+            n = nuke.createNode('ColorCorrect', 'maskChannelInput SSS.alpha label SSS调整')
+        n = nuke.createNode('HueCorrect')
+        n = nuke.createNode('Premult')
+
+        def _depthfog():
+            n = nuke.createNode('Group', '''
+                name DepthFog1
+                tile_color 0x2386eaff
+                label "深度雾\n由_DepthFogControl控制"
+                disable {{_DepthFogControl.disable}}
+            '''
+            )
+            n.begin()
+            input = nuke.nodes.Input(name='Input')
+            depthkeyer_node = nuke.loadToolset(toolset + '/Keyer/DepthKeyer.nk')
+            depthkeyer_node.setInput(0, input)
+            depthkeyer_node['range'].setExpression('_DepthFogControl.range')
+            grade_node = nuke.nodes.Grade(inputs=[input, depthkeyer_node], black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}')
+            output = nuke.nodes.Output(inputs=[grade_node])
+            n.end()
+
+            return n
+        n = _depthfog()
+        
+        n = nuke.createNode('SoftClip')
+        n = nuke.createNode('ZDefocus2', '''
+            math depth
+            center {{"\[value _ZDefocus.center curve]"}}
+            focal_point {1.#INF 1.#INF}
+            dof {{"\[value _ZDefocus.dof curve]"}}
+            blur_dof {{"\[value _ZDefocus.blur_dof curve]"}}
+            size {{"\[value _ZDefocus.size curve]"}}
+            max_size {{"\[value _ZDefocus.max_size curve]"}}
+            label "\[\nset trg parent._ZDefocus\nknob this.math \[value \$trg.math depth]\nknob this.z_channel \[value \$trg.z_channel depth.Z]\nif \{\[exists _ZDefocus]\} \{return \"由_ZDefocus控制\"\} else \{return \"需要_ZDefocus节点\"\}\n]"
+            disable {{"\[if \{\[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || \[value _ZDefocus.disable]\} \{return True\} else \{return False\}]"}}
+        '''
+        )
+        n = nuke.createNode('Crop', '''
+                 box {0 0 {root.width} {root.height}}
+            '''
         )
 
+        _bg_ch_nodes[i] = n
         if i > 0:
             _bg_ch_nodes[i] = nuke.nodes.Merge2(
                 inputs=[_bg_ch_nodes[i-1], _bg_ch_nodes[i]],
-                label=n[_tag_knob_name].value()
+                label=_read_node[_tag_knob_name].value()
             )
+
+        _depth_copy_node.setInput(0, _bg_ch_nodes[-1])
+        def _add_zdefocus_control(input):
+            # Use for one-node zdefocus control
+            n = nuke.nodes.ZDefocus2(inputs=[input], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
+            n.setName('_ZDefocus')
+            return n
+
+        _add_zdefocus_control(_depth_copy_node)
+
+        def _add_depthfog_control(input):
+            node_color = 596044543
+            n = load_toolset('Keyer/DepthKeyer')
+            n.setInput(0, input)
+            n.setName('_DepthFogControl')
+            n['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
+            n['range'].setValue(1)
+            n['gl_color'].setValue(node_color)
+            n['tile_color'].setValue(node_color)
+            n.addKnob(nuke.Text_Knob('颜色控制'))
+            n.addKnob(nuke.Color_Knob('fog_color', '雾颜色'))
+            n['fog_color'].setValue((0.009, 0.025133, 0.045))
+
+            k = nuke.Double_Knob('fog_mix', 'mix')
+            k.setValue(1)
+            n.addKnob(k)
+            
+        _add_depthfog_control(_depth_copy_node)
+
+        def _merge_mp():
+            #TODO:add lut;crop
+            n = nuke.createNode('Read', 'name MP')
+            n['file'].fromUserText(mp)
+
+            n = nuke.createNode('Reformat', 'resize fit')
+            n = nuke.createNode('Transform')
+            n = nuke.createNode('ColorCorrect')
+            n = nuke.createNode('Grade')
+            n = nuke.createNode('ProjectionMP')
+            n = nuke.createNode('Defocus', 'disable true')
+            n = nuke.createNode('Crop', 'box {0 0 {root.width} {root.height}}')
+            
+            # lut = None
+            # filename = nuke.filename(self.bg_ch_nodes[0])
+            # lut_dir = os.path.join(os.path.dirname(filename), 'lut')
+            # if os.path.exists(lut_dir):
+                # lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
+                # lut = lut_dir + '/' + lut_list[0]
+        
+            # if lut:
+                # print('MergeMP(): {}'.format(lut))
+                # self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
+            
+            return n
+            
+        n = nuke.nodes.Merge(inputs=[input, _depth_copy_node], operation='under', label='MP')
+        n = load_toolset('Write', inputs=[n])
+
+        
 
 class Comp(object):
 
@@ -921,10 +1066,60 @@ def insert_node(node, input_node):
     nuke.delete(dot)
 
 def load_toolset(name, dir='../../ToolSets/WLF', inputs=None):
-    _toolset_node = nuke.loadToolset(os.path.join(dir, name))
+    _toolset_node = nuke.loadToolset(os.path.join(dir, '{}.nk'.format(name)))
     if _toolset_node and inputs:
         for i, n in enumerate(inputs):
             _toolset_node.setInput(i, n)
+    
+    return _toolset_node
+
+def load_gizmo(name, inputs=None):
+    _gizmo = nuke.load(name)
+    if _gizmo and inputs:
+        for i, n in enumerate(inputs):
+            _gizmo.setInput(i, n)
+
+    return _gizmo
+
+def get_max(n, channel='depth.Z' ):
+    '''
+    Return themax values of a given node's image at middle frame
+    @parm n: node
+    @parm channel: channel for sample
+    '''
+    # Get middle_frame
+    middle_frame = (n.frameRange().first() + n.frameRange().last()) // 2
+    
+    # Create nodes
+    invert_node = nuke.nodes.Invert( channels=channel, inputs=[n])
+    mincolor_node = nuke.nodes.MinColor( channels=channel, target=0, inputs=[invert_node] )
+    
+    # Execute
+    try:
+        nuke.execute( mincolor_node, middle_frame, middle_frame )
+        max_value = mincolor_node['pixeldelta'].value() + 1
+    except RuntimeError, e:
+        if 'Read error:' in str(e):
+            max_value = -1
+        else:
+            raise RuntimeError, e
+            
+    # Avoid dark frame
+    if max_value < 0.7:
+        nuke.execute( mincolor_node, n.frameRange().last(), n.frameRange().last() )
+        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+    if max_value < 0.7:
+        nuke.execute( mincolor_node, n.frameRange().first(), n.frameRange().first() )
+        max_value = max(max_value, mincolor_node['pixeldelta'].value() + 1)
+        
+    # Delete created nodes
+    for i in ( mincolor_node, invert_node ):
+        nuke.delete( i )
+
+    # Output
+    print('getMax({1}, {0}) -> {2}'.format(channel, n.name(), max_value))
+    
+    return max_value
 
 def main():
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
@@ -955,7 +1150,7 @@ if __name__ == '__main__' and  len(sys.argv) == 6:
         traceback.print_exc()
 if __name__ == '__main__':
     try:
-        comp_wlf()
+        comp_wlf(autograde=False)
     except SystemExit as e:
         exit(e)
     except:
