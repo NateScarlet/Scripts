@@ -9,15 +9,20 @@ import edit
 import csheet
 import asset
 import pref
+import ui
+import cgtw
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 def add_callback():
     def _cgtw():
-        from . import cgtw
         def on_close_callback():
+            if nuke.modified():
+                return False
+
             if os.path.basename(nuke.scriptName()).startswith('SNJYW'):
                 cgtw.Shot().upload_image()
+
         nuke.addOnScriptClose(on_close_callback)
     
     def _dropframe():
@@ -49,18 +54,49 @@ def add_callback():
         
         if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
             asset.sent_to_dir(nuke.value('preferences.wlf_render_dir'))
+
     def _render_jpg():
         if nuke.modified():
             return False
 
         if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
             nuke.toNode('_Write')['bt_render_JPG'].execute()
+            
+    def _gizmo_to_group_on_create():
+        n = nuke.thisNode()
+        if not nuke.numvalue('preferences.wlf_gizmo_to_group', 0.0):
+            return
 
+        if not isinstance(n, nuke.Gizmo):
+            return
+            # Avoid scripted gizmo.
+
+        if nuke.knobChangeds.get(n.Class()):
+            return
+
+        n.addKnob(nuke.Text_Knob('wlf_gizmo_to_group'))
+
+    def _gizmo_to_group_update_ui():
+        n = nuke.thisNode()
+        _temp_knob_name = 'wlf_gizmo_to_group'
+        _has_temp_knob = nuke.exists('{}.{}'.format(n.name(), _temp_knob_name))
+
+        if _has_temp_knob:
+            n = edit.gizmo_to_group(n)
+            n.removeKnob(n[_temp_knob_name])
+            n.removeKnob(n['User'])
+
+    def _print_name():
+        print(nuke.thisNode().name())
+    
     nuke.addBeforeRender(create_out_dirs, nodeClass='Write')
     if nuke.env['gui']:
         _dropframe()
         _cgtw()
         add_dropdata_callback()
+        nuke.addOnUserCreate(_gizmo_to_group_on_create)
+        nuke.addUpdateUI(_gizmo_to_group_update_ui)
+        nuke.addOnCreate(lambda: edit.randomGlColor(nuke.thisNode()))
         nuke.addOnScriptSave(edit.enableRSMB, kwargs={'prefix': '_'})
         nuke.addOnScriptSave(_check_project)
         nuke.addOnScriptSave(_lock_connections)
@@ -68,6 +104,8 @@ def add_callback():
         nuke.addOnScriptClose(_render_jpg)
         nuke.addOnScriptClose(_create_csheet)
         nuke.addOnScriptClose(_send_to_render_dir)
+        nuke.addAutolabel(ui.custom_autolabel)
+
 
 def create_out_dirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )
@@ -126,7 +164,6 @@ def add_dropdata_callback():
         else:
             return None
 
-    nuke.addOnCreate(lambda : edit.randomGlColor(nuke.thisNode()))
 
     nukescripts.addDropDataCallback(_fbx)
     nukescripts.addDropDataCallback(_vf)

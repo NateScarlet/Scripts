@@ -29,6 +29,7 @@ def add_menu():
         m.addCommand("所有节点:根据背板重命名", "wlf.edit.rename_all_nodes()" )
         m.addCommand("所有节点:根据背板分割文件", "wlf.edit.splitByBackdrop()")
         m.addCommand("所有节点:添加Dots变成90度","wlf.edit.nodes_add_dots(nuke.allNodes())")
+        m.addCommand("所有节点:Gizmo转Group","wlf.edit.all_gizmo_to_group()")
 
     def _comp(menu):
         m = menu.addMenu('合成')
@@ -43,7 +44,8 @@ def add_menu():
         m.addCommand('添加note', "wlf.cgtw.Shot().ask_add_note()")
         m.addCommand('上传nk文件', "wlf.cgtw.Shot().upload_nk_file()")
         m.addCommand('上传单帧', "wlf.cgtw.Shot().upload_image()")
-    
+        m.addCommand("批量下载", r'nukescripts.start(r"\\SERVER\scripts\NukePlugins\CGTeamWork工具\CGTW批量下载.bat")')
+
     def _create_node_menu():
         _plugin_path = '../../plugins'
 
@@ -53,6 +55,7 @@ def add_menu():
         
         create_menu_by_dir(m, _plugin_path)
         m.addCommand("吾立方网站", "nukescripts.start('http://www.wlf-studio.com/')")
+        m.addCommand("场集工具", r'nukescripts.start(r"\\SERVER\scripts\NukePlugins\场集工具\SceneTools.exe")')
 
     _menubar = nuke.menu("Nuke")
 
@@ -76,11 +79,10 @@ def create_menu_by_dir(parent, dir):
         _abspath = os.path.join(_dir, i)
         _name, _ext = os.path.splitext(i)
         if os.path.isdir(_abspath):
-            nuke.pluginAddPath(_abspath)
             n = parent.addMenu(i, icon='{}.png'.format(i))            
             create_menu_by_dir(n, _abspath)
         elif _ext.lower() == '.gizmo':
-            parent.addCommand(_name, 'nuke.load("{}")'.format(_name), icon='{}.png'.format(_name))
+            parent.addCommand(_name, 'nuke.tcl("{0}")'.format(_name), icon='{}.png'.format(_name))
             
 def custom_autolabel(enable_text_style=True) :
     '''

@@ -25,15 +25,27 @@ def set_knob_default():
     _vectorblur2()
     _zdefocus2()
     nuke.knobDefault("LayerContactSheet.showLayerNames", "1")
-    nuke.knobDefault("note_font", u"微软雅黑".encode('utf8'))
+    nuke.knobDefault("note_font", '微软雅黑')
     nuke.knobDefault("Switch.which", "1")
     nuke.knobDefault("Viewer.input_process", "False")
     nuke.knobDefault("SoftClip.conversion", "3")
+
+    k = nuke.toNode('preferences')['UIFontSize']
+    if k.value() == 11:
+        k.setValue(12)
 
 def add_preferences():
     p = nuke.toNode('preferences')
     k = nuke.Tab_Knob('wlf_tab', '吾立方')
     p.addKnob(k)
+    
+    def _remove_old():
+        for k in ['wlf_lock_connection', 'wlf_tab']:
+            try:
+                p.removeKnob(p[k])
+            except NameError:
+                pass
+
     def _add_knob(k):
         _knob_tcl_name = 'preferences.{}'.format(k.name())
         if nuke.exists(_knob_tcl_name):
@@ -41,6 +53,10 @@ def add_preferences():
             p.removeKnob(p[k.name()])
         k.setFlag(nuke.ALWAYS_SAVE)
         p.addKnob(k)
+
+    k = nuke.Boolean_Knob('wlf_gizmo_to_group', '创建Gizmo时尝试转换为Group')
+    k.setFlag(nuke.STARTLINE)
+    _add_knob(k)
 
     k = nuke.Text_Knob('wlf_on_script_save', '保存时')
     _add_knob(k)
@@ -71,12 +87,5 @@ def add_preferences():
     k = nuke.Boolean_Knob('wlf_create_csheet', '生成色板')
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
-
-    def _remove_old():
-        try:
-            p.removeKnob(p['wlf_lock_connection'])
-            p.removeKnob(p['wlf_tab'])
-        except NameError:
-            pass
 
     _remove_old()

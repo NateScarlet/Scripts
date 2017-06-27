@@ -9,7 +9,7 @@ import nuke
 VERSION = 1.01
 
 def all_knobs_name(node):
-    _ret
+    _ret = []
     for n in node.allKnobs() :
         _ret.append(n.name())
     return _ret
@@ -426,7 +426,37 @@ def nodes_add_dots(nodes=None):
             continue
         _all_input_add_dot(n)
 
+def gizmo_to_group(gizmo):
+    if not isinstance(gizmo, nuke.Gizmo):
+        return gizmo
+    
+    _group = gizmo.makeGroup()
+
+    # Set Input/Output.
+    gizmo.selectOnly()
+    n = nuke.createNode('Dot')
+    n.setInput(0, _group)
+    nuke.delete(n)
+    for i in range(gizmo.inputs()):
+        _group.setInput(i, gizmo.input(i))
+        
+    # Set position and name.
+    if gizmo.shown():
+        _group.showControlPanel()
+    _group.setXYpos(gizmo.xpos(), gizmo.ypos())
+    _name = gizmo['name'].value()
+    nuke.delete(gizmo)
+    _group.setName(_name)
+    
+    return _group
+    
+def all_gizmo_to_group():
+    for n in nuke.allNodes():
+        # Avoid scripted gizmo.
+        if nuke.knobChangeds.get(n.Class()):
+            continue
+
+        gizmo_to_group(n)
 
 if __name__ == '__main__':
-    pass
-    nodes_add_dots(nuke.allNodes())
+    gizmo_to_group(nuke.selectedNode())

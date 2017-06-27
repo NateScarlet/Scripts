@@ -47,18 +47,132 @@ tag_convert_dict = {
     'CH_D_OC': 'OCC_CH_D',
     'CH_D_OCC': 'OCC_CH_D',
 }
-regular_tag_list = ['CH_A', 'CH_B', 'CH_C', 'CH_D', 'BG_A', 'BG_B', 'BG_C', 'BG_D', 'OCC', 'SH']
-toolset = r'\\\\SERVER\scripts\NukePlugins\ToolSets\WLF'
-default_mp = r"\\192.168.1.4\f\QQFC_2015\Render\mp\Brooklyn-Bridge-Panorama.tga"
-sys_codec = locale.getdefaultlocale()[1]
+REGULAR_TAGS = [
+    'CH_A',
+    'CH_B',
+    'CH_C',
+    'CH_D',
+    'BG_A',
+    'BG_B',
+    'BG_C',
+    'BG_D',
+    'OCC',
+    'SH',
+]
+toolset = '../../ToolSets/WLF'
+DEFAULT_MP = r"\\192.168.1.4\f\QQFC_2015\Render\mp\Brooklyn-Bridge-Panorama.tga"
+SYS_CODEC = locale.getdefaultlocale()[1]
 script_codec = 'UTF-8'
 
+def comp_wlf(mp=DEFAULT_MP):
+    if not nuke.allNodes('Read'):
+        raise FootageError('没有读取节点')
+
+    _bg_node = None
+    _mp = mp.replace('\\', '/')
+    _tag_knob_name = 'wlf_tag'
+    _nodes_order = lambda n: ('_' + n[_tag_knob_name].value()).replace('_BG', '1_').replace('_CH', '0_')
+
+    def _get_tag(filename):
+        _tag_pattern = re.compile(r'sc.+?_([^.]+)', flags=re.I)
+        _default_result = '_OTHER'
+
+        def _get_tag_from_pattern(str):
+            _ret = re.search(_tag_pattern, str)
+            if _ret:
+                _ret = _ret.group(1).upper()
+            else:
+                _ret = _default_result
+            return _ret
+
+        _ret = _get_tag_from_pattern(os.path.basename(filename))
+
+        if _ret not in REGULAR_TAGS:
+            _dir_result = _get_tag_from_pattern(os.path.basename(os.path.dirname(filename)))
+            if _dir_result != _default_result:
+                _ret = _dir_result
+        
+        return _ret
+
+    def _setup_node(n):
+        _tag = _get_tag(nuke.filename(n))
+        if not 'rgba.alpha' in n.channels():
+            _tag = '_OTHER'
+        
+        _name = n['name'].value()
+        if _name in REGULAR_TAGS:
+            _tag = _name
+
+        _temp_tab = nuke.Tab_Knob('User')
+        n.addKnob(_temp_tab)
+
+        def _add_knob(k):
+            _knob_name = k.name()
+            while nuke.exists('{}.{}'.format(_name, k.name())):
+                k.setValue(n[_knob_name].value())
+                n.removeKnob(n[_knob_name])
+            n.addKnob(k)
+
+        k = nuke.Tab_Knob('吾立方')
+        _add_knob(k)
+
+        k = nuke.String_Knob(_tag_knob_name, '素材标签')
+        _add_knob(k)
+        k.setValue(_tag)
+        
+        n.removeKnob(_temp_tab)
+        
+        n.setName(_tag, updateExpressions=True)
+
+    for n in nuke.allNodes('Read'):
+        _setup_node(n)
+
+    def _get_nodes_by_tag(tags):
+        _ret = []    
+        if type(tags) is str :
+            tags = [tags]
+        tags = tuple(map(str.upper, tags))
+
+        for n in nuke.allNodes('Read'):
+            if n[_tag_knob_name].value().startswith(tags):
+                _ret.append(n)
+        _ret.sort(key=_nodes_order, reverse=True)
+        return _ret
+    
+    _bg_ch_nodes = _get_nodes_by_tag(['BG', 'CH'])
+    
+    if _bg_ch_nodes:
+        _last_output = _bg_ch_nodes[0]
+    else:
+        raise FootageError('BG', 'CH')
+
+    # Create nodes.
+    for i, n in enumerate(_bg_ch_nodes):
+        if 'SSS.alpha' in n.channels():
+            _bg_ch_nodes[i] = nuke.nodes.Keyer(
+                inputs=[_bg_ch_nodes[i]],
+                input='SSS',
+                output='SSS.alpha',
+                operation='luminance key',
+                range='0 0.007297795507 1 1'
+            )
+
+        _bg_ch_nodes[i] = nuke.nodes.Crop(
+            inputs=[_bg_ch_nodes[i]],
+            box='0 0 {root.width} {root.height}'
+        )
+
+        if i > 0:
+            _bg_ch_nodes[i] = nuke.nodes.Merge2(
+                inputs=[_bg_ch_nodes[i-1], _bg_ch_nodes[i]],
+                label=n[_tag_knob_name].value()
+            )
 
 class Comp(object):
 
     order = lambda self, n: ('_' + self.node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
     
-    def __init__(self, mp=default_mp):
+    def __init__(self, mp=DEFAULT_MP):
 
         self._last_output = None
         self.node_tag_dict = {}
@@ -159,7 +273,7 @@ class Comp(object):
         if not 'rgba.alpha' in n.channels():
             return '_OTHER'
         
-        if n['name'].value() in tag_convert_dict.values() + regular_tag_list:
+        if n['name'].value() in tag_convert_dict.values() + REGULAR_TAGS:
             return n['name'].value()
         
         # Try file name
@@ -175,17 +289,17 @@ class Comp(object):
         else:
             result = '_OTHER'
         # Try folder name
-        if result not in regular_tag_list:
+        if result not in REGULAR_TAGS:
             folder_name = os.path.basename(os.path.dirname((os.path.normcase(nuke.filename(n)))))
             dir_tag = re.search(_pat, folder_name)
-            if dir_tag and dir_tag.group(1).upper() in regular_tag_list:
+            if dir_tag and dir_tag.group(1).upper() in REGULAR_TAGS:
                 result = dir_tag.group(1).upper()
         return result
 
     def getNodesByTag(self, tags):
         result = []    
         # Convert input param
-        if type(tags) is str :
+        if isinstance(tags, str) :
             tags = [tags]
         tags = tuple(map(str.upper, tags))
         # Output result
@@ -431,22 +545,13 @@ class Comp(object):
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
         self.insertNode(nuke.nodes.Grade(inputs=[read_node, ramp_node]), read_node)
         self.insertNode(nuke.nodes.ColorCorrect(), read_node)
-
-        try:
-            filename = nuke.filename(self.bg_ch_nodes[0])
-            print(filename)
-            lut_dir = re.match(r'(.+/\d{2}).+', filename).group(1) + '/lut'
-            if os.path.exists(lut_dir):
-                lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
-                lut = lut_dir + '/' + lut_list[0]
-            else:
-                lut = None
-        except IndexError:
-            lut = None
-        except:
-            print('MergeMP(): ')
-            traceback.print_exc()
-            print('')
+        
+        lut = None
+        filename = nuke.filename(self.bg_ch_nodes[0])
+        lut_dir = os.path.join(os.path.dirname(filename), 'lut')
+        if os.path.exists(lut_dir):
+            lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
+            lut = lut_dir + '/' + lut_list[0]
         
         if lut:
             print('MergeMP(): {}'.format(lut))
@@ -532,7 +637,7 @@ class MultiComp(object):
 
     footage_filter = lambda self, s: not any(map(lambda excluded_word: excluded_word in s, ['副本', '.lock']))
     
-    def __init__(self, dir_=None, target_dir=None, mp=default_mp, footage_pat=r'^.+_sc.+_.+\..+$', dir_pat=r'.+',):
+    def __init__(self, dir_=None, target_dir=None, mp=DEFAULT_MP, footage_pat=r'^.+_sc.+_.+\..+$', dir_pat=r'.+',):
 
         self.dir = ''
         self.target_dir = ''
@@ -566,9 +671,9 @@ class MultiComp(object):
         
         self.compAll()
         
-        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(sys_codec)
+        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(SYS_CODEC)
         call(cmd)
-        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(sys_codec))
+        choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(SYS_CODEC))
         if choice == 2:
             call('PAUSE', shell=True)
     
@@ -622,7 +727,7 @@ class MultiComp(object):
         info = '错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
         print('')
         print_(info)
-        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(sys_codec), 'w') as log:
+        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(SYS_CODEC), 'w') as log:
             log.write('总计镜头数量:\t{}\n'.format(self.shots_number))
             log.write(info)
 
@@ -631,7 +736,7 @@ class MultiComp(object):
         p = nuke.Panel('Precomp')
         p.addFilenameSearch('存放素材的文件夹', 'Z:\SNJYW\Render\EP')
         p.addFilenameSearch('存放至', 'E:\precomp')
-        p.addFilenameSearch('指定MP', default_mp)
+        p.addFilenameSearch('指定MP', DEFAULT_MP)
         p.addSingleLineInput('素材名正则', r'^.+_sc.+_.+\..+$')
         p.addSingleLineInput('文件夹名正则', r'^.*[^\\]{8,}$')
 
@@ -675,9 +780,16 @@ class MultiComp(object):
 Precomp = MultiComp
 
 class FootageError(Exception):
-    def __init__(self):
-        print_("**错误** - 没有找到素材")
-                    
+    def __init__(self, *args):
+        self.tags = args
+        if nuke.env['gui']:
+            nuke.message('找不到合成所需的素材: {}'.format(';'.join(self.tags)))
+        else:
+            print("**错误** - 没有找到素材: {}".format(';'.join(self.tags)).encode(SYS_CODEC))
+            
+    def __str__(self):
+        return ';'.join(self.tags)
+
 def precomp_arnold():
     # set a ordered list of input layer
     layerlist = ['indirect_diffuse', 'direct_diffuse', 'indirect_specular', 'direct_specular', 'reflection',
@@ -797,12 +909,27 @@ def precomp_arnold():
     nuke.connectViewer(0, mergegroup[-1])
 
 def print_(obj):
-    print(str(obj).decode(script_codec).encode(sys_codec))
+    print(str(obj).encode(SYS_CODEC))
+
+def insert_node(node, input_node):
+    input_node.selectOnly()
+    dot = nuke.createNode('Dot')
+
+    node.setInput(0, input_node)
+    dot.setInput(0, node)
+
+    nuke.delete(dot)
+
+def load_toolset(name, dir='../../ToolSets/WLF', inputs=None):
+    _toolset_node = nuke.loadToolset(os.path.join(dir, name))
+    if _toolset_node and inputs:
+        for i, n in enumerate(inputs):
+            _toolset_node.setInput(i, n)
 
 def main():
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
 
-    call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(sys_codec), shell=True)
+    call(u'CHCP 936 & TITLE 批量预合成_吾立方 & CLS'.encode(SYS_CODEC), shell=True)
     print_('{:-^50s}'.format('确认设置'))
     print_('素材路径:\t\t{0[1]}\n保存路径:\t\t{0[2]}\nMP:\t\t\t{0[3]}\n素材名正则匹配:\t\t{0[4]}\n文件夹名正则匹配:\t{0[5]}'.format(argv))
 
@@ -821,6 +948,14 @@ def main():
 if __name__ == '__main__' and  len(sys.argv) == 6:
     try:
         main()
+    except SystemExit as e:
+        exit(e)
+    except:
+        import traceback
+        traceback.print_exc()
+if __name__ == '__main__':
+    try:
+        comp_wlf()
     except SystemExit as e:
         exit(e)
     except:
