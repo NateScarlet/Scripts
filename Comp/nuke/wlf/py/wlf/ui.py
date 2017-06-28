@@ -34,7 +34,7 @@ def add_menu():
     def _comp(menu):
         m = menu.addMenu('合成')
         m.addCommand('吾立方自动合成',"wlf.comp.comp_wlf()",icon='autocomp.png')
-        m.addCommand('吾立方批量合成',"wlf.comp.Precomp().showDialog()",icon='autocomp.png')
+        m.addCommand('吾立方批量合成',"wlf.comp.MultiComp_WLF().showModalDialog()",icon='autocomp.png')
         m.addCommand('arnold预合成',"wlf.comp.precomp_arnold()",icon='autocomp.png')
 
     def _cgtw(menu):
@@ -82,7 +82,7 @@ def create_menu_by_dir(parent, dir):
             n = parent.addMenu(i, icon='{}.png'.format(i))            
             create_menu_by_dir(n, _abspath)
         elif _ext.lower() == '.gizmo':
-            parent.addCommand(_name, 'nuke.tcl("{0}")'.format(_name), icon='{}.png'.format(_name))
+            parent.addCommand(_name, 'nuke.createNode("{0}")'.format(_name), icon='{}.png'.format(_name))
             
 def custom_autolabel(enable_text_style=True) :
     '''

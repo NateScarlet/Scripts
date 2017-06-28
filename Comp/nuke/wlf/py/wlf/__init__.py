@@ -4,9 +4,8 @@ import os
 import nuke
 
 import asset
-import autocomp
-import cgtw
 import comp
+import cgtw
 import csheet
 import pref
 import callback

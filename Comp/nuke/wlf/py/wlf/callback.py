@@ -91,7 +91,7 @@ def add_callback():
     
     nuke.addBeforeRender(create_out_dirs, nodeClass='Write')
     if nuke.env['gui']:
-        # _dropframe()
+        _dropframe()
         _cgtw()
         add_dropdata_callback()
         nuke.addOnUserCreate(_gizmo_to_group_on_create)
@@ -157,9 +157,9 @@ def add_dropdata_callback():
                 return True
 
         if type == 'text/plain' and os.path.isdir(data):
-            _dir = data.replace('\\', '/')
-            for i in nuke.getFileNameList(_dir):
-                _path(type, '/'.join([_dir, i]))
+            _dirname = data.replace('\\', '/')
+            for i in nuke.getFileNameList(_dirname):
+                _path(type, '/'.join([_dirname, i]))
             return True
         else:
             return None

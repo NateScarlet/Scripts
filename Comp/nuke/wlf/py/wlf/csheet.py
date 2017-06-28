@@ -185,7 +185,7 @@ def parse_arg():
     return args
 
 def create_csheet():
-    if nuke.Root().modified():
+    if nuke.Root().modified() or not nuke.value('root.name'):
         return False
     
     json = os.path.join(os.path.dirname(nuke.scriptName()), '.projectsettings.json')

@@ -8,15 +8,20 @@ import re
 import time
 import locale
 import traceback
-from subprocess import call
+import json
+from subprocess import call, Popen
 
 import nuke
+import nukescripts
+
+if not nuke.env['gui']:
+    nukescripts.PythonPanel = object
 
 fps = 25
 format = 'HD_1080'
 VERSION = 0.872
 
-tag_convert_dict = {
+TAG_CONVERT_DICT = {
     'BG_FOG': 'FOG_BG',
     'BG_ID': 'ID_BG',
     'BG_CO': 'BG',
@@ -62,7 +67,7 @@ REGULAR_TAGS = [
 toolset = '../../ToolSets/WLF'
 DEFAULT_MP = r"\\192.168.1.4\f\QQFC_2015\Render\mp\Brooklyn-Bridge-Panorama.tga"
 SYS_CODEC = locale.getdefaultlocale()[1]
-script_codec = 'UTF-8'
+SCRIPT_CODEC = 'UTF-8'
 
 def comp_wlf(mp=DEFAULT_MP, autograde=True):
     if not nuke.allNodes('Read'):
@@ -91,6 +96,9 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             _dir_result = _get_tag_from_pattern(os.path.basename(os.path.dirname(filename)))
             if _dir_result != _default_result:
                 _ret = _dir_result
+                
+        if _ret in TAG_CONVERT_DICT:
+            _ret = TAG_CONVERT_DICT[_ret]
         
         return _ret
 
@@ -114,9 +122,7 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         k = nuke.String_Knob(_tag_knob_name, '素材标签')
         _add_knob(k)
         k.setValue(_tag)
-        
-        n.removeKnob(n['吾立方'])
-        
+      
         n.setName(_tag, updateExpressions=True)
 
     for n in nuke.allNodes('Read'):
@@ -200,8 +206,9 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         _nodes = _get_nodes_by_tag('OC')
         n = input
         for _read_node in _nodes:
+            _reformat_node = nuke.nodes.Reformat(inputs=[_read_node], resize='fit')
             n = nuke.nodes.Merge2(
-                inputs=[n, _read_node],
+                inputs=[n, _reformat_node],
                 operation='multiply',
                 screen_alpha=True,
                 label='OCC'
@@ -212,8 +219,9 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         _nodes = _get_nodes_by_tag(['SH', 'SD'])
         n = input
         for _read_node in _nodes:
+            _reformat_node = nuke.nodes.Reformat(inputs=[_read_node], resize='fit')
             n = nuke.nodes.Grade(
-                inputs=[n, _read_node],
+                inputs=[n, _reformat_node],
                 white="0.08420000225 0.1441999972 0.2041999996 0.0700000003",
                 white_panelDropped=True,
                 label='Shadow'
@@ -224,9 +232,9 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         _nodes = _get_nodes_by_tag('FOG')
         n = input
         for _read_node in _nodes:
-            n = nuke.nodes.Reformat(inputs=[n])
+            _reformat_node = nuke.nodes.Reformat(inputs=[_read_node], resize='fit')
             n = nuke.nodes.Merge2(
-                inputs=[n, i],
+                inputs=[n, _reformat_node],
                 operation='screen',
                 maskChannelInput='rgba.alpha',
                 label=_read_node[_tag_knob_name].value(),
@@ -235,10 +243,6 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
 
     for i, _read_node in enumerate(_bg_ch_nodes):
         n = _read_node
-        if i == 0:
-            n = _merge_occ(n)
-            n = _merge_shadow(n)
-            n = _merge_screen(n)
         if 'SSS.alpha' in _read_node.channels():
             n = nuke.nodes.Keyer(
                     inputs=[n],
@@ -248,6 +252,10 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
                     range='0 0.007297795507 1 1'
             )
         n = nuke.nodes.Reformat(inputs=[n], resize='fit')
+        if i == 0:
+            n = _merge_occ(n)
+            n = _merge_shadow(n)
+            n = _merge_screen(n)
         n = nuke.nodes.DepthFix(inputs=[n])
         if get_max(_read_node, 'depth.Z') > 1.1 :
             n['farpoint'].setValue(10000)
@@ -280,7 +288,7 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
 
         n = _depthfog(n)
         
-        n = nuke.nodes.SoftClip(inputs=[n])
+        n = nuke.nodes.SoftClip(inputs=[n], conversion='logarithmic compress')
         n = nuke.nodes.ZDefocus2(
             inputs=[n],
             math='depth',
@@ -365,8 +373,9 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         n = nuke.nodes.ColorCorrect(inputs=[n])
         n = nuke.nodes.Grade(inputs=[n, nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')])
         n = nuke.nodes.ProjectionMP(inputs=[n])
+        n = nuke.nodes.SoftClip(inputs=[n], conversion='logarithmic compress')
         n = nuke.nodes.Defocus(inputs=[n], disable=True)
-        n = nuke.nodes.Crop(inputs=[n], box='{0 0 {root.width} {root.height}}')
+        n = nuke.nodes.Crop(inputs=[n], box='0 0 root.width root.height')
 
         return n
     
@@ -380,6 +389,163 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
     else:
         nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
 
+class MultiComp_WLF(nukescripts.PythonPanel):
+    knob_list=[
+        (nuke.File_Knob, 'input_dir', '输入文件夹'),
+        (nuke.File_Knob, 'output_dir', '输出文件夹'),
+        (nuke.File_Knob, 'mp', '指定MP'),
+        (nuke.String_Knob, 'footage_pat', '素材名正则'),
+        (nuke.String_Knob, 'dir_pat', '路径正则'),
+        (nuke.Multiline_Eval_String_Knob, 'info', ''),
+    ]
+    config = {
+        'footage_pat': r'^.+_sc.+_.+\..+$',
+        'dir_pat': r'^.*[^\\]{8,}$',
+        'output_dir': 'E:/precomp',
+        'input_dir': 'Z:/SNJYW/Render/EP',
+        'mp': DEFAULT_MP,
+    }
+    def __init__(self):
+        nukescripts.PythonPanel.__init__(self, '吾立方批量合成', 'com.wlf.multicomp')
+
+        for i in self.knob_list:
+            k = i[0](i[1], i[2])
+            k.setValue(self.config.get(i[1]))
+            self.addKnob(k)
+        
+    def knobChanged(self, knob):
+        if knob is self.knobs()['OK']:
+            self.call_script()
+        elif knob is self.knobs()['info']:
+            self.update()
+        else:
+            self.config[knob.name()] = knob.value()
+            self.update()
+    
+    def call_script(self):
+        _cmd = 'START "" "{nuke}" -t {script} "{config}"'.format(
+            nuke=nuke.env['ExecutablePath'],
+            script=os.path.normcase(__file__).rstrip('c'),
+            config=json.dumps(self.config).replace('"', r'\"').replace('^', r'^^')
+        )
+        print(_cmd)
+        _proc = call(_cmd, shell=True)
+    
+    
+    def update(self):
+        self.set_enabled()
+        self.update_info()
+
+    def update_info(self):
+        _shot_list = self.get_shot_list(self.config)
+        if _shot_list:
+            _info = '共{}个镜头\n'.format(len(_shot_list))
+            _info += '\n'.join(_shot_list)
+        else:
+            _info = '找不到镜头文件夹'
+        self.knobs()['info'].setValue(_info)
+
+    @staticmethod
+    def get_shot_list(config):
+        _dir = sys_codec(config['input_dir'])
+        _pat = sys_codec(config['dir_pat'])
+
+        _ret = os.listdir(_dir)
+        _ret = filter(lambda path: re.match(_pat, path), _ret)
+        _ret = filter(lambda dirname: os.path.isdir(os.path.join(_dir, dirname)), _ret)
+        return _ret
+    
+    def set_enabled(self):
+        if not os.path.isdir(self.config['input_dir']):
+            self.knobs()['output_dir'].setEnabled(False)
+            self.knobs()['footage_pat'].setEnabled(False)
+            self.knobs()['dir_pat'].setEnabled(False)
+            self.knobs()['OK'].setEnabled(False)
+        else:
+            self.knobs()['input_dir'].setEnabled(True)
+            self.knobs()['output_dir'].setEnabled(True)
+            self.knobs()['footage_pat'].setEnabled(True)
+            self.knobs()['dir_pat'].setEnabled(True)
+            self.knobs()['OK'].setEnabled(True)
+
+    @staticmethod
+    def comp(config):
+        _errors = []
+        _shot_list = MultiComp_WLF.get_shot_list(config)
+
+        def _import_footage(dir):
+            # Get all subdir
+            _dirs = [x[0] for x in os.walk(dir)]
+            print_('导入素材:')
+            for d in _dirs:
+                # Get footage in subdir
+                print_('文件夹 {}:'.format(d))
+                if not re.match(config['dir_pat'], os.path.basename(d)):
+                    print_('\t\t\t不匹配文件夹正则, 跳过\n'.format(d))
+                    continue
+
+                _footages = nuke.getFileNameList(d)
+                if _footages:
+                    _footages = filter(lambda path: not path.endswith(('副本', '.lock')), _footages)
+                    _footages = filter(lambda path: re.match(config['footage_pat'], path), _footages)
+                    for f in _footages:
+                        nuke.createNode('Read', 'file {{{}/{}}}'.format(d, f))
+                        print('\t' * 3 + f)
+                print('')
+            print('')
+
+        for i, shot in enumerate(_shot_list):
+            _shot_dir = os.path.join(config['input_dir'], shot)
+            _savepath = '{}.nk'.format(os.path.join(config['output_dir'], shot)).replace('\\', '/')
+
+            print_('\n## [{1}/{2}]:\t\t{0}'.format(shot, i, len(_shot_list)))
+            
+            if os.path.exists(_savepath):
+                print_('**提示** 已存在{}, 将直接跳过\n'.format(_savepath))
+                continue
+
+            try: 
+                # Comp
+                nuke.scriptClear()
+                _import_footage(_shot_dir)
+                comp_wlf(config['mp'])
+
+                # Save nk
+                print_('保存为:\n\t\t\t{}\n'.format(_savepath))
+                nuke.Root()['name'].setValue(_savepath)
+                nuke.scriptSave(_savepath)
+
+                # Render Single Frame
+                write_node = nuke.toNode('_Write')
+                if write_node:
+                    write_node = write_node.node('Write_JPG_1')
+                    frame = int(nuke.numvalue('_Write.knob.frame'))
+                    write_node['disable'].setValue(False)
+                    try:
+                        nuke.execute(write_node, frame, frame)
+                    except RuntimeError:
+                        # Try first frame.
+                        try: nuke.execute(write_node, write_node.firstFrame(), write_node.firstFrame())
+                        except RuntimeError:
+                            # Try last frame.
+                            try:
+                                nuke.execute(write_node, write_node.lastFrame(), write_node.lastFrame())
+                            except RuntimeError:
+                                _errors.append('{}:\t渲染出错'.format(shot))
+            except FootageError:
+                _errors.append('{}:\t没有素材'.format(shot))
+            except:
+                _errors.append('{}:\t未知错误'.format(shot))
+                traceback.print_exc()
+        info = '错误列表:\n{}\n总计:\t{}'.format('\n'.join(_errors), len(_errors))
+        print('')
+        print_(info)
+        _logfile = os.path.join(config['output_dir']+ u'/批量合成.log')
+        with open(_logfile, 'w') as log:
+            log.write('总计镜头数量:\t{}\n'.format(len(_shot_list)))
+            log.write(info)
+
+    
 class Comp(object):
 
     order = lambda self, n: ('_' + self.node_tag_dict[n]).replace('_BG', '1_').replace('_CH', '0_')
@@ -485,7 +651,7 @@ class Comp(object):
         if not 'rgba.alpha' in n.channels():
             return '_OTHER'
         
-        if n['name'].value() in tag_convert_dict.values() + REGULAR_TAGS:
+        if n['name'].value() in TAG_CONVERT_DICT.values() + REGULAR_TAGS:
             return n['name'].value()
         
         # Try file name
@@ -496,8 +662,8 @@ class Comp(object):
         if result:
             result = result.group(1).upper()
             # Convert tag use dictionary
-            if result in tag_convert_dict.keys():
-                result = tag_convert_dict[result]
+            if result in TAG_CONVERT_DICT.keys():
+                result = TAG_CONVERT_DICT[result]
         else:
             result = '_OTHER'
         # Try folder name
@@ -736,7 +902,7 @@ class Comp(object):
     def add_crop(self): 
         ret = None
         for i in self.bg_ch_nodes:
-            crop_node = nuke.nodes.Crop(box='0 0 {root.width} {root.height}')
+            crop_node = nuke.nodes.Crop(box='0 0 root.width root.height')
             self.insertNode(crop_node, i)
             ret = crop_node
         return ret
@@ -751,7 +917,7 @@ class Comp(object):
         
         root_width, root_height = nuke.Root().width(), nuke.Root().height()
 
-        self.insertNode(nuke.nodes.Crop(box='0 0 {root.width} {root.height}'), read_node)
+        self.insertNode(nuke.nodes.Crop(box='0 0 root.width root.height'), read_node)
         self.insertNode(nuke.nodes.Defocus(disable=True), read_node)
         self.insertNode(nuke.loadToolset(toolset + r'\MP\ProjectionMP.nk'), read_node)
         ramp_node = nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')
@@ -883,7 +1049,7 @@ class MultiComp(object):
         
         self.compAll()
         
-        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(argv[2].strip('"')).decode(script_codec).encode(SYS_CODEC)
+        cmd = 'EXPLORER /select,"{}\\批量预合成.log"'.format(sys.argv[2].strip('"')).decode(SCRIPT_CODEC).encode(SYS_CODEC)
         call(cmd)
         choice = call(u'CHOICE /t 15 /d y /m "此窗口将自动关闭"'.encode(SYS_CODEC))
         if choice == 2:
@@ -909,7 +1075,7 @@ class MultiComp(object):
                 # Comp
                 nuke.scriptClear()
                 self.importFootage(shot_dir)
-                Comp(self.mp)()
+                comp_wlf(self.mp)
 
                 # Save nk
                 print_('保存为:\n\t\t\t{}\n'.format(nk_filename))
@@ -939,7 +1105,7 @@ class MultiComp(object):
         info = '错误列表:\n{}\n总计:\t{}'.format('\n'.join(error_list), len(error_list))
         print('')
         print_(info)
-        with open(str(self.target_dir+'/批量预合成.log').decode(script_codec).encode(SYS_CODEC), 'w') as log:
+        with open(str(self.target_dir+'/批量预合成.log').decode(SCRIPT_CODEC).encode(SYS_CODEC), 'w') as log:
             log.write('总计镜头数量:\t{}\n'.format(self.shots_number))
             log.write(info)
 
@@ -1121,7 +1287,10 @@ def precomp_arnold():
     nuke.connectViewer(0, mergegroup[-1])
 
 def print_(obj):
-    print(str(obj).encode(SYS_CODEC))
+    if nuke.env['gui']:
+        print(obj)
+    else:
+        print(unicode(str(obj), SCRIPT_CODEC).encode(SYS_CODEC))
 
 def insert_node(node, input_node):
     for n in nuke.allNodes():
@@ -1130,22 +1299,6 @@ def insert_node(node, input_node):
                 n.setInput(i, node)
     
     node.setInput(0, input_node)
-
-def load_toolset(name, dir='../../ToolSets/WLF', inputs=None):
-    _toolset_node = nuke.loadToolset(os.path.join(dir, '{}.nk'.format(name)))
-    if _toolset_node and inputs:
-        for i, n in enumerate(inputs):
-            _toolset_node.setInput(i, n)
-    
-    return _toolset_node
-
-def load_gizmo(name, inputs=None):
-    _gizmo = nuke.load(name)
-    if _gizmo and inputs:
-        for i, n in enumerate(inputs):
-            _gizmo.setInput(i, n)
-
-    return _gizmo
 
 def get_max(n, channel='depth.Z' ):
     '''
@@ -1210,6 +1363,21 @@ def main():
 
     Precomp(argv[1], argv[2], argv[3], argv[4], argv[5])()
 
+def pause():
+    # call('PAUSE', shell=True)
+    print('')
+    for i in range(5)[::-1]:
+        sys.stdout.write('\r{:2d}'.format(i+1))
+        time.sleep(1)
+    sys.stdout.write('\r          ')
+    print('')
+
+def sys_codec(str):
+    if isinstance(str, unicode):
+        return str.encode(SYS_CODEC)
+    else:
+        return str
+
 if __name__ == '__main__' and  len(sys.argv) == 6:
     try:
         main()
@@ -1218,11 +1386,16 @@ if __name__ == '__main__' and  len(sys.argv) == 6:
     except:
         import traceback
         traceback.print_exc()
-if __name__ == '__main__':
+if __name__ == '__main__' and  len(sys.argv) == 2:
     try:
-        comp_wlf(autograde=False)
+        _config = json.loads(sys.argv[1])
+        for k, v in _config.iteritems():
+            _config[k] = sys_codec(v)
+        MultiComp_WLF.comp(_config)
+        pause()
     except SystemExit as e:
         exit(e)
     except:
         import traceback
         traceback.print_exc()
+        
