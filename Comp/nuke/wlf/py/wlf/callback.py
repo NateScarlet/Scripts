@@ -20,7 +20,7 @@ def add_callback():
             if nuke.modified():
                 return False
 
-            if os.path.basename(nuke.scriptName()).startswith('SNJYW'):
+            if os.path.basename(nuke.value('root.name')).startswith('SNJYW'):
                 cgtw.Shot().upload_image()
 
         nuke.addOnScriptClose(on_close_callback)
@@ -59,7 +59,7 @@ def add_callback():
         if nuke.modified():
             return False
 
-        if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
+        if nuke.numvalue('preferences.wlf_send_to_dir', 0.0) and nuke.exists('_Write.bt_render_JPG'):
             nuke.toNode('_Write')['bt_render_JPG'].execute()
             
     def _gizmo_to_group_on_create():
@@ -91,7 +91,7 @@ def add_callback():
     
     nuke.addBeforeRender(create_out_dirs, nodeClass='Write')
     if nuke.env['gui']:
-        _dropframe()
+        # _dropframe()
         _cgtw()
         add_dropdata_callback()
         nuke.addOnUserCreate(_gizmo_to_group_on_create)

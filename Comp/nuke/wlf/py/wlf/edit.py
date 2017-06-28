@@ -430,16 +430,18 @@ def gizmo_to_group(gizmo):
     if not isinstance(gizmo, nuke.Gizmo):
         return gizmo
     
+    _selected = gizmo['selected'].value()
     _group = gizmo.makeGroup()
 
-    # Set Input/Output.
-    gizmo.selectOnly()
-    n = nuke.createNode('Dot')
-    n.setInput(0, _group)
-    nuke.delete(n)
+    # Set Input.
     for i in range(gizmo.inputs()):
         _group.setInput(i, gizmo.input(i))
-        
+    # Set Output.
+    for n in nuke.allNodes():
+        for i in range(n.inputs()):
+            if n.input(i) is gizmo:
+                n.setInput(i, _group)
+
     # Set position and name.
     if gizmo.shown():
         _group.showControlPanel()
@@ -447,6 +449,7 @@ def gizmo_to_group(gizmo):
     _name = gizmo['name'].value()
     nuke.delete(gizmo)
     _group.setName(_name)
+    _group['selected'].setValue(_selected)
     
     return _group
     

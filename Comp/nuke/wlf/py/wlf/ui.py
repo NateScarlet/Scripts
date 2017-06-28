@@ -92,6 +92,8 @@ def custom_autolabel(enable_text_style=True) :
     b = '\n'.join( autolabel().split( '\n' )[1:] )
     s = ''
     this = nuke.thisNode()
+    if not this:
+        return
     if this.Class() == 'Keyer' :
         s = '输入通道 : ' + nuke.value( 'this.input' )
     elif this.Class() == 'Read' :
@@ -124,6 +126,8 @@ def custom_autolabel(enable_text_style=True) :
             if v != 'none':
                 ch[ i ] = v + ' '
         s = ( ch[ 'in' ] + ch[ 'in2' ] + '-> ' + ch[ 'out' ] + ch[ 'out2' ] ).rstrip( ' ' )
+    else:
+        return
 
     # join result
     if s :

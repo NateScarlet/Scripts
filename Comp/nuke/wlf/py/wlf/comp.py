@@ -95,20 +95,15 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         return _ret
 
     def _setup_node(n):
-        _tag = _get_tag(nuke.filename(n))
-        if not 'rgba.alpha' in n.channels():
-            _tag = '_OTHER'
-        
-        _name = n['name'].value()
-        if _name in REGULAR_TAGS:
-            _tag = _name
-
-        _temp_tab = nuke.Tab_Knob('User')
-        n.addKnob(_temp_tab)
+        _tag = nuke.value('{}.{}'.format(n.name(), _tag_knob_name), '')
+        if not _tag:
+            _tag = _get_tag(nuke.filename(n))
+            if not 'rgba.alpha' in n.channels():
+                _tag = '_OTHER'
 
         def _add_knob(k):
             _knob_name = k.name()
-            while nuke.exists('{}.{}'.format(_name, k.name())):
+            if nuke.exists('{}.{}'.format(n.name(), k.name())):
                 k.setValue(n[_knob_name].value())
                 n.removeKnob(n[_knob_name])
             n.addKnob(k)
@@ -120,7 +115,7 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         _add_knob(k)
         k.setValue(_tag)
         
-        n.removeKnob(_temp_tab)
+        n.removeKnob(n['吾立方'])
         
         n.setName(_tag, updateExpressions=True)
 
@@ -134,16 +129,14 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         tags = tuple(map(str.upper, tags))
 
         for n in nuke.allNodes('Read'):
-            if n[_tag_knob_name].value().startswith(tags):
+            if nuke.value('{}.{}'.format(n.name(), _tag_knob_name), '').startswith(tags):
                 _ret.append(n)
         _ret.sort(key=_nodes_order, reverse=True)
         return _ret
     
     _bg_ch_nodes = _get_nodes_by_tag(['BG', 'CH'])
     
-    if _bg_ch_nodes:
-        _last_output = _bg_ch_nodes[0]
-    else:
+    if not _bg_ch_nodes:
         raise FootageError('BG', 'CH')
 
     # Create nodes.
@@ -169,25 +162,53 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         merge_node = nuke.nodes.Merge2(inputs=nodes[:2] + [None] + nodes[2:], tile_color=2184871423L, operation='min', Achannels='depth', Bchannels='depth', output='depth', label='Depth', hide_input=True)
         copy_node = nuke.nodes.Copy(inputs=[None, merge_node], from0='depth.Z', to0='depth.Z')
         return copy_node
+    
+    def _create_node(node, args=''):
+        return nuke.createNode(node, args, inpanel=False)
+
+    def _depthfog(input):
+        _group = nuke.nodes.Group(
+            inputs=[input],
+            tile_color=0x2386eaff,
+            label="深度雾\n由_DepthFogControl控制",
+            disable='{{_DepthFogControl.disable}}',
+        )
+        _group.setName('DepthFog1')
+        _group.begin()
+        _input_node = nuke.nodes.Input(name='Input')
+        n = nuke.nodes.DepthKeyer(inputs = [_input_node])
+        n['range'].setExpression('_DepthFogControl.range')
+        _depthkeyer_node = n
+        n = nuke.nodes.Grade(
+            inputs=[_input_node, _depthkeyer_node],
+            black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color} 0',
+            unpremult='rgba.alpha',
+            mix='{{_DepthFogControl.fog_mix}}'
+        )
+        n = nuke.nodes.Output()
+        _group.end()
+
+        return _group
 
     _depth_copy_node = _merge_depth(_bg_ch_nodes)
         
     for i, _read_node in enumerate(_bg_ch_nodes):
         _read_node.selectOnly()
         if 'SSS.alpha' in _read_node.channels():
-            n = nuke.createNode('Keyer', '''
+            n = _create_node('Keyer', '''
                     input SSS
                     output SSS.alpha
                     operation "luminance key"
                     range {0 0.007297795507 1 1}
                 '''
             )
-        n = nuke.createNode('Reformat', 'resize fit')
-        n = nuke.createNode('DepthFix')
+        n = _create_node('Reformat', 'resize fit')
+        n = nuke.nodes.DepthFix(inputs=[n])
         if get_max(_read_node, 'depth.Z') > 1.1 :
             n['farpoint'].setValue(10000)
+        n.selectOnly()
 
-        n = nuke.createNode('Grade', '''
+        n = _create_node('Grade', '''
                 unpremult rgba.alpha
                 label "白点: \[value this.whitepoint]\n混合:\[value this.mix]\n使亮度范围靠近0-1"
             '''
@@ -201,36 +222,19 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             n['whitepoint'].setValue(_max)
             n['mix'].setValue(_mix)
 
-        n = nuke.createNode('Unpremult')
-        n = nuke.createNode('ColorCorrect', 'label 亮度调整')
-        n = nuke.createNode('ColorCorrect', 'mix_luminance 1 label 颜色调整')
+        n = _create_node('Unpremult')
+        n = _create_node('ColorCorrect', 'label 亮度调整')
+        n = _create_node('ColorCorrect', 'mix_luminance 1 label 颜色调整')
         if 'SSS.alpha' in _read_node.channels():
-            n = nuke.createNode('ColorCorrect', 'maskChannelInput SSS.alpha label SSS调整')
-        n = nuke.createNode('HueCorrect')
-        n = nuke.createNode('Premult')
+            n = _create_node('ColorCorrect', 'maskChannelInput SSS.alpha label SSS调整')
+        n = _create_node('HueCorrect')
+        n = _create_node('Premult')
 
-        def _depthfog():
-            n = nuke.createNode('Group', '''
-                name DepthFog1
-                tile_color 0x2386eaff
-                label "深度雾\n由_DepthFogControl控制"
-                disable {{_DepthFogControl.disable}}
-            '''
-            )
-            n.begin()
-            input = nuke.nodes.Input(name='Input')
-            depthkeyer_node = nuke.loadToolset(toolset + '/Keyer/DepthKeyer.nk')
-            depthkeyer_node.setInput(0, input)
-            depthkeyer_node['range'].setExpression('_DepthFogControl.range')
-            grade_node = nuke.nodes.Grade(inputs=[input, depthkeyer_node], black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color}', unpremult='rgba.alpha', mix='{_DepthFogControl.fog_mix}')
-            output = nuke.nodes.Output(inputs=[grade_node])
-            n.end()
-
-            return n
-        n = _depthfog()
+        n = _depthfog(n)
+        n.selectOnly()
         
-        n = nuke.createNode('SoftClip')
-        n = nuke.createNode('ZDefocus2', '''
+        n = _create_node('SoftClip')
+        n = _create_node('ZDefocus2', '''
             math depth
             center {{"\[value _ZDefocus.center curve]"}}
             focal_point {1.#INF 1.#INF}
@@ -242,7 +246,7 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             disable {{"\[if \{\[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || \[value _ZDefocus.disable]\} \{return True\} else \{return False\}]"}}
         '''
         )
-        n = nuke.createNode('Crop', '''
+        n = _create_node('Crop', '''
                  box {0 0 {root.width} {root.height}}
             '''
         )
@@ -254,64 +258,81 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
                 label=_read_node[_tag_knob_name].value()
             )
 
-        _depth_copy_node.setInput(0, _bg_ch_nodes[-1])
-        def _add_zdefocus_control(input):
-            # Use for one-node zdefocus control
-            n = nuke.nodes.ZDefocus2(inputs=[input], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
-            n.setName('_ZDefocus')
-            return n
+    _depth_copy_node.setInput(0, _bg_ch_nodes[-1])
+    def _add_zdefocus_control(input):
+        # Use for one-node zdefocus control
+        n = nuke.nodes.ZDefocus2(inputs=[input], math='depth', output='focal plane setup', center=0.00234567, blur_dof=False, label='** 虚焦总控制 **\n在此拖点定虚焦及设置')
+        n.setName('_ZDefocus')
+        return n
 
-        _add_zdefocus_control(_depth_copy_node)
+    _add_zdefocus_control(_depth_copy_node)
 
-        def _add_depthfog_control(input):
-            node_color = 596044543
-            n = load_toolset('Keyer/DepthKeyer')
-            n.setInput(0, input)
-            n.setName('_DepthFogControl')
-            n['label'].setValue('**深度雾总控制**\n在此设置深度雾范围及颜色')
-            n['range'].setValue(1)
-            n['gl_color'].setValue(node_color)
-            n['tile_color'].setValue(node_color)
-            n.addKnob(nuke.Text_Knob('颜色控制'))
-            n.addKnob(nuke.Color_Knob('fog_color', '雾颜色'))
-            n['fog_color'].setValue((0.009, 0.025133, 0.045))
+    def _add_depthfog_control(input):
+        node_color = 596044543
+        n = nuke.nodes.DepthKeyer(label='**深度雾总控制**\n在此设置深度雾范围及颜色',
+        range='1 1 1 1',
+        gl_color=node_color,
+        tile_color=node_color,
+        )
 
-            k = nuke.Double_Knob('fog_mix', 'mix')
-            k.setValue(1)
-            n.addKnob(k)
-            
-        _add_depthfog_control(_depth_copy_node)
+        n.setName('_DepthFogControl')
+        # n = n.makeGroup()
 
-        def _merge_mp():
-            #TODO:add lut;crop
-            n = nuke.createNode('Read', 'name MP')
-            n['file'].fromUserText(mp)
+        k = nuke.Text_Knob('颜色控制')
+        n.addKnob(k)
 
-            n = nuke.createNode('Reformat', 'resize fit')
-            n = nuke.createNode('Transform')
-            n = nuke.createNode('ColorCorrect')
-            n = nuke.createNode('Grade')
-            n = nuke.createNode('ProjectionMP')
-            n = nuke.createNode('Defocus', 'disable true')
-            n = nuke.createNode('Crop', 'box {0 0 {root.width} {root.height}}')
-            
+        k = nuke.Color_Knob('fog_color', '雾颜色')
+        k.setValue((0.009, 0.025133, 0.045))
+        n.addKnob(k)
+
+        k = nuke.Double_Knob('fog_mix', 'mix')
+        k.setValue(1)
+        n.addKnob(k)
+  
+        n.setInput(0, input)
+        
+    _add_depthfog_control(_depth_copy_node)
+
+    def _merge_mp():
+        def _add_lut():
+            # TODO
             # lut = None
             # filename = nuke.filename(self.bg_ch_nodes[0])
             # lut_dir = os.path.join(os.path.dirname(filename), 'lut')
             # if os.path.exists(lut_dir):
-                # lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
-                # lut = lut_dir + '/' + lut_list[0]
-        
-            # if lut:
-                # print('MergeMP(): {}'.format(lut))
-                # self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
-            
-            return n
-            
-        n = nuke.nodes.Merge(inputs=[input, _depth_copy_node], operation='under', label='MP')
-        n = load_toolset('Write', inputs=[n])
+            # lut_list = list(i for i in os.listdir(os.path.normcase(lut_dir)) if i.endswith('.vf') and 'mp' in i.lower())
+            # lut = lut_dir + '/' + lut_list[0]
 
-        
+            # if lut:
+            # print('MergeMP(): {}'.format(lut))
+            # self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
+            pass
+
+        n = _create_node('Read', 'name MP')
+        n['file'].fromUserText(mp)
+
+        n = _create_node('Reformat', 'resize fit')
+        n = _create_node('Transform')
+        _add_lut()
+        n = _create_node('ColorCorrect')
+        n = _create_node('Grade')
+        n.setInput(1, nuke.nodes.Ramp(p0='1700 1000', p1='1700 500'))
+        n = nuke.nodes.ProjectionMP(inputs=[n])
+        n.selectOnly()
+        n = _create_node('Defocus', 'disable true')
+        n = _create_node('Crop', 'box {0 0 {root.width} {root.height}}')
+
+        return n
+    
+    _mp_last_node = _merge_mp()
+    _mp_merge_node = nuke.nodes.Merge(inputs=[_mp_last_node, _depth_copy_node], operation='under', label='MP')
+    n = nuke.nodes.wlf_Write(inputs=[_mp_merge_node])
+    n.setName('_Write')
+    
+    if nuke.env['gui']:
+        autoplace_all()
+    else:
+        nuke.nodes.NoOp(label='[\npython {map(lambda n: nuke.autoplace(n), nuke.allNodes(group=nuke.Root()))}\ndelete this\n]')
 
 class Comp(object):
 
@@ -1057,13 +1078,12 @@ def print_(obj):
     print(str(obj).encode(SYS_CODEC))
 
 def insert_node(node, input_node):
-    input_node.selectOnly()
-    dot = nuke.createNode('Dot')
-
+    for n in nuke.allNodes():
+        for i in range(n.inputs()):
+            if n.input(i) == input_node:
+                n.setInput(i, node)
+    
     node.setInput(0, input_node)
-    dot.setInput(0, node)
-
-    nuke.delete(dot)
 
 def load_toolset(name, dir='../../ToolSets/WLF', inputs=None):
     _toolset_node = nuke.loadToolset(os.path.join(dir, '{}.nk'.format(name)))
@@ -1120,6 +1140,10 @@ def get_max(n, channel='depth.Z' ):
     print('getMax({1}, {0}) -> {2}'.format(channel, n.name(), max_value))
     
     return max_value
+
+def autoplace_all():
+    for n in nuke.allNodes():
+        nuke.autoplace(n)
 
 def main():
     argv = list(map(lambda s: os.path.normcase(s).rstrip('\\/'), sys.argv))
