@@ -171,21 +171,25 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             inputs=[input],
             tile_color=0x2386eaff,
             label="深度雾\n由_DepthFogControl控制",
-            disable='{{_DepthFogControl.disable}}',
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
         )
         _group.setName('DepthFog1')
+
         _group.begin()
         _input_node = nuke.nodes.Input(name='Input')
-        n = nuke.nodes.DepthKeyer(inputs = [_input_node])
-        n['range'].setExpression('_DepthFogControl.range')
-        _depthkeyer_node = n
-        n = nuke.nodes.Grade(
-            inputs=[_input_node, _depthkeyer_node],
-            black='{_DepthFogControl.fog_color} {_DepthFogControl.fog_color} {_DepthFogControl.fog_color} 0',
-            unpremult='rgba.alpha',
-            mix='{{_DepthFogControl.fog_mix}}'
+        n = nuke.nodes.DepthKeyer(
+            inputs=[_input_node],
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
         )
-        n = nuke.nodes.Output()
+        n['range'].setExpression('([exists _DepthFogControl.range]) ? _DepthFogControl.range : curve')
+        n = nuke.nodes.Grade(
+            inputs=[_input_node, n],
+            black='{{(\[exists _DepthFogControl.fog_color]) ? _DepthFogControl.fog_color : curve}}',
+            unpremult='rgba.alpha',
+            mix='{{([exists _DepthFogControl.fog_mix]) ? _DepthFogControl.fog_mix : curve}}',
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
+        )
+        n = nuke.nodes.Output(inputs=[n])
         _group.end()
 
         return _group
@@ -193,15 +197,39 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
     _depth_copy_node = _merge_depth(_bg_ch_nodes)
 
     def _merge_occ(input):
-        _occ_nodes = _get_nodes_by_tag('OC')
-        if not _occ_nodes:
-            return input
-        for _occ_read_node in _occ_nodes:
-            n = merge_node = nuke.nodes.Merge2(
-                inputs=[input, _occ_read_node],
+        _nodes = _get_nodes_by_tag('OC')
+        n = input
+        for _read_node in _nodes:
+            n = nuke.nodes.Merge2(
+                inputs=[n, _read_node],
                 operation='multiply',
                 screen_alpha=True,
                 label='OCC'
+            )
+        return n
+
+    def _merge_shadow(input):
+        _nodes = _get_nodes_by_tag(['SH', 'SD'])
+        n = input
+        for _read_node in _nodes:
+            n = nuke.nodes.Grade(
+                inputs=[n, _read_node],
+                white="0.08420000225 0.1441999972 0.2041999996 0.0700000003",
+                white_panelDropped=True,
+                label='Shadow'
+            )
+        return n
+
+    def _merge_screen(input):
+        _nodes = _get_nodes_by_tag('FOG')
+        n = input
+        for _read_node in _nodes:
+            n = nuke.nodes.Reformat(inputs=[n])
+            n = nuke.nodes.Merge2(
+                inputs=[n, i],
+                operation='screen',
+                maskChannelInput='rgba.alpha',
+                label=_read_node[_tag_knob_name].value(),
             )
         return n
 
@@ -209,6 +237,8 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         n = _read_node
         if i == 0:
             n = _merge_occ(n)
+            n = _merge_shadow(n)
+            n = _merge_screen(n)
         if 'SSS.alpha' in _read_node.channels():
             n = nuke.nodes.Keyer(
                     inputs=[n],
@@ -221,12 +251,11 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         n = nuke.nodes.DepthFix(inputs=[n])
         if get_max(_read_node, 'depth.Z') > 1.1 :
             n['farpoint'].setValue(10000)
-        n.selectOnly()
 
-        n = _create_node('Grade', '''
-                unpremult rgba.alpha
-                label "白点: \[value this.whitepoint]\n混合:\[value this.mix]\n使亮度范围靠近0-1"
-            '''
+        n = nuke.nodes.Grade(
+            inputs=[n],
+            unpremult='rgba.alpha',
+            label='白点: \[value this.whitepoint]\n混合:\[value this.mix]\n使亮度范围靠近0-1'
         )
         if autograde:
             _max = _autograde_get_max(_read_node)
@@ -237,33 +266,36 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             n['whitepoint'].setValue(_max)
             n['mix'].setValue(_mix)
 
-        n = _create_node('Unpremult')
-        n = _create_node('ColorCorrect', 'label 亮度调整')
-        n = _create_node('ColorCorrect', 'mix_luminance 1 label 颜色调整')
+        n = nuke.nodes.Unpremult(inputs=[n])
+        n = nuke.nodes.ColorCorrect(inputs=[n], label='亮度调整')
+        n = nuke.nodes.ColorCorrect(inputs=[n], mix_luminance=1, label='颜色调整')
         if 'SSS.alpha' in _read_node.channels():
-            n = _create_node('ColorCorrect', 'maskChannelInput SSS.alpha label SSS调整')
-        n = _create_node('HueCorrect')
-        n = _create_node('Premult')
+            n = nuke.nodes.ColorCorrect(
+                inputs=[n],
+                maskChannelInput='SSS.alpha',
+                label='SSS调整'
+            )
+        n = nuke.nodes.HueCorrect(inputs=[n])
+        n = nuke.nodes.Premult(inputs=[n])
 
         n = _depthfog(n)
-        n.selectOnly()
         
-        n = _create_node('SoftClip')
-        n = _create_node('ZDefocus2', '''
-            math depth
-            center {{"\[value _ZDefocus.center curve]"}}
-            focal_point {1.#INF 1.#INF}
-            dof {{"\[value _ZDefocus.dof curve]"}}
-            blur_dof {{"\[value _ZDefocus.blur_dof curve]"}}
-            size {{"\[value _ZDefocus.size curve]"}}
-            max_size {{"\[value _ZDefocus.max_size curve]"}}
-            label "\[\nset trg parent._ZDefocus\nknob this.math \[value \$trg.math depth]\nknob this.z_channel \[value \$trg.z_channel depth.Z]\nif \{\[exists _ZDefocus]\} \{return \"由_ZDefocus控制\"\} else \{return \"需要_ZDefocus节点\"\}\n]"
-            disable {{"\[if \{\[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || \[value _ZDefocus.disable]\} \{return True\} else \{return False\}]"}}
-        '''
+        n = nuke.nodes.SoftClip(inputs=[n])
+        n = nuke.nodes.ZDefocus2(
+            inputs=[n],
+            math='depth',
+            center='{{\[value _ZDefocus.center curve]}}',
+            focal_point='1.#INF 1.#INF',
+            dof='{{\[value _ZDefocus.dof curve]}}',
+            blur_dof='{{\[value _ZDefocus.blur_dof curve]}}',
+            size='{{\[value _ZDefocus.size curve]}}',
+            max_size='{{\[value _ZDefocus.max_size curve]}}',
+            label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return \"由_ZDefocus控制\"} else {return \"需要_ZDefocus节点\"}\n]',
+            disable='{{!\[exists _ZDefocus] || \[if \{\[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || \[value _ZDefocus.disable]\} \{return True\} else \{return False\}]}}'
         )
-        n = _create_node('Crop', '''
-                 box {0 0 {root.width} {root.height}}
-            '''
+        n = nuke.nodes.Crop(
+            inputs=[n],
+            box='0 0 root.width root.height'
         )
 
         _bg_ch_nodes[i] = n
@@ -323,19 +355,18 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
             # self.insertNode(nuke.nodes.Vectorfield(vfield_file=lut, file_type='vf', label='[basename [value this.knob.vfield_file]]'), read_node)
             pass
 
-        n = _create_node('Read', 'name MP')
+        n = nuke.nodes.Read()
         n['file'].fromUserText(mp)
+        n.setName('MP')
 
-        n = _create_node('Reformat', 'resize fit')
-        n = _create_node('Transform')
+        n = nuke.nodes.Reformat(inputs=[n], resize='fit')
+        n = nuke.nodes.Transform(inputs=[n])
         _add_lut()
-        n = _create_node('ColorCorrect')
-        n = _create_node('Grade')
-        n.setInput(1, nuke.nodes.Ramp(p0='1700 1000', p1='1700 500'))
+        n = nuke.nodes.ColorCorrect(inputs=[n])
+        n = nuke.nodes.Grade(inputs=[n, nuke.nodes.Ramp(p0='1700 1000', p1='1700 500')])
         n = nuke.nodes.ProjectionMP(inputs=[n])
-        n.selectOnly()
-        n = _create_node('Defocus', 'disable true')
-        n = _create_node('Crop', 'box {0 0 {root.width} {root.height}}')
+        n = nuke.nodes.Defocus(inputs=[n], disable=True)
+        n = nuke.nodes.Crop(inputs=[n], box='{0 0 {root.width} {root.height}}')
 
         return n
     

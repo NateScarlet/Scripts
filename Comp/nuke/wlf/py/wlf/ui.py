@@ -33,7 +33,7 @@ def add_menu():
 
     def _comp(menu):
         m = menu.addMenu('合成')
-        m.addCommand('吾立方自动合成',"wlf.comp.Comp()()",icon='autocomp.png')
+        m.addCommand('吾立方自动合成',"wlf.comp.comp_wlf()",icon='autocomp.png')
         m.addCommand('吾立方批量合成',"wlf.comp.Precomp().showDialog()",icon='autocomp.png')
         m.addCommand('arnold预合成',"wlf.comp.precomp_arnold()",icon='autocomp.png')
 
