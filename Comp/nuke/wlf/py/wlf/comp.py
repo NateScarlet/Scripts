@@ -191,18 +191,33 @@ def comp_wlf(mp=DEFAULT_MP, autograde=True):
         return _group
 
     _depth_copy_node = _merge_depth(_bg_ch_nodes)
-        
-    for i, _read_node in enumerate(_bg_ch_nodes):
-        _read_node.selectOnly()
-        if 'SSS.alpha' in _read_node.channels():
-            n = _create_node('Keyer', '''
-                    input SSS
-                    output SSS.alpha
-                    operation "luminance key"
-                    range {0 0.007297795507 1 1}
-                '''
+
+    def _merge_occ(input):
+        _occ_nodes = _get_nodes_by_tag('OC')
+        if not _occ_nodes:
+            return input
+        for _occ_read_node in _occ_nodes:
+            n = merge_node = nuke.nodes.Merge2(
+                inputs=[input, _occ_read_node],
+                operation='multiply',
+                screen_alpha=True,
+                label='OCC'
             )
-        n = _create_node('Reformat', 'resize fit')
+        return n
+
+    for i, _read_node in enumerate(_bg_ch_nodes):
+        n = _read_node
+        if i == 0:
+            n = _merge_occ(n)
+        if 'SSS.alpha' in _read_node.channels():
+            n = nuke.nodes.Keyer(
+                    inputs=[n],
+                    input='SSS',
+                    output='SSS.alpha',
+                    operation='luminance key',
+                    range='0 0.007297795507 1 1'
+            )
+        n = nuke.nodes.Reformat(inputs=[n], resize='fit')
         n = nuke.nodes.DepthFix(inputs=[n])
         if get_max(_read_node, 'depth.Z') > 1.1 :
             n['farpoint'].setValue(10000)
