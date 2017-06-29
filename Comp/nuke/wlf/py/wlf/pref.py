@@ -58,6 +58,10 @@ def add_preferences():
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
+    k = nuke.Boolean_Knob('wlf_autoplace', '自动摆放节点')
+    k.setFlag(nuke.STARTLINE)
+    _add_knob(k)
+
     k = nuke.Text_Knob('wlf_on_script_save', '保存时')
     _add_knob(k)
 
@@ -84,7 +88,7 @@ def add_preferences():
     k.clearFlag(nuke.STARTLINE)
     _add_knob(k)
 
-    k = nuke.Boolean_Knob('wlf_create_csheet', '生成色板')
+    k = nuke.Boolean_Knob('wlf_create_csheet', '生成色板(如果目录下有配置文件)')
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 

@@ -14,98 +14,103 @@ import cgtw
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
-def add_callback():
-    def _cgtw():
-        def on_close_callback():
-            if nuke.modified():
-                return False
-
-            if os.path.basename(nuke.value('root.name')).startswith('SNJYW'):
-                cgtw.Shot().upload_image()
-
-        nuke.addOnScriptClose(on_close_callback)
-    
-    def _dropframe():
-        _dropframe = asset.DropFrameCheck()
-        nuke.addOnCreate(lambda : _dropframe.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
-        nuke.addOnScriptSave(_dropframe.show)
-
-    def _create_csheet():
-        if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
-            csheet.create_csheet()
-
-    def _check_project():
-        if not nuke.value('root.project_directory'):
-            nuke.message('工程目录未设置')
-
-    def _lock_connections():
-        if nuke.numvalue('preferences.wlf_lock_connections', 0.0):
-            nuke.Root()['lock_connections'].setValue(1);
-            nuke.Root().setModified(False)
-
-    def _jump_frame():
-        if nuke.numvalue('preferences.wlf_lock_connection', 0.0) and nuke.exists('_Write.knob.frame'):
-            nuke.frame(nuke.numvalue('_Write.knob.frame'));
-            nuke.Root().setModified(False)
-
-    def _send_to_render_dir():
-        if nuke.modified():
-            return False
-        
-        if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
-            asset.sent_to_dir(nuke.value('preferences.wlf_render_dir'))
-
-    def _render_jpg():
-        if nuke.modified():
-            return False
-
-        if nuke.numvalue('preferences.wlf_send_to_dir', 0.0) and nuke.exists('_Write.bt_render_JPG'):
-            nuke.toNode('_Write')['bt_render_JPG'].execute()
-            
-    def _gizmo_to_group_on_create():
-        n = nuke.thisNode()
-        if not nuke.numvalue('preferences.wlf_gizmo_to_group', 0.0):
-            return
-
-        if not isinstance(n, nuke.Gizmo):
-            return
-            # Avoid scripted gizmo.
-
-        if nuke.knobChangeds.get(n.Class()):
-            return
-
-        n.addKnob(nuke.Text_Knob('wlf_gizmo_to_group'))
-
-    def _gizmo_to_group_update_ui():
-        n = nuke.thisNode()
-        _temp_knob_name = 'wlf_gizmo_to_group'
-        _has_temp_knob = nuke.exists('{}.{}'.format(n.name(), _temp_knob_name))
-
-        if _has_temp_knob:
-            n = edit.gizmo_to_group(n)
-            n.removeKnob(n[_temp_knob_name])
-            n.removeKnob(n['User'])
-
-    def _print_name():
-        print(nuke.thisNode().name())
-    
+def init():
     nuke.addBeforeRender(create_out_dirs, nodeClass='Write')
-    if nuke.env['gui']:
-        _dropframe()
-        _cgtw()
-        add_dropdata_callback()
-        nuke.addOnUserCreate(_gizmo_to_group_on_create)
-        nuke.addUpdateUI(_gizmo_to_group_update_ui)
-        nuke.addOnCreate(lambda: edit.randomGlColor(nuke.thisNode()))
-        nuke.addOnScriptSave(edit.enableRSMB, kwargs={'prefix': '_'})
-        nuke.addOnScriptSave(_check_project)
-        nuke.addOnScriptSave(_lock_connections)
-        nuke.addOnScriptSave(_jump_frame)
-        nuke.addOnScriptClose(_render_jpg)
-        nuke.addOnScriptClose(_create_csheet)
-        nuke.addOnScriptClose(_send_to_render_dir)
-        nuke.addAutolabel(ui.custom_autolabel)
 
+def menu():
+    _dropframe()
+    _cgtw()
+    add_dropdata_callback()
+    nuke.addOnUserCreate(_gizmo_to_group_on_create)
+    nuke.addUpdateUI(_gizmo_to_group_update_ui)
+    nuke.addUpdateUI(_autoplace)
+    nuke.addOnCreate(lambda: edit.randomGlColor(nuke.thisNode()))
+    nuke.addOnScriptSave(edit.enableRSMB, kwargs={'prefix': '_'})
+    nuke.addOnScriptSave(_check_project)
+    nuke.addOnScriptSave(_lock_connections)
+    nuke.addOnScriptSave(_jump_frame)
+    nuke.addOnScriptClose(_render_jpg)
+    nuke.addOnScriptClose(_create_csheet)
+    nuke.addOnScriptClose(_send_to_render_dir)
+    nuke.addAutolabel(ui.custom_autolabel)
+def _cgtw():
+    def on_close_callback():
+        if nuke.modified():
+            return False
+
+        if os.path.basename(nuke.value('root.name')).startswith('SNJYW'):
+            cgtw.Shot().upload_image()
+
+    nuke.addOnScriptClose(on_close_callback)
+
+def _dropframe():
+    _dropframe = asset.DropFrameCheck()
+    nuke.addUpdateUI(lambda : _dropframe.getDropFrameRanges(nuke.thisNode()), nodeClass='Read')
+    nuke.addOnScriptSave(_dropframe.show)
+
+def _create_csheet():
+    if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
+        csheet.create_csheet()
+
+def _check_project():
+    if not nuke.value('root.project_directory'):
+        nuke.message('工程目录未设置')
+
+def _lock_connections():
+    if nuke.numvalue('preferences.wlf_lock_connections', 0.0):
+        nuke.Root()['lock_connections'].setValue(1);
+        nuke.Root().setModified(False)
+
+def _jump_frame():
+    if nuke.numvalue('preferences.wlf_lock_connection', 0.0) and nuke.exists('_Write.knob.frame'):
+        nuke.frame(nuke.numvalue('_Write.knob.frame'));
+        nuke.Root().setModified(False)
+
+def _send_to_render_dir():
+    if nuke.modified():
+        return False
+    
+    if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
+        asset.sent_to_dir(nuke.value('preferences.wlf_render_dir'))
+
+def _render_jpg():
+    if nuke.modified():
+        return False
+
+    if nuke.numvalue('preferences.wlf_send_to_dir', 0.0) and nuke.exists('_Write.bt_render_JPG'):
+        nuke.toNode('_Write')['bt_render_JPG'].execute()
+        
+def _gizmo_to_group_on_create():
+    n = nuke.thisNode()
+    if not nuke.numvalue('preferences.wlf_gizmo_to_group', 0.0):
+        return
+
+    if not isinstance(n, nuke.Gizmo):
+        return
+        # Avoid scripted gizmo.
+
+    if nuke.knobChangeds.get(n.Class()):
+        return
+
+    n.addKnob(nuke.Text_Knob('wlf_gizmo_to_group'))
+
+def _gizmo_to_group_update_ui():
+    n = nuke.thisNode()
+    _temp_knob_name = 'wlf_gizmo_to_group'
+    _has_temp_knob = nuke.exists('{}.{}'.format(n.name(), _temp_knob_name))
+
+    if _has_temp_knob:
+        n = edit.gizmo_to_group(n)
+        n.removeKnob(n[_temp_knob_name])
+        n.removeKnob(n['User'])
+
+def _autoplace():
+    if nuke.numvalue('preferences.wlf_autoplace', 0.0):
+        nuke.autoplace(nuke.thisNode())
+
+def _print_name():
+    print(nuke.thisNode().name())
+    
 
 def create_out_dirs():
     trgDir = os.path.dirname( nuke.filename( nuke.thisNode() ) )

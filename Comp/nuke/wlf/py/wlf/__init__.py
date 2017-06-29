@@ -5,6 +5,7 @@ import nuke
 
 import asset
 import comp
+from comp import Comp
 import cgtw
 import csheet
 import pref
