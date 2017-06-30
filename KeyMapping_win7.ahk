@@ -14,6 +14,7 @@ Loop {
 OnWinChange()
 {
     IfWinExist, ahk_exe WerFault.exe,
+		sleep, 3000
         WinClose,
 	IfWinExist, ahk_exe CrashReporterNuke.exe,
 		WinClose,
