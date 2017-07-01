@@ -1,21 +1,27 @@
-# usr/bin/env python
+#! usr/bin/env python3
 # -*- coding=UTF-8 -*-
 # Version 0.41
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
 import os, sys
+print(sys.version)
 import statistics
 import colorsys
 from shutil import move, copy2
-from subprocess import call
+from subprocess import call, Popen
 import zipfile
 import io
 import datetime
+import locale
+import codecs
+
+SYS_CODEC = locale.getdefaultlocale()[1]
 
 prompt_codec = 'GBK'
 nconvert = r'C:\Program Files\nconvert.exe'
-autocrop = os.path.join(os.path.dirname(__file__), '智能裁边.exe')
-filtering = os.path.join(os.path.dirname(__file__), '黑白图修图(无视RGB模式图像).exe')
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+autocrop = os.path.abspath(u'./智能裁边.exe')
+filtering =  os.path.abspath(u'./黑白图修图(无视RGB模式图像).exe')
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class CommandLineUI(object):
@@ -122,7 +128,10 @@ class MangaProcessing(CommandLineUI):
     def smartcrop(self):
         for image in self.image_list:
             print('{}: 智能裁剪'.format(image))
-            call('"{}" "{}"'.format(autocrop, os.path.abspath(image)))
+            _cmd = '"{}" "{}"'.format(autocrop, os.path.abspath(image))
+            print(_cmd)
+            _proc = Popen(_cmd)
+            _proc.communicate()
 
     def getWhitepoint(self):
         pass
