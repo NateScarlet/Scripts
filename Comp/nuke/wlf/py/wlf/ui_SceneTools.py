@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'SceneTools.ui'
 #
-# Created: Mon Jun 19 17:33:20 2017
+# Created: Mon Jul 03 14:12:22 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -185,7 +185,8 @@ class Ui_Dialog(object):
         self.csheetOpenCheck = QtGui.QCheckBox(Dialog)
         self.csheetOpenCheck.setObjectName("csheetOpenCheck")
         self.verticalLayout_2.addWidget(self.csheetOpenCheck)
-        self.sheetButton = QtGui.QCommandLinkButton(Dialog)
+        self.sheetButton = QtGui.QPushButton(Dialog)
+        self.sheetButton.setMinimumSize(QtCore.QSize(0, 50))
         self.sheetButton.setObjectName("sheetButton")
         self.verticalLayout_2.addWidget(self.sheetButton)
         self.openCSheetButton = QtGui.QPushButton(Dialog)
@@ -241,7 +242,8 @@ class Ui_Dialog(object):
         self.imageDownCheck.setObjectName("imageDownCheck")
         self.horizontalLayout_8.addWidget(self.imageDownCheck)
         self.verticalLayout_4.addLayout(self.horizontalLayout_8)
-        self.syncButton = QtGui.QCommandLinkButton(Dialog)
+        self.syncButton = QtGui.QPushButton(Dialog)
+        self.syncButton.setMinimumSize(QtCore.QSize(0, 50))
         self.syncButton.setObjectName("syncButton")
         self.verticalLayout_4.addWidget(self.syncButton)
         self.verticalLayout_5.addLayout(self.verticalLayout_4)

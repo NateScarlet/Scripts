@@ -216,7 +216,11 @@ def main():
     frame = Dialog()
     frame.show()
     sys.exit(app.exec_())
-  
+
+def call_from_nuke():
+    frame = Dialog()
+    frame.show()
+
 if __name__ == '__main__':
     try:
         main()
