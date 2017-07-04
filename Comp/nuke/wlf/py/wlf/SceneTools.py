@@ -315,10 +315,10 @@ class Dialog(QDialog, Ui_Dialog, SingleInstance):
                 edit.textChanged.connect(lambda text, k=key: self._config.__setitem__(k, text))
                 edit.textChanged.connect(self.update)
             elif isinstance(edit, PySide.QtGui.QCheckBox):
-                edit.stateChanged.connect(lambda state, k=key: self.self._config.__setitem__(k, state))
+                edit.stateChanged.connect(lambda state, k=key: self._config.__setitem__(k, state))
                 edit.stateChanged.connect(self.update)
             elif isinstance(edit, PySide.QtGui.QComboBox):
-                edit.currentIndexChanged.connect(lambda index, e=edit, k=key: self.self._config.__setitem__(k, e.itemText(index)))
+                edit.currentIndexChanged.connect(lambda index, e=edit, k=key: self._config.__setitem__(k, e.itemText(index)))
             else:
                 print(u'待处理的控件: {} {}'.format(type(edit), edit))
 
@@ -460,8 +460,6 @@ def active_pid(pid):
 if __name__ == '__main__':
     try:
         main()
-    except SystemExit as e:
-        exit(e)
     except SingleInstanceException as e:
         active_pid(Config()['PID'])
     except:
