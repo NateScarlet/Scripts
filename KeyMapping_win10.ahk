@@ -41,13 +41,15 @@ Run, Krita
 return
 
 $#3:: 
-IfWinExist, ahk_exe Typora.exe 
+IfWinNotExist, ahk_exe notepad++.exe
 {
-	GroupAdd, G_TYPORA, ahk_exe Typora.exe
-	GroupActivate, G_TYPORA
-}
-else
     Run, "%USERPROFILE%\Shortcut\txt.lnk"
+}
+
+GroupAdd, G_TXT, ahk_exe notepad++.exe
+GroupAdd, G_TXT, ahk_exe Typora.exe
+GroupActivate, G_TXT
+
 return
 
 $#f:: 
@@ -81,5 +83,5 @@ else
 }
 return
 
-LButton::Send, % "{" (A_TimeSincePriorHotkey > 50 ? A_ThisHotkey " Down" : "") "}"
-LButton Up::Send, {%A_ThisHotkey%}
+; LButton::Send, % "{" (A_TimeSincePriorHotkey > 50 ? A_ThisHotkey " Down" : "") "}"
+; LButton Up::Send, {%A_ThisHotkey%}
