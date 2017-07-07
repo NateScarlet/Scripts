@@ -44,14 +44,15 @@ def add_menu():
             _cmd = 'import wlf.scenetools;wlf.scenetools.call_from_nuke()'
         m.addCommand('色板\\/成果上传', _cmd)
 
-    def _nukecgtw(menu):
+    def _cgtw(menu):
 
         m = menu.addMenu('CGTeamWork', icon='cgteamwork.png')
-        m.addCommand('设置工程', "wlf.nukecgtw.CGTeamWork.ask_database()")
-        m.addCommand('添加note', "wlf.nukecgtw.Shot().ask_add_note()")
-        m.addCommand('上传nk文件', "wlf.nukecgtw.Shot().upload_nk_file()")
-        m.addCommand('上传单帧', "wlf.nukecgtw.Shot().upload_image()")
-        m.addCommand("批量下载", r'nukescripts.start(r"\\SERVER\scripts\NukePlugins\CGTeamWork工具\nukecgtw批量下载.bat")')
+        # m.addCommand('设置工程', "wlf.cgtw.CGTeamWork.ask_database()")
+        m.addCommand('添加note', "wlf.cgtw.Shot().ask_add_note()")
+        # m.addCommand('上传nk文件', "wlf.cgtw.Shot().upload_nk_file()")
+        # m.addCommand('上传单帧', "wlf.cgtw.Shot().upload_image()")
+        m.addCommand('提交检查', "wlf.cgtw.Shot().sumbit_all()")
+        m.addCommand("批量下载", 'nukescripts.start("file://SERVER/scripts/NukePlugins/CGTeamWork工具/CGTW批量下载.bat")')
 
     def _create_node_menu():
         _plugin_path = '../../../plugins'
@@ -66,7 +67,7 @@ def add_menu():
 
     _edit(_menubar)
     _comp(_menubar)
-    _nukecgtw(_menubar)
+    _cgtw(_menubar)
     _create_node_menu()
     
 
