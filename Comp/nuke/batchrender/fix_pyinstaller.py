@@ -2,6 +2,8 @@
 
 import os
 import sys
+import multiprocessing
+multiprocessing.freeze_support()
 
 # Module multiprocessing is organized differently in Python 3.4+
 try:

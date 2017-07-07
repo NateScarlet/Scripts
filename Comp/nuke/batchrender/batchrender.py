@@ -1,5 +1,7 @@
 # -*- coding=UTF-8 -*-
-
+"""
+GUI Batchrender for nuke.
+"""
 import os
 import sys
 import re
@@ -17,25 +19,28 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
 from ui_mainwindow import Ui_MainWindow
 
-VERSION = 0.31
+VERSION = '0.3.5'
 SYS_CODEC = locale.getdefaultlocale()[1]
 TIME = datetime.datetime.now().strftime('%y%m%d_%H%M')
 EXE_PATH = os.path.join(os.path.dirname(__file__), 'batchrender.exe')
 
 class Config(dict):
+    """Config file as dict that automatic write and read json file."""
+
     default = {
-                'NUKE': r'C:\Program Files\Nuke10.0v4\Nuke10.0.exe', 
-                'DIR': r'E:\batchrender', 
-                'PROXY': 0, 
-                'LOW_PRIORITY': 2, 
-                'CONTINUE': 2, 
-                'HIBER': 0, 
-                'PID': None,
-             }
+        'NUKE': r'C:\Program Files\Nuke10.0v4\Nuke10.0.exe', 
+        'DIR': r'E:\batchrender', 
+        'PROXY': 0, 
+        'LOW_PRIORITY': 2, 
+        'CONTINUE': 2, 
+        'HIBER': 0, 
+        'PID': None,
+    }
     path = os.path.expanduser('~/.nuke/.batchrender.json')
     instance = None
 
     def __new__(cls):
+        # Singleton
         if not cls.instance:
             cls.instance = super(Config, cls).__new__(cls)
         return cls.instance
@@ -61,15 +66,18 @@ class Config(dict):
                 self.update(dict(json.load(f)))
 
     def change_dir(self, dir):
-        os.chdir(dir)
+        try:
+            os.chdir(dir)
+        except:
+            print(sys.exc_info()[2])
         print(u'工作目录改为: {}'.format(os.getcwd()))
 
 class SingleInstanceException(Exception):
     def __str__(self):
         return u'已经有另一个实例在运行了'
 
-
 class SingleInstance(object):
+    """Check if another instance runing, Raise SingleInstanceException."""
     def __init__(self):
         PID = Config()['PID']
         if isinstance(PID, int) and self.is_pid_exists(PID):
@@ -83,6 +91,7 @@ class SingleInstance(object):
             return '"{}"'.format(pid) in _stdout
 
 class Logger(logging.Logger):
+    #TODO
     instance = None
 
     def __new__(cls):
@@ -91,6 +100,7 @@ class Logger(logging.Logger):
         return cls.instance
 
 class BatchRender(multiprocessing.Process):
+    """Main render process."""
     LOG_FILENAME = u'Nuke批渲染.log'
     LOG_LEVEL = logging.DEBUG
     lock = multiprocessing.Lock()
@@ -285,6 +295,7 @@ def hiber():
     call(['SHUTDOWN', '/h'])
 
 class Files(list):
+    """Files that need to be render."""
     instance = None
 
     def __new__(cls):
@@ -345,6 +356,7 @@ class Files(list):
         return unicode(locked_file, SYS_CODEC)
     
 class MainWindow(QMainWindow, Ui_MainWindow, SingleInstance):
+    """Main GUI window."""
 
     def __init__(self, parent=None):
         def _actions():
@@ -379,7 +391,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, SingleInstance):
             self.continueCheck: 'CONTINUE',
             self.hiberCheck: 'HIBER',
         }
-        os.chdir(self._config['DIR'])
         self.update()
         self.update_threading()
         self.versionLabel.setText('v{}'.format(VERSION))
@@ -452,7 +463,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, SingleInstance):
     
     def closeEvent(self, event):
         if self._proc and self._proc.is_alive():
-            _ok = QtGui.QMessageBox.question(
+            ok = QtGui.QMessageBox.question(
                 self,
                 u'正在渲染中',
                 u"停止渲染并退出?",
@@ -460,7 +471,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, SingleInstance):
                 QtGui.QMessageBox.No,
                 QtGui.QMessageBox.No
             )
-            if _ok == QtGui.QMessageBox.Yes:
+            if ok == QtGui.QMessageBox.Yes:
                 self._proc.stop()
                 event.accept()
             else:
@@ -470,18 +481,27 @@ class MainWindow(QMainWindow, Ui_MainWindow, SingleInstance):
 
 
 def main():
-    BatchRender()
-    multiprocessing.freeze_support()
+    import fix_pyinstaller
     reload(sys)
     sys.setdefaultencoding('UTF-8')
-    call(u'CHCP 936 & TITLE BatchRender{} & CLS'.format(VERSION), shell=True)
+    call(u'CHCP 936 & TITLE batchrender.console & CLS', shell=True)
+    try:
+        os.chdir(Config()['DIR'])
+    except:
+        print(sys.exc_info())
     app = QApplication(sys.argv)
     frame = MainWindow()
     frame.show()
     sys.exit(app.exec_())
 
 def pause():
-    call('PAUSE', shell=True)
+    # call(u'PAUSE', shell=True)
+    print(u'')
+    for i in range(5)[::-1]:
+        sys.stdout.write(u'\r{:2d}'.format(i+1))
+        time.sleep(1)
+    sys.stdout.write(u'\r          ')
+    print(u'')
 
 if __name__ == '__main__':
     try:
@@ -491,6 +511,8 @@ if __name__ == '__main__':
     except SingleInstanceException as e:
         print(u'激活已经打开的实例')
         Popen('"{}" "{}"'.format(os.path.join(__file__, '../active_pid.exe'), format(Config()['PID'])))
+        pause()
     except:
         import traceback
         traceback.print_exc()
+        pause()
