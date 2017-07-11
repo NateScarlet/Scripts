@@ -1,10 +1,14 @@
 # -*- coding: UTF-8 -*-
+"""Setup UI."""
+
 import os
 
 import nuke
 from autolabel import autolabel
 
+
 def add_menu():
+    """Add menu for commands and nodes."""
 
     def _edit(menu):
         m = menu.addMenu("编辑")
@@ -39,8 +43,9 @@ def add_menu():
     def _comp(menu):
         m = menu.addMenu('合成')
         m.addCommand('吾立方自动合成', "wlf.Comp()", icon='autocomp.png')
-        m.addCommand('吾立方批量合成', "wlf.Comp.show_dialog()", icon='autocomp.png')
-        m.addCommand('arnold预合成', "wlf.comp.precomp_arnold()",
+        m.addCommand('吾立方批量合成', "wlf.Comp.show_dialog()",
+                     icon='autocomp.png')
+        m.addCommand('arnold预合成', "wlf.precomp.arnold()",
                      icon='autocomp.png')
         _path = os.path.abspath(os.path.join(__file__, '../scenetools.exe'))
         if os.path.isfile(_path):
@@ -53,13 +58,14 @@ def add_menu():
     def _cgtw(menu):
 
         m = menu.addMenu('CGTeamWork', icon='cgteamwork.png')
-        # m.addCommand('设置工程', "wlf.cgtw.CGTeamWork.ask_database()")
-        m.addCommand('添加note', "wlf.cgtw.Shot().ask_add_note()")
-        # m.addCommand('上传nk文件', "wlf.cgtw.Shot().upload_nk_file()")
-        # m.addCommand('上传单帧', "wlf.cgtw.Shot().upload_image()")
-        m.addCommand('提交检查', "wlf.cgtw.Shot().sumbit_all()")
+        # m.addCommand('设置工程', "wlf.cgtwn.CGTeamWork.ask_database()")
+        m.addCommand('添加note', "wlf.cgtwn.Shot().ask_add_note()")
+        # m.addCommand('上传nk文件', "wlf.cgtwn.Shot().upload_nk_file()")
+        # m.addCommand('上传单帧', "wlf.cgtwn.Shot().upload_image()")
+        m.addCommand('提交检查', "wlf.cgtwn.Shot().sumbit_all()")
         m.addCommand(
-            "批量下载", 'nukescripts.start("file://SERVER/scripts/NukePlugins/CGTeamWork工具/CGTW批量下载.bat")')
+            "批量下载",
+            'nukescripts.start("file://SERVER/scripts/NukePlugins/CGTeamWork工具/CGTW批量下载.bat")')
 
     def _create_node_menu():
         _plugin_path = '../../../plugins'
@@ -81,12 +87,15 @@ def add_menu():
 
 
 def create_menu_by_dir(parent, dir_):
+    """Create menus by given folder structrue."""
+
     if not os.path.isdir(dir_):
         return False
     _dir = os.path.abspath(dir_)
 
-    def _order(s): return ('_0_' if os.path.isdir(
-        os.path.join(_dir, s)) else '_1_') + s
+    def _order(name):
+        return ('_0_' if os.path.isdir(os.path.join(_dir, name)) else '_1_') + name
+
     _listdir = os.listdir(_dir)
     _listdir.sort(key=_order)
     for i in _listdir:
@@ -110,38 +119,58 @@ def custom_autolabel(enable_text_style=True):
     '''
     _class = nuke.thisNode().Class()
 
-    def _add_to_autolabel(s):
-        if not isinstance(s, str):
+    def _add_to_autolabel(label):
+        if not isinstance(label, str):
             return
         _ret = autolabel().split('\n')
-        _ret.insert(1, s)
+        _ret.insert(1, label)
         _ret = '\n'.join(_ret).rstrip('\n')
         return _ret
 
     if _class == 'Keyer':
-        s = '输入通道 : ' + nuke.value('this.input')
+        label = '输入通道 : ' + nuke.value('this.input')
     elif _class == 'Read':
-        df = nuke.value('this.dropframes', '')
-        if df:
+        dropframes = nuke.value('this.dropframes', '')
+        if dropframes:
             if enable_text_style:
-                df = '\n<span style=\"color:red\">缺帧:{}</span>'.format(df)
+                dropframes = '\n<span style=\"color:red\">缺帧:{}</span>'.format(
+                    dropframes)
             else:
-                df = '\n缺帧:' + df
+                dropframes = '\n缺帧:' + dropframes
         if enable_text_style:
-            s = '<span style=\"color:#548DD4;font-family:微软雅黑\"><b> 帧范围 :</b></span> '\
-                '<span style=\"color:red\">' + nuke.value('this.first') + ' - ' + nuke.value('this.last') + '</span>'\
-                + df
+            label = '<span style=\"color:#548DD4;font-family:微软雅黑\">'\
+                '<b> 帧范围 :</b></span> '\
+                '<span style=\"color:red\">{} - {}</span>{}'
+            label = label.format(nuke.value('this.first'),
+                                 nuke.value('this.last'), dropframes)
+
         else:
-            s = '帧范围 :' + nuke.value('this.first') + \
+            label = '帧范围 :' + nuke.value('this.first') + \
                 ' - ' + nuke.value('this.last')
     elif _class == 'Shuffle':
-        ch = dict.fromkeys(['in', 'in2', 'out', 'out2'], '')
-        for i in ch.keys():
-            v = nuke.value('this.' + i)
-            if v != 'none':
-                ch[i] = v + ' '
-        s = (ch['in'] + ch['in2'] + '-> ' + ch['out'] + ch['out2']).rstrip(' ')
+        channels = dict.fromkeys(['in', 'in2', 'out', 'out2'], '')
+        for i in channels.keys():
+            channel_value = nuke.value('this.' + i)
+            if channel_value != 'none':
+                channels[i] = channel_value + ' '
+        label = (channels['in'] + channels['in2'] + '-> ' +
+                 channels['out'] + channels['out2']).rstrip(' ')
     else:
         return
 
-    return _add_to_autolabel(s)
+    return _add_to_autolabel(label)
+
+
+def panel_show(keyword):
+    """Show control panel for matched nodes."""
+
+    def _node_name(node):
+        return node.name()
+    list_ = []
+    for n in nuke.allNodes():
+        name = n.name()
+        if keyword in name and nuke.numvalue('{}.disable'.format(name), 0):
+            list_.append(n)
+    list_.sort(key=_node_name, reverse=True)
+    for n in list_:
+        n.showControlPanel()

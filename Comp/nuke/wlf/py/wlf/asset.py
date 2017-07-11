@@ -1,9 +1,11 @@
 # -*- coding: UTF-8 -*-
+"""Deal with assets and files."""
 
 import locale
 import os
 import re
 import threading
+import time
 from subprocess import PIPE, STDOUT, Popen
 
 import nuke
@@ -13,8 +15,10 @@ SYS_CODEC = locale.getdefaultlocale()[1]
 
 
 class DropFrameCheck(threading.Thread):
+    """Check drop frames and record on the node."""
+
     knob_name = 'dropframes'
-    lock = threading.Lock()
+    # lock = threading.Lock()
     showed_files = []
 
     def __init__(self, n, prefix=('_',)):
@@ -27,30 +31,36 @@ class DropFrameCheck(threading.Thread):
     def run(self):
         if self._node['disable'].value():
             return
-        self.lock.acquire()
-        self.record()
-        self.lock.release()
+        # self.lock.acquire()
+        while self._node:
+            self.record()
+            time.sleep(5)
+        # self.lock.release()
 
     def dropframe_ranges(self):
+        """Return nuke framerange instance of dropframes."""
+
         _ret = nuke.FrameRanges()
         if self._node.name().startswith(self._prefix):
             return _ret
 
         _filename = os.path.join(nuke.value(
             'root.project_directory', ''), nuke.filename(self._node))
-        if self.expand_frame(_filename, 1) == _filename:
+        if expand_frame(_filename, 1) == _filename:
             return _ret
 
         _read_framerange = xrange(
             self._node.firstFrame(), self._node.lastFrame() + 1)
         for f in _read_framerange:
-            _file = self.expand_frame(_filename, f)
+            _file = expand_frame(_filename, f)
             if not os.path.isfile(_file.decode('UTF-8').encode(SYS_CODEC)):
                 _ret.add([f])
         _ret.compact()
         return _ret
 
     def setup_node(self):
+        """Add knob if needed."""
+
         def _add_knob():
             k = nuke.String_Knob(self.knob_name, '缺帧')
             k.setEnabled(False)
@@ -60,6 +70,8 @@ class DropFrameCheck(threading.Thread):
             nuke.executeInMainThreadWithResult(_add_knob)
 
     def record(self):
+        """Record dropframes on knob for futher use."""
+
         _dropframes = str(self.dropframe_ranges())
 
         def _set_knob():
@@ -71,29 +83,23 @@ class DropFrameCheck(threading.Thread):
             self.setup_node()
             nuke.executeInMainThreadWithResult(_set_knob)
 
-    def expand_frame(self, filename, frame):
-        '''
-        Return a frame mark expaned version of filename, with given frame
-        '''
-        pat = re.compile(r'%0?\d*d')
-
-        def formated_frame(matchobj): return matchobj.group(0) % frame
-        return re.sub(pat, formated_frame, nukescripts.frame.replaceHashes(filename))
-
     @classmethod
-    def show_dialog(self, show_all=False):
+    def show_dialog(cls, show_all=False):
+        """Show all dropframes to user."""
+
         _message = ''
         for n in nuke.allNodes('Read'):
             _filename = nuke.filename(n)
             if not show_all:
-                if _filename in self.showed_files:
+                if _filename in cls.showed_files:
                     continue
             _dropframes = nuke.value(
-                '{}.{}'.format(n.name(), self.knob_name), '')
+                '{}.{}'.format(n.name(), cls.knob_name), '')
             if _dropframes:
-                _message += '<tr><td>{}</td><td><span style=\"color:red\">{}</span></td></tr>'.format(
-                    _filename, _dropframes)
-                self.showed_files.append(_filename)
+                _message += '<tr><td>{}</td><td>'\
+                    '<span style=\"color:red\">{}</span></td></tr>'.format(
+                        _filename, _dropframes)
+                cls.showed_files.append(_filename)
 
         if _message:
             _message = '<style>td{padding:8px;}</style>'\
@@ -104,9 +110,20 @@ class DropFrameCheck(threading.Thread):
             nuke.message(_message)
 
 
+def expand_frame(filename, frame):
+    '''
+    Return a frame mark expaned version of filename, with given frame
+    '''
+    pat = re.compile(r'%0?\d*d')
+
+    def _formated_frame(matchobj):
+        return matchobj.group(0) % frame
+    return re.sub(pat, _formated_frame, nukescripts.frame.replaceHashes(filename))
+
+
 def sent_to_dir(dir_):
     """Send current working file to server."""
-    
+
     if not nuke.value('root.name'):
         return False
 
@@ -122,6 +139,8 @@ def sent_to_dir(dir_):
 
 
 def main():
+    """For test script effect."""
+
     n = nuke.toNode('Read3')
     result = DropFrameCheck(n).dropframe_ranges()
     print(result)

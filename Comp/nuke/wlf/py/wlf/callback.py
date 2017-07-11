@@ -12,6 +12,7 @@ from . import asset, cgtwn, csheet, edit, ui
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
+
 def init():
     """Add callback for nuke init phase."""
 
@@ -20,14 +21,19 @@ def init():
 
 def menu():
     """Add callback for nuke menu phase."""
+    def _dropframe():
+        nuke.addOnUserCreate(lambda: asset.DropFrameCheck(
+            nuke.thisNode()).start(), nodeClass='Read')
+        nuke.addOnScriptSave(asset.DropFrameCheck.show_dialog)
 
     add_dropdata_callback()
     nuke.addOnUserCreate(_gizmo_to_group_on_create)
-    nuke.addOnCreate(lambda: edit.randomGlColor(nuke.thisNode()))
+    nuke.addOnUserCreate(lambda: edit.set_random_glcolor(nuke.thisNode()))
     nuke.addUpdateUI(_gizmo_to_group_update_ui)
     nuke.addUpdateUI(_autoplace)
-    nuke.addOnScriptSave(edit.enableRSMB, kwargs={'prefix': '_'})
+    nuke.addOnScriptSave(edit.enable_rsmb, kwargs={'prefix': '_'})
     nuke.addOnScriptSave(_check_project)
+    nuke.addOnScriptSave(_check_fps)
     nuke.addOnScriptSave(_lock_connections)
     nuke.addOnScriptSave(_jump_frame)
     nuke.addOnScriptClose(_render_jpg)
@@ -74,12 +80,6 @@ def _cgtwn():
     nuke.addOnScriptSave(_nk_file)
 
 
-def _dropframe():
-    nuke.addOnUserCreate(lambda: asset.DropFrameCheck(
-        nuke.thisNode()).start(), nodeClass='Read')
-    nuke.addOnScriptSave(asset.DropFrameCheck.show_dialog)
-
-
 @abort_modified
 def _create_csheet():
     if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
@@ -90,6 +90,13 @@ def _create_csheet():
 def _check_project():
     if not nuke.value('root.project_directory'):
         nuke.message('工程目录未设置')
+
+
+def _check_fps():
+    default_fps = 30
+    fps = nuke.numvalue('root.fps')
+    if fps != default_fps:
+        nuke.message('当前fps: {}, 默认值: {}'.format(fps, default_fps))
 
 
 def _lock_connections():

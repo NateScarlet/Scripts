@@ -1,4 +1,5 @@
 # -*- coding=UTF-8 -*-
+"""Create contact sheet from all shot images."""
 
 import os
 import sys
@@ -14,29 +15,44 @@ SYS_CODEC = locale.getdefaultlocale()[1]
 
 
 class ContactSheet(object):
+    """Create contactsheet in new script."""
+
     shot_width, shot_height = 1920, 1080
     contactsheet_shot_width, contactsheet_shot_height = 1920, 1160
 
     def __init__(self):
-        self.read_config()
-        nuke.scriptClear()
-        nuke.Root()['project_directory'].setValue(
-            os.getcwd().replace('\\', '/'))
-        nuke.knob('root.format', '1920 1080')
-        self.create_nodes()
-        self.output()
+        try:
+            self.read_config()
+        except IOError:
+            print('没有.projectsettings.json, 不会生成色板')
+        else:
+            nuke.scriptClear()
+            nuke.Root()['project_directory'].setValue(
+                os.getcwd().replace('\\', '/'))
+            nuke.knob('root.format', '1920 1080')
+            self.create_nodes()
+            self.output()
 
     def read_config(self):
+        """Set instance config from disk."""
+
         with open(self.json_path()) as f:
             self._config = json.load(f)
 
-    def json_path(self):
+    @staticmethod
+    def json_path():
+        """Return current json config path."""
+
         if __name__ == '__main__':
-            return sys.argv[1]
+            result = sys.argv[1]
         else:
-            return os.path.join(os.path.dirname(nuke.value('root.name')), '.projectsettings.json')
+            result = os.path.join(os.path.dirname(
+                nuke.value('root.name')), '.projectsettings.json')
+        return result
 
     def create_nodes(self):
+        """Create node tree for rendering contactsheet."""
+
         nuke.addFormat('{} {} contactsheet_shot'.format(
             self.contactsheet_shot_width, self.contactsheet_shot_height))
         _nodes = []
@@ -119,11 +135,15 @@ class ContactSheet(object):
         self._write_node = n
 
     def output(self):
+        """Write contactsheet to disk."""
+
         # nuke.scriptSave('E:\\temp.nk')
         print(u'输出色板:\t\t{}'.format(self._config['csheet']))
         nuke.render(self._write_node, 1, 1)
 
     def image_list(self):
+        """Return all image in csheet_footagedir."""
+
         _dir = self._config['csheet_footagedir']
         _images = list(os.path.join(_dir, i.decode(SYS_CODEC))
                        for i in os.listdir(_dir))
@@ -179,12 +199,16 @@ class ContactSheetThread(threading.Thread, ContactSheet):
 
 
 class FootageError(Exception):
+    """Indicate no footage available."""
+
     def __init__(self):
         super(FootageError, self).__init__()
         print(u'\n**错误** - 在images文件夹中没有可用图像\n')
 
 
 def main():
+    """Use for run as script."""
+
     reload(sys)
     sys.setdefaultencoding('UTF-8')
 
