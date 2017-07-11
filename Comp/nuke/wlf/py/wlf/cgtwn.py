@@ -7,24 +7,15 @@ import locale
 import os
 import re
 import shutil
-import sys
 
-try:
-    import cgtw
-except ImportError:
-    sys.path.append(r"C:\cgteamwork\bin\base")
-    import cgtw
 import nuke
-
+from . import cgtw
 
 VERSION = '0.2.1'
 SYS_CODEC = locale.getdefaultlocale()[1]
-reload(sys)
-sys.setdefaultencoding('UTF-8')
 
 
 def copy(src, dst):
-    """Copy src to dst."""
     dst_dir = os.path.dirname(dst)
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
@@ -35,43 +26,31 @@ def copy(src, dst):
 
 
 class CGTeamWork(object):
-    """Base class for cgtw action."""
-
     database = u'proj_qqfc_2017'
 
     def __init__(self):
         self._tw = cgtw.tw()
 
     def is_login(self):
-        """Return if logged in."""
-
         ret = self._tw.sys().get_socket_status()
         return ret
 
     def check_login(self):
-        """ Raise LoginError if not login """
-
         if not self.is_login():
             raise LoginError
 
     @classmethod
     def set_database(cls, database):
-        """Set class.database attribute."""
-
         cls.database = database
 
     @classmethod
     def ask_database(cls):
-        """Show a dialog ask user database then set."""
-
         database = nuke.getInput(u'工程英文名称'.encode('UTF-8'), cls.database)
         if database:
             cls.set_database(database)
 
 
 class Shot(CGTeamWork):
-    """Methods for shot action."""
-
     pipeline = u'合成'
     pipeline_name = u'comp'
     module = u'shot_task'
@@ -84,15 +63,14 @@ class Shot(CGTeamWork):
         super(Shot, self).__init__()
 
         self._task_module = self._tw.task_module(self.database, self.module)
+
+        self._name = self.get_name()
         self._id = self.get_id()
         self._path = self.get_path()
 
         self._task_module.init_with_id(self._id)
 
-    @property
-    def name(self):
-        """The shot.shot name for cgtw."""
-
+    def get_name(self):
         ret = nuke.value('root.name', '')
         ret = os.path.basename(ret)
         ret = os.path.splitext(ret)[0]
@@ -103,10 +81,10 @@ class Shot(CGTeamWork):
         self.check_login()
 
         id_list = self._task_module.get_with_filter(
-            [], [['shot.shot', '=', self.name], ['shot_task.pipeline', '=', self.pipeline]])
+            [], [['shot.shot', '=', self._name], ['shot_task.pipeline', '=', self.pipeline]])
         if not id_list:
             raise IDError(self.database, self.module,
-                          self.pipeline, self.name)
+                          self.pipeline, self._name)
         elif len(id_list) is not 1:
             raise IDError(u'多个符合的条目'.encode('UTF-8'), id_list)
         ret = id_list[0]['id']

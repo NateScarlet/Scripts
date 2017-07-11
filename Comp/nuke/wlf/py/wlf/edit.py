@@ -39,14 +39,18 @@ def swap_knob_value(knob_a, knob_b):
 def panel_show(keyword):
     def _node_name(node):
         return node.name()
-    list_ = []
-    for n in nuke.allNodes():
-        name = n.name()
-        if keyword in name and nuke.numvalue('{}.disable'.format(name), 0):
-            list_.append(n)
-    list_.sort(key=_node_name, reverse=True)
-    for n in list_:
-        n.showControlPanel()
+    list1 = []
+    for i in nuke.allNodes():
+        a = 0
+        try:
+            a = not i['disable'].value()
+        except:
+            pass
+        if keyword in i.name() and a:
+            list1.append(i)
+    list1.sort(key=_node_name, reverse=True)
+    for i in list1:
+        i.showControlPanel()
 
 
 def update_toolsets(toolset_name, path):
@@ -68,72 +72,69 @@ def channels_rename(prefix='PuzzleMatte'):
     n = nuke.selectedNode()
 
     # Record viewer status
-    existed_viewer = nuke.activeViewer()
+    n_vw = nuke.activeViewer()
     _raw = dict.fromkeys(['has_viewer', 'viewer_input', 'viewer_channels'])
     _raw_viewer = {}
-    if existed_viewer:
-        existed_viewer = existed_viewer.node()
+    if n_vw:
+        n_vwn = n_vw.node()
         _raw['has_viewer'] = True
-        _raw['viewer_input'] = existed_viewer.input(0)
+        _raw['viewer_input'] = n_vwn.input(0)
         if not _raw['viewer_input']:
-            existed_viewer.setInput(0, n)
-        for knob in existed_viewer.knobs():
-            _raw_viewer[knob] = existed_viewer[knob].value()
+            n_vwn.setInput(0, n)
+        for knob in n_vwn.knobs():
+            _raw_viewer[knob] = n_vwn[knob].value()
     else:
         _raw['has_viewer'] = False
-        existed_viewer = nuke.createNode('Viewer')
-        existed_viewer.setInput(0, n)
+        n_vwn = nuke.createNode('Viewer')
+        n_vwn.setInput(0, n)
 
     # Set viewer
     nuke.activeViewer().activateInput(0)
-    layer_contactsheet = nuke.nodes.LayerContactSheet(showLayerNames=1)
-    layer_contactsheet.setInput(0, n)
-    existed_viewer.setInput(0, layer_contactsheet)
-    existed_viewer['channels'].setValue('rgba')
+    n_lcs = nuke.nodes.LayerContactSheet(showLayerNames=1)
+    n_lcs.setInput(0, n)
+    n_vwn.setInput(0, n_lcs)
+    n_vwn['channels'].setValue('rgba')
 
     # Prepare dictionary
-    dict_ = {}
+    _D = {}
     for i in n.channels():
         if i.startswith(prefix):
-            dict_[i] = ''
-    channel_names = dict_.keys()
+            _D[i] = ''
+    _L = _D.keys()
 
     # Sort object on rgba order
-    def _rgba_order(s):
-        return s.replace(prefix + '.', '!.').replace('.red',
-                                                     '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
-    channel_names.sort(key=_rgba_order)
+    def rgbaOrder(s): return s.replace(prefix + '.', '!.').replace('.red',
+                                                                   '.0_').replace('.green', '.1_').replace('.blue', '.2_').replace('.alpha', '.3_')
+    _L.sort(key=rgbaOrder)
 
     # Set text style
-    def _text_stylize(s):
-        return s.replace('.red', '.<span style=\"color:#FF4444\">red</span>').replace('.green',
-                                                                                      '.<span style=\"color:#44FF44\">green</span>').replace('.blue', '.<span style=\"color:#4444FF\">blue</span>')
-    stylized_channel_names = map(_text_stylize, channel_names)
+    def _text_stylize(s): return s.replace('.red', '.<span style=\"color:#FF4444\">red</span>').replace('.green',
+                                                                                                        '.<span style=\"color:#44FF44\">green</span>').replace('.blue', '.<span style=\"color:#4444FF\">blue</span>')
+    _L_stylized = map(_text_stylize, _L)
 
     # Set panel from dictionary
     p = nuke.Panel('MaskShuffle')
-    for i in range(len(channel_names)):
-        p.addSingleLineInput(
-            stylized_channel_names[i], dict_[channel_names[i]])
+    for i in range(len(_L)):
+        p.addSingleLineInput(_L_stylized[i], _D[_L[i]])
 
     # Show panel
     p.show()
-    nuke.delete(layer_contactsheet)
+    nuke.delete(n_lcs)
 
     # Recover Viewer Status
     if _raw['has_viewer']:
-        existed_viewer.setInput(0, _raw['viewer_input'])
-        for knob in existed_viewer.knobs():
+        n_vwn.setInput(0, _raw['viewer_input'])
+        for knob in n_vwn.knobs():
             try:
-                existed_viewer[knob].setValue(_raw_viewer[knob])
-            except TypeError:
+                n_vwn[knob].setValue(_raw_viewer[knob])
+            except:
                 pass
     else:
-        nuke.delete(existed_viewer)
+        nuke.delete(n_vwn)
     n.selectOnly()
 
     # Create copy
-    for i in range(len(channel_names)):
+    for i in range(len(_L)):
         # Create copy node every 4 channels
         count = i % 4
         if count == 0:
@@ -144,14 +145,14 @@ def channels_rename(prefix='PuzzleMatte'):
             elif c.input(0):
                 c.setInput(1, c.input(0))
         # Prepare 'to' channel name
-        _input = p.value(stylized_channel_names[i])
+        _input = p.value(_L_stylized[i])
         if _input:
             to = 'mask_extra.' + _input.replace(' ', '_').replace('.', '_')
             nuke.Layer('mask_extra', [to])
         else:
             to = 'none'
         # Set node
-        c['from' + str(count)].setValue(channel_names[i])
+        c['from' + str(count)].setValue(_L[i])
         c['to' + str(count)].setValue(to)
         # Delete empty copy node
         if count == 3:
@@ -244,8 +245,9 @@ def getMinMax(srcNode, channel='depth.Z'):
 def randomGlColor(n):
     if 'gl_color' in list(i.name() for i in n.allKnobs()) and not n['gl_color'].value() and not n.name().startswith('_'):
         color = colorsys.hsv_to_rgb(random.random(), 0.8, 1)
-        color = tuple(int(i * 255) for i in color)
-        n['gl_color'].setValue(color[0] << 24 | color[1] << 16 | color[2] << 8)
+        color = tuple(hex(int(i * 255))[2:] for i in color)
+        n['gl_color'].setValue(
+            eval('0x{}{}{}{}'.format(color[0], color[1], color[2], '00')))
     else:
         return False
 
@@ -259,15 +261,15 @@ def enableRSMB(prefix='_'):
 def fix_error_read():
     while True:
         _created_node = []
-        for i in (i for i in nuke.allNodes('Read') if i.hasError()):
+        for i in filter(lambda x: x.hasError(), nuke.allNodes('Read')):
             _filename = nuke.filename(i)
             if os.path.basename(_filename).lower() == 'thumbs.db':
                 nuke.delete(i)
             if os.path.isdir(_filename):
                 _filename_list = nuke.getFileNameList(_filename)
-                for f in _filename_list:
+                for file in _filename_list:
                     _read = nuke.createNode(
-                        'Read', 'file "{}"'.format('/'.join([_filename, f])))
+                        'Read', 'file "{}"'.format('/'.join([_filename, file])))
                     _created_node.append(_read)
                 nuke.delete(i)
         if not _created_node:
@@ -278,8 +280,9 @@ def delete_unused_nodes(message=False):
     def _is_used(n):
         if n.name().startswith('_') or n.Class() in ['BackdropNode', 'Read', 'Write', 'Viewer', 'GenerateLUT']:
             return True
-        nodes_dependent_this = (n for n in n.dependent() if n.Class() not in [
-                                ''] or n.name().startswith('_'))
+
+        nodes_dependent_this = filter(lambda n: n.Class() not in [
+                                      ''] or n.name().startswith('_'), n.dependent())
         return bool(nodes_dependent_this)
 
     c = 0
@@ -338,16 +341,16 @@ def replace_sequence():
                 i['last'].setValue(last)
                 i['origlast'].setValue(last)
 
-        n = nuke.toNode('_Write')
-        if n:
+        _Write = nuke.toNode('_Write')
+        if _Write:
             if flag_frame:
                 flag_frame = int(flag_frame)
-                n['custom_frame'].setValue(flag_frame)
+                _Write['custom_frame'].setValue(flag_frame)
                 nuke.frame(flag_frame)
-            n['use_custom_frame'].setValue(True)
+            _Write['use_custom_frame'].setValue(True)
 
 
-def set_project_root_by_name(path='E:'):
+def setProjectRootByName(path='E:'):
     nuke.root()['project_directory'].setValue(os.path.dirname(
         path + '/' + os.path.basename(nuke.scriptName()).split('.')[0].replace('_', '/')))
 
@@ -357,28 +360,29 @@ def split_layers(node):
     Splits each and every layer from the selected node into their own pipes
     '''
 
-    channels = node.channels()
+    ch = node.channels()
 
     layers = []
     valid_channels = ['red', 'green', 'blue', 'alpha', 'black', 'white']
 
-    for channel in channels:
-        layer_name = channel.split('.')[0]
-        layer = []
-        for i in channels:
-            if i.startswith(layer_name):
-                layer.append(i)
-        while len(layer) < 4:
-            layer.append(layer_name + ".white")
-        if layer not in layers:
-            layers.append(layer)
+    for each in ch:
+        layer_name = each.split('.')[0]
+        tmp = []
+        for channel in ch:
+            if channel.startswith(layer_name) == True:
+                tmp.append(channel)
+        if len(tmp) < 4:
+            for i in range(4 - len(tmp)):
+                tmp.append(layer_name + ".white")
+        if tmp not in layers:
+            layers.append(tmp)
 
-    for i in layers:
-        layer = i[0].split('.')[0]
-        ch1 = i[0].split('.')[1]
-        ch2 = i[1].split('.')[1]
-        ch3 = i[2].split('.')[1]
-        ch4 = i[3].split('.')[1]
+    for each in layers:
+        layer = each[0].split('.')[0]
+        ch1 = each[0].split('.')[1]
+        ch2 = each[1].split('.')[1]
+        ch3 = each[2].split('.')[1]
+        ch4 = each[3].split('.')[1]
 
         if ch1 not in valid_channels:
             ch1 = "red red"

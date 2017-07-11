@@ -12,7 +12,6 @@ from . import asset, cgtwn, csheet, edit, ui
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
-
 def init():
     """Add callback for nuke init phase."""
 
@@ -76,7 +75,7 @@ def _cgtwn():
 
 
 def _dropframe():
-    nuke.addOnCreate(lambda: asset.DropFrameCheck(
+    nuke.addOnUserCreate(lambda: asset.DropFrameCheck(
         nuke.thisNode()).start(), nodeClass='Read')
     nuke.addOnScriptSave(asset.DropFrameCheck.show_dialog)
 

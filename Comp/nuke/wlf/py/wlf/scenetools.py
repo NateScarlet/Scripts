@@ -11,12 +11,11 @@ from subprocess import call, Popen, PIPE
 from PySide import QtCore, QtGui
 from PySide.QtGui import QDialog, QApplication, QFileDialog
 
-from .ui_scenetools_dialog import Ui_Dialog
+from ui_scenetools_dialog import Ui_Dialog
 
 VERSION = 0.6
 
 SYS_CODEC = locale.getdefaultlocale()[1]
-
 
 def pause():
     # call(u'PAUSE', shell=True)
@@ -26,7 +25,6 @@ def pause():
         time.sleep(1)
     sys.stdout.write(u'\r          ')
     print(u'')
-
 
 class Config(dict):
     default = {
@@ -64,7 +62,6 @@ class Config(dict):
         return cls.instance
 
     def __init__(self):
-        super(Config, self).__init__()
         self.update(dict(self.default))
         self.read()
         try:
@@ -186,8 +183,8 @@ class Config(dict):
         _dest()
         _csheet()
 
-    def change_dir(self, dir_):
-        os.chdir(dir_)
+    def change_dir(self, dir):
+        os.chdir(dir)
         print(u'工作目录改为: {}'.format(os.getcwd()))
         self.read()
 
@@ -229,16 +226,13 @@ class SingleInstance(object):
 
 
 class Sync(object):
-    image_ignore = []
-    video_ignore = []
-
     def __init__(self):
         self._config = Config()
-        self.image_ignore = []
-        self.video_ignore = []
+        self._image_ignore = []
+        self._video_ignore = []
 
     def image_list(self):
-        self.image_ignore = []
+        self._image_ignore = []
         _dir = self._config['IMAGE_FNAME']
         if not os.path.isdir(_dir):
             raise ValueError
@@ -253,11 +247,11 @@ class Sync(object):
                 if not is_same(_src, _dst):
                     _ret.append(i)
                 else:
-                    self.image_ignore.append(i)
+                    self._image_ignore.append(i)
         return _ret
 
     def video_list(self):
-        self.video_ignore = []
+        self._video_ignore = []
         _dir = self._config['VIDEO_FNAME']
         if not os.path.isdir(_dir):
             raise ValueError
@@ -272,7 +266,7 @@ class Sync(object):
                 if not is_same(_src, _dst):
                     _ret.append(i)
                 else:
-                    self.video_ignore.append(i)
+                    self._video_ignore.append(i)
         return _ret
 
     def upload_videos(self):
@@ -290,7 +284,7 @@ class Sync(object):
             dst = video_dest
             copy(src, dst)
 
-    def download_videos(self):
+    def download_videos():
         pass
 
     def upload_images(self):
@@ -321,8 +315,8 @@ class Sync(object):
             if not os.path.isdir(dest):
                 os.mkdir(dest)
         else:
-            print(u'**错误** 色板上传文件夹不存在, 将不会上传。')
             return False
+            print(u'**错误** 色板上传文件夹不存在, 将不会上传。')
 
         copy(self._config['csheet'], dest)
 
@@ -499,11 +493,11 @@ class Dialog(QDialog, Ui_Dialog, SingleInstance):
                                 '# {}/'.format(self._config['IMAGE_FNAME'])
                             ]
                         _not_ignore += _image_list
-                        if self._sync.image_ignore:
+                        if self._sync._image_ignore:
                             _ignore += [
                                 '## {}/'.format(self._config['IMAGE_FNAME'])
                             ]
-                            _ignore += self._sync.image_ignore
+                            _ignore += self._sync._image_ignore
                     except ValueError:
                         _not_ignore += ([u'#单帧文件夹不存在'])
 
@@ -515,12 +509,12 @@ class Dialog(QDialog, Ui_Dialog, SingleInstance):
                                 '# {}/'.format(self._config['VIDEO_FNAME'])
                             ]
                         _not_ignore += _video_list
-                        _video_ignore = self._sync.video_ignore
-                        if self._sync.video_ignore:
+                        _video_ignore = self._sync._video_ignore
+                        if self._sync._video_ignore:
                             _ignore += [
                                 '## {}/'.format(self._config['VIDEO_FNAME'])
                             ]
-                            _ignore += self._sync.video_ignore
+                            _ignore += self._sync._video_ignore
                     except ValueError:
                         _not_ignore += ([u'#视频文件夹不存在'])
                 map(_list.addItem, _not_ignore)
@@ -554,11 +548,11 @@ class Dialog(QDialog, Ui_Dialog, SingleInstance):
 
     def ask_server(self):
         fileDialog = QFileDialog()
-        dir_ = fileDialog.getExistingDirectory(
-            dir_=os.path.dirname(self._config['SERVER'])
+        dir = fileDialog.getExistingDirectory(
+            dir=os.path.dirname(self._config['SERVER'])
         )
-        if dir_:
-            self._config['SERVER'] = dir_
+        if dir:
+            self._config['SERVER'] = dir
             self.update()
 
     def sync(self):
@@ -645,3 +639,7 @@ if __name__ == '__main__':
         print(u'激活已经打开的实例')
     except SystemExit as e:
         sys.exit(e)
+    except:
+        import traceback
+        traceback.print_exc()
+        pause()

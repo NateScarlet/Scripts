@@ -2,11 +2,9 @@
 # Preset Backdrop 1.2
 # Copyright (c) 2011 Victor Perez.  All Rights Reserved.
 
+import nuke
 import colorsys
 import operator
-
-import nuke
-
 
 # Preset Backdrop
 
@@ -132,8 +130,8 @@ def create_backdrop():
         if not selNodes:
             if customLabel == '':
                 return nuke.nodes.BackdropNode(label='<center>' + icon + presetLabel, tile_color=hexColour, note_font_size=30)
-
-            return nuke.nodes.BackdropNode(label='<center>' + icon + customLabel, tile_color=hexColour, note_font_size=30)
+            else:
+                return nuke.nodes.BackdropNode(label='<center>' + icon + customLabel, tile_color=hexColour, note_font_size=30)
 
         # Find Min. and Max. of Positions
         positions = [(i.xpos(), i.ypos()) for i in selNodes]

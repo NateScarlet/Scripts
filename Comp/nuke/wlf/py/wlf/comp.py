@@ -1,21 +1,19 @@
 # -*- coding=UTF-8 -*-
-"""Comp footages."""
-
-import json
-import locale
 import os
-import pprint
-import re
 import sys
-import threading
+import re
 import time
+import locale
 import traceback
-from subprocess import PIPE, Popen
+import json
+import threading
+import pprint
+from subprocess import call, Popen, PIPE
 
 import nuke
 import nukescripts
 
-FPS = 25
+fps = 25
 FORMAT = 'HD_1080'
 VERSION = 1.1
 
@@ -23,7 +21,6 @@ SYS_CODEC = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
 reload(sys)
 sys.setdefaultencoding('UTF-8')
-
 
 class Comp(object):
     config = {
@@ -174,20 +171,24 @@ class Comp(object):
 
     def import_resource(self):
         # Get all subdir
-        dirs = list(x[0] for x in os.walk(self._config['footage_dir']))
+        _dirs = list(x[0] for x in os.walk(self._config['footage_dir']))
         print(u'{:-^30s}'.format(u'开始 导入素材'))
-        for dir_ in dirs:
+        for d in _dirs:
             # Get footage in subdir
-            print(u'文件夹 {}:'.format(dir_))
-            if not re.match(self._config['dir_pat'], os.path.basename(dir_.rstrip('\\/'))):
+            print(u'文件夹 {}:'.format(d))
+            if not re.match(self._config['dir_pat'], os.path.basename(d.rstrip('\\/'))):
                 print(u'\t\t\t不匹配文件夹正则, 跳过\n')
                 continue
 
-            _footages = [i for i in nuke.getFileNameList(dir_) if (
-                i.endswith(('副本', '.lock')) and re.match(self._config['footage_pat'], i))]
+            _footages = nuke.getFileNameList(d)
+            # if _footages:
+            _footages = filter(lambda path: not path.endswith(
+                ('副本', '.lock')), _footages)
+            _footages = filter(lambda path: re.match(
+                self._config['footage_pat'], path), _footages)
             if _footages:
                 for f in _footages:
-                    nuke.createNode(u'Read', 'file {{{}/{}}}'.format(dir_, f))
+                    nuke.createNode(u'Read', 'file {{{}/{}}}'.format(d, f))
                     print(u'\t' * 3 + f)
             print('')
         print(u'{:-^30s}'.format(u'结束 导入素材'))
@@ -251,7 +252,7 @@ class Comp(object):
             n = nuke.nodes.Grade(
                 inputs=[n],
                 unpremult='rgba.alpha',
-                label='白点: [value this.whitepoint]\n混合:[value this.mix]\n使亮度范围靠近0-1'
+                label='白点: \[value this.whitepoint]\n混合:\[value this.mix]\n使亮度范围靠近0-1'
             )
             if _autograde:
                 print(u'{:-^30s}'.format(u'开始 自动亮度'))
@@ -290,7 +291,7 @@ class Comp(object):
                 size='{{[value _ZDefocus.size curve]}}',
                 max_size='{{[value _ZDefocus.max_size curve]}}',
                 label='[\nset trg parent._ZDefocus\nknob this.math [value $trg.math depth]\nknob this.z_channel [value $trg.z_channel depth.Z]\nif {[exists _ZDefocus]} {return \"由_ZDefocus控制\"} else {return \"需要_ZDefocus节点\"}\n]',
-                disable='{{![exists _ZDefocus] || [if {[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || [value _ZDefocus.disable]} {return True} else {return False}]}}'
+                disable='{{![exists _ZDefocus] || \[if \{\[value _ZDefocus.focal_point \"200 200\"] == \"200 200\" || \[value _ZDefocus.disable]\} \{return True\} else \{return False\}]}}'
             )
             n = nuke.nodes.Crop(
                 inputs=[n],
@@ -337,15 +338,14 @@ class Comp(object):
         _ret = []
         if isinstance(tags, str):
             tags = [tags]
-        tags = tuple(unicode(i).upper() for i in tags)
+        tags = tuple(map(lambda x: unicode(x).upper(), tags))
 
         for n in nuke.allNodes(u'Read'):
             if nuke.value(u'{}.{}'.format(n.name(), cls.tag_knob_name).encode(SCRIPT_CODEC), '').startswith(tags):
                 _ret.append(n)
 
-        def _nodes_order(n):
-            return (
-                u'_' + n[cls.tag_knob_name].value()).replace(u'_BG', '1_').replace(u'_CH', '0_')
+        def _nodes_order(n): return (
+            u'_' + n[cls.tag_knob_name].value()).replace(u'_BG', '1_').replace(u'_CH', '0_')
         _ret.sort(key=_nodes_order, reverse=True)
         return _ret
 
@@ -465,7 +465,7 @@ class Comp(object):
             inputs=[input_node],
             tile_color=0x2386eaff,
             label="深度雾\n由_DepthFogControl控制",
-            disable='{{![exists _DepthFogControl] || _DepthFogControl.disable}}',
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
         )
         _group.setName(u'DepthFog1')
 
@@ -473,16 +473,16 @@ class Comp(object):
         _input_node = nuke.nodes.Input(name='Input')
         n = nuke.nodes.DepthKeyer(
             inputs=[_input_node],
-            disable='{{![exists _DepthFogControl] || _DepthFogControl.disable}}',
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
         )
         n['range'].setExpression(
             u'([exists _DepthFogControl.range]) ? _DepthFogControl.range : curve')
         n = nuke.nodes.Grade(
             inputs=[_input_node, n],
-            black='{{([exists _DepthFogControl.fog_color]) ? _DepthFogControl.fog_color : curve}}',
+            black='{{(\[exists _DepthFogControl.fog_color]) ? _DepthFogControl.fog_color : curve}}',
             unpremult='rgba.alpha',
             mix='{{([exists _DepthFogControl.fog_mix]) ? _DepthFogControl.fog_mix : curve}}',
-            disable='{{![exists _DepthFogControl] || _DepthFogControl.disable}}',
+            disable='{{!\[exists _DepthFogControl] || _DepthFogControl.disable}}',
         )
         n = nuke.nodes.Output(inputs=[n])
         _group.end()
@@ -570,7 +570,7 @@ class Comp(object):
         return n
 
     @staticmethod
-    def _merge_mp(input_node, mp_file=''):
+    def _merge_mp(input, mp_file=''):
         def _add_lut():
             # TODO
             # lut = None
@@ -599,7 +599,7 @@ class Comp(object):
         n = nuke.nodes.SoftClip(inputs=[n], conversion='logarithmic compress')
         n = nuke.nodes.Defocus(inputs=[n], disable=True)
         n = nuke.nodes.Crop(inputs=[n], box='0 0 root.width root.height')
-        n = nuke.nodes.Merge(inputs=[n, input_node], label='MP')
+        n = nuke.nodes.Merge(inputs=[n, input], label='MP')
 
         return n
 
@@ -642,11 +642,10 @@ class CompDialog(nukescripts.PythonPanel):
         # self.update()
 
     def read_config(self):
-        """Read config from disk."""
-        if os.path.isfile(self.config_file):
+        try:
             with open(self.config_file, 'r') as f:
                 self.config.update(json.load(f))
-        else:
+        except:
             self.write_config()
 
     def write_config(self):
@@ -764,13 +763,9 @@ def precomp_arnold():
     layerlist = ['indirect_diffuse', 'direct_diffuse', 'indirect_specular', 'direct_specular', 'reflection',
                  'refraction',
                  'AO', 'depth', 'MV', 'alpha']
-    # gradelayers = ['indirect_diffuse',
-    #  'direct_diffuse',
-    #  'indirect_specular',
-    #  'direct_specular',
-    #  'reflection',
-    #                'refraction',
-    #                'AO']
+    gradelayers = ['indirect_diffuse', 'direct_diffuse', 'indirect_specular', 'direct_specular', 'reflection',
+                   'refraction',
+                   'AO']
     # Get The Layers Of Selected Read Node
 
     orderedmerge = []
@@ -844,7 +839,7 @@ def precomp_arnold():
             pass
         elif num > 0 and num < 2:
             merge = nuke.nodes.Merge(name=k, operation='plus', mix=1, inputs=[
-                gradegroup[0], dot], note_font_size=15)
+                                     gradegroup[0], dot], note_font_size=15)
             merge.setXYpos(int(x), int(dotY - 6))
             mergegroup.append(merge)
         elif num > 1 and num < 6:
@@ -897,7 +892,6 @@ def insert_node(node, input_node):
 def get_max(n, channel='rgb'):
     '''
     Return themax values of a given node's image at middle frame
-
     @parm n: node
     @parm channel: channel for sample
     '''
@@ -913,11 +907,11 @@ def get_max(n, channel='rgb'):
     try:
         nuke.execute(mincolor_node, middle_frame, middle_frame)
         max_value = mincolor_node['pixeldelta'].value() + 1
-    except RuntimeError, ex:
-        if 'Read error:' in str(ex):
+    except RuntimeError, e:
+        if 'Read error:' in str(e):
             max_value = -1
         else:
-            raise RuntimeError, ex
+            raise RuntimeError, e
 
     # Avoid dark frame
     if max_value < 0.7:
@@ -965,4 +959,10 @@ def pause():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except SystemExit as e:
+        exit(e)
+    except:
+        import traceback
+        traceback.print_exc()
