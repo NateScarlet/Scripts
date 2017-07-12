@@ -6,55 +6,56 @@ cgteamwork integration with nuke.
 import locale
 import os
 import re
-import shutil
+
 import sys
 
+import nuke
+
+from .asset import copy
 try:
     import cgtw
 except ImportError:
-    sys.path.append(r"C:\cgteamwork\bin\base")
-    import cgtw
-import nuke
+    CGTW_PATH = r"C:\cgteamwork\bin\base"
+    if os.path.isdir(CGTW_PATH):
+        sys.path.append(CGTW_PATH)
+        import cgtw
+    else:
+        raise ImportError('not a dir: {}'.format(CGTW_PATH))
 
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 SYS_CODEC = locale.getdefaultlocale()[1]
 reload(sys)
 sys.setdefaultencoding('UTF-8')
 
 
-def copy(src, dst):
-    """Copy src to dst."""
-    if not os.path.exists(src):
-        return
-    dst_dir = os.path.dirname(dst)
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
-    shutil.copy2(src, dst)
-    message = u'{} -> {}'.format(src, dst)
-    print(message)
-    nuke.tprint(message)
+def check_login(func):
+    """(Decorator)Abort funciton if not logged in."""
+
+    def _func(*args, **kwargs):
+        if CGTeamWork.is_logged_in:
+            func(*args, **kwargs)
+
+    return _func
 
 
 class CGTeamWork(object):
     """Base class for cgtw action."""
 
     database = u'proj_qqfc_2017'
+    is_logged_in = False
 
     def __init__(self):
         self._tw = cgtw.tw()
 
-    def is_login(self):
-        """Return if logged in."""
+    @classmethod
+    def update_status(cls):
+        """Return and set if cls.is_logged_in."""
 
-        ret = self._tw.sys().get_socket_status()
+        ret = cgtw.tw().sys().get_socket_status()
+        cls.is_logged_in = ret
+        print(u'CGTeamWork连接正常' if ret else u'CGTeamWork未连接')
         return ret
-
-    def check_login(self):
-        """ Raise LoginError if not login """
-
-        if not self.is_login():
-            raise LoginError
 
     @classmethod
     def set_database(cls, database):
@@ -82,11 +83,12 @@ class Shot(CGTeamWork):
     image_folder = u'Image'
     server = u'Z:\\CGteamwork_Test'
 
+    @check_login
     def __init__(self):
         super(Shot, self).__init__()
-        self.check_login()
 
-        self._task_module = self._tw.task_module(self.database, self.module)
+        self._task_module = self._tw.task_module(
+            self.database, self.module)
 
         self._task_module.init_with_id(self.shot_id)
 
@@ -159,6 +161,7 @@ class Shot(CGTeamWork):
             raise FolderError(ret)
         return ret
 
+    @check_login
     def submit(self, files, folders=None, note=u'自nuke提交'):
         """Submit this shot to cgtw."""
 
@@ -166,6 +169,7 @@ class Shot(CGTeamWork):
             folders = []
         self._task_module.submit(files, note, folders)
 
+    @check_login
     def upload_nk_file(self):
         """Upload .nk file to server."""
 
@@ -173,6 +177,7 @@ class Shot(CGTeamWork):
         dst = self.workfile_dest
         copy(src, dst)
 
+    @check_login
     def upload_image(self):
         """Uploade .jpg file to server."""
 
@@ -191,6 +196,7 @@ class Shot(CGTeamWork):
         else:
             return False
 
+    @check_login
     def sumbit_all(self):
         """Upload .jpg to server then sumbit these files."""
 
@@ -201,10 +207,10 @@ class Shot(CGTeamWork):
 
         self._task_module.create_note(note)
 
+    @check_login
     def ask_add_note(self):
         """Show a dialog for self.add_note function."""
 
-        self.check_login()
         note = nuke.getInput(
             u'note内容'.encode('UTF-8'),
             u'来自nuke的note'.encode('UTF-8')

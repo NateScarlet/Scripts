@@ -8,7 +8,7 @@ import traceback
 import nuke
 import nukescripts
 
-from . import asset, cgtwn, csheet, edit, ui
+from . import asset, csheet, edit, ui
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
@@ -44,19 +44,8 @@ def menu():
     _cgtwn()
 
 
-def ignore_exc(func):
-    """Decorate for ignore cgtwn exceptions."""
-
-    def _func():
-        try:
-            func()
-        except (cgtwn.IDError, cgtwn.LoginError, cgtwn.FolderError):
-            traceback.print_exc()
-    return _func
-
-
 def abort_modified(func):
-    """Decorate for abort modified project."""
+    """(Decorator)Abort function when project has been modified."""
 
     def _func():
         if nuke.modified():
@@ -66,18 +55,29 @@ def abort_modified(func):
 
 
 def _cgtwn():
-    @abort_modified
-    @ignore_exc
-    def _image():
-        cgtwn.Shot().upload_image()
+    try:
+        from . import cgtwn
+        cgtwn.CGTeamWork.update_status()
 
-    @abort_modified
-    @ignore_exc
-    def _nk_file():
-        cgtwn.Shot().upload_nk_file()
+        @abort_modified
+        @cgtwn.check_login
+        def _nk_file():
+            cgtwn.Shot().upload_nk_file()
 
-    nuke.addOnScriptClose(_image)
-    nuke.addOnScriptSave(_nk_file)
+        @abort_modified
+        @cgtwn.check_login
+        def _on_close():
+            task = nuke.ProgressTask('CGTW')
+            task.setMessage('上传单帧')
+            cgtwn.Shot().upload_image()
+            task.setProgress(50)
+            task.setMessage('上传nk文件')
+            _nk_file()
+
+        nuke.addOnScriptClose(_on_close)
+        nuke.addOnScriptSave(_nk_file)
+    except ImportError:
+        traceback.print_exc()
 
 
 @abort_modified
@@ -94,7 +94,9 @@ def _check_project():
     # avoid ValueError of script_directory() when no root.name.
     elif project_directory == '[python {nuke.script_directory()}]':
         nuke.knob('root.project_directory',
-                  r"[python {os.path.abspath(os.path.join('D:/temp', nuke.value('root.name', ''), '../')).replace('\\', '/')}]")
+                  r"[python {os.path.abspath(os.path.join("
+                  r"'D:/temp', nuke.value('root.name', ''), '../'"
+                  r")).replace('\\', '/')}]")
 
 
 def _check_fps():
@@ -111,7 +113,7 @@ def _lock_connections():
 
 
 def _jump_frame():
-    if nuke.numvalue('preferences.wlf_lock_connection', 0.0) and nuke.exists('_Write.knob.frame'):
+    if nuke.numvalue('preferences.wlf_jump_frame', 0.0) and nuke.exists('_Write.knob.frame'):
         nuke.frame(nuke.numvalue('_Write.knob.frame'))
         nuke.Root().setModified(False)
 
@@ -119,7 +121,8 @@ def _jump_frame():
 @abort_modified
 def _send_to_render_dir():
     if nuke.numvalue('preferences.wlf_send_to_dir', 0.0):
-        asset.sent_to_dir(nuke.value('preferences.wlf_render_dir'))
+        asset.sent_to_dir(
+            unicode(nuke.value('preferences.wlf_render_dir'), 'UTF-8'))
 
 
 @abort_modified
