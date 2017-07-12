@@ -4,8 +4,8 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-CGTW_PATH	../py\wlf\cgtwn.py	/^    CGTW_PATH = r"C:\\cgteamwork\\bin\\base"$/;"	kind:variable	line:17
-CGTeamWork	../py\wlf\cgtwn.py	/^class CGTeamWork(object):$/;"	kind:class	line:54
+CGTW_PATH	../py\wlf\cgtwn.py	/^    CGTW_PATH = r"C:\\cgteamwork\\bin\\base"$/;"	kind:variable	line:18
+CGTeamWork	../py\wlf\cgtwn.py	/^class CGTeamWork(object):$/;"	kind:class	line:42
 Comp	../py\wlf\__init__.py	/^from .comp import Comp$/;"	kind:namespace	line:8
 Comp	../py\wlf\comp.py	/^class Comp(object):$/;"	kind:class	line:28
 CompDialog	../py\wlf\comp.py	/^class CompDialog(nukescripts.PythonPanel):$/;"	kind:class	line:592
@@ -16,15 +16,13 @@ Dialog	../py\wlf\scenetools.py	/^class Dialog(QDialog, Ui_Dialog):$/;"	kind:clas
 DropFrameCheck	../py\wlf\asset.py	/^class DropFrameCheck(threading.Thread):$/;"	kind:class	line:17
 FORMAT	../py\wlf\comp.py	/^FORMAT = 'HD_1080'$/;"	kind:variable	line:19
 FPS	../py\wlf\comp.py	/^FPS = 25$/;"	kind:variable	line:18
-FolderError	../py\wlf\cgtwn.py	/^class FolderError(Exception):$/;"	kind:class	line:245
+FolderError	../py\wlf\cgtwn.py	/^class FolderError(Exception):$/;"	kind:class	line:233
 FootageError	../py\wlf\comp.py	/^class FootageError(Exception):$/;"	kind:class	line:738
 FootageError	../py\wlf\csheet.py	/^class FootageError(Exception):$/;"	kind:class	line:201
-IDError	../py\wlf\cgtwn.py	/^class IDError(Exception):$/;"	kind:class	line:234
-LoginError	../py\wlf\cgtwn.py	/^class LoginError(Exception):$/;"	kind:class	line:256
-PIPE	../py\wlf\asset.py	/^from subprocess import PIPE, STDOUT, Popen$/;"	kind:namespace	line:9
+IDError	../py\wlf\cgtwn.py	/^class IDError(Exception):$/;"	kind:class	line:222
+LoginError	../py\wlf\cgtwn.py	/^class LoginError(Exception):$/;"	kind:class	line:244
 PIPE	../py\wlf\comp.py	/^from subprocess import PIPE, Popen$/;"	kind:namespace	line:13
 PIPE	../py\wlf\scenetools.py	/^from subprocess import call, Popen, PIPE$/;"	kind:namespace	line:10
-Popen	../py\wlf\asset.py	/^from subprocess import PIPE, STDOUT, Popen$/;"	kind:namespace	line:9
 Popen	../py\wlf\comp.py	/^from subprocess import PIPE, Popen$/;"	kind:namespace	line:13
 Popen	../py\wlf\scenetools.py	/^from subprocess import call, Popen, PIPE$/;"	kind:namespace	line:10
 QApplication	../py\wlf\scenetools.py	/^from PySide.QtGui import QDialog, QApplication, QFileDialog$/;"	kind:namespace	line:13
@@ -36,28 +34,23 @@ QtGui	../py\wlf\scenetools.py	/^from PySide import QtCore, QtGui$/;"	kind:namesp
 QtGui	../py\wlf\ui_scenetools_dialog.py	/^from PySide import QtCore, QtGui$/;"	kind:namespace	line:10
 RenderError	../py\wlf\comp.py	/^class RenderError(Exception):$/;"	kind:class	line:749
 SCRIPT_CODEC	../py\wlf\comp.py	/^SCRIPT_CODEC = 'UTF-8'$/;"	kind:variable	line:23
-STDOUT	../py\wlf\asset.py	/^from subprocess import PIPE, STDOUT, Popen$/;"	kind:namespace	line:9
 SYS_CODEC	../py\wlf\asset.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:14
 SYS_CODEC	../py\wlf\callback.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:13
-SYS_CODEC	../py\wlf\cgtwn.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:26
+SYS_CODEC	../py\wlf\cgtwn.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:27
 SYS_CODEC	../py\wlf\comp.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:22
 SYS_CODEC	../py\wlf\csheet.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:14
 SYS_CODEC	../py\wlf\scenetools.py	/^SYS_CODEC = locale.getdefaultlocale()[1]$/;"	kind:variable	line:19
-Shot	../py\wlf\cgtwn.py	/^class Shot(CGTeamWork):$/;"	kind:class	line:87
+Shot	../py\wlf\cgtwn.py	/^class Shot(CGTeamWork):$/;"	kind:class	line:75
 SingleInstanceException	../py\wlf\scenetools.py	/^class SingleInstanceException(Exception):$/;"	kind:class	line:213
 Sync	../py\wlf\scenetools.py	/^class Sync(object):$/;"	kind:class	line:239
 Ui_Dialog	../py\wlf\scenetools.py	/^from .ui_scenetools_dialog import Ui_Dialog$/;"	kind:namespace	line:15
 Ui_Dialog	../py\wlf\ui_scenetools_dialog.py	/^class Ui_Dialog(object):$/;"	kind:class	line:12
-VERSION	../py\wlf\cgtwn.py	/^VERSION = '0.2.2'$/;"	kind:variable	line:25
-VERSION	../py\wlf\comp.py	/^VERSION = 1.1$/;"	kind:variable	line:20
-VERSION	../py\wlf\edit.py	/^VERSION = 1.01$/;"	kind:variable	line:11
-VERSION	../py\wlf\scenetools.py	/^VERSION = 0.6$/;"	kind:variable	line:17
 __all__	../py\wlf\__init__.py	/^__all__ = ['asset', 'comp', 'edit', 'csheet']$/;"	kind:variable	line:15
 __init__	../py\wlf\asset.py	/^    def __init__(self, n, prefix=('_',)):$/;"	kind:member	line:24
-__init__	../py\wlf\cgtwn.py	/^    def __init__(self):$/;"	kind:member	line:60
-__init__	../py\wlf\cgtwn.py	/^    def __init__(self):$/;"	kind:member	line:99
-__init__	../py\wlf\cgtwn.py	/^    def __init__(self, *args):$/;"	kind:member	line:237
-__init__	../py\wlf\cgtwn.py	/^    def __init__(self, *args):$/;"	kind:member	line:248
+__init__	../py\wlf\cgtwn.py	/^    def __init__(self):$/;"	kind:member	line:48
+__init__	../py\wlf\cgtwn.py	/^    def __init__(self):$/;"	kind:member	line:87
+__init__	../py\wlf\cgtwn.py	/^    def __init__(self, *args):$/;"	kind:member	line:225
+__init__	../py\wlf\cgtwn.py	/^    def __init__(self, *args):$/;"	kind:member	line:236
 __init__	../py\wlf\comp.py	/^    def __init__(self):$/;"	kind:member	line:612
 __init__	../py\wlf\comp.py	/^    def __init__(self, *args):$/;"	kind:member	line:741
 __init__	../py\wlf\comp.py	/^    def __init__(self, *args):$/;"	kind:member	line:752
@@ -71,13 +64,17 @@ __init__	../py\wlf\scenetools.py	/^    def __init__(self, parent=None):$/;"	kind
 __init__.py	../py\wlf\__init__.py	1;"	kind:file	line:1
 __new__	../py\wlf\scenetools.py	/^    def __new__(cls):$/;"	kind:member	line:65
 __setitem__	../py\wlf\scenetools.py	/^    def __setitem__(self, key, value):$/;"	kind:member	line:79
-__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:241
-__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:252
-__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:259
+__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:229
+__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:240
+__str__	../py\wlf\cgtwn.py	/^    def __str__(self):$/;"	kind:member	line:247
 __str__	../py\wlf\comp.py	/^    def __str__(self):$/;"	kind:member	line:745
 __str__	../py\wlf\comp.py	/^    def __str__(self):$/;"	kind:member	line:756
 __str__	../py\wlf\scenetools.py	/^    def __str__(self):$/;"	kind:member	line:214
 __version__	../py\wlf\__init__.py	/^__version__ = '1.0.0'$/;"	kind:variable	line:16
+__version__	../py\wlf\cgtwn.py	/^__version__ = '0.2.2'$/;"	kind:variable	line:26
+__version__	../py\wlf\comp.py	/^__version__ = 1.1$/;"	kind:variable	line:20
+__version__	../py\wlf\edit.py	/^__version__ = 1.01$/;"	kind:variable	line:11
+__version__	../py\wlf\scenetools.py	/^__version__ = 0.6$/;"	kind:variable	line:17
 _actions	../py\wlf\scenetools.py	/^        def _actions():$/;"	kind:function	line:388
 _add_depthfog_control	../py\wlf\comp.py	/^    def _add_depthfog_control(input_node):$/;"	kind:member	line:561
 _add_dot	../py\wlf\edit.py	/^    def _add_dot(output_node, input_num):$/;"	kind:function	line:467
@@ -89,14 +86,14 @@ _add_to_autolabel	../py\wlf\ui.py	/^    def _add_to_autolabel(label):$/;"	kind:f
 _add_zdefocus_control	../py\wlf\comp.py	/^    def _add_zdefocus_control(input_node):$/;"	kind:member	line:553
 _all_input_add_dot	../py\wlf\edit.py	/^    def _all_input_add_dot(node):$/;"	kind:function	line:485
 _autograde_get_max	../py\wlf\comp.py	/^    def _autograde_get_max(n):$/;"	kind:member	line:445
-_autoplace	../py\wlf\callback.py	/^def _autoplace():$/;"	kind:function	line:159
+_autoplace	../py\wlf\callback.py	/^def _autoplace():$/;"	kind:function	line:160
 _backdrop	../py\wlf\scenetools.py	/^        def _backdrop():$/;"	kind:function	line:341
 _bg_ch_nodes	../py\wlf\comp.py	/^    def _bg_ch_nodes(self):$/;"	kind:member	line:342
 _button_enabled	../py\wlf\comp.py	/^        def _button_enabled():$/;"	kind:function	line:710
 _button_enabled	../py\wlf\scenetools.py	/^        def _button_enabled():$/;"	kind:function	line:479
-_catch_all	../py\wlf\callback.py	/^    def _catch_all(type_, data):$/;"	kind:function	line:245
+_catch_all	../py\wlf\callback.py	/^    def _catch_all(type_, data):$/;"	kind:function	line:246
 _cgtw	../py\wlf\ui.py	/^    def _cgtw(menu):$/;"	kind:function	line:58
-_cgtwn	../py\wlf\callback.py	/^    def _cgtwn(type_, data):$/;"	kind:function	line:212
+_cgtwn	../py\wlf\callback.py	/^    def _cgtwn(type_, data):$/;"	kind:function	line:213
 _cgtwn	../py\wlf\callback.py	/^def _cgtwn():$/;"	kind:function	line:57
 _check_fps	../py\wlf\callback.py	/^def _check_fps():$/;"	kind:function	line:102
 _check_project	../py\wlf\callback.py	/^def _check_project():$/;"	kind:function	line:90
@@ -104,24 +101,24 @@ _comp	../py\wlf\ui.py	/^    def _comp(menu):$/;"	kind:function	line:43
 _create_csheet	../py\wlf\callback.py	/^def _create_csheet():$/;"	kind:function	line:84
 _create_node_menu	../py\wlf\ui.py	/^    def _create_node_menu():$/;"	kind:function	line:71
 _csheet	../py\wlf\scenetools.py	/^        def _csheet():$/;"	kind:function	line:151
-_db	../py\wlf\callback.py	/^    def _db(type_, data):$/;"	kind:function	line:179
+_db	../py\wlf\callback.py	/^    def _db(type_, data):$/;"	kind:function	line:180
 _depthfog	../py\wlf\comp.py	/^    def _depthfog(input_node):$/;"	kind:member	line:478
 _dest	../py\wlf\scenetools.py	/^        def _dest():$/;"	kind:function	line:124
-_dir	../py\wlf\callback.py	/^    def _dir(type_, data):$/;"	kind:function	line:218
+_dir	../py\wlf\callback.py	/^    def _dir(type_, data):$/;"	kind:function	line:219
 _dropframe	../py\wlf\callback.py	/^    def _dropframe():$/;"	kind:function	line:24
 _edit	../py\wlf\ui.py	/^    def _edit(menu):$/;"	kind:function	line:13
 _edits	../py\wlf\scenetools.py	/^        def _edits():$/;"	kind:function	line:399
 _edits	../py\wlf\scenetools.py	/^        def _edits():$/;"	kind:function	line:464
-_else	../py\wlf\callback.py	/^    def _else(type_, data):$/;"	kind:function	line:207
-_fbx	../py\wlf\callback.py	/^    def _fbx(type_, data):$/;"	kind:function	line:183
-_file	../py\wlf\callback.py	/^        def _file(type_, data):$/;"	kind:function	line:219
+_else	../py\wlf\callback.py	/^    def _else(type_, data):$/;"	kind:function	line:208
+_fbx	../py\wlf\callback.py	/^    def _fbx(type_, data):$/;"	kind:function	line:184
+_file	../py\wlf\callback.py	/^        def _file(type_, data):$/;"	kind:function	line:220
 _formated_frame	../py\wlf\asset.py	/^    def _formated_frame(matchobj):$/;"	kind:function	line:119
 _func	../py\wlf\callback.py	/^    def _func():$/;"	kind:function	line:50
-_func	../py\wlf\cgtwn.py	/^    def _func(*args, **kwargs):$/;"	kind:function	line:47
+_func	../py\wlf\cgtwn.py	/^    def _func(*args, **kwargs):$/;"	kind:function	line:35
 _get_tag	../py\wlf\comp.py	/^    def _get_tag(self, filename):$/;"	kind:member	line:328
 _get_tag_from_pattern	../py\wlf\comp.py	/^    def _get_tag_from_pattern(self, str_):$/;"	kind:member	line:319
-_gizmo_to_group_on_create	../py\wlf\callback.py	/^def _gizmo_to_group_on_create():$/;"	kind:function	line:133
-_gizmo_to_group_update_ui	../py\wlf\callback.py	/^def _gizmo_to_group_update_ui():$/;"	kind:function	line:148
+_gizmo_to_group_on_create	../py\wlf\callback.py	/^def _gizmo_to_group_on_create():$/;"	kind:function	line:134
+_gizmo_to_group_update_ui	../py\wlf\callback.py	/^def _gizmo_to_group_update_ui():$/;"	kind:function	line:149
 _icon	../py\wlf\scenetools.py	/^        def _icon():$/;"	kind:function	line:358
 _info	../py\wlf\comp.py	/^        def _info():$/;"	kind:function	line:700
 _is_used	../py\wlf\edit.py	/^    def _is_used(n):$/;"	kind:function	line:303
@@ -138,10 +135,10 @@ _node_name	../py\wlf\ui.py	/^    def _node_name(node):$/;"	kind:function	line:16
 _nodes_order	../py\wlf\comp.py	/^        def _nodes_order(n):$/;"	kind:function	line:252
 _on_close	../py\wlf\callback.py	/^        def _on_close():$/;"	kind:function	line:69
 _order	../py\wlf\ui.py	/^    def _order(name):$/;"	kind:function	line:97
-_path	../py\wlf\callback.py	/^        def _path(type_, data):$/;"	kind:function	line:225
-_print_name	../py\wlf\callback.py	/^def _print_name():$/;"	kind:function	line:164
+_path	../py\wlf\callback.py	/^        def _path(type_, data):$/;"	kind:function	line:226
+_print_name	../py\wlf\callback.py	/^def _print_name():$/;"	kind:function	line:165
 _remove_old	../py\wlf\pref.py	/^    def _remove_old():$/;"	kind:function	line:50
-_render_jpg	../py\wlf\callback.py	/^def _render_jpg():$/;"	kind:function	line:128
+_render_jpg	../py\wlf\callback.py	/^def _render_jpg():$/;"	kind:function	line:129
 _rgba_order	../py\wlf\edit.py	/^    def _rgba_order(name):$/;"	kind:function	line:98
 _root	../py\wlf\pref.py	/^    def _root():$/;"	kind:function	line:18
 _send_to_render_dir	../py\wlf\callback.py	/^def _send_to_render_dir():$/;"	kind:function	line:122
@@ -150,19 +147,19 @@ _set_knob	../py\wlf\asset.py	/^        def _set_knob():$/;"	kind:function	line:7
 _setup_node	../py\wlf\comp.py	/^    def _setup_node(self, n):$/;"	kind:member	line:296
 _text_stylize	../py\wlf\edit.py	/^    def _text_stylize(text):$/;"	kind:function	line:109
 _vectorblur2	../py\wlf\pref.py	/^    def _vectorblur2():$/;"	kind:function	line:10
-_vf	../py\wlf\callback.py	/^    def _vf(type_, data):$/;"	kind:function	line:198
+_vf	../py\wlf\callback.py	/^    def _vf(type_, data):$/;"	kind:function	line:199
 _zdefocus2	../py\wlf\pref.py	/^    def _zdefocus2():$/;"	kind:function	line:25
 abort_modified	../py\wlf\callback.py	/^def abort_modified(func):$/;"	kind:function	line:47
 active_pid	../py\wlf\scenetools.py	/^def active_pid(pid):$/;"	kind:function	line:632
-add_dropdata_callback	../py\wlf\callback.py	/^def add_dropdata_callback():$/;"	kind:function	line:176
+add_dropdata_callback	../py\wlf\callback.py	/^def add_dropdata_callback():$/;"	kind:function	line:177
 add_menu	../py\wlf\ui.py	/^def add_menu():$/;"	kind:function	line:10
-add_note	../py\wlf\cgtwn.py	/^    def add_note(self, note):$/;"	kind:member	line:217
+add_note	../py\wlf\cgtwn.py	/^    def add_note(self, note):$/;"	kind:member	line:205
 add_preferences	../py\wlf\pref.py	/^def add_preferences():$/;"	kind:function	line:43
 all_gizmo_to_group	../py\wlf\edit.py	/^def all_gizmo_to_group():$/;"	kind:function	line:525
 all_knobs_name	../py\wlf\edit.py	/^def all_knobs_name(node):$/;"	kind:function	line:14
 arnold	../py\wlf\precomp.py	/^def arnold():$/;"	kind:function	line:7
-ask_add_note	../py\wlf\cgtwn.py	/^    def ask_add_note(self):$/;"	kind:member	line:223
-ask_database	../py\wlf\cgtwn.py	/^    def ask_database(cls):$/;"	kind:member	line:79
+ask_add_note	../py\wlf\cgtwn.py	/^    def ask_add_note(self):$/;"	kind:member	line:211
+ask_database	../py\wlf\cgtwn.py	/^    def ask_database(cls):$/;"	kind:member	line:67
 ask_dir	../py\wlf\scenetools.py	/^    def ask_dir(self):$/;"	kind:member	line:545
 ask_nuke	../py\wlf\scenetools.py	/^    def ask_nuke(self):$/;"	kind:member	line:554
 ask_server	../py\wlf\scenetools.py	/^    def ask_server(self):$/;"	kind:member	line:564
@@ -178,14 +175,14 @@ call	../py\wlf\scenetools.py	/^from subprocess import call, Popen, PIPE$/;"	kind
 call_from_nuke	../py\wlf\scenetools.py	/^def call_from_nuke():$/;"	kind:function	line:627
 callback	../py\wlf\__init__.py	/^from . import asset, comp, pref, ui, callback, backdrop, csheet$/;"	kind:namespace	line:9
 callback.py	../py\wlf\callback.py	1;"	kind:file	line:1
-cgtw	../py\wlf\cgtwn.py	/^        import cgtw$/;"	kind:namespace	line:20
-cgtw	../py\wlf\cgtwn.py	/^    import cgtw$/;"	kind:namespace	line:15
+cgtw	../py\wlf\cgtwn.py	/^        import cgtw$/;"	kind:namespace	line:21
+cgtw	../py\wlf\cgtwn.py	/^    import cgtw$/;"	kind:namespace	line:16
 cgtwn	../py\wlf\__init__.py	/^    from . import cgtwn$/;"	kind:namespace	line:11
 cgtwn	../py\wlf\callback.py	/^        from . import cgtwn$/;"	kind:namespace	line:59
 cgtwn.py	../py\wlf\cgtwn.py	1;"	kind:file	line:1
 change_dir	../py\wlf\scenetools.py	/^    def change_dir(self, dir_):$/;"	kind:member	line:193
 channels_rename	../py\wlf\edit.py	/^def channels_rename(prefix='PuzzleMatte'):$/;"	kind:function	line:61
-check_login	../py\wlf\cgtwn.py	/^def check_login(func):$/;"	kind:function	line:44
+check_login	../py\wlf\cgtwn.py	/^def check_login(func):$/;"	kind:function	line:32
 check_single_instance	../py\wlf\scenetools.py	/^def check_single_instance():$/;"	kind:function	line:218
 colorsys	../py\wlf\backdrop.py	/^import colorsys$/;"	kind:namespace	line:5
 colorsys	../py\wlf\edit.py	/^import colorsys$/;"	kind:namespace	line:6
@@ -194,19 +191,20 @@ comp.py	../py\wlf\comp.py	1;"	kind:file	line:1
 comp_shot	../py\wlf\comp.py	/^    def comp_shot(self, config=None):$/;"	kind:member	line:83
 comp_shots	../py\wlf\comp.py	/^    def comp_shots(self):$/;"	kind:member	line:65
 config_file	../py\wlf\comp.py	/^    config_file = os.path.expanduser(u'~\/.nuke\/wlf.comp.config.json')$/;"	kind:variable	line:610
-copy	../py\wlf\cgtwn.py	/^def copy(src, dst):$/;"	kind:function	line:31
+copy	../py\wlf\asset.py	/^def copy(src, dst):$/;"	kind:function	line:129
+copy	../py\wlf\cgtwn.py	/^from .asset import copy$/;"	kind:namespace	line:14
 copy	../py\wlf\scenetools.py	/^def copy(src, dst):$/;"	kind:function	line:208
 create_backdrop	../py\wlf\backdrop.py	/^def create_backdrop():$/;"	kind:function	line:14
 create_menu_by_dir	../py\wlf\ui.py	/^def create_menu_by_dir(parent, dir_):$/;"	kind:function	line:90
 create_nodes	../py\wlf\comp.py	/^    def create_nodes(self):$/;"	kind:member	line:173
 create_nodes	../py\wlf\csheet.py	/^    def create_nodes(self):$/;"	kind:member	line:53
-create_out_dirs	../py\wlf\callback.py	/^def create_out_dirs():$/;"	kind:function	line:168
+create_out_dirs	../py\wlf\callback.py	/^def create_out_dirs():$/;"	kind:function	line:169
 create_sheet	../py\wlf\scenetools.py	/^    def create_sheet(self):$/;"	kind:member	line:589
 csheet	../py\wlf\__init__.py	/^from . import asset, comp, pref, ui, callback, backdrop, csheet$/;"	kind:namespace	line:9
 csheet	../py\wlf\callback.py	/^from . import asset, csheet, edit, ui$/;"	kind:namespace	line:11
 csheet.py	../py\wlf\csheet.py	1;"	kind:file	line:1
 custom_autolabel	../py\wlf\ui.py	/^def custom_autolabel(enable_text_style=True):$/;"	kind:function	line:117
-database	../py\wlf\cgtwn.py	/^    database = u'proj_qqfc_2017'$/;"	kind:variable	line:57
+database	../py\wlf\cgtwn.py	/^    database = u'proj_qqfc_2017'$/;"	kind:variable	line:45
 default	../py\wlf\scenetools.py	/^    default = {$/;"	kind:variable	line:36
 default_config	../py\wlf\comp.py	/^    default_config = {$/;"	kind:variable	line:31
 default_tag	../py\wlf\comp.py	/^    default_tag = '_OTHER',$/;"	kind:variable	line:41
@@ -222,11 +220,11 @@ fix_error_read	../py\wlf\edit.py	/^def fix_error_read():$/;"	kind:function	line:
 get_max	../py\wlf\comp.py	/^def get_max(n, channel='rgb'):$/;"	kind:function	line:771
 get_min_max	../py\wlf\edit.py	/^def get_min_max(src_node, channel='depth.Z'):$/;"	kind:function	line:234
 get_nodes_by_tags	../py\wlf\comp.py	/^    def get_nodes_by_tags(cls, tags):$/;"	kind:member	line:239
-get_property	../py\wlf\cgtwn.py	/^    def get_property(self, property_name):$/;"	kind:member	line:131
+get_property	../py\wlf\cgtwn.py	/^    def get_property(self, property_name):$/;"	kind:member	line:119
 get_shot_list	../py\wlf\comp.py	/^    def get_shot_list(config):$/;"	kind:member	line:98
 gizmo_to_group	../py\wlf\edit.py	/^def gizmo_to_group(gizmo):$/;"	kind:function	line:495
-image_dest	../py\wlf\cgtwn.py	/^    def image_dest(self):$/;"	kind:member	line:157
-image_folder	../py\wlf\cgtwn.py	/^    image_folder = u'Image'$/;"	kind:variable	line:95
+image_dest	../py\wlf\cgtwn.py	/^    def image_dest(self):$/;"	kind:member	line:145
+image_folder	../py\wlf\cgtwn.py	/^    image_folder = u'Image'$/;"	kind:variable	line:83
 image_ignore	../py\wlf\scenetools.py	/^    image_ignore = []$/;"	kind:variable	line:240
 image_list	../py\wlf\csheet.py	/^    def image_list(self):$/;"	kind:member	line:144
 image_list	../py\wlf\scenetools.py	/^    def image_list(self):$/;"	kind:member	line:248
@@ -237,7 +235,7 @@ init.py	../plugins\3D\init.py	1;"	kind:file	line:1
 init.py	../plugins\init.py	1;"	kind:file	line:1
 insert_node	../py\wlf\comp.py	/^def insert_node(node, input_node):$/;"	kind:function	line:760
 instance	../py\wlf\scenetools.py	/^    instance = None$/;"	kind:variable	line:63
-is_logged_in	../py\wlf\cgtwn.py	/^    is_logged_in = False$/;"	kind:variable	line:58
+is_logged_in	../py\wlf\cgtwn.py	/^    is_logged_in = False$/;"	kind:variable	line:46
 is_pid_exists	../py\wlf\scenetools.py	/^def is_pid_exists(pid):$/;"	kind:function	line:227
 is_same	../py\wlf\scenetools.py	/^def is_same(src, dst):$/;"	kind:function	line:199
 json	../py\wlf\comp.py	/^import json$/;"	kind:namespace	line:4
@@ -255,14 +253,14 @@ locale	../py\wlf\comp.py	/^import locale$/;"	kind:namespace	line:5
 locale	../py\wlf\csheet.py	/^import locale$/;"	kind:namespace	line:6
 locale	../py\wlf\scenetools.py	/^import locale$/;"	kind:namespace	line:6
 lock	../py\wlf\csheet.py	/^    lock = threading.Lock()$/;"	kind:variable	line:175
-main	../py\wlf\asset.py	/^def main():$/;"	kind:function	line:141
+main	../py\wlf\asset.py	/^def main():$/;"	kind:function	line:142
 main	../py\wlf\comp.py	/^def main():$/;"	kind:function	line:823
 main	../py\wlf\csheet.py	/^def main():$/;"	kind:function	line:209
 main	../py\wlf\scenetools.py	/^def main():$/;"	kind:function	line:619
 menu	../py\wlf\callback.py	/^def menu():$/;"	kind:function	line:22
 menu.py	../menu.py	1;"	kind:file	line:1
-module	../py\wlf\cgtwn.py	/^    module = u'shot_task'$/;"	kind:variable	line:92
-name	../py\wlf\cgtwn.py	/^    def name(self):$/;"	kind:member	line:108
+module	../py\wlf\cgtwn.py	/^    module = u'shot_task'$/;"	kind:variable	line:80
+name	../py\wlf\cgtwn.py	/^    def name(self):$/;"	kind:member	line:96
 nodePresetsStartup	../NodePresets\user_presets.py	/^def nodePresetsStartup():$/;"	kind:function	line:2
 nodes_add_dots	../py\wlf\edit.py	/^def nodes_add_dots(nodes=None):$/;"	kind:function	line:461
 nodes_to_relpath	../py\wlf\edit.py	/^def nodes_to_relpath(nodes):$/;"	kind:function	line:449
@@ -305,8 +303,8 @@ panel_show	../py\wlf\ui.py	/^def panel_show(keyword):$/;"	kind:function	line:165
 path	../py\wlf\scenetools.py	/^    path = os.path.expanduser('~\/.wlf.scenetools.json')$/;"	kind:variable	line:61
 pause	../py\wlf\comp.py	/^def pause():$/;"	kind:function	line:835
 pause	../py\wlf\scenetools.py	/^def pause():$/;"	kind:function	line:22
-pipeline	../py\wlf\cgtwn.py	/^    pipeline = u'合成'$/;"	kind:variable	line:90
-pipeline_name	../py\wlf\cgtwn.py	/^    pipeline_name = u'comp'$/;"	kind:variable	line:91
+pipeline	../py\wlf\cgtwn.py	/^    pipeline = u'合成'$/;"	kind:variable	line:78
+pipeline_name	../py\wlf\cgtwn.py	/^    pipeline_name = u'comp'$/;"	kind:variable	line:79
 pprint	../py\wlf\comp.py	/^import pprint$/;"	kind:namespace	line:7
 precomp.py	../py\wlf\precomp.py	1;"	kind:file	line:1
 pref	../py\wlf\__init__.py	/^from . import asset, comp, pref, ui, callback, backdrop, csheet$/;"	kind:namespace	line:9
@@ -331,8 +329,8 @@ run	../py\wlf\asset.py	/^    def run(self):$/;"	kind:member	line:31
 run	../py\wlf\csheet.py	/^    def run(self):$/;"	kind:member	line:182
 scenetools.py	../py\wlf\scenetools.py	1;"	kind:file	line:1
 sent_to_dir	../py\wlf\asset.py	/^def sent_to_dir(dir_):$/;"	kind:function	line:124
-server	../py\wlf\cgtwn.py	/^    server = u'Z:\\\\CGteamwork_Test'$/;"	kind:variable	line:96
-set_database	../py\wlf\cgtwn.py	/^    def set_database(cls, database):$/;"	kind:member	line:73
+server	../py\wlf\cgtwn.py	/^    server = u'Z:\\\\CGteamwork_Test'$/;"	kind:variable	line:84
+set_database	../py\wlf\cgtwn.py	/^    def set_database(cls, database):$/;"	kind:member	line:61
 set_knob_default	../py\wlf\pref.py	/^def set_knob_default():$/;"	kind:function	line:7
 set_path	../py\wlf\scenetools.py	/^    def set_path(self):$/;"	kind:member	line:123
 set_project_root_by_name	../py\wlf\edit.py	/^def set_project_root_by_name(path='E:'):$/;"	kind:function	line:380
@@ -340,17 +338,17 @@ set_random_glcolor	../py\wlf\edit.py	/^def set_random_glcolor(n):$/;"	kind:funct
 setupUi	../py\wlf\ui_scenetools_dialog.py	/^    def setupUi(self, Dialog):$/;"	kind:member	line:13
 setup_node	../py\wlf\asset.py	/^    def setup_node(self):$/;"	kind:member	line:61
 setup_nodes	../py\wlf\comp.py	/^    def setup_nodes(self):$/;"	kind:member	line:158
-shot_id	../py\wlf\cgtwn.py	/^    def shot_id(self):$/;"	kind:member	line:118
-shot_task_folder	../py\wlf\cgtwn.py	/^    shot_task_folder = u'shot_work'$/;"	kind:variable	line:94
+shot_id	../py\wlf\cgtwn.py	/^    def shot_id(self):$/;"	kind:member	line:106
+shot_task_folder	../py\wlf\cgtwn.py	/^    shot_task_folder = u'shot_work'$/;"	kind:variable	line:82
 show_dialog	../py\wlf\asset.py	/^    def show_dialog(cls, show_all=False):$/;"	kind:member	line:87
 show_dialog	../py\wlf\comp.py	/^    def show_dialog():$/;"	kind:member	line:128
 showed_files	../py\wlf\asset.py	/^    showed_files = []$/;"	kind:variable	line:22
 shuffle_rgba	../py\wlf\edit.py	/^def shuffle_rgba(node):$/;"	kind:function	line:439
-shutil	../py\wlf\cgtwn.py	/^import shutil$/;"	kind:namespace	line:9
+shutil	../py\wlf\asset.py	/^import shutil$/;"	kind:namespace	line:9
 split_by_backdrop	../py\wlf\edit.py	/^def split_by_backdrop():$/;"	kind:function	line:172
 split_layers	../py\wlf\edit.py	/^def split_layers(node):$/;"	kind:function	line:387
-submit	../py\wlf\cgtwn.py	/^    def submit(self, files, folders=None, note=u'自nuke提交'):$/;"	kind:member	line:177
-sumbit_all	../py\wlf\cgtwn.py	/^    def sumbit_all(self):$/;"	kind:member	line:212
+submit	../py\wlf\cgtwn.py	/^    def submit(self, files, folders=None, note=u'自nuke提交'):$/;"	kind:member	line:165
+sumbit_all	../py\wlf\cgtwn.py	/^    def sumbit_all(self):$/;"	kind:member	line:200
 swap_knob_value	../py\wlf\edit.py	/^def swap_knob_value(knob_a, knob_b):$/;"	kind:function	line:38
 sync	../py\wlf\scenetools.py	/^    def sync(self):$/;"	kind:member	line:573
 sys	../init.py	/^import sys$/;"	kind:namespace	line:3
@@ -375,11 +373,11 @@ ui.py	../py\wlf\ui.py	1;"	kind:file	line:1
 ui_scenetools_dialog.py	../py\wlf\ui_scenetools_dialog.py	1;"	kind:file	line:1
 update	../py\wlf\comp.py	/^    def update(self):$/;"	kind:member	line:697
 update	../py\wlf\scenetools.py	/^    def update(self):$/;"	kind:member	line:463
-update_status	../py\wlf\cgtwn.py	/^    def update_status(cls):$/;"	kind:member	line:64
+update_status	../py\wlf\cgtwn.py	/^    def update_status(cls):$/;"	kind:member	line:52
 update_toolsets	../py\wlf\edit.py	/^def update_toolsets(toolset_name, toolset_path):$/;"	kind:function	line:45
-upload_image	../py\wlf\cgtwn.py	/^    def upload_image(self):$/;"	kind:member	line:193
+upload_image	../py\wlf\cgtwn.py	/^    def upload_image(self):$/;"	kind:member	line:181
 upload_images	../py\wlf\scenetools.py	/^    def upload_images(self):$/;"	kind:member	line:304
-upload_nk_file	../py\wlf\cgtwn.py	/^    def upload_nk_file(self):$/;"	kind:member	line:185
+upload_nk_file	../py\wlf\cgtwn.py	/^    def upload_nk_file(self):$/;"	kind:member	line:173
 upload_sheet	../py\wlf\scenetools.py	/^    def upload_sheet(self):$/;"	kind:member	line:325
 upload_videos	../py\wlf\scenetools.py	/^    def upload_videos(self):$/;"	kind:member	line:286
 url_open	../py\wlf\scenetools.py	/^def url_open(url):$/;"	kind:function	line:644
@@ -388,7 +386,7 @@ video_ignore	../py\wlf\scenetools.py	/^    video_ignore = []$/;"	kind:variable	l
 video_list	../py\wlf\scenetools.py	/^    def video_list(self):$/;"	kind:member	line:267
 wlf	../init.py	/^import wlf$/;"	kind:namespace	line:6
 wlf	../menu.py	/^import wlf$/;"	kind:namespace	line:4
-work_folder	../py\wlf\cgtwn.py	/^    work_folder = u'work'$/;"	kind:variable	line:93
-workfile_dest	../py\wlf\cgtwn.py	/^    def workfile_dest(self):$/;"	kind:member	line:138
+work_folder	../py\wlf\cgtwn.py	/^    work_folder = u'work'$/;"	kind:variable	line:81
+workfile_dest	../py\wlf\cgtwn.py	/^    def workfile_dest(self):$/;"	kind:member	line:126
 write	../py\wlf\scenetools.py	/^    def write(self):$/;"	kind:member	line:92
 write_config	../py\wlf\comp.py	/^    def write_config(self):$/;"	kind:member	line:637
