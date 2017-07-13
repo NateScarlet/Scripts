@@ -2,6 +2,7 @@
 """
 GUI Batchrender for nuke.
 """
+
 import os
 import sys
 import re
@@ -19,7 +20,7 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
 from ui_mainwindow import Ui_MainWindow
 
-__version__ = '0.3.7'
+__version__ = '0.3.9'
 SYS_CODEC = locale.getdefaultlocale()[1]
 TIME = datetime.datetime.now().strftime('%y%m%d_%H%M')
 EXE_PATH = os.path.join(os.path.dirname(__file__), 'batchrender.exe')
@@ -78,7 +79,7 @@ def change_dir(dir_):
         os.chdir(dir_)
     except WindowsError:
         print(sys.exc_info()[2])
-    print(u'工作目录改为: {}'.format(os.getcwd()))
+    print(u'工作目录改为: {}'.format(os.getcwd()).encode('UTF-8'))
 
 
 class SingleInstanceException(Exception):
@@ -109,18 +110,6 @@ def is_pid_exists(pid):
         return '"{}"'.format(pid) in _stdout
 
 
-class Logger(logging.Logger):
-    """Customed logging.Logger."""
-
-    # TODO: module logger
-    instance = None
-
-    def __new__(cls):
-        if not cls.instance:
-            cls.instance = super(Logger, cls).__new__(cls)
-        return cls.instance
-
-
 class BatchRender(multiprocessing.Process):
     """Main render process."""
     LOG_FILENAME = u'Nuke批渲染.log'
@@ -134,10 +123,32 @@ class BatchRender(multiprocessing.Process):
         self._config = Config()
         self._error_files = []
         self._files = Files()
+        self._logger = None
         self.daemon = True
 
-        # Set logger
-        self._logfile = open(self.LOG_FILENAME, 'a')
+    def run(self):
+        """(override)This function run in new process."""
+
+        reload(sys)
+        sys.setdefaultencoding('UTF-8')
+        print(sys.getdefaultencoding())
+
+        self.lock.acquire()
+
+        self.set_logger()
+        os.chdir(self._config['DIR'])
+        self._files.unlock_all()
+        self.continuous_render()
+
+        if Config()['HIBER']:
+            self._logger.info('<计算机进入休眠模式>')
+            hiber()
+
+        self.lock.release()
+
+    def set_logger(self):
+        """Set logger for this process."""
+
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(self.LOG_LEVEL)
         handler = logging.FileHandler(self.LOG_FILENAME)
@@ -145,13 +156,7 @@ class BatchRender(multiprocessing.Process):
             '[%(asctime)s]\t%(levelname)10s:\t%(message)s')
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
-
-    def run(self):
         self.rotate_log()
-        self.lock.acquire()
-        self._files.unlock_all()
-        self.batch_render()
-        self.lock.release()
 
     def continuous_render(self):
         """Loop batch rendering as files exists."""
@@ -186,9 +191,6 @@ class BatchRender(multiprocessing.Process):
             _rtcode = self.render(f)
 
         self._logger.info('<结束批渲染>')
-        if Config()['HIBER']:
-            self._logger.info('<计算机进入休眠模式>')
-            hiber()
 
     def render(self, f):
         """Render a file with nuke."""
@@ -225,7 +227,7 @@ class BatchRender(multiprocessing.Process):
         )
         self._logger.debug(u'命令: %s', cmd)
         print(cmd)
-        _proc = Popen(cmd.encode('UTF-8'), stderr=PIPE)
+        _proc = Popen(cmd.encode(SYS_CODEC), stderr=PIPE)
         self._queue.put(_proc.pid)
         _stderr = _proc.communicate()[1]
         _stderr = fanyi(_stderr)
@@ -468,13 +470,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def _button_enabled():
             if self._proc and self._proc.is_alive():
+                # Rendering.
                 self.renderButton.setEnabled(False)
                 self.stopButton.setEnabled(True)
                 self.listWidget.setStyleSheet(
                     'color:white;background-color:rgb(12%, 16%, 18%);')
             else:
-                if os.path.isdir(self._config['DIR']):
+                # Not rendering.
+                if os.path.isdir(self._config['DIR']) and Files():
                     self.renderButton.setEnabled(True)
+                else:
+                    self.renderButton.setEnabled(False)
                 self.stopButton.setEnabled(False)
                 self.listWidget.setStyleSheet('')
 
@@ -559,7 +565,7 @@ def main():
     fix_pyinstaller.main()
     reload(sys)
     sys.setdefaultencoding('UTF-8')
-    call(u'CHCP 936 & TITLE batchrender.console & CLS', shell=True)
+    call(u'@TITLE batchrender.console', shell=True)
     try:
         os.chdir(Config()['DIR'])
     except WindowsError:

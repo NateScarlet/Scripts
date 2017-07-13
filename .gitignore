@@ -52,5 +52,7 @@ Temporary Items
 Backdrops/
 *.json
 *.pyc
+
+# build
 build/
 *.spec
