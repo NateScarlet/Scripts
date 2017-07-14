@@ -28,7 +28,7 @@ sys.setdefaultencoding('UTF-8')
 
 
 class Config(dict):
-    """Config file as dict that automatic write and read json file."""
+    """A config file can be manipulated that automatic write and read json file on disk."""
 
     default = {
         'NUKE': r'C:\Program Files\Nuke10.0v4\Nuke10.0.exe',
@@ -549,7 +549,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 def main():
     """Run this script standalone."""
-    __file__ = sys.argv[0]
     import fix_pyinstaller
     fix_pyinstaller.main()
     call(u'@TITLE batchrender.console', shell=True)
@@ -592,6 +591,7 @@ def url_open(url):
 
 
 if __name__ == '__main__':
+    __file__ = sys.argv[0]
     try:
         main()
     except SystemExit as ex:

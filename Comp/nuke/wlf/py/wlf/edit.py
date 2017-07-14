@@ -8,7 +8,7 @@ import random
 
 import nuke
 
-__version__ = '1.1.1'
+__version__ = '1.1.5'
 
 
 def rename_all_nodes():
@@ -137,30 +137,32 @@ def channels_rename(prefix='PuzzleMatte'):
     panel = nuke.Panel('MaskShuffle')
     for channel_name in channel_names:
         panel.addSingleLineInput(_stylize(channel_name), '')
-    panel.show()
+    confirm = panel.show()
 
     nuke.delete(layercontactsheet)
     n = node
-
     viewer.recover()
-    repl = (' ', '_'), ('.', '_')
-    new_names_dict = {
-        channel_name:
-        reduce(
-            lambda text, repl: '{0[0]}{0[1]}{1}'.format(
-                text.partition('.')[:-1], text.partition('.')[-1].replace(*repl)),
-            repl,
-            panel.value(_stylize(channel_name)))
-        for channel_name in channel_names}
-    for key in new_names_dict.keys():
-        if not new_names_dict[key]:
-            del new_names_dict[key]
-    n = crate_copy_from_dict(new_names_dict, n)
-    replace_node(node, n)
+
+    if confirm:
+        new_names_dict = {channel_name: panel.value(_stylize(channel_name))
+                          for channel_name in channel_names}
+        n = crate_copy_from_dict(new_names_dict, n)
+        replace_node(node, n)
+
+
+def format_channel_name(text):
+    """Return formatted text with nuke standard.  """
+
+    ret = text
+    ret = ret.replace(' ', '_')
+    ret = '{0[0]}{0[1]}{1}'.format(
+        ret.partition('.')[:-1], ret.partition('.')[-1].replace('.', '_'))
+    return ret
 
 
 def crate_copy_from_dict(dict_, input_node):
-    """Create multiple copy from dict_.  """
+    """Create multiple Copy node from @dict_.  """
+
     def _rgba_order(channel):
         ret = channel
         repl = (('.red', '.0_'), ('.green', '.1_'),
@@ -172,8 +174,8 @@ def crate_copy_from_dict(dict_, input_node):
     n = input_node
     new_names_dict = {
         k:
-        v if '.' in v else 'mask_extra.{}'.format(v)
-        for k, v in dict_.items()}
+        format_channel_name(v) if '.' in v else 'mask_extra.{}'.format(v)
+        for k, v in dict_.items() if v}
     old_names = new_names_dict.keys()
     old_names.sort(key=_rgba_order)
 
@@ -422,56 +424,14 @@ def set_project_root_by_name(path='E:'):
         path + '/' + os.path.basename(nuke.scriptName()).split('.')[0].replace('_', '/')))
 
 
-def split_layers(node):
-    """Splits each and every layer from the selected node into their own pipes."""
+def split_layers(n):
+    """Create Shuffle node for all layers in node @n.  """
 
-    channels = node.channels()
-
-    layers = []
-    valid_channels = ['red', 'green', 'blue', 'alpha', 'black', 'white']
-
-    for channel in channels:
-        layer_name = channel.split('.')[0]
-        layer = []
-        for i in channels:
-            if i.startswith(layer_name):
-                layer.append(i)
-        while len(layer) < 4:
-            layer.append(layer_name + ".white")
-        if layer not in layers:
-            layers.append(layer)
-
-    for i in layers:
-        layer = i[0].split('.')[0]
-        ch1 = i[0].split('.')[1]
-        ch2 = i[1].split('.')[1]
-        ch3 = i[2].split('.')[1]
-        ch4 = i[3].split('.')[1]
-
-        if ch1 not in valid_channels:
-            ch1 = "red red"
-        else:
-            ch1 = '%s %s' % (ch1, ch1)
-
-        if ch2 not in valid_channels:
-            ch2 = "green green"
-        else:
-            ch2 = '%s %s' % (ch2, ch2)
-
-        if ch3 not in valid_channels:
-            ch3 = "blue blue"
-        else:
-            ch3 = '%s %s' % (ch3, ch3)
-
-        if ch4 not in valid_channels:
-            ch4 = "alpha alpha"
-        else:
-            ch4 = '%s %s' % (ch4, ch4)
-
-        prefs = "in %s %s %s %s %s" % (layer, ch1, ch2, ch3, ch4)
-        shuffle = nuke.createNode('Shuffle', prefs, inpanel=False)
-        # shuffle.knob( 'label' ).setValue( layer )
-        shuffle.setInput(0, node)
+    for layer in nuke.layers(n):
+        if layer in ['rgb', 'rgba', 'alpha']:
+            continue
+        knob_in = {'in': layer}  # Avoid use of python keyword 'in'.
+        nuke.nodes.Shuffle(inputs=[n], label=layer, **knob_in)
 
 
 def shuffle_rgba(node):
@@ -504,9 +464,9 @@ def nodes_add_dots(nodes=None):
 
     def _add_dot(output_node, input_num):
         input_node = output_node.input(input_num)
-        if not input_node \
-                or input_node.Class() in ['Dot'] \
-                or abs(output_node.xpos() - input_node.xpos()) < output_node.screenWidth() \
+        if not input_node\
+                or input_node.Class() in ['Dot']\
+                or abs(output_node.xpos() - input_node.xpos()) < output_node.screenWidth()\
                 or abs(output_node.ypos() - input_node.ypos()) <= output_node.screenHeight():
             return None
         if output_node.Class() in ['Viewer'] or output_node['hide_input'].value():
