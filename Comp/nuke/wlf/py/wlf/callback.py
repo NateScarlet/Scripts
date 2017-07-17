@@ -9,6 +9,7 @@ import nukescripts
 
 from . import asset, csheet, edit, ui, cgtwn
 
+__version__ = '0.2.0'
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 
@@ -35,13 +36,13 @@ def menu():
     nuke.addOnScriptSave(_check_fps)
     nuke.addOnScriptSave(_lock_connections)
     nuke.addOnScriptSave(_jump_frame)
-    nuke.addOnScriptClose(_render_jpg)
-    nuke.addOnScriptClose(_create_csheet)
+    nuke.addOnScriptSave(cgtwn.on_save_callback)
     nuke.addOnScriptClose(_send_to_render_dir)
+    nuke.addOnScriptClose(_render_jpg)
+    nuke.addOnScriptClose(cgtwn.on_close_callback)
+    nuke.addOnScriptClose(_create_csheet)
     nuke.addAutolabel(ui.custom_autolabel)
     _dropframe()
-    nuke.addOnScriptClose(cgtwn.on_close_callback)
-    nuke.addOnScriptSave(cgtwn.on_save_callback)
 
 
 def abort_modified(func):
@@ -58,11 +59,11 @@ def abort_modified(func):
 def _create_csheet():
     if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
         if nuke.value('root.name'):
-            csheet.ContactSheetThread(new_process=True).run()
+            csheet.ContactSheetThread().run()
 
 
 def _check_project():
-    project_directory = nuke.Root()['project_directory'].value()
+    project_directory = nuke.value('root.project_directory')
     if not project_directory:
         nuke.message('工程目录未设置')
     # avoid ValueError of script_directory() when no root.name.
@@ -159,17 +160,18 @@ def add_dropdata_callback():
 
     def _fbx(type_, data):
         if type_ == 'text/plain' and data.endswith('.fbx'):
-            camera_node = nuke.createNode(
+            n = nuke.createNode(
                 'Camera2',
                 'read_from_file True '
-                'file {data} '
                 'frame_rate 25 '
                 'suppress_dialog True '
-                'label {{'
+                'label {'
                 '导入的摄像机：\n'
-                '[basename [value file]]\n'
-                '注意选择file -> node name}}'.format(data=data))
-            camera_node.setName('Camera_3DEnv_1')
+                '[basename [value file]]\n}')
+            n.setName('Camera_3DEnv_1')
+            n['file'].fromUserText(data)
+            if nuke.expression('{}.animated'.format(n.name())):
+                n['read_from_file'].setValue(False)
             return True
 
     def _vf(type_, data):
