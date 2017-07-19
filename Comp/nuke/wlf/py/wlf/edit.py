@@ -8,7 +8,7 @@ import random
 
 import nuke
 
-__version__ = '1.1.6'
+__version__ = '1.1.8'
 
 
 def rename_all_nodes():
@@ -344,7 +344,7 @@ def delete_unused_nodes(message=False):
             return True
         nodes_dependent_this = (n for n in n.dependent()
                                 if n.Class() not in [''] or n.name().startswith('_'))
-        return bool(nodes_dependent_this)
+        return any(nodes_dependent_this)
 
     count = 0
     while True:

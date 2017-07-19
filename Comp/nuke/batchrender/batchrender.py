@@ -21,7 +21,7 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 from ui_mainwindow import Ui_MainWindow
 
 
-__version__ = '0.6.4'
+__version__ = '0.7.0'
 EXE_PATH = os.path.join(os.path.dirname(__file__), 'batchrender.exe')
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -369,7 +369,7 @@ class Files(list):
         """Archive file in a folder with time struture."""
 
         now = datetime.datetime.now()
-        weekday = ('周日', '周一', '周而', '周三', '周四', '周五', '周六')
+        weekday = ('周日', '周一', '周二', '周三', '周四', '周五', '周六')
         dest = os.path.join(
             dest,
             get_unicode(now.strftime(u'%Y年%m月')),
@@ -489,6 +489,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update(self):
         """Update UI content."""
+
         rendering = bool(self._proc and self._proc.is_alive())
         if not rendering and self.rendering:
             QApplication.alert(self)
@@ -524,7 +525,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.listWidget.clear()
             for i in Files():
                 self.listWidget.addItem(u'{}'.format(i))
-
+        if not rendering and self.checkBoxAutoStart.isChecked() and Files():
+            self.render()
         _edits()
         _list_widget()
         _button_enabled()

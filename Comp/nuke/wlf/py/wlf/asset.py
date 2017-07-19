@@ -10,14 +10,14 @@ import shutil
 
 import nuke
 
-__version__ = '0.1.1'
+__version__ = '0.2.5'
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 
 class DropFrameCheck(threading.Thread):
     """Check drop frames and record on the node."""
 
-    # lock = threading.Lock()
+    lock = threading.Lock()
     showed_files = []
     knob_name = 'dropframes'
 
@@ -36,19 +36,19 @@ class DropFrameCheck(threading.Thread):
     def run(self):
         if self._node['disable'].value():
             return
-        # self.lock.acquire()
         time.sleep(5)
         while self._node:
+            self.lock.acquire()
             self.record()
+            self.lock.release()
             time.sleep(5)
-        # self.lock.release()
 
     def dropframe_ranges(self):
         """Return nuke framerange instance of dropframes."""
         ret = nuke.FrameRanges()
         if not self._node\
                 or self._node.name().startswith(self._prefix):
-            return
+            return ret
         _filename = nuke.filename(self._node)
         if not _filename \
                 or expand_frame(_filename, 1) == _filename:
@@ -148,14 +148,50 @@ def copy(src, dst):
     shutil.copy2(src, dst)
 
 
-def main():
-    """For test script effect."""
+def dropdata_handler(mime_type, data, from_dir=False):
+    """Handling dropdata."""
+    # print(mime_type, data)
+    if mime_type != 'text/plain':
+        return
+    match = re.match(r'file:///([^/].*)', data)
 
-    n = nuke.toNode('Read3')
-    result = DropFrameCheck(n).dropframe_ranges()
-    print(result)
+    if os.path.isdir(data):
+        _dirname = data.replace('\\', '/')
+        for i in nuke.getFileNameList(_dirname):
+            dropdata_handler(
+                mime_type, '{}/{}'.format(_dirname, i), from_dir=True)
+    elif os.path.basename(data).lower() == 'thumbs.db':
+        pass
+    elif match:
+        data = match.group(1)
+        return dropdata_handler(mime_type, data, from_dir=True)
+    elif data.endswith('.fbx'):
+        n = nuke.createNode(
+            'Camera2',
+            'read_from_file True '
+            'frame_rate 25 '
+            'suppress_dialog True '
+            'label {'
+            '导入的摄像机：\n'
+            '[basename [value file]]\n}')
+        n.setName('Camera_3DEnv_1')
+        n['file'].fromUserText(data)
+        if nuke.expression('{}.animated'.format(n.name())):
+            n['read_from_file'].setValue(False)
 
-
-if __name__ == '__main__':
-    # For test in script editor.
-    main()
+        n = nuke.createNode('ReadGeo2')
+        n['file'].fromUserText(data)
+        n['all_objects'].setValue(True)
+    elif data.endswith('.vf'):
+        nuke.createNode(
+            'Vectorfield',
+            'vfield_file "{data}" '
+            'file_type vf '
+            'label {{[value this.vfield_file]}}'.format(data=data))
+    elif data.endswith('.nk'):
+        nuke.scriptReadFile(data)
+    elif from_dir:
+        n = nuke.createNode('Read', 'file "{}"'.format(data))
+    else:
+        return
+    return True
