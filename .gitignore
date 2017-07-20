@@ -55,3 +55,4 @@ Backdrops/
 # build
 build/
 *.spec
+*.exe
