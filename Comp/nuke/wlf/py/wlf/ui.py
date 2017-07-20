@@ -6,6 +6,8 @@ import os
 import nuke
 from autolabel import autolabel
 
+__version__ = '0.1.1'
+
 
 def add_menu():
     """Add menu for commands and nodes."""
@@ -13,47 +15,54 @@ def add_menu():
     def _edit(menu):
         m = menu.addMenu("编辑")
 
-        m.addCommand('创建背板', 'wlf.backdrop.create_backdrop()',
+        m.addCommand('创建背板', 'import wlf.backdrop; wlf.backdrop.create_backdrop()',
                      'ctrl+alt+b', icon="backdrops.png")
         m.addSeparator()
-        m.addCommand('选中节点:使用相对路径', 'wlf.edit.nodes_to_relpath(nuke.selectedNodes())',
+        m.addCommand('选中节点:使用相对路径', 'import wlf.edit; wlf.edit.nodes_to_relpath(nuke.selectedNodes())',
                      'F2', icon="utilitiesfolder.png")
         m.addCommand(
-            "选中节点:分离rgba", "wlf.edit.shuffle_rgba(nuke.selectedNode())")
-        m.addCommand('选中节点:分离所有通道', 'wlf.edit.split_layers(nuke.selectedNode())',
+            "选中节点:分离rgba", "import wlf.edit; wlf.edit.shuffle_rgba(nuke.selectedNode())")
+        m.addCommand('选中节点:分离所有通道', 'import wlf.edit; wlf.edit.split_layers(nuke.selectedNode())',
                      'F3', icon="SplitLayers.png")
         m.addCommand("选中节点:重命名PuzzleMatte",
-                     "wlf.edit.channels_rename(prefix='PuzzleMatte')", "F4")
+                     "import wlf.edit; wlf.edit.channels_rename(prefix='PuzzleMatte')", "F4")
         m.addCommand("选中节点:添加Dots变成90度",
-                     "wlf.edit.nodes_add_dots(nuke.selectedNodes())")
+                     "import wlf.edit; wlf.edit.nodes_add_dots(nuke.selectedNodes())")
         m.addSeparator()
-        m.addCommand("所有读取节点:修正错误", "wlf.edit.fix_error_read()", 'F6')
+        m.addCommand(
+            "所有读取节点:修正错误", "import wlf.edit; wlf.edit.fix_error_read()", 'F6')
         m.addCommand("所有读取节点:显示所有缺帧",
-                     "wlf.asset.DropFrameCheck.show_dialog(True)")
-        m.addCommand("所有读取节点:序列替单帧", "wlf.edit.replace_sequence()")
+                     "import wlf.asset; wlf.asset.DropFrameCheck.show_dialog(True)")
+        m.addCommand("所有读取节点:序列替单帧",
+                     "import wlf.edit; wlf.edit.replace_sequence()")
         m.addSeparator()
         m.addCommand("所有节点:删除未使用的节点",
-                     "wlf.edit.delete_unused_nodes(message=True)")
-        m.addCommand("所有节点:根据背板重命名", "wlf.edit.rename_all_nodes()")
-        m.addCommand("所有节点:根据背板分割文件", "wlf.edit.splitByBackdrop()")
+                     "import wlf.edit; wlf.edit.delete_unused_nodes(message=True)")
+        m.addCommand("所有节点:根据背板重命名",
+                     "import wlf.edit; wlf.edit.rename_all_nodes()")
+        m.addCommand("所有节点:根据背板分割文件",
+                     "import wlf.edit; wlf.edit.splitByBackdrop()")
         m.addCommand("所有节点:添加Dots变成90度",
-                     "wlf.edit.nodes_add_dots(nuke.allNodes())")
-        m.addCommand("所有节点:Gizmo转Group", "wlf.edit.all_gizmo_to_group()")
+                     "import wlf.edit; wlf.edit.nodes_add_dots(nuke.allNodes())")
+        m.addCommand("所有节点:Gizmo转Group",
+                     "import wlf.edit; wlf.edit.all_gizmo_to_group()")
 
     def _comp(menu):
         m = menu.addMenu('合成')
-        m.addCommand('吾立方自动合成', "wlf.Comp()", icon='autocomp.png')
-        m.addCommand('吾立方批量合成', "wlf.Comp.show_dialog()",
+        m.addCommand('吾立方自动合成', "import wlf.comp; wlf.comp.Comp()",
                      icon='autocomp.png')
-        m.addCommand('arnold预合成', "wlf.precomp.arnold()",
+        m.addCommand('吾立方批量合成', "import wlf.comp; wlf.comp.Comp.show_dialog()",
+                     icon='autocomp.png')
+        m.addCommand('arnold预合成', "import wlf.precomp; wlf.precomp.arnold()",
                      icon='autocomp.png')
         _path = os.path.abspath(os.path.join(
-            __file__, '../scenetools/scenetools.exe'))
+            __file__, '../../../scenetools/scenetools.exe'))
         if os.path.isfile(_path):
             _cmd = 'nukescripts.start(r"file://{}")'.format(_path)
         else:
+            nuke.pluginAddPath(os.path.abspath(os.path.join(_path, '../')))
             nuke.tprint('wlf.scenetools: use uncomplied version')
-            _cmd = 'import wlf.scenetools;wlf.scenetools.call_from_nuke()'
+            _cmd = 'import scenetools;scenetools.call_from_nuke()'
         m.addCommand('色板\\/成果上传', _cmd)
 
     def _cgtw(menu):
@@ -81,11 +90,11 @@ def add_menu():
         m.addCommand(
             "吾立方网站", "nukescripts.start('http://www.wlf-studio.com/')")
 
-    _menubar = nuke.menu("Nuke")
+    menubar = nuke.menu("Nuke")
 
-    _edit(_menubar)
-    _comp(_menubar)
-    _cgtw(_menubar)
+    _edit(menubar)
+    _comp(menubar)
+    _cgtw(menubar)
     _create_node_menu()
 
 
@@ -99,8 +108,7 @@ def create_menu_by_dir(parent, dir_):
     def _order(name):
         return ('_0_' if os.path.isdir(os.path.join(_dir, name)) else '_1_') + name
 
-    _listdir = os.listdir(_dir)
-    _listdir.sort(key=_order)
+    _listdir = sorted(os.listdir(_dir), key=_order)
     for i in _listdir:
         if i in ['icons', 'Obsolete']:
             continue
@@ -169,11 +177,9 @@ def panel_show(keyword):
 
     def _node_name(node):
         return node.name()
-    list_ = []
-    for n in nuke.allNodes():
-        name = n.name()
-        if keyword in name and nuke.numvalue('{}.disable'.format(name), 0):
-            list_.append(n)
-    list_.sort(key=_node_name, reverse=True)
-    for n in list_:
+    nodes = sorted((n for n in nuke.allNodes()
+                    if keyword in n.name() and not nuke.numvalue('{}.disable'.format(n.name()), 0)),
+                   key=lambda n: n.name(),
+                   reverse=True)
+    for n in nodes:
         n.showControlPanel()

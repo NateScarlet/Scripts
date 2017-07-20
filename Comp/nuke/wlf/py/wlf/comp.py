@@ -17,7 +17,7 @@ import nukescripts
 
 FPS = 25
 FORMAT = 'HD_1080'
-__version__ = 1.1
+__version__ = '1.1.1'
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
@@ -214,7 +214,7 @@ class Comp(object):
         self._add_depthfog_control(n)
         print(u'{:-^30s}'.format(u'添加深度雾控制'))
         n = _merge_mp(
-            n, mp_file=self._config['mp'], lut=self._config['mp_lut'])
+            n, mp_file=self._config['mp'], lut=self._config.get('mp_lut'))
         print(u'{:-^30s}'.format(u'MP节点创建'))
 
         n = nuke.nodes.wlf_Write(inputs=[n])
@@ -240,7 +240,7 @@ class Comp(object):
         """Return nodes that match given tags."""
 
         ret = []
-        if isinstance(tags, str):
+        if isinstance(tags, str) or isinstance(tags, unicode):
             tags = [tags]
         tags = tuple(unicode(i).upper() for i in tags)
 
@@ -465,7 +465,7 @@ class Comp(object):
 
         merge_node = nuke.nodes.Merge2(
             inputs=nodes[:2] + [None] + nodes[2:],
-            tile_color='2184871423L',
+            tile_color=2184871423L,
             operation='min',
             Achannels='depth', Bchannels='depth', output='depth',
             label='Depth',

@@ -53,8 +53,9 @@ Temporary Items
 *.pyc
 
 # Build file
-py/wlf/build/scenetools/
+build/
 *.spec
+!scenetools.exe
 
 # vscode
 .vscode

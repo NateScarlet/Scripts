@@ -3,12 +3,14 @@
 
 import locale
 import os
+import re
 
 import nuke
 import nukescripts
 
 from . import asset, csheet, edit, ui, cgtwn
 
+__version__ = '0.2.4'
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 
@@ -35,13 +37,13 @@ def menu():
     nuke.addOnScriptSave(_check_fps)
     nuke.addOnScriptSave(_lock_connections)
     nuke.addOnScriptSave(_jump_frame)
-    nuke.addOnScriptClose(_render_jpg)
-    nuke.addOnScriptClose(_create_csheet)
+    nuke.addOnScriptSave(cgtwn.on_save_callback)
     nuke.addOnScriptClose(_send_to_render_dir)
+    nuke.addOnScriptClose(_render_jpg)
+    nuke.addOnScriptClose(cgtwn.on_close_callback)
+    nuke.addOnScriptClose(_create_csheet)
     nuke.addAutolabel(ui.custom_autolabel)
     _dropframe()
-    nuke.addOnScriptClose(cgtwn.on_close_callback)
-    nuke.addOnScriptSave(cgtwn.on_save_callback)
 
 
 def abort_modified(func):
@@ -58,11 +60,11 @@ def abort_modified(func):
 def _create_csheet():
     if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
         if nuke.value('root.name'):
-            csheet.ContactSheetThread(new_process=True).run()
+            csheet.ContactSheetThread().run()
 
 
 def _check_project():
-    project_directory = nuke.Root()['project_directory'].value()
+    project_directory = nuke.value('root.project_directory')
     if not project_directory:
         nuke.message('工程目录未设置')
     # avoid ValueError of script_directory() when no root.name.
@@ -153,27 +155,28 @@ def create_out_dirs():
 def add_dropdata_callback():
     """Add callback for datadrop enhance."""
 
-    def _db(type_, data):
-        if type_ == 'text/plain' and os.path.basename(data).lower() == 'thumbs.db':
+    def _db(mime_type, data):
+        if mime_type == 'text/plain' and os.path.basename(data).lower() == 'thumbs.db':
             return True
 
-    def _fbx(type_, data):
-        if type_ == 'text/plain' and data.endswith('.fbx'):
-            camera_node = nuke.createNode(
+    def _fbx(mime_type, data):
+        if mime_type == 'text/plain' and data.endswith('.fbx'):
+            n = nuke.createNode(
                 'Camera2',
                 'read_from_file True '
-                'file {data} '
                 'frame_rate 25 '
                 'suppress_dialog True '
-                'label {{'
+                'label {'
                 '导入的摄像机：\n'
-                '[basename [value file]]\n'
-                '注意选择file -> node name}}'.format(data=data))
-            camera_node.setName('Camera_3DEnv_1')
+                '[basename [value file]]\n}')
+            n.setName('Camera_3DEnv_1')
+            n['file'].fromUserText(data)
+            if nuke.expression('{}.animated'.format(n.name())):
+                n['read_from_file'].setValue(False)
             return True
 
-    def _vf(type_, data):
-        if type_ == 'text/plain' and data.endswith('.vf'):
+    def _vf(mime_type, data):
+        if mime_type == 'text/plain' and data.endswith('.vf'):
             nuke.createNode(
                 'Vectorfield',
                 'vfield_file "{data}" '
@@ -181,36 +184,41 @@ def add_dropdata_callback():
                 'label {{[value this.vfield_file]}}'.format(data=data))
             return True
 
-    def _else(type_, data):
-        if type_ == 'text/plain':
+    def _else(mime_type, data):
+        if mime_type == 'text/plain':
             nuke.createNode('Read', 'file "{}"'.format(data))
             return True
 
-    def _cgtwn(type_, data):
-        if type_ == 'text/plain' and data.startswith('file:///Y:'):
-            data = data[8:]
-            nuke.createNode('Read', 'file "{}"'.format(data))
-            return True
+    def _cgtwn(mime_type, data):
+        if mime_type == 'text/plain':
+            match = re.match(r'file:///([^/].*)', data)
+            if match:
+                data = match.group(1)
+                if data.endswith('.nk'):
+                    nuke.scriptReadFile(data)
+                else:
+                    nuke.createNode('Read', 'file "{}"'.format(data))
+                return True
 
-    def _dir(type_, data):
-        def _file(type_, data):
-            _db(type_, data)
-            _fbx(type_, data)
-            _vf(type_, data)
-            _else(type_, data)
+    def _dir(mime_type, data):
+        def _file(mime_type, data):
+            _db(mime_type, data)
+            _fbx(mime_type, data)
+            _vf(mime_type, data)
+            _else(mime_type, data)
 
-        def _path(type_, data):
+        def _path(mime_type, data):
             if os.path.isdir(data):
-                _dir(type_, data)
+                _dir(mime_type, data)
             else:
-                _file(type_, data)
+                _file(mime_type, data)
 
             return True
 
-        if type_ == 'text/plain' and os.path.isdir(data):
+        if mime_type == 'text/plain' and os.path.isdir(data):
             _dirname = data.replace('\\', '/')
             for i in nuke.getFileNameList(_dirname):
-                _path(type_, '/'.join([_dirname, i]))
+                _path(mime_type, '/'.join([_dirname, i]))
             return True
 
     nukescripts.addDropDataCallback(_fbx)
@@ -219,8 +227,8 @@ def add_dropdata_callback():
     nukescripts.addDropDataCallback(_cgtwn)
     nukescripts.addDropDataCallback(_dir)
 
-    def _catch_all(type_, data):
-        print(type_)
+    def _catch_all(mime_type, data):
+        print(mime_type)
         print(data)
         return None
 

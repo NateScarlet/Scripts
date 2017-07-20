@@ -14,7 +14,7 @@ from PySide.QtGui import QDialog, QApplication, QFileDialog
 
 from ui_scenetools_dialog import Ui_Dialog
 
-__version__ = '0.6.0'
+__version__ = '0.7.1'
 
 SYS_CODEC = locale.getdefaultlocale()[1]
 
@@ -90,6 +90,8 @@ class Config(dict):
         self.write()
 
     def write(self):
+        """Write config to disk."""
+
         with open(self.path, 'w') as f:
             json.dump(self, f, indent=4, sort_keys=True)
         try:
@@ -113,6 +115,7 @@ class Config(dict):
             pass
 
     def read(self):
+        """Read config from disk."""
         if os.path.isfile(self.path):
             with open(self.path) as f:
                 self.update(dict(json.load(f)))
@@ -121,6 +124,8 @@ class Config(dict):
                 self.update(dict(json.load(f)))
 
     def set_path(self):
+        """Join path from config for futher use."""
+
         def _dest():
             _value = os.path.join(
                 self['SERVER'],
@@ -191,12 +196,16 @@ class Config(dict):
         _csheet()
 
     def change_dir(self, dir_):
+        """Change working dir."""
+
         os.chdir(dir_)
         print(u'工作目录改为: {}'.format(os.getcwd()))
         self.read()
 
 
 def is_same(src, dst):
+    """Check if src is same with dst.  """
+
     if not os.path.isfile(dst):
         return False
     if os.path.getmtime(src) == os.path.getmtime(dst):
@@ -206,11 +215,15 @@ def is_same(src, dst):
 
 
 def copy(src, dst):
+    """Copy src to dst.  """
+
     _cmd = u'XCOPY /Y /V "{}" "{}"'.format(unicode(src), unicode(dst))
     call(_cmd.encode(SYS_CODEC))
 
 
 class SingleInstanceException(Exception):
+    """Indicate not single instance.  """
+
     def __str__(self):
         return u'已经有另一个实例在运行了'
 
@@ -227,16 +240,22 @@ def check_single_instance():
 def is_pid_exists(pid):
     """Check if pid existed.(Windows only)"""
 
-    if sys.platform == 'win32':
-        _proc = Popen(
-            'TASKLIST /FI "PID eq {}" /FO CSV /NH'.format(pid),
-            stdout=PIPE
-        )
-        _stdout = _proc.communicate()[0]
-        return '"python.exe"' in _stdout or '"scenetools.exe"' in _stdout and '"{}"'.format(pid) in _stdout
+    if sys.platform != 'win32':
+        raise RuntimeError('Only support windows platfomr.')
+    _proc = Popen(
+        'TASKLIST /FI "PID eq {}" /FO CSV /NH'.format(pid),
+        stdout=PIPE
+    )
+    _stdout = _proc.communicate()[0]
+    ret = '"python.exe"' in _stdout \
+        or '"scenetools.exe"' in _stdout \
+        and '"{}"'.format(pid) in _stdout
+    return ret
 
 
 class Sync(object):
+    """Sync files with server.  """
+
     image_ignore = []
     video_ignore = []
 
@@ -246,6 +265,8 @@ class Sync(object):
         self.video_ignore = []
 
     def image_list(self):
+        """Return images in image folder as list.  """
+
         self.image_ignore = []
         _dir = self._config['IMAGE_FNAME']
         if not os.path.isdir(_dir):
@@ -265,6 +286,8 @@ class Sync(object):
         return _ret
 
     def video_list(self):
+        """Return videos in video folder as list.  """
+
         self.video_ignore = []
         _dir = self._config['VIDEO_FNAME']
         if not os.path.isdir(_dir):
@@ -284,6 +307,8 @@ class Sync(object):
         return _ret
 
     def upload_videos(self):
+        """Upload videos to server.  """
+
         video_dest = unicode(self._config['video_dest'])
 
         if os.path.exists(os.path.dirname(video_dest)):
@@ -298,10 +323,9 @@ class Sync(object):
             dst = video_dest
             copy(src, dst)
 
-    def download_videos(self):
-        pass
-
     def upload_images(self):
+        """Upload images to server.  """
+
         dest = unicode(self._config['image_dest'])
         print(dest)
         if os.path.isdir(os.path.dirname(dest)):
@@ -317,12 +341,16 @@ class Sync(object):
             copy(src, dst)
 
     def download_images(self):
+        """Download images from server. """
+
         src = self._config['image_dest']
         dst = self._config['IMAGE_FNAME']
         print(u'## 下载单帧: {} -> {}'.format(src, dst))
         call('XCOPY /Y /D /I /V "{}\\*.jpg" "{}"'.format(src, dst))
 
     def upload_sheet(self):
+        """Upload contactsheet to server."""
+
         dest = self._config['csheet_dest']
 
         if os.path.isdir(os.path.dirname(dest)):
@@ -336,6 +364,7 @@ class Sync(object):
 
 
 class Dialog(QDialog, Ui_Dialog):
+    """Mian GUI dialog.  """
 
     def __init__(self, parent=None):
         def _backdrop():
@@ -452,7 +481,7 @@ class Dialog(QDialog, Ui_Dialog):
         }
         self._config = Config()
         self._sync = Sync()
-        self.update()
+        self._start_update()
         self.version_label.setText('v{}'.format(__version__))
 
         _icon()
@@ -460,7 +489,17 @@ class Dialog(QDialog, Ui_Dialog):
         _actions()
         _edits()
 
+    def _start_update(self):
+        """Start a thread for update."""
+
+        self.update()
+        _timer = QtCore.QTimer(self)
+        _timer.timeout.connect(self.update)
+        _timer.start(1000)
+
     def update(self):
+        """Update dialog UI content.  """
+
         def _edits():
             for qt_edit, k in self.edits_key.iteritems():
                 try:
@@ -493,10 +532,9 @@ class Dialog(QDialog, Ui_Dialog):
         def _list_widget():
             _list = self.listWidget
             _page_index = self.toolBox.currentIndex()
-            print('_page_index', _page_index)
             _list.clear()
             if _page_index == 0:
-                pass
+                map(_list.addItem, self._sync.image_list())
             elif _page_index == 1:
                 _not_ignore = []
                 _ignore = []
@@ -540,18 +578,20 @@ class Dialog(QDialog, Ui_Dialog):
         _edits()
         _button_enabled()
         _list_widget()
-        print('upadeted')
 
     def ask_dir(self):
+        """Show a dialog ask user self._config['DIR'].  """
+
         file_dialog = QFileDialog()
         _dir = file_dialog.getExistingDirectory(
             dir=os.path.dirname(self._config['DIR'])
         )
         if _dir:
             self._config['DIR'] = _dir
-            self.update()
 
     def ask_nuke(self):
+        """Show a dialog ask user self._config['NUKE'].  """
+
         file_dialog = QFileDialog()
         file_names = file_dialog.getOpenFileName(
             dir=os.getenv('ProgramFiles'),
@@ -559,18 +599,20 @@ class Dialog(QDialog, Ui_Dialog):
         )[0]
         if file_names:
             self._config['NUKE'] = file_names
-            self.update()
 
     def ask_server(self):
+        """Show a dialog ask user config['SERVER'].  """
+
         file_dialog = QFileDialog()
         dir_ = file_dialog.getExistingDirectory(
             dir_=os.path.dirname(self._config['SERVER'])
         )
         if dir_:
             self._config['SERVER'] = dir_
-            self.update()
 
     def sync(self):
+        """Sync files follow the config.   """
+
         cfg = self._config
         if cfg['isImageDown']:
             self._sync.download_images()
@@ -578,25 +620,24 @@ class Dialog(QDialog, Ui_Dialog):
             self._sync.upload_images()
         if cfg['isVideoUp']:
             self._sync.upload_videos()
-        self.update()
 
     def open_dir(self):
+        """Open config['DIR'] in explorer.  """
+
         url_open('file://{}'.format(self._config['DIR']))
 
     def open_server(self):
+        """Open config['SERVER'] in explorer.  """
+
         url_open('file://{}'.format(self._config['SERVER']))
 
     def create_sheet(self):
+        """Create contact sheet use nuke with images.  """
+
         self.hide()
-        active_pid(self._config['PID'])
         cfg = self._config
-        if __name__ == '__main__':
-            script = os.path.join(
-                unicode(sys.argv[0], SYS_CODEC),
-                '../csheet.py'
-            )
-        else:
-            script = os.path.join(__file__, '../csheet.py')
+
+        script = os.path.join(__file__, '../../py/wlf/csheet.py')
         _json = os.path.join(cfg['DIR'], Config.psetting_bname)
         _cmd = u'"{NUKE}" -t "{script}" "{json}"'.format(
             NUKE=cfg['NUKE'],
@@ -609,14 +650,19 @@ class Dialog(QDialog, Ui_Dialog):
             self.open_sheet()
         if self._config['isCSheetUp']:
             self._sync.upload_sheet()
+
         self.show()
 
     def open_sheet(self):
+        """Open contactsheet in explorer."""
+
         if os.path.exists(self._config['csheet']):
             url_open('file://' + self._config['csheet'])
 
 
 def main():
+    """Run this script standalone.  """
+
     call(u'CHCP 936 & TITLE scenetools.console & CLS', shell=True)
     app = QApplication(sys.argv)
     frame = Dialog()
@@ -625,11 +671,15 @@ def main():
 
 
 def call_from_nuke():
+    """Run this script standaloe.  """
+
     frame = Dialog()
     frame.show()
 
 
 def active_pid(pid):
+    """Active window of given pid.  """
+
     if __name__ == '__main__':
         _file = sys.argv[0]
     else:
@@ -642,12 +692,14 @@ def active_pid(pid):
 
 
 def url_open(url):
+    """Open url in explorer. """
     _cmd = "rundll32.exe url.dll,FileProtocolHandler {}".format(url)
     Popen(_cmd)
 
 
 if __name__ == '__main__':
     try:
+        __file__ = os.path.abspath(sys.argv[0])
         main()
     except SingleInstanceException as ex:
         active_pid(Config()['PID'])

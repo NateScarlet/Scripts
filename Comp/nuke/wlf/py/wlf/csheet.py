@@ -3,15 +3,19 @@
 
 import os
 import sys
-import locale
 import json
 import threading
+import locale
+import re
 
-from subprocess import call
+from subprocess import Popen
 import nuke
 
 
-SYS_CODEC = locale.getdefaultlocale()[1]
+__version__ = '1.1.3'
+reload(sys)
+sys.setdefaultencoding('UTF-8')
+OS_ENCODING = locale.getdefaultlocale()[1]
 
 
 class ContactSheet(object):
@@ -75,9 +79,11 @@ class ContactSheet(object):
             )
             n = nuke.nodes.Text2(
                 inputs=[n],
-                message='[lrange [split [basename [metadata input/filename]] ._] 3 3]',
-                box='0 0 0 80',
-                color='0.145 0.15 0.14 1'
+                message=get_shot(i),
+                box='5 0 1000 75',
+                color='0.145 0.15 0.14 1',
+                global_font_scale=0.8,
+                # font='{{Microsoft YaHei : Regular : msyh.ttf : 0}}'
             )
             _nodes.append(n)
 
@@ -97,7 +103,7 @@ class ContactSheet(object):
         _contactsheet_node = n
 
         print(u'使用背板:\t\t{}'.format(self._config['backdrop']))
-        if os.path.isfile(self._config['backdrop'].encode(SYS_CODEC)):
+        if os.path.isfile(self._config['backdrop']):
             n = nuke.nodes.Read()
             n['file'].fromUserText(self._config['backdrop'].encode('UTF-8'))
             if n.hasError():
@@ -145,57 +151,85 @@ class ContactSheet(object):
         """Return all image in csheet_footagedir."""
 
         _dir = self._config['csheet_footagedir']
-        _images = list(os.path.join(_dir, i.decode(SYS_CODEC))
-                       for i in os.listdir(_dir))
+        _images = sorted((os.path.join(_dir, i)
+                          for i in os.listdir(_dir)), key=os.path.getmtime, reverse=True)
 
         if not _images:
             raise FootageError
 
-        _images.sort(key=lambda file: os.stat(
-            file.encode(SYS_CODEC)).st_mtime, reverse=True)
-        _shots = []
-        _ret = []
+        shots = []
+        ret = []
         for image in _images:
-            _shot = image.split('.')[0].rstrip('_proxy').lower()
-            if _shot in _shots:
+            shot = split_version(image.split(
+                '.')[0].rstrip('_proxy').lower())[0]
+            if shot in shots:
                 print(u'排除:\t\t\t{} (较旧)'.format(image))
             else:
                 print(u'包含:\t\t\t{}'.format(image))
-                _shots.append(_shot)
-                _ret.append(image)
-        _ret.sort()
+                shots.append(shot)
+                ret.append(image)
+        ret.sort()
+
         print(u'总计图像数量:\t\t{}'.format(len(_images)))
-        print(u'总计有效图像:\t\t{}'.format(len(_ret)))
-        print(u'总计镜头数量:\t\t{}'.format(len(_shots)))
-        return _ret
+        print(u'总计有效图像:\t\t{}'.format(len(ret)))
+        print(u'总计镜头数量:\t\t{}'.format(len(shots)))
+        return ret
 
 
-class ContactSheetThread(threading.Thread, ContactSheet):
+def get_shot(filename):
+    """Get shot name from filename.  """
+    match = re.match(r'.*(sc_?\d+[^\.]*)_?.*\..+', filename, flags=re.I)
+    if match:
+        return match.group(1)
+
+    return filename
+
+
+class ContactSheetThread(threading.Thread):
     """Thread that create contact sheet."""
     lock = threading.Lock()
 
     def __init__(self, new_process=False):
-        ContactSheet.__init__(self)
         threading.Thread.__init__(self)
         self._new_process = new_process
 
     def run(self):
-        _json = self.json_path()
-        if not os.path.isfile(_json):
+        config_json = ContactSheet.json_path()
+        if not os.path.isfile(config_json):
             return
         self.lock.acquire()
-        _task = nuke.ProgressTask('生成色板')
-        _task.setProgress(50)
-        _cmd = u'"{NUKE}" -t "{script}" "{json}"'.format(
+        task = nuke.ProgressTask('生成色板')
+        task.setProgress(50)
+        cmd = u'"{NUKE}" -t "{script}" "{json}"'.format(
             NUKE=nuke.EXE_PATH,
             script=__file__.rstrip('cd'),
-            json=_json
+            json=config_json
         )
         if self._new_process:
-            _cmd = ''.join([u'START "生成色板" ', _cmd])
-        call(_cmd.encode(SYS_CODEC), shell=self._new_process)
-        _task.setProgress(100)
+            cmd = u'START "生成色板" {}'.format(cmd)
+        unicode_popen(cmd, shell=self._new_process)
+        task.setProgress(100)
         self.lock.release()
+
+
+def split_version(f):
+    """Return nuke style _v# (shot, version number) pair.  """
+
+    match = re.match(r'(.+)_v(\d+)', f)
+    if not match:
+        return (f, -1)
+    shot, version = match.groups()
+    if version < 0:
+        raise ValueError('Negative version number not supported.')
+    return (shot, version)
+
+
+def unicode_popen(args, **kwargs):
+    """Return Popen object use encoded args.  """
+
+    if isinstance(args, unicode):
+        args = args.encode(OS_ENCODING)
+    return Popen(args, **kwargs)
 
 
 class FootageError(Exception):
@@ -208,9 +242,6 @@ class FootageError(Exception):
 
 def main():
     """Run this module as script."""
-
-    reload(sys)
-    sys.setdefaultencoding('UTF-8')
 
     ContactSheet()
 
