@@ -21,7 +21,7 @@ from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 from ui_mainwindow import Ui_MainWindow
 
 
-__version__ = '0.7.0'
+__version__ = '0.7.11'
 EXE_PATH = os.path.join(os.path.dirname(__file__), 'batchrender.exe')
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -111,8 +111,10 @@ def is_pid_exists(pid):
             stdout=PIPE
         )
         _stdout = _proc.communicate()[0]
-        print(_stdout)
-        return '"{}"'.format(pid) in _stdout
+        ret = '"{}"'.format(pid) in _stdout
+        if ret:
+            print(_stdout)
+        return ret
 
 
 class BatchRender(multiprocessing.Process):
@@ -137,18 +139,12 @@ class BatchRender(multiprocessing.Process):
         reload(sys)
         sys.setdefaultencoding('UTF-8')
 
-        self.lock.acquire()
+        with self.lock:
 
-        self.set_logger()
-        os.chdir(self._config['DIR'])
-        self._files.unlock_all()
-        self.continuous_render()
-
-        if Config()['HIBER']:
-            self._logger.info('<计算机进入休眠模式>')
-            hiber()
-
-        self.lock.release()
+            self.set_logger()
+            os.chdir(self._config['DIR'])
+            self._files.unlock_all()
+            self.continuous_render()
 
     def set_logger(self):
         """Set logger for this process."""
@@ -165,7 +161,7 @@ class BatchRender(multiprocessing.Process):
     def continuous_render(self):
         """Loop batch rendering as files exists."""
 
-        while Files():
+        while not Files().all_locked:
             self.batch_render()
 
     def rotate_log(self):
@@ -252,15 +248,12 @@ class BatchRender(multiprocessing.Process):
             self._error_files.append(f)
             _count = self._error_files.count(f)
             self._logger.error(u'%s: 渲染出错 第%s次', f, _count)
+            # TODO: retry limit
             if _count >= 3:
                 # Not retry.
                 self._logger.error(u'%s: 连续渲染错误超过3次,不再进行重试。', f)
-            elif os.path.isfile(f):
-                # Retry, use new version.
-                os.remove(nk_file)
             else:
-                # Retry, use this version.
-                os.rename(nk_file, f)
+                Files.unlock(nk_file)
         else:
             # Normal exit.
             if not self._config['PROXY']:
@@ -271,6 +264,7 @@ class BatchRender(multiprocessing.Process):
     def stop(self):
         """Stop rendering."""
 
+        _pid = None
         while not self._queue.empty():
             _pid = self._queue.get()
         if _pid:
@@ -332,6 +326,7 @@ class Files(list):
         _files = sorted([get_unicode(i) for i in os.listdir(
             os.getcwd()) if i.endswith(('.nk', '.nk.lock'))], key=os.path.getmtime, reverse=False)
         self.extend(_files)
+        self.all_locked = self and all(bool(i.endswith('.lock')) for i in self)
 
     def unlock_all(self):
         """Unlock all .nk.lock files."""
@@ -480,6 +475,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         url_open(u'file://{}'.format(self._config['DIR']))
 
+    def open_log(self):
+        """Open log in explorer."""
+        # TODO: open log
+        pass
+
     def _start_update(self):
         """Start a thread for update."""
 
@@ -492,8 +492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         rendering = bool(self._proc and self._proc.is_alive())
         if not rendering and self.rendering:
-            QApplication.alert(self)
-            self.statusbar.showMessage(u'渲染已完成')
+            self.on_stop_callback()
         self.rendering = rendering
 
         def _button_enabled():
@@ -502,6 +501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.stopButton.setEnabled(True)
                 self.listWidget.setStyleSheet(
                     'color:white;background-color:rgb(12%, 16%, 18%);')
+                self.pushButtonRemoveOldVersion.setEnabled(False)
             else:
                 if os.path.isdir(self._config['DIR']) and Files():
                     self.renderButton.setEnabled(True)
@@ -509,6 +509,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.renderButton.setEnabled(False)
                 self.stopButton.setEnabled(False)
                 self.listWidget.setStyleSheet('')
+                self.pushButtonRemoveOldVersion.setEnabled(True)
 
         def _edits():
             for qt_edit, k in self.edits_key.items():
@@ -525,11 +526,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.listWidget.clear()
             for i in Files():
                 self.listWidget.addItem(u'{}'.format(i))
-        if not rendering and self.checkBoxAutoStart.isChecked() and Files():
+
+        if not rendering and self.checkBoxAutoStart.isChecked() \
+                and not Files().all_locked:
             self.render()
         _edits()
         _list_widget()
         _button_enabled()
+
+    def on_stop_callback(self):
+        """Do work when rendering stop.  """
+
+        QApplication.alert(self)
+        if not self.statusbar.currentMessage():
+            self.statusbar.showMessage(time_prefix(u'渲染已完成'))
+        if self.hiberCheck.isChecked():
+            self.statusbar.showMessage(time_prefix(u'休眠'))
+            self._config['HIBER'] = False
+            hiber()
 
     def ask_dir(self):
         """Show a dialog ask config['DIR']"""
@@ -558,11 +572,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def render(self):
         """Start rendering from UI."""
-
         self._proc = BatchRender()
         self._proc.start()
+        self.statusbar.showMessage(u'渲染中')
 
-    def remove_old_version(self):
+    @staticmethod
+    def remove_old_version():
         """Remove old version nk files from UI.  """
         Files().remove_old_version()
 
@@ -571,7 +586,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._config['HIBER'] = 0
         self._proc.stop()
-        print(u'# 停止渲染')
+        self.checkBoxAutoStart.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        self.statusbar.showMessage(time_prefix(u'停止渲染'))
 
     def closeEvent(self, event):
         """Override qt closeEvent."""
@@ -592,6 +608,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 event.ignore()
         else:
             event.accept()
+
+
+def time_prefix(text):
+    """Insert time before @text.  """
+    return u'[{}]{}'.format(time.strftime('%H:%M:%S'), text)
 
 
 def main():

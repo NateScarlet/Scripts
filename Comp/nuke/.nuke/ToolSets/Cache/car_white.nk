@@ -1,0 +1,57 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot1
+ gl_color 0x3432ff00
+ note_font 微软雅黑
+ selected true
+ xpos -4
+ ypos -893
+}
+set N72919400 [stack 0]
+add_layer {DiffuseFilter DiffuseFilter.red DiffuseFilter.green DiffuseFilter.blue DiffuseFilter.alpha}
+Keyer {
+ input {-DiffuseFilter.red -DiffuseFilter.green DiffuseFilter.blue}
+ operation "luminance key"
+ range {0.01010075503 0.0327264463 1 1}
+ name Keyer2
+ gl_color 0xffda3200
+ note_font 微软雅黑
+ selected true
+ xpos 76
+ ypos -887
+}
+add_layer {mask_extra mask_extra.car mask_extra.car_white}
+Dilate {
+ channels {none none none mask_extra.car}
+ size -1
+ name Dilate1
+ gl_color 0x32ffc600
+ note_font 微软雅黑
+ selected true
+ xpos 76
+ ypos -827
+}
+Premult {
+ channels rgba
+ alpha mask_extra.car
+ name Premult3
+ gl_color 0xfffa3200
+ note_font 微软雅黑
+ selected true
+ xpos 80
+ ypos -767
+}
+push $N72919400
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.car_white
+ name Copy3
+ gl_color 0xfff83200
+ note_font 微软雅黑
+ selected true
+ xpos -29
+ ypos -753
+}
