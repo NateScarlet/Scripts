@@ -56,3 +56,6 @@ Backdrops/
 build/
 *.spec
 *.exe
+
+# vscode
+.vscode

@@ -14,9 +14,19 @@ from PySide.QtGui import QDialog, QApplication, QFileDialog
 
 from ui_scenetools_dialog import Ui_Dialog
 
-__version__ = '0.7.1'
+if __name__ == '__main__':
+    __file__ = os.path.abspath(sys.argv[0])
+try:
+    LIB_PATH = os.path.join(
+        getattr(sys, '_MEIPASS', os.path.abspath('{}/../../'.format(__file__))), 'py')
+    sys.path.append(LIB_PATH)
+    from wlf.files import version_filter, copy, remove_version
+except ImportError:
+    raise
 
-SYS_CODEC = locale.getdefaultlocale()[1]
+__version__ = '0.8.9'
+
+OS_ENCODING = locale.getdefaultlocale()[1]
 
 
 def pause():
@@ -35,8 +45,8 @@ class Config(dict):
 
     default = {
         'SERVER': r'\\192.168.1.7\z',
-        'SIMAGE_FOLDER': r'Comp\image',
-        'SVIDEO_FOLDER': r'Comp\mov',
+        'SIMAGE_FOLDER': 'Comp\\images',
+        'SVIDEO_FOLDER': 'Comp\\mov',
         'NUKE': r'C:\Program Files\Nuke10.0v4\Nuke10.0.exe',
         'DIR': 'N://',
         'PROJECT': 'SNJYW',
@@ -214,13 +224,6 @@ def is_same(src, dst):
     return False
 
 
-def copy(src, dst):
-    """Copy src to dst.  """
-
-    _cmd = u'XCOPY /Y /V "{}" "{}"'.format(unicode(src), unicode(dst))
-    call(_cmd.encode(SYS_CODEC))
-
-
 class SingleInstanceException(Exception):
     """Indicate not single instance.  """
 
@@ -270,15 +273,17 @@ class Sync(object):
         self.image_ignore = []
         _dir = self._config['IMAGE_FNAME']
         if not os.path.isdir(_dir):
-            raise ValueError
-        _ret = list(i for i in os.listdir(_dir) if i.endswith('.jpg'))
+            return []
+        _ret = version_filter(i for i in os.listdir(_dir)
+                              if i.endswith('.jpg'))
 
         if os.path.isdir(self._config['image_dest']):
             _all_items = _ret
             _ret = []
             for i in _all_items:
                 _src = os.path.join(self._config['IMAGE_FNAME'], i)
-                _dst = os.path.join(self._config['image_dest'], i)
+                _dst = os.path.join(
+                    self._config['image_dest'], remove_version(i))
                 if not is_same(_src, _dst):
                     _ret.append(i)
                 else:
@@ -291,15 +296,17 @@ class Sync(object):
         self.video_ignore = []
         _dir = self._config['VIDEO_FNAME']
         if not os.path.isdir(_dir):
-            raise ValueError
-        _ret = list(i for i in os.listdir(_dir) if i.endswith('.mov'))
+            return []
+        _ret = version_filter(i for i in os.listdir(_dir)
+                              if i.endswith('.mov'))
 
         if os.path.isdir(self._config['video_dest']):
             _all_items = _ret
             _ret = []
             for i in _all_items:
                 _src = os.path.join(self._config['VIDEO_FNAME'], i)
-                _dst = os.path.join(self._config['video_dest'], i)
+                _dst = os.path.join(
+                    self._config['video_dest'], remove_version(i))
                 if not is_same(_src, _dst):
                     _ret.append(i)
                 else:
@@ -320,7 +327,7 @@ class Sync(object):
 
         for i in self.video_list():
             src = os.path.join(self._config['VIDEO_FNAME'], i)
-            dst = video_dest
+            dst = os.path.join(video_dest, remove_version(i))
             copy(src, dst)
 
     def upload_images(self):
@@ -337,7 +344,16 @@ class Sync(object):
 
         for i in self.image_list():
             src = os.path.join(self._config['IMAGE_FNAME'], i)
-            dst = dest
+            dst = os.path.join(dest, remove_version(i))
+            if os.path.exists(dst):
+                _src_mtime = os.path.getmtime(src)
+                _dst_mtime = os.path.getmtime(dst)
+                if _src_mtime < _dst_mtime:
+                    print(u'{} -> {}'.format(src, dst))
+                    print(u'服务器上的文件较新, 跳过')
+                if _src_mtime == _dst_mtime:
+                    print(u'{} -> {}'.format(src, dst))
+                    print(u'服务器上的文件相同, 跳过')
             copy(src, dst)
 
     def download_images(self):
@@ -346,7 +362,7 @@ class Sync(object):
         src = self._config['image_dest']
         dst = self._config['IMAGE_FNAME']
         print(u'## 下载单帧: {} -> {}'.format(src, dst))
-        call('XCOPY /Y /D /I /V "{}\\*.jpg" "{}"'.format(src, dst))
+        call('XCOPY /Y /D /I /V "{}" "{}"'.format(os.path.join(src, '*.jpg'), dst))
 
     def upload_sheet(self):
         """Upload contactsheet to server."""
@@ -368,20 +384,16 @@ class Dialog(QDialog, Ui_Dialog):
 
     def __init__(self, parent=None):
         def _backdrop():
-            self._config['BACKDROP_DIR'] = unicode(
-                os.path.join(
-                    os.path.dirname(unicode(sys.argv[0], SYS_CODEC)),
-                    u'Backdrops'
-                )
-            )
+            self._config['BACKDROP_DIR'] = os.path.abspath(os.path.join(
+                __file__, u'../Backdrops'))
             dir_ = self._config['BACKDROP_DIR']
             box = self.backDropBox
             if not os.path.exists(dir_):
                 os.mkdir(dir_)
             bd_list = os.listdir(dir_)
+            box.addItem(self._config['backdrop_name'])
             for item in bd_list:
                 box.addItem(item)
-            self._config['backdrop_name'] = box.currentText()
             box.addItem(u'纯黑')
 
         def _icon():
@@ -534,7 +546,8 @@ class Dialog(QDialog, Ui_Dialog):
             _page_index = self.toolBox.currentIndex()
             _list.clear()
             if _page_index == 0:
-                map(_list.addItem, self._sync.image_list())
+                map(_list.addItem, self._sync.image_list() +
+                    self._sync.image_ignore)
             elif _page_index == 1:
                 _not_ignore = []
                 _ignore = []
@@ -637,7 +650,7 @@ class Dialog(QDialog, Ui_Dialog):
         self.hide()
         cfg = self._config
 
-        script = os.path.join(__file__, '../../py/wlf/csheet.py')
+        script = os.path.join(LIB_PATH, 'wlf/csheet.py')
         _json = os.path.join(cfg['DIR'], Config.psetting_bname)
         _cmd = u'"{NUKE}" -t "{script}" "{json}"'.format(
             NUKE=cfg['NUKE'],
@@ -645,7 +658,7 @@ class Dialog(QDialog, Ui_Dialog):
             json=_json
         )
         print(_cmd)
-        call(_cmd.encode(SYS_CODEC))
+        call(_cmd.encode(OS_ENCODING))
         if self._config['isCSheetOpen']:
             self.open_sheet()
         if self._config['isCSheetUp']:
@@ -699,7 +712,6 @@ def url_open(url):
 
 if __name__ == '__main__':
     try:
-        __file__ = os.path.abspath(sys.argv[0])
         main()
     except SingleInstanceException as ex:
         active_pid(Config()['PID'])

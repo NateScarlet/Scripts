@@ -11,8 +11,9 @@ import re
 from subprocess import Popen
 import nuke
 
+from wlf.files import version_filter, split_version
 
-__version__ = '1.1.4'
+__version__ = '1.1.9'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -78,7 +79,7 @@ class ContactSheet(object):
             )
             n = nuke.nodes.Text2(
                 inputs=[n],
-                message=get_shot(i),
+                message=split_version(get_shot(i))[0],
                 box='5 0 1000 75',
                 color='0.145 0.15 0.14 1',
                 global_font_scale=0.8,
@@ -147,36 +148,27 @@ class ContactSheet(object):
         nuke.render(self._write_node, 1, 1)
 
     def image_list(self):
-        """Return all image in csheet_footagedir."""
+        """Return images to create contactsheet."""
 
-        _dir = self._config['csheet_footagedir']
-        _images = sorted((os.path.join(_dir, i)
-                          for i in os.listdir(_dir)), key=os.path.getmtime, reverse=True)
+        footage_dir = self._config['csheet_footagedir']
 
-        if not _images:
-            raise FootageError
-
-        shots = []
-        ret = []
-        for image in _images:
-            shot = split_version(image.split(
-                '.')[0].rstrip('_proxy').lower())[0]
-            if shot in shots:
-                print(u'排除:\t\t\t{} (较旧)'.format(image))
+        images = list(os.path.join(footage_dir, i)
+                      for i in os.listdir(footage_dir))
+        ret = version_filter(images)
+        for image in images:
+            if image not in ret:
+                print(u'排除:\t\t{} (较旧)'.format(image))
             else:
-                print(u'包含:\t\t\t{}'.format(image))
-                shots.append(shot)
-                ret.append(image)
-        ret.sort()
-
-        print(u'总计图像数量:\t\t{}'.format(len(_images)))
-        print(u'总计有效图像:\t\t{}'.format(len(ret)))
-        print(u'总计镜头数量:\t\t{}'.format(len(shots)))
+                print(u'包含:\t\t{}\n'.format(image))
+        print(u'共{}个文件 总计{}个镜头'.format(len(images), len(ret)))
+        if not ret:
+            raise FootageError
         return ret
 
 
 def get_shot(filename):
     """Get shot name from filename.  """
+
     match = re.match(r'.*(sc_?\d+[^\.]*)_?.*\..+', filename, flags=re.I)
     if match:
         return match.group(1)
@@ -186,6 +178,7 @@ def get_shot(filename):
 
 class ContactSheetThread(threading.Thread):
     """Thread that create contact sheet."""
+
     lock = threading.Lock()
 
     def __init__(self, new_process=False):
@@ -209,18 +202,6 @@ class ContactSheetThread(threading.Thread):
         unicode_popen(cmd, shell=self._new_process)
         task.setProgress(100)
         self.lock.release()
-
-
-def split_version(f):
-    """Return nuke style _v# (shot, version number) pair.  """
-
-    match = re.match(r'(.+)_v(\d+)', f)
-    if not match:
-        return (f, -1)
-    shot, version = match.groups()
-    if version < 0:
-        raise ValueError('Negative version number not supported.')
-    return (shot, version)
 
 
 def unicode_popen(args, **kwargs):

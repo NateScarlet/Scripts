@@ -1,5 +1,5 @@
 # -*- coding=UTF-8 -*-
-"""Comp footages to a .nk file."""
+"""Comp footages to a .nk file, can be run as script.  """
 
 import json
 import locale
@@ -16,7 +16,9 @@ from subprocess import PIPE, Popen
 import nuke
 import nukescripts
 
-__version__ = '1.3.4'
+from wlf.files import url_open
+
+__version__ = '0.13.8'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
@@ -70,7 +72,13 @@ class Config(dict):
 
 
 def escape_batch(text):
-    """Return escaped text for windows shell.  """
+    """Return escaped text for windows shell.
+
+    >>> escape_batch('test_text "^%~1"')
+    u'test_text \\\\"^^%~1\\\\"'
+    >>> escape_batch(u'中文 \"^%1\"')
+    u'\\xe4\\xb8\\xad\\xe6\\x96\\x87 \\\\"^^%1\\\\"'
+    """
 
     return text.replace(u'"', r'\"').replace(u'^', r'^^')
 
@@ -398,9 +406,8 @@ class Comp(object):
     def _bg_ch_node(self, input_node):
         n = input_node
         if 'MotionVectors' in nuke.layers(input_node):
-            _kwargs = {'in': 'MotionVectors'}
-            n = nuke.nodes.Shuffle(
-                inputs=[n], out='motion', blue='red', alpha='green', **_kwargs)
+            n = nuke.nodes.MotionFix(
+                inputs=[n], channel='MotionVectors', output='motion')
         if 'SSS.alpha' in input_node.channels():
             n = nuke.nodes.Keyer(
                 inputs=[n],
@@ -714,8 +721,7 @@ class CompDialog(nukescripts.PythonPanel):
             _cmd = u'"{nuke}" -t {script} "{config}"'.format(
                 nuke=nuke.EXE_PATH,
                 script=os.path.normcase(__file__).rstrip(u'c'),
-                config=json.dumps(self.config).replace(
-                    u'"', r'\"').replace(u'^', r'^^')
+                config=escape_batch(json.dumps(self.config))
             ).encode(OS_ENCODING)
             proc = Popen(_cmd, shell=True, stderr=PIPE)
             stderr = proc.communicate()[1]
@@ -732,7 +738,7 @@ class CompDialog(nukescripts.PythonPanel):
                 u'<td><img src="images/{0}.jpg" height="200" alt="<无图像>"></img></td>\n'\
                 u'<td>{0}</td>\n<td>{1}</td></tr>\n'.format(
                     shot, shot_info[shot])
-        infos = u'<style>td{{padding:8px;}}</style>\n'\
+        infos = u'<head>\n<meta charset="UTF-8">\n<style>td{{padding:8px;}}</style>\n</head>\n'\
             u'<table><tr><th>图像</th><th>镜头</th><th>信息</th></tr>\n'\
             u'{}</table>'.format(infos)
         log_path = os.path.join(self.config['output_dir'], u'批量合成日志.html')
@@ -867,20 +873,6 @@ def main():
     except FootageError as ex:
         print(u'** FootageError: {}\n\n'.format(ex).encode(OS_ENCODING))
         traceback.print_exc()
-
-
-def url_open(url):
-    """Open url in explorer. """
-    _cmd = u"rundll32.exe url.dll,FileProtocolHandler {}".format(url)
-    unicode_popen(_cmd)
-
-
-def unicode_popen(args, **kwargs):
-    """Return Popen object use encoded args.  """
-
-    if isinstance(args, unicode):
-        args = args.encode(OS_ENCODING)
-    return Popen(args, **kwargs)
 
 
 def pause():

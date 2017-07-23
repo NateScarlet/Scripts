@@ -1,16 +1,16 @@
 # -*- coding: UTF-8 -*-
-"""Deal with assets and files."""
+"""Deal with assets and files in nuke."""
 
 import locale
 import os
 import re
 import threading
-import time
-import shutil
 
 import nuke
 
-__version__ = '0.2.5'
+from .files import expand_frame, copy
+
+__version__ = '0.2.10'
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 
@@ -20,11 +20,13 @@ class DropFrameCheck(threading.Thread):
     lock = threading.Lock()
     showed_files = []
     knob_name = 'dropframes'
+    dropframes_dict = {}
+    runnning = False
 
-    def __init__(self, n, prefix=('_',)):
+    def __init__(self, prefix=('_',)):
         threading.Thread.__init__(self)
         self.daemon = True
-        self._node = n
+        self._node = None
         self._prefix = prefix
 
     @property
@@ -34,23 +36,28 @@ class DropFrameCheck(threading.Thread):
             return '{}.{}'.format(self._node.name(), self.knob_name)
 
     def run(self):
-        if self._node['disable'].value():
+        if self.runnning:
             return
-        time.sleep(5)
-        while self._node:
-            with self.lock:
-                self.record()
-            time.sleep(5)
+
+        self.runnning = True
+        for n in nuke.allNodes('Read'):
+            if n.name().startswith(self._prefix) and n['disable'].value():
+                continue
+            self._node = n
+            self.record()
+        self.runnning = False
 
     def dropframe_ranges(self):
         """Return nuke framerange instance of dropframes."""
         ret = nuke.FrameRanges()
-        if not self._node\
-                or self._node.name().startswith(self._prefix):
+        if not self._node:
             return ret
         _filename = nuke.filename(self._node)
-        if not _filename \
-                or expand_frame(_filename, 1) == _filename:
+        if not _filename:
+            return ret
+        if expand_frame(_filename, 1) == _filename:
+            if not os.path.isfile(_filename):
+                ret = self._node.frameRange()
             return ret
 
         _read_framerange = xrange(
@@ -62,30 +69,18 @@ class DropFrameCheck(threading.Thread):
         ret.compact()
         return ret
 
-    def setup_node(self):
-        """Add knob if needed."""
-
-        def _add_knob():
-            k = nuke.String_Knob(self.knob_name, '缺帧')
-            k.setEnabled(False)
-            self._node.addKnob(k)
-
-        if not nuke.exists(self.knob_tcl_name):
-            nuke.executeInMainThreadWithResult(_add_knob)
-
     def record(self):
         """Record dropframes on knob for futher use."""
 
-        _dropframes = str(self.dropframe_ranges())
+        _dropframes = self.dropframe_ranges()
 
-        def _set_knob():
-            self._node['dropframes'].setValue(_dropframes)
-            if _dropframes:
-                nuke.warning('{}: [dropframnes]{}'.format(
+        def _warning():
+            if str(_dropframes):
+                nuke.warning('{}: [dropframes]{}'.format(
                     self._node.name(), _dropframes))
-        if _dropframes != nuke.value(self.knob_tcl_name, ''):
-            self.setup_node()
-            nuke.executeInMainThread(_set_knob)
+        if str(_dropframes) != str(self.dropframes_dict.get(self._node, nuke.FrameRanges())):
+            self.dropframes_dict[self._node] = _dropframes
+            nuke.executeInMainThread(_warning)
 
     @classmethod
     def show_dialog(cls, show_all=False):
@@ -114,37 +109,9 @@ class DropFrameCheck(threading.Thread):
             nuke.message(_message)
 
 
-def expand_frame(filename, frame):
-    '''
-    Return a frame mark expaned version of filename, with given frame
-    '''
-    def _format_repl(matchobj):
-        return matchobj.group(0) % frame
-
-    def _hash_repl(matchobj):
-        return '%0{}d'.format(len(matchobj.group(0)))
-    ret = filename
-    ret = re.sub(r'(\#+)', _hash_repl, ret)
-    ret = re.sub(r'(%0?\d*d)', _format_repl, ret)
-    return ret
-
-
 def sent_to_dir(dir_):
     """Send current working file to dir."""
     copy(nuke.value('root.name'), dir_)
-
-
-def copy(src, dst):
-    """Copy src to dst."""
-    message = u'{} -> {}'.format(src, dst)
-    print(message)
-    nuke.tprint(message)
-    if not os.path.exists(src):
-        return
-    dst_dir = os.path.dirname(dst)
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
-    shutil.copy2(src, dst)
 
 
 def dropdata_handler(mime_type, data, from_dir=False):

@@ -1,0 +1,139 @@
+#! C:/Program Files/Nuke10.0v4/nuke-10.0.4.dll -nx
+version 10.0 v4
+add_layer {MotionVectors MotionVectors.red MotionVectors.green MotionVectors.blue MotionVectors.alpha}
+Gizmo {
+ tile_color 0xff3300ff
+ gl_color 0xb3ff3200
+ label "修复正负inf和正负nan的速度层\n(\[value this.channel])"
+ note_font 微软雅黑
+ addUserKnob {20 MotionFix l "MotionFix v0.1.1"}
+ addUserKnob {41 channel T Shuffle3.in}
+ addUserKnob {7 range R 1 10}
+ range 1
+ addUserKnob {7 strength t 强度 R 1 10}
+ strength 1
+ addUserKnob {41 output T Merge1.output}
+}
+ Input {
+  inputs 0
+  name Input
+  gl_color 0xc032ff00
+  xpos -40
+  ypos -151
+ }
+set N57484000 [stack 0]
+ Shuffle {
+  in MotionVectors
+  blue red
+  alpha green
+  out motion
+  name Shuffle3
+  gl_color 0xff7a3200
+  note_font 微软雅黑
+  xpos -40
+  ypos -440
+ }
+set N66a2bc00 [stack 0]
+ Expression {
+  channel0 rgba
+  expr3 "(abs(u) == inf || abs(v) == inf ) ? 1 : 0"
+  name Expression2
+  gl_color 0x4cff3200
+  label 正负inf的alpha
+  note_font 微软雅黑
+  xpos -40
+  ypos -396
+ }
+set N66a2b800 [stack 0]
+ Expression {
+  channel0 rgba
+  expr3 "(abs(u) == nan || abs(v) == nan) ? 1 : 0"
+  name Expression1
+  gl_color 0x4cff3200
+  label 正负nan的alpha
+  note_font 微软雅黑
+  xpos -40
+  ypos -344
+ }
+push $N66a2b800
+ ChannelMerge {
+  inputs 2
+  name ChannelMerge1
+  gl_color 0x3285ff00
+  note_font 微软雅黑
+  xpos 70
+  ypos -352
+ }
+set N66a2a800 [stack 0]
+ FilterErode {
+  size {{"-50 * parent.range"}}
+  filter gaussian
+  name FilterErode1
+  gl_color 0xff327800
+  note_font 微软雅黑
+  xpos 70
+  ypos -292
+ }
+push $N66a2a800
+ Dilate {
+  channels alpha
+  size 3
+  name Dilate3
+  gl_color 0x3271ff00
+  note_font 微软雅黑
+  xpos 180
+  ypos -292
+ }
+push $N66a2a800
+push $N66a2bc00
+ Multiply {
+  inputs 1+1
+  channels motion
+  value 0
+  name Multiply1
+  gl_color 0x5bff3200
+  note_font 微软雅黑
+  xpos 70
+  ypos -248
+ }
+ Dilate {
+  inputs 1+1
+  channels motion
+  size {{"20 * parent.range"}}
+  name Dilate1
+  gl_color 0xff329800
+  note_font 微软雅黑
+  xpos 180
+  ypos -248
+ }
+ Multiply {
+  inputs 1+1
+  channels motion
+  value {{"0.005 / parent.strength"}}
+  name Multiply3
+  gl_color 0x3b32ff00
+  note_font 微软雅黑
+  xpos 180
+  ypos -204
+ }
+push $N57484000
+ Merge2 {
+  inputs 2
+  operation copy
+  Achannels motion
+  Bchannels none
+  output motion
+  name Merge1
+  gl_color 0x323dff00
+  note_font 微软雅黑
+  selected true
+  xpos 180
+  ypos -160
+ }
+ Output {
+  name Output1
+  gl_color 0x7b32ff00
+  xpos 180
+  ypos -116
+ }
+end_group
