@@ -1,5 +1,5 @@
 # -*- coding=UTF-8 -*-
-"""Comp footages to a .nk file, can be run as script.  """
+"""Comp footages adn create output, can be run as script.  """
 
 import json
 import locale
@@ -18,7 +18,7 @@ import nukescripts
 
 from wlf.files import url_open
 
-__version__ = '0.13.8'
+__version__ = '0.14.6'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
@@ -87,7 +87,7 @@ class Comp(object):
     """Create .nk file from footage that taged in filename."""
 
     default_config = {
-        'footage_pat': r'^.+_sc.+_.+\.exr[0-9\- ]*$',
+        'footage_pat': r'^.*_?sc.+_.+\.exr[0-9\- ]*$',
         'dir_pat': r'^.{8,}$',
         'tag_pat': r'sc.+?_([^.]+)',
         'output_dir': 'E:/precomp',
@@ -100,6 +100,7 @@ class Comp(object):
     tag_knob_name = u'wlf_tag'
 
     def __init__(self, config=None):
+        print(u'\n吾立方批量合成 {}\n'.format(__version__))
         with open(os.path.join(__file__, '../comp.tags.json')) as f:
             tags = json.load(f)
             self._regular_tags = tags['regular_tags']
@@ -170,21 +171,22 @@ class Comp(object):
             # Get footage in subdir
             print(u'文件夹 {}:'.format(dir_))
             if not re.match(self._config['dir_pat'], os.path.basename(dir_.rstrip('\\/'))):
-                print(u'\t\t\t不匹配文件夹正则, 跳过\n')
+                print(u'\t不匹配文件夹正则, 跳过\n')
                 continue
 
             _footages = [i for i in nuke.getFileNameList(dir_) if
                          not i.endswith(('副本', '.lock'))]
             if _footages:
                 for f in _footages:
-                    print(u'\t' * 3 + f)
                     if os.path.isdir(os.path.join(dir_, f)):
+                        print(u'\t文件夹: {}'.format(f))
                         continue
-                    elif re.match(self._config['footage_pat'], f, flags=re.I):
+                    print(u'\t素材: {}'.format(f))
+                    if re.match(self._config['footage_pat'], f, flags=re.I):
                         nuke.createNode(
                             u'Read', 'file {{{}/{}}}'.format(dir_, f))
                     else:
-                        print(u'\t\t\t不匹配素材正则, 跳过\n')
+                        print(u'\t\t不匹配素材正则, 跳过\n')
             print('')
         print(u'{:-^30s}'.format(u'结束 导入素材'))
 
@@ -199,12 +201,18 @@ class Comp(object):
             raise FootageError(u'没有读取节点')
 
         n = None
+        root_format = None
         for n in _nodes:
             self._setup_node(n)
+            if n.format().name() == 'HD_1080':
+                root_format = 'HD_1080'
         if n:
+            if not root_format:
+                root_format = n.format()
             nuke.Root()['first_frame'].setValue(n['first'].value())
             nuke.Root()['last_frame'].setValue(n['last'].value())
             nuke.Root()['lock_range'].setValue(True)
+            nuke.Root()['format'].setValue(root_format)
 
     def create_nodes(self):
         """Create nodes that a comp need."""
@@ -212,7 +220,9 @@ class Comp(object):
         n = self._bg_ch_nodes()
         print(u'{:-^30s}'.format('BG CH 节点创建'))
 
-        n = self._merge_depth(n, self.get_nodes_by_tags(['BG', 'CH']))
+        nodes = nuke.allNodes(
+            'DepthFix') or self.get_nodes_by_tags(['BG', 'CH'])
+        n = self._merge_depth(n, nodes)
 
         print(u'{:-^30s}'.format(u'整体深度节点创建'))
         self._add_zdefocus_control(n)
@@ -275,7 +285,7 @@ class Comp(object):
             inputs=[n], conversion='logarithmic compress')
         n = nuke.nodes.Defocus(inputs=[n], disable=True)
         n = nuke.nodes.Crop(inputs=[n], box='0 0 root.width root.height')
-        n = nuke.nodes.Merge(
+        n = nuke.nodes.Merge2(
             inputs=[input_node, n], operation='under', bbox='B', label='MP')
 
         return n
@@ -310,7 +320,7 @@ class Comp(object):
         """Save .nk file and render .jpg file."""
 
         print(u'{:-^30s}'.format(u'开始 输出'))
-        _path = self._config['save_path'].replace('\\', '/')
+        _path = self._config['save_path'].replace('\\', '/').lower()
         _dir = os.path.dirname(_path)
         if not os.path.exists(_dir):
             os.makedirs(_dir)
@@ -319,6 +329,18 @@ class Comp(object):
         print(u'保存为:\n\t\t\t{}\n'.format(_path))
         nuke.Root()['name'].setValue(_path)
         nuke.scriptSave(_path)
+
+        # Render png
+        for n in nuke.allNodes('Read'):
+            name = n.name()
+            if name in ('MP', 'Read_Write_JPG'):
+                continue
+            for frame in (n.firstFrame(), n.lastFrame(), int(nuke.numvalue(u'_Write.knob.frame'))):
+                try:
+                    render_png(n, frame)
+                    break
+                except RuntimeError:
+                    continue
 
         # Render Single Frame
         n = nuke.toNode(u'_Write')
@@ -416,7 +438,6 @@ class Comp(object):
                 operation='luminance key',
                 range='0 0.007297795507 1 1'
             )
-        n = nuke.nodes.Reformat(inputs=[n], resize='fit')
         if 'depth.Z' not in input_node.channels():
             _constant = nuke.nodes.Constant(
                 channels='depth',
@@ -428,6 +449,7 @@ class Comp(object):
                 also_merge='all',
                 label='add_depth'
             )
+        n = nuke.nodes.Reformat(inputs=[n], resize='fit')
 
         n = nuke.nodes.DepthFix(inputs=[n])
         if self._config['autograde']:
@@ -465,6 +487,8 @@ class Comp(object):
 
         n = nuke.nodes.SoftClip(
             inputs=[n], conversion='logarithmic compress')
+        n = nuke.nodes.Crop(
+            inputs=[n], box='0 0 {} {}'.format(n.width(), n.height()), crop=False)
         n = nuke.nodes.ZDefocus2(
             inputs=[n],
             math='depth',
@@ -486,7 +510,8 @@ class Comp(object):
             '|| [value _ZDefocus.disable]} {return True} else {return False}]}}'
         )
         if 'motion' in nuke.layers(n):
-            n = nuke.nodes.VectorBlur2(inputs=[n], disable=True)
+            n = nuke.nodes.VectorBlur2(
+                inputs=[n], uv='motion', scale=1, soft_lines=True, normalize=True, disable=True)
         n = nuke.nodes.Crop(
             inputs=[n],
             box='0 0 root.width root.height')
@@ -638,6 +663,33 @@ if not nuke.GUI:
     nukescripts.PythonPanel = object
 
 
+def render_png(nodes, frame=None, show=False):
+    """create png for given @nodes."""
+    assert isinstance(nodes, (nuke.Node, list, tuple))
+    assert nuke.value('root.project_directory'), u'未设置工程目录'
+    if isinstance(nodes, nuke.Node):
+        nodes = (nodes,)
+    script_name = os.path.join(os.path.splitext(
+        os.path.basename(nuke.value('root.name')))[0])
+    for read_node in nodes:
+        if read_node.hasError() or read_node['disable'].value():
+            continue
+        name = read_node.name()
+        print(u'渲染: {}'.format(name))
+        n = nuke.nodes.Write(
+            inputs=[read_node], channels='rgba')
+        n['file'].fromUserText(os.path.join(
+            script_name, '{}.png'.format(name)))
+        if not frame:
+            frame = nuke.frame()
+        nuke.execute(n, frame, frame)
+
+        nuke.delete(n)
+    if show:
+        url_open(
+            'file://{}/{}'.format(nuke.value('root.project_directory'), script_name))
+
+
 class CompDialog(nukescripts.PythonPanel):
     """Dialog UI of class Comp."""
 
@@ -734,16 +786,77 @@ class CompDialog(nukescripts.PythonPanel):
 
         infos = ''
         for shot in sorted(shot_info.keys()):
-            infos += u'<tr>'\
-                u'<td><img src="images/{0}.jpg" height="200" alt="<无图像>"></img></td>\n'\
-                u'<td>{0}</td>\n<td>{1}</td></tr>\n'.format(
-                    shot, shot_info[shot])
-        infos = u'<head>\n<meta charset="UTF-8">\n<style>td{{padding:8px;}}</style>\n</head>\n'\
-            u'<table><tr><th>图像</th><th>镜头</th><th>信息</th></tr>\n'\
-            u'{}</table>'.format(infos)
+            infos += u'''\
+    <tr>
+        <td class="shot"><img src="images/{0}.jpg" class="preview"></img><br>{0}</td>
+        <td class="info">{1}</td>
+    </tr>
+'''.format(shot, shot_info[shot])
+        html_page = r"""<!DOCTYPE HTML>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        table {
+            margin: auto
+        }
+
+        td {
+            padding: 8px
+        }
+
+        tr {
+            background: #FFF
+        }
+
+        tr:hover {
+            background: #EEE
+        }
+
+        th {
+            font-family: "Microsoft YaHei", SimHei, sans-serif
+        }
+
+        img.preview {
+            height: 200px
+        }
+
+        .shot {
+            text-align: center;
+            font-family: "Microsoft YaHei", Verdana, Geneva, Tahoma, sans-serif
+        }
+
+        .info {
+            white-space: pre;
+        }
+    </style>
+    <script language="javascript">
+        window.onload = function showtable() {
+            var tablename = document.getElementById("mytable");
+            var li = tablename.getElementsByTagName("tr");
+            for (var i = 0; i <= li.length; i++) {
+                if (i % 2 == 0) {
+                    li[i].style.backgroundColor = "#EEE";
+                } else li[i].style.backgroundColor = "#FFF";
+            }
+        }
+    </script>
+</head>
+"""
+        html_page += u'''
+<body>
+    <table id="mytable">
+    <tr>
+        <th>镜头</th>
+        <th>信息</th>
+    </tr>
+    {}
+    </table>
+</body>
+'''.format(infos)
         log_path = os.path.join(self.config['output_dir'], u'批量合成日志.html')
         with open(log_path, 'w') as f:
-            f.write(infos.encode('UTF-8'))
+            f.write(html_page.encode('UTF-8'))
         # nuke.executeInMainThread(nuke.message, args=(errors,))
         url_open(u'file://{}'.format(log_path))
         url_open(

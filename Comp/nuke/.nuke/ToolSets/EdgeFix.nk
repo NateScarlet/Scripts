@@ -1,0 +1,72 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot4
+ gl_color 0xff3f3200
+ note_font 微软雅黑
+ selected true
+ xpos -1386
+ ypos -3329
+}
+set Ne4383400 [stack 0]
+FilterErode {
+ name FilterErode2
+ gl_color 0xff32d600
+ note_font 微软雅黑
+ selected true
+ xpos -1420
+ ypos -3311
+}
+LevelSet {
+ output -rgba.alpha
+ create_matte true
+ matte_limit 18
+ extrapolated rgb
+ name LevelSet3
+ gl_color 0x32ff3f00
+ note_font 微软雅黑
+ selected true
+ xpos -1420
+ ypos -3267
+}
+push $Ne4383400
+Merge2 {
+ inputs 2
+ Bchannels none
+ output rgb
+ name Merge7
+ gl_color 0xff813200
+ note_font 微软雅黑
+ selected true
+ xpos -1310
+ ypos -3272
+}
+add_layer {mask_extra mask_extra.flags mask_extra.road mask_extra.trees mask_extra.highlight mask_extra.shadow mask_extra.mountain_right mask_extra.rock}
+Unpremult {
+ channels alpha
+ alpha mask_extra.rock
+ name Unpremult7
+ gl_color 0xff327e00
+ note_font 微软雅黑
+ selected true
+ xpos -1310
+ ypos -3244
+}
+Premult {
+ name Premult11
+ gl_color 0xff703200
+ note_font 微软雅黑
+ selected true
+ xpos -1259
+ ypos -3203
+}
+Clamp {
+ channels alpha
+ name Clamp2
+ gl_color 0x34ff3200
+ note_font 微软雅黑
+ selected true
+ xpos -1259
+ ypos -3175
+}

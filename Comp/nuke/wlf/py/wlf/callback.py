@@ -8,8 +8,6 @@ import nukescripts
 
 from . import asset, csheet, edit, ui, cgtwn
 
-__version__ = '0.3.4'
-
 
 def init():
     """Add callback for nuke init phase."""
@@ -30,8 +28,12 @@ def menu():
 
     nuke.addOnUserCreate(_gizmo_to_group_on_create)
 
+    nuke.addOnScriptSave(lambda: asset.DropFrameCheck().start())
+    nuke.addOnScriptLoad(_add_root_info)
+    nuke.addOnScriptLoad(_eval_proj_dir)
+
     nuke.addOnScriptSave(_autoplace)
-    nuke.addOnScriptSave(edit.enable_rsmb, kwargs={'prefix': '_'})
+    nuke.addOnScriptSave(_enable_node)
     nuke.addOnScriptSave(_check_project)
     nuke.addOnScriptSave(_check_fps)
     nuke.addOnScriptSave(_lock_connections)
@@ -49,10 +51,28 @@ def abort_modified(func):
     """(Decorator)Abort function when project has been modified."""
 
     def _func():
-        if nuke.modified():
+        if nuke.Root().modified():
             return False
         func()
     return _func
+
+
+def _enable_node():
+    if nuke.numvalue('preferences.wlf_enable_node', 0.0):
+        enable_node('_enable_')
+
+
+def enable_node(prefix='_'):
+    """Enable all nodes with given prefix."""
+    task = nuke.ProgressTask('启用节点')
+    nodes = tuple(n for n in nuke.allNodes() if n.name().startswith(prefix))
+    all_num = len(nodes)
+    count = 0
+    for n in nodes:
+        task.setMessage(n.name())
+        task.setProgress(count * 100 // all_num)
+        n['disable'].setValue(False)
+        count += 1
 
 
 @abort_modified
@@ -60,6 +80,12 @@ def _create_csheet():
     if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
         if nuke.value('root.name'):
             csheet.ContactSheetThread().run()
+
+
+def _eval_proj_dir():
+    if nuke.numvalue('preferences.wlf_eval_proj_dir', 0.0):
+        attr = 'root.project_directory'
+        nuke.knob(attr, os.path.abspath(nuke.value(attr)).replace('\\', '/'))
 
 
 def _check_project():
@@ -84,6 +110,8 @@ def _check_project():
 
 def _check_fps():
     default_fps = 30
+    if os.path.basename(nuke.value('root.name')).startswith('SNJYW'):
+        default_fps = 25
     fps = nuke.numvalue('root.fps')
     if fps != default_fps:
         nuke.message('当前fps: {}, 默认值: {}'.format(fps, default_fps))
@@ -96,9 +124,11 @@ def _lock_connections():
 
 
 def _jump_frame():
-    if nuke.numvalue('preferences.wlf_jump_frame', 0.0) and nuke.exists('_Write.knob.frame'):
-        nuke.frame(nuke.numvalue('_Write.knob.frame'))
-        nuke.Root().setModified(False)
+    if nuke.numvalue('preferences.wlf_jump_frame', 0.0):
+        n = wlf_write_node()
+        if n:
+            nuke.frame(n['frame'].value())
+            nuke.Root().setModified(False)
 
 
 @abort_modified
@@ -110,8 +140,21 @@ def _send_to_render_dir():
 
 @abort_modified
 def _render_jpg():
-    if nuke.numvalue('preferences.wlf_send_to_dir', 0.0) and nuke.exists('_Write.bt_render_JPG'):
-        nuke.toNode('_Write')['bt_render_JPG'].execute()
+    if nuke.numvalue('preferences.wlf_render_jpg', 0.0):
+        n = wlf_write_node()
+        if n:
+            print('render_jpg: {}'.format(n.name()))
+            n['bt_render_JPG'].execute()
+
+
+def wlf_write_node():
+    """Return founded wlf_write node.  """
+
+    n = nuke.toNode('_Write')\
+        or nuke.toNode('wlf_Write1')\
+        or (nuke.allNodes('wlf_Write') and nuke.allNodes('wlf_Write')[0])
+
+    return n
 
 
 def _gizmo_to_group_on_create():
@@ -141,12 +184,33 @@ def _gizmo_to_group_update_ui():
 
 
 def _autoplace():
-    if nuke.numvalue('preferences.wlf_autoplace', 0.0) and nuke.modified():
+    if nuke.numvalue('preferences.wlf_autoplace', 0.0) and nuke.Root().modified():
         map(nuke.autoplace, nuke.allNodes())
 
 
 def _print_name():
     print(nuke.thisNode().name())
+
+
+def _add_root_info():
+    """add info to root.  """
+
+    artist = nuke.value('preferences.wlf_artist', '')
+    if not artist:
+        return
+    if not nuke.exists('root.wlf'):
+        n = nuke.Root()
+        k = nuke.Tab_Knob('wlf', '吾立方')
+        k.setFlag(nuke.STARTLINE)
+        n.addKnob(k)
+
+        k = nuke.String_Knob('wlf_artist', '制作人')
+        k.setFlag(nuke.STARTLINE)
+        k.setValue(artist)
+        n.addKnob(k)
+    else:
+        if nuke.exists('root.wlf_artist') and not nuke.value('root.wlf_artist', ''):
+            nuke.knob('root.wlf_artist', artist)
 
 
 def create_out_dirs():

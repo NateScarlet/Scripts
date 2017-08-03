@@ -2,9 +2,11 @@
 
 from pymel.all import *
 
+
 def breakAllLightLink():
     light = ls(selection=True)[0]
-    lightlink(b=True, light=light ,object=lightlink(query=True, object=light))
+    lightlink(b=True, light=light, object=lightlink(query=True, object=light))
+
 
 def rsPhysicalLight():
     mel.eval('redshiftCreateLight("RedshiftPhysicalLight")')
@@ -20,11 +22,11 @@ def rsPhysicalLight():
 
     aim = aimConstraint(locator, light)
     setAttr(aim + '.aimVector', (0, 0, -1))
-    
+
     position = autoPlace()
     move(light, position, relative=True)
     move(locator, position, relative=True)
-    
+
     rename(locator, '{}_aim'.format(light))
-    
+
     modelEditor('modelPanel4', e=True, lights=True, locators=True)

@@ -24,7 +24,7 @@ try:
 except ImportError:
     raise
 
-__version__ = '0.8.9'
+__version__ = '0.8.12'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -170,10 +170,12 @@ class Config(dict):
                     self['EP'],
                     self['SCENE']
                 )
-            else:
+            elif self.get('USE_TIME'):
                 _csheet_name += '_{}.jpg'.format(
                     time.strftime('%y%m%d_%H%M')
                 )
+            else:
+                _csheet_name += '_{}.jpg'.format(os.path.basename(self['DIR']))
             dict.__setitem__(self, 'csheet_name', _csheet_name)
 
             _value = os.path.join(
@@ -351,9 +353,11 @@ class Sync(object):
                 if _src_mtime < _dst_mtime:
                     print(u'{} -> {}'.format(src, dst))
                     print(u'服务器上的文件较新, 跳过')
+                    continue
                 if _src_mtime == _dst_mtime:
                     print(u'{} -> {}'.format(src, dst))
                     print(u'服务器上的文件相同, 跳过')
+                    continue
             copy(src, dst)
 
     def download_images(self):

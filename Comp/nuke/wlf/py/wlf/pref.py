@@ -36,6 +36,9 @@ def set_knob_default():
     nuke.knobDefault("Switch.which", "1")
     nuke.knobDefault("Viewer.input_process", "False")
     nuke.knobDefault("SoftClip.conversion", "3")
+    nuke.knobDefault("PositionToPoints.P_channel", "P")
+    nuke.knobDefault('Roto.cliptype', 'no clip')
+    nuke.knobDefault('RotoPaint.cliptype', 'no clip')
 
     k = nuke.toNode('preferences')['UIFontSize']
     if k.value() == 11:
@@ -64,7 +67,16 @@ def add_preferences():
         k.setFlag(nuke.ALWAYS_SAVE)
         pref.addKnob(k)
 
+    k = nuke.String_Knob('wlf_artist', '制作人信息')
+    k.setFlag(nuke.STARTLINE)
+    _add_knob(k)
+
     k = nuke.Boolean_Knob('wlf_gizmo_to_group', '创建Gizmo时尝试转换为Group')
+    k.setFlag(nuke.STARTLINE)
+    _add_knob(k)
+
+    k = nuke.Boolean_Knob('wlf_eval_proj_dir', '读取时工程目录自动转换为绝对路径')
+    k.setValue(True)
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
@@ -79,15 +91,22 @@ def add_preferences():
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
-    k = nuke.Boolean_Knob('wlf_jump_frame', '跳至_Write节点指定的帧')
+    k = nuke.Boolean_Knob('wlf_enable_node', '启用名称以 _enable_ 开头的节点')
+    k.setValue(True)
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
-    k = nuke.Boolean_Knob('wlf_render_jpg', '渲染_Write节点单帧')
+    k = nuke.Boolean_Knob('wlf_jump_frame', '跳至_Write节点指定的帧')
+    k.setValue(True)
     k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
     k = nuke.Text_Knob('wlf_on_script_close', '保存并退出时')
+    _add_knob(k)
+
+    k = nuke.Boolean_Knob('wlf_render_jpg', '渲染_Write节点单帧')
+    k.setValue(True)
+    k.setFlag(nuke.STARTLINE)
     _add_knob(k)
 
     k = nuke.Boolean_Knob('wlf_send_to_dir', '发送至渲染文件夹(Nuke渲染不支持中文路径)')

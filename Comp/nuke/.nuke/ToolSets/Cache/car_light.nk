@@ -1,0 +1,35 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot5
+ gl_color 0x78ff3200
+ note_font 微软雅黑
+ selected true
+ xpos 1333
+ ypos -729
+}
+set Na1c0c400 [stack 0]
+add_layer {Refractions Refractions.red Refractions.green Refractions.blue Refractions.alpha}
+Keyer {
+ input Refractions
+ operation "saturation key"
+ name Keyer3
+ gl_color 0xff613200
+ note_font 微软雅黑
+ selected true
+ xpos 1419
+ ypos -715
+}
+push $Na1c0c400
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 rgba.alpha
+ name Copy7
+ gl_color 0x32d7ff00
+ note_font 微软雅黑
+ selected true
+ xpos 1323
+ ypos -663
+}

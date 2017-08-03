@@ -7,8 +7,9 @@ import colorsys
 import random
 
 import nuke
+import nukescripts
 
-__version__ = '1.1.8'
+__version__ = '1.2.3'
 
 
 def rename_all_nodes():
@@ -101,6 +102,7 @@ class CurrentViewer(object):
 
 def channels_rename(prefix='PuzzleMatte'):
     """Shuffle channel to given name channel in mask_extra layer."""
+    # TODO: non-modal pannel.
 
     def _pannel_order(name):
         ret = name.replace(prefix + '.', '!.')
@@ -318,6 +320,18 @@ def enable_rsmb(prefix='_'):
 def fix_error_read():
     """Try fix all read nodes tha has error."""
 
+    filename_dict = dict(
+        {nukescripts.replaceHashes(os.path.basename(nuke.filename(n))): nuke.filename(n)
+         for n in nuke.allNodes('Read') if not n.hasError()})
+    for n in nuke.allNodes('Read'):
+        if n.hasError():
+            name = os.path.basename(nuke.filename(n))
+            new_path = filename_dict.get(nukescripts.replaceHashes(name))
+            if new_path:
+                filename_knob = n['file'] if not n['proxy'].value() \
+                    or nuke.value('root.proxy') == 'false' else n['proxy']
+                filename_knob.setValue(new_path)
+
     while True:
         _created_node = []
         for i in (i for i in nuke.allNodes('Read') if i.hasError()):
@@ -340,7 +354,8 @@ def delete_unused_nodes(message=False):
 
     def _is_used(n):
         if n.name().startswith('_')\
-                or n.Class() in ['BackdropNode', 'Read', 'Write', 'Viewer', 'GenerateLUT']:
+                or n.Class() in ['BackdropNode', 'Read', 'Write', 'Viewer', 'GenerateLUT', 'wlf_Write']\
+                or n.name() == 'VIEWER_INPUT':
             return True
         nodes_dependent_this = (n for n in n.dependent()
                                 if n.Class() not in [''] or n.name().startswith('_'))
@@ -529,5 +544,26 @@ def all_gizmo_to_group():
         gizmo_to_group(n)
 
 
-if __name__ == '__main__':
-    gizmo_to_group(nuke.selectedNode())
+def mark_enable(nodes):
+    """Mark selected node enable on script save.  """
+    if isinstance(nodes, nuke.Node):
+        nodes = (nodes)
+    for n in nodes:
+        old_name = n.name()
+        if not old_name.startswith('_enable_'):
+            n.setName('_enable_{}'.format(old_name))
+        try:
+            n['disable'].setValue(True)
+        except AttributeError:
+            pass
+
+
+def disable_nodes(prefix):
+    """Disable multiple nodes.  """
+
+    for n in nuke.allNodes():
+        if n.name().startswith(prefix):
+            try:
+                n['disable'].setValue(True)
+            except AttributeError:
+                pass

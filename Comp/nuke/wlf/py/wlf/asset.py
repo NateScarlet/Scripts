@@ -10,23 +10,20 @@ import nuke
 
 from .files import expand_frame, copy
 
-__version__ = '0.2.10'
-SYS_CODEC = locale.getdefaultlocale()[1]
+__version__ = '0.3.8'
+OS_ENCODING = locale.getdefaultlocale()[1]
 
 
 class DropFrameCheck(threading.Thread):
     """Check drop frames and record on the node."""
 
-    lock = threading.Lock()
     showed_files = []
-    knob_name = 'dropframes'
     dropframes_dict = {}
-    runnning = False
+    running = False
 
     def __init__(self, prefix=('_',)):
         threading.Thread.__init__(self)
         self.daemon = True
-        self._node = None
         self._prefix = prefix
 
     @property
@@ -36,77 +33,92 @@ class DropFrameCheck(threading.Thread):
             return '{}.{}'.format(self._node.name(), self.knob_name)
 
     def run(self):
-        if self.runnning:
+        if DropFrameCheck.running:
             return
 
-        self.runnning = True
-        for n in nuke.allNodes('Read'):
-            if n.name().startswith(self._prefix) and n['disable'].value():
+        DropFrameCheck.running = True
+
+        task = nuke.ProgressTask('检查缺帧')
+        read_files = tuple((nuke.filename(n), n.frameRange())
+                           for n in nuke.allNodes('Read') if not n['disable'].value())
+        footages = {}
+        for filename, framerange in read_files:
+            footages.setdefault(filename, nuke.FrameRanges())
+            footages[filename].add(framerange)
+        dropframe_dict = {}
+        all_num = len(footages)
+        count = 0
+        for filename, framerange in footages.items():
+            if task.isCancelled():
+                return
+            if not filename:
                 continue
-            self._node = n
-            self.record()
-        self.runnning = False
+            framerange.compact()
 
-    def dropframe_ranges(self):
+            task.setMessage(filename)
+            task.setProgress(count * 100 // all_num)
+            dropframes = self.dropframe_ranges(
+                filename, framerange.toFrameList())
+            if str(dropframes):
+                dropframe_dict[filename] = dropframes
+                nuke.executeInMainThread(DropFrameCheck.show_dialog)
+
+            count += 1
+        DropFrameCheck.dropframes_dict = dropframe_dict
+
+        DropFrameCheck.running = False
+
+    @staticmethod
+    def dropframe_ranges(filename, framerange):
         """Return nuke framerange instance of dropframes."""
+        assert isinstance(framerange, (list, nuke.FrameRange))
+        filename = get_unicode(filename)
+        task = nuke.ProgressTask(u'验证文件')
         ret = nuke.FrameRanges()
-        if not self._node:
-            return ret
-        _filename = nuke.filename(self._node)
-        if not _filename:
-            return ret
-        if expand_frame(_filename, 1) == _filename:
-            if not os.path.isfile(_filename):
-                ret = self._node.frameRange()
+        if expand_frame(filename, 1) == filename:
+            if not os.path.isfile(get_unicode(filename).encode(OS_ENCODING)):
+                ret.add(framerange)
             return ret
 
-        _read_framerange = xrange(
-            self._node.firstFrame(), self._node.lastFrame() + 1)
-        for f in _read_framerange:
-            _file = expand_frame(_filename, f)
-            if not os.path.isfile(unicode(_file, 'UTF-8').encode(SYS_CODEC)):
+        folder = get_unicode(os.path.dirname(filename.encode(OS_ENCODING)))
+        if not os.path.isdir(folder.encode(OS_ENCODING)):
+            ret.add(framerange)
+            return ret
+        _listdir = list(get_unicode(i)
+                        for i in os.listdir(folder.encode(OS_ENCODING)))
+        all_num = len(framerange)
+        count = 0
+        for f in framerange:
+            task.setProgress(count * 100 // all_num)
+            frame_file = unicode(os.path.basename(expand_frame(filename, f)))
+            task.setMessage(frame_file)
+            if frame_file not in _listdir:
                 ret.add([f])
+            count += 1
         ret.compact()
         return ret
-
-    def record(self):
-        """Record dropframes on knob for futher use."""
-
-        _dropframes = self.dropframe_ranges()
-
-        def _warning():
-            if str(_dropframes):
-                nuke.warning('{}: [dropframes]{}'.format(
-                    self._node.name(), _dropframes))
-        if str(_dropframes) != str(self.dropframes_dict.get(self._node, nuke.FrameRanges())):
-            self.dropframes_dict[self._node] = _dropframes
-            nuke.executeInMainThread(_warning)
 
     @classmethod
     def show_dialog(cls, show_all=False):
         """Show all dropframes to user."""
-
-        _message = ''
-        for n in nuke.allNodes('Read'):
-            _filename = nuke.filename(n)
-            if not show_all:
-                if _filename in cls.showed_files:
-                    continue
-            _dropframes = nuke.value(
-                '{}.{}'.format(n.name(), cls.knob_name), '')
-            if _dropframes:
-                _message += '<tr><td>{}</td><td>'\
+        message = ''
+        for filename, dropframes in cls.dropframes_dict.items():
+            if not show_all\
+                    and filename in cls.showed_files:
+                continue
+            if dropframes:
+                message += '<tr><td>{}</td><td>'\
                     '<span style=\"color:red\">{}</span></td></tr>'.format(
-                        _filename, _dropframes)
-                cls.showed_files.append(_filename)
+                        filename, dropframes)
+                cls.showed_files.append(filename)
 
-        if _message:
-            _message = '<style>td{padding:8px;}</style>'\
+        if message:
+            message = '<style>td{padding:8px;}</style>'\
                 '<table>'\
                 '<tr><th>素材</th><th>缺帧</th></tr>'\
-                + _message + \
+                + message + \
                 '</table>'
-            nuke.message(_message)
+            nuke.message(message)
 
 
 def sent_to_dir(dir_):
@@ -114,8 +126,22 @@ def sent_to_dir(dir_):
     copy(nuke.value('root.name'), dir_)
 
 
+def get_unicode(string, codecs=('UTF-8', OS_ENCODING)):
+    """Return unicode by try decode @string with @codecs.  """
+
+    if isinstance(string, unicode):
+        return string
+
+    for i in codecs:
+        try:
+            return unicode(string, i)
+        except UnicodeDecodeError:
+            continue
+
+
 def dropdata_handler(mime_type, data, from_dir=False):
     """Handling dropdata."""
+    # TODO: progressTask
     # print(mime_type, data)
     if mime_type != 'text/plain':
         return

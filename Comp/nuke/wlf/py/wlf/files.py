@@ -7,7 +7,7 @@ import shutil
 import locale
 from subprocess import call, Popen
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 OS_ENCODING = locale.getdefaultlocale()[1]
 
 
@@ -88,13 +88,19 @@ def split_version(f):
     ('hello world', None)
     >>> split_version('sc_001_v-1.nk')
     ('sc_001_v-1', None)
+    >>> split_version('sc001V1.jpg')
+    ('sc001', 1)
+    >>> split_version('sc001V1_no_bg.jpg')
+    ('sc001', 1)
+    >>> split_version('suv2005_v2_m.jpg')
+    ('suv2005', 2)
     """
 
-    match = re.match(r'(.+)_v(\d+)', f)
+    match = re.match(r'(.+)v(\d+)', f, flags=re.I)
     if not match:
         return (os.path.splitext(f)[0], None)
     shot, version = match.groups()
-    return (shot, int(version))
+    return (shot.strip('_'), int(version))
 
 
 def remove_version(path):
@@ -106,6 +112,14 @@ def remove_version(path):
     shot = split_version(path)[0]
     ext = os.path.splitext(path)[1]
     return '{}{}'.format(shot, ext)
+
+
+def map_drivers():
+    """Map unc path. """
+    cmd = r'(IF NOT EXIST X: NET USE X: \\192.168.1.4\h) &'\
+        r'(IF NOT EXIST Y: NET USE Y: \\192.168.1.7\y) &'\
+        r'(IF NOT EXIST Z: NET USE Z: \\192.168.1.7\z)'
+    call(cmd, shell=True)
 
 
 def url_open(url):
