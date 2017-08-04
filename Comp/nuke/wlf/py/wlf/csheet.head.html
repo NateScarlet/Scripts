@@ -11,17 +11,22 @@
             width: 90%;
             margin: auto;
             display: block;
+            text-align: center;
         }
         
         .shots:hover {
             background: #050505;
         }
         
+        .shots:hover .image:not(:hover):not(:target) {
+            opacity: 0.4;
+        }
+        
         .lightbox {
             display: inline-block;
             height: 200px !important;
             color: grey;
-            margin: 0.05%;
+            margin: auto;
             text-align: center;
             margin-bottom: 2em;
         }
@@ -51,10 +56,6 @@
             overflow: hidden;
             margin: auto;
             font-family: "Microsoft YaHei", SimHei, sans-serif
-        }
-        
-        .shots:hover .image:not(:hover):not(:target) {
-            opacity: 0.4;
         }
         
         .lightbox .full {
