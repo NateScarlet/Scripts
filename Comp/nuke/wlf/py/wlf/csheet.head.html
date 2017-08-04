@@ -20,7 +20,6 @@
         .lightbox {
             display: inline-block;
             height: 200px !important;
-            transition: opacity .4s ease-in-out;
             color: grey;
             margin: 0.05%;
             text-align: center;
@@ -30,6 +29,10 @@
         .lightbox .thumb {
             height: 100%;
             border: 1px solid grey;
+        }
+        
+        .image {
+            transition: opacity .4s ease-in-out;
         }
         
         figure.lightbox a:link {
@@ -49,10 +52,10 @@
             margin: auto;
             font-family: "Microsoft YaHei", SimHei, sans-serif
         }
-        /* The work below, CSSBox, is released under the Creative Commons
-   Attribution-ShareAlike 4.0 license and is available on
-   https://notabug.org/SylvieLorxu/CSSBox. You are not required to add
-   additional credit to your website, just leave the above text in this file */
+        
+        .shots:hover .image:not(:hover):not(:target) {
+            opacity: 0.4;
+        }
         
         .lightbox .full {
             position: fixed;
@@ -62,13 +65,14 @@
             top: 0;
             left: 0;
             opacity: 0;
-            transition: opacity 0.5s linear;
+            transition: opacity 0.5s ease-in-out;
             pointer-events: none;
+            z-index: 1;
         }
         
         .lightbox .full img {
             position: fixed;
-            z-index: 3;
+            z-index: 10;
             background-color: white;
             margin: 0;
             padding: 0;
@@ -88,7 +92,14 @@
             text-decoration: none;
             visibility: hidden;
             color: white;
-            font-size: 36px;
+            font-size: 3em;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5% 2%;
+        }
+        
+        a.prev:hover,
+        a.next:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         a.close {
@@ -122,10 +133,8 @@
         }
         
         a:target~.full {
-            visibility: visible;
             opacity: 1;
             pointer-events: auto;
         }
-        /* This is the end of CSSBox */
     </style>
 </head>

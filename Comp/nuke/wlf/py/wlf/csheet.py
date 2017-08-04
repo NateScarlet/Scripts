@@ -227,7 +227,7 @@ def create_html(image_folder):
         <figcaption>{name}</figcaption>
     </a>
     <span class="full">
-        <a href="./{folder}/{image}">
+        <a href="./{folder}/{image}" target="_blank">
             <img src="./{folder}/{image}">{name}</img>
         </a>
         <a class="close" href="#void"></a>
