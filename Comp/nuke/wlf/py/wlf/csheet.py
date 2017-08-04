@@ -218,15 +218,15 @@ def create_html(image_folder):
     column_num = int(len(images) ** 0.5)
     column_num = 5 if column_num > 5 else column_num
     for index, image in enumerate(images, 1):
-        if index % column_num == 1:
-            body += '<tr>\n'
-        body += '''<td class='shot'>
-    <a href="./{2}/{0}" target="_blank"><img src="./{2}/{0}" alt="{0}"></img></a><br>{1}
-</td>\n'''.format(image, split_version(get_shot(image))[0], os.path.basename(image_folder))
-        if index % column_num == 0:
-            body += '</tr>\n'
+        # if index % column_num == 1:
+        #     body += '<tr>\n'
+        body += '''<figure class='shot'>
+    <a href="./{2}/{0}" target="_blank"><img src="./{2}/{0}" alt="{0}"><figcaption>{1}</figcaption></img></a>
+</figure>\n'''.format(image, split_version(get_shot(image))[0], os.path.basename(image_folder))
+        # if index % column_num == 0:
+        #     body += '</tr>\n'
 
-    body = '<table>\n    {}\n</table>'.format(body)
+    body = '<div class="shots">\n    {}\n</div>'.format(body)
     body = '<body>\n    {}\n</body>'.format(body)
     with open(os.path.join(__file__, '../csheet.head.html')) as f:
         head = f.read()
