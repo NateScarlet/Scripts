@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
+"""Nuke menu file."""
 import nuke
 
 from wlf import ui, callback, pref, cgtwn
 
 nuke.pluginAddPath('plugins/icons')
-# nuke.pluginAddPath('//192.168.1.7/repository7/submission/Nuke/Client')
 
 print(u'添加菜单')
 ui.add_menu()

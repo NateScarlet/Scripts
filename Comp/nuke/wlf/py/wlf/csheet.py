@@ -1,6 +1,5 @@
 # -*- coding=UTF-8 -*-
 """Create contact sheet from all shot images."""
-# TODO: html implementation.
 
 import os
 import sys
@@ -14,7 +13,7 @@ import nuke
 
 from wlf.files import version_filter, split_version
 
-__version__ = '1.1.10'
+__version__ = '1.2.2'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -148,7 +147,7 @@ class ContactSheet(object):
         print(u'输出色板:\t\t{}'.format(self._config['csheet']))
         nuke.render(self._write_node, 1, 1)
 
-    def image_list(self):
+    def image_list(self, showinfo=True):
         """Return images to create contactsheet."""
 
         footage_dir = self._config['csheet_footagedir']
@@ -156,14 +155,17 @@ class ContactSheet(object):
         images = list(os.path.join(footage_dir, i)
                       for i in os.listdir(footage_dir))
         ret = version_filter(images)
-        for image in images:
-            if image not in ret:
-                print(u'排除:\t\t{} (较旧)'.format(image))
-            else:
-                print(u'包含:\t\t{}\n'.format(image))
-        print(u'共{}个文件 总计{}个镜头'.format(len(images), len(ret)))
+
         if not ret:
             raise FootageError
+
+        if showinfo:
+            for image in images:
+                if image not in ret:
+                    print(u'排除:\t\t{} (较旧)'.format(image))
+                else:
+                    print(u'包含:\t\t{}\n'.format(image))
+            print(u'共{}个文件 总计{}个镜头'.format(len(images), len(ret)))
         return ret
 
 
@@ -204,6 +206,36 @@ class ContactSheetThread(threading.Thread):
         task.setProgress(100)
         del task
         self.lock.release()
+
+
+def create_html(image_folder):
+    """Create a html page for a @image_folder.  """
+    if not os.path.isdir(image_folder):
+        return
+    body = ''
+    images = version_filter(i for i in os.listdir(image_folder)
+                            if os.path.isfile(os.path.join(image_folder, i)) and i.lower().endswith(('.jpg', '.png', '.gif')))
+    column_num = int(len(images) ** 0.5)
+    column_num = 5 if column_num > 5 else column_num
+    for index, image in enumerate(images, 1):
+        if index % column_num == 1:
+            body += '<tr>\n'
+        body += '''<td class='shot'>
+    <a href="./{2}/{0}" target="_blank"><img src="./{2}/{0}" alt="{0}"></img></a><br>{1}
+</td>\n'''.format(image, split_version(get_shot(image))[0], os.path.basename(image_folder))
+        if index % column_num == 0:
+            body += '</tr>\n'
+
+    body = '<table>\n    {}\n</table>'.format(body)
+    body = '<body>\n    {}\n</body>'.format(body)
+    with open(os.path.join(__file__, '../csheet.head.html')) as f:
+        head = f.read()
+    html_page = head + body
+    save_path = os.path.abspath(os.path.join(image_folder, u'../色板.html'))
+    with open(save_path.encode(OS_ENCODING), 'w') as f:
+        f.write(html_page)
+    print(u'生成: {}'.format(save_path))
+    return save_path
 
 
 def unicode_popen(args, **kwargs):
