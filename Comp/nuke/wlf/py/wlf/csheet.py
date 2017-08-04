@@ -13,7 +13,7 @@ import nuke
 
 from wlf.files import version_filter, split_version
 
-__version__ = '1.2.6'
+__version__ = '1.2.7'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -222,16 +222,18 @@ def create_html(image_folder):
         # if index % column_num == 1:
         #     body += '<tr>\n'
         body += '''<figure class='lightbox'>
-    <a id="image{index}" href="#image{index}">
-        <img class="thumb" src="./{folder}/{image}" alt="{image}" />
-        <span class="full">
-            <img src="./{folder}/{image}" >{name}</img>
-        </span>
+    <a id="image{index}" href="#image{index}" class="image">
+        <img src="./{folder}/{image}" alt="{image}" class="thumb" />
+        <figcaption>{name}</figcaption>
     </a>
-    <a class="close" href="#void"></a>
-    <a class="prev" href="#image{prev_index}">&lt;</a>
-    <a class="next" href="#image{next_index}">&gt;</a>
-    <figcaption>{name}</figcaption>
+    <span class="full">
+        <a href="./{folder}/{image}">
+            <img src="./{folder}/{image}">{name}</img>
+        </a>
+        <a class="close" href="#void"></a>
+        <a class="prev" href="#image{prev_index}">&lt;</a>
+        <a class="next" href="#image{next_index}">&gt;</a>
+    </span>
 </figure>
 '''.format(image=image,
            name=split_version(get_shot(image))[0],

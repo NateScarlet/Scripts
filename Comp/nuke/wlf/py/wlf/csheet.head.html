@@ -17,7 +17,7 @@
             background: #050505;
         }
         
-        figure.lightbox {
+        .lightbox {
             display: inline-block;
             height: 200px !important;
             transition: opacity .4s ease-in-out;
@@ -27,7 +27,7 @@
             margin-bottom: 2em;
         }
         
-        figure.lightbox img {
+        .lightbox .thumb {
             height: 100%;
             border: 1px solid grey;
         }
@@ -49,17 +49,12 @@
             margin: auto;
             font-family: "Microsoft YaHei", SimHei, sans-serif
         }
-        
-        .shots:hover .lightbox:not(:hover) {
-            opacity: 0.4;
-        }
         /* The work below, CSSBox, is released under the Creative Commons
    Attribution-ShareAlike 4.0 license and is available on
    https://notabug.org/SylvieLorxu/CSSBox. You are not required to add
    additional credit to your website, just leave the above text in this file */
         
-        span.full {
-            z-index: 999;
+        .lightbox .full {
             position: fixed;
             height: 100%;
             width: 100%;
@@ -67,12 +62,13 @@
             top: 0;
             left: 0;
             opacity: 0;
-            pointer-events: none;
             transition: opacity 0.5s linear;
+            pointer-events: none;
         }
         
-        span.full img {
+        .lightbox .full img {
             position: fixed;
+            z-index: 3;
             background-color: white;
             margin: 0;
             padding: 0;
@@ -85,10 +81,9 @@
             box-shadow: 0 0 20px black;
         }
         
-        a.close,
         a.prev,
         a.next {
-            z-index: 999;
+            z-index: 3;
             position: fixed;
             text-decoration: none;
             visibility: hidden;
@@ -97,12 +92,13 @@
         }
         
         a.close {
-            top: 1%;
-            right: 1%
-        }
-        
-        a.close::after {
-            content: '\00d7';
+            z-index: 1;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            left: 0px;
+            visibility: hidden;
         }
         
         a.prev,
@@ -119,20 +115,16 @@
             right: 5%;
         }
         
-        a:target~a.close,
-        a:target~a.prev,
-        a:target~a.next {
+        a:target~.full a.close,
+        a:target~.full a.prev,
+        a:target~.full a.next {
             visibility: visible;
         }
         
-        a:target>img.thumb+span.full {
+        a:target~.full {
             visibility: visible;
             opacity: 1;
-            pointer-events: initial;
-        }
-        
-        span.full {
-            cursor: initial;
+            pointer-events: auto;
         }
         /* This is the end of CSSBox */
     </style>
