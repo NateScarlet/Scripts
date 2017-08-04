@@ -13,7 +13,7 @@ import nuke
 
 from wlf.files import version_filter, split_version
 
-__version__ = '1.2.4'
+__version__ = '1.2.5'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -214,7 +214,8 @@ def create_html(image_folder):
         return
     body = ''
     images = version_filter(i for i in os.listdir(image_folder)
-                            if os.path.isfile(os.path.join(image_folder, i)) and i.lower().endswith(('.jpg', '.png', '.gif')))
+                            if os.path.isfile(os.path.join(image_folder, i))
+                            and i.lower().endswith(('.jpg', '.png', '.gif')))
     column_num = int(len(images) ** 0.5)
     column_num = 5 if column_num > 5 else column_num
     for index, image in enumerate(images, 1):
@@ -231,7 +232,13 @@ def create_html(image_folder):
         <a class="prev" href="#image{prev_index}">&lt;</a>
         <a class="next" href="#image{next_index}">&gt;</a>
     <figcaption>{name}</figcaption>
-</figure>'''.format(image=image, name=split_version(get_shot(image))[0], folder=os.path.basename(image_folder), index=index, prev_index=index - 1, next_index=index + 1)
+</figure>
+'''.format(image=image,
+           name=split_version(get_shot(image))[0],
+           folder=os.path.basename(image_folder),
+           index=index,
+           prev_index=index - 1,
+           next_index=index + 1)
         # if index % column_num == 0:
         #     body += '</tr>\n'
 
