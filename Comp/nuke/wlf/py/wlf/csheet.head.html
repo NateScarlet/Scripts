@@ -17,7 +17,7 @@
             background: #050505;
         }
         
-        figure.shot {
+        figure.lightbox {
             display: inline-block;
             height: 200px;
             transition: opacity .4s ease-in-out;
@@ -26,21 +26,21 @@
             text-align: center;
         }
         
-        figure.shot img {
+        figure.lightbox img {
             height: 100%;
             border: 1px solid grey;
         }
         
-        figure.shot a:link {
+        figure.lightbox a:link {
             text-decoration: none;
             color: grey
         }
         
-        figure.shot a:visited {
+        figure.lightbox a:visited {
             color: burlywood;
         }
         
-        figure.shot figcaption {
+        figure.lightbox figcaption {
             word-break: keep-all;
             text-overflow: ellipsis;
             width: 10em;
@@ -48,8 +48,90 @@
             margin: auto;
         }
         
-        #shots:hover figure.shot:not(:hover) {
+        .shots:hover .lightbox:not(:hover) {
             opacity: 0.4;
         }
+        /* The work below, CSSBox, is released under the Creative Commons
+   Attribution-ShareAlike 4.0 license and is available on
+   https://notabug.org/SylvieLorxu/CSSBox. You are not required to add
+   additional credit to your website, just leave the above text in this file */
+        
+        span.full {
+            z-index: 999;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s linear;
+        }
+        
+        span.full img {
+            position: fixed;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            max-height: 90%;
+            max-width: 90%;
+            top: 50%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px black;
+        }
+        
+        a.close,
+        a.prev,
+        a.next {
+            z-index: 999;
+            position: fixed;
+            text-decoration: none;
+            visibility: hidden;
+            color: white;
+            font-size: 36px;
+        }
+        
+        a.close {
+            top: 1%;
+            right: 1%
+        }
+        
+        a.close::after {
+            content: '\00d7';
+        }
+        
+        a.prev,
+        a.next {
+            top: 50%;
+            transform: translate(0%, -50%);
+        }
+        
+        a.prev {
+            left: 5%;
+        }
+        
+        a.next {
+            right: 5%;
+        }
+        
+        a:target~a.close,
+        a:target~a.prev,
+        a:target~a.next {
+            visibility: visible;
+        }
+        
+        a:target>img.thumb+span.full {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: initial;
+        }
+        
+        span.full {
+            cursor: initial;
+        }
+        /* This is the end of CSSBox */
     </style>
 </head>
