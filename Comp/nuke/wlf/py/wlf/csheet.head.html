@@ -95,6 +95,16 @@
             font-size: 3em;
             background: rgba(255, 255, 255, 0.1);
             padding: 5% 2%;
+            top: 50%;
+            transform: translate(0%, -50%);
+        }
+        
+        a.prev {
+            left: 1%;
+        }
+        
+        a.next {
+            right: 1%;
         }
         
         a.prev:hover,
@@ -110,20 +120,6 @@
             top: 0px;
             left: 0px;
             visibility: hidden;
-        }
-        
-        a.prev,
-        a.next {
-            top: 50%;
-            transform: translate(0%, -50%);
-        }
-        
-        a.prev {
-            left: 5%;
-        }
-        
-        a.next {
-            right: 5%;
         }
         
         a:target~.full a.close,
