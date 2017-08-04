@@ -11,9 +11,9 @@ import re
 from subprocess import Popen
 import nuke
 
-from wlf.files import version_filter, split_version
+from wlf.files import version_filter, split_version, get_unicode
 
-__version__ = '1.2.7'
+__version__ = '1.2.8'
 
 OS_ENCODING = locale.getdefaultlocale()[1]
 
@@ -213,7 +213,7 @@ def create_html(image_folder):
     if not os.path.isdir(image_folder):
         return
     body = ''
-    images = version_filter(i for i in os.listdir(image_folder)
+    images = version_filter(get_unicode(i) for i in os.listdir(image_folder)
                             if os.path.isfile(os.path.join(image_folder, i))
                             and i.lower().endswith(('.jpg', '.png', '.gif')))
     column_num = int(len(images) ** 0.5)
@@ -221,7 +221,7 @@ def create_html(image_folder):
     for index, image in enumerate(images, 1):
         # if index % column_num == 1:
         #     body += '<tr>\n'
-        body += '''<figure class='lightbox'>
+        body += u'''<figure class='lightbox'>
     <a id="image{index}" href="#image{index}" class="image">
         <img src="./{folder}/{image}" alt="{image}" class="thumb" />
         <figcaption>{name}</figcaption>
@@ -239,8 +239,8 @@ def create_html(image_folder):
            name=split_version(get_shot(image))[0],
            folder=os.path.basename(image_folder),
            index=index,
-           prev_index=index - 1,
-           next_index=index + 1)
+           prev_index=str(index - 1),
+           next_index=str(index + 1))
         # if index % column_num == 0:
         #     body += '</tr>\n'
 
@@ -251,7 +251,7 @@ def create_html(image_folder):
     html_page = head + body
     save_path = os.path.abspath(os.path.join(image_folder, u'../色板.html'))
     with open(save_path.encode(OS_ENCODING), 'w') as f:
-        f.write(html_page)
+        f.write(html_page.encode('UTF-8'))
     print(u'生成: {}'.format(save_path))
     return save_path
 
