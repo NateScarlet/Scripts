@@ -5,17 +5,14 @@ import os
 import sys
 import json
 import threading
-import locale
 import re
 
 from subprocess import Popen
 import nuke
 
-from wlf.files import version_filter, split_version, get_unicode
+from wlf.files import version_filter, split_version, get_unicode, get_encoded, url_open
 
-__version__ = '1.2.8'
-
-OS_ENCODING = locale.getdefaultlocale()[1]
+__version__ = '1.2.12'
 
 
 class ContactSheet(object):
@@ -202,7 +199,7 @@ class ContactSheetThread(threading.Thread):
         )
         if self._new_process:
             cmd = u'START "生成色板" {}'.format(cmd)
-        unicode_popen(cmd, shell=self._new_process)
+        Popen(get_encoded(cmd), shell=self._new_process)
         task.setProgress(100)
         del task
         self.lock.release()
@@ -210,17 +207,16 @@ class ContactSheetThread(threading.Thread):
 
 def create_html(image_folder):
     """Create a html page for a @image_folder.  """
-    if not os.path.isdir(image_folder):
+    image_folder = os.path.normpath(image_folder)
+    if not os.path.isdir(get_encoded(image_folder)):
         return
     body = ''
-    images = version_filter(get_unicode(i) for i in os.listdir(image_folder)
-                            if os.path.isfile(os.path.join(image_folder, i))
+    images = version_filter(get_unicode(i) for i in os.listdir(get_encoded(image_folder))
+                            if os.path.isfile(get_encoded(os.path.join(image_folder, i)))
                             and i.lower().endswith(('.jpg', '.png', '.gif')))
     column_num = int(len(images) ** 0.5)
     column_num = 5 if column_num > 5 else column_num
     for index, image in enumerate(images, 1):
-        # if index % column_num == 1:
-        #     body += '<tr>\n'
         body += u'''<figure class='lightbox'>
     <a id="image{index}" href="#image{index}" class="image">
         <img src="./{folder}/{image}" alt="{image}" class="thumb" />
@@ -228,7 +224,7 @@ def create_html(image_folder):
     </a>
     <span class="full">
         <a href="./{folder}/{image}" target="_blank">
-            <img src="./{folder}/{image}">{name}</img>
+            <img src="./{folder}/{image}"><figcaption>{name}</figcaption></img>
         </a>
         <a class="close" href="#void"></a>
         <a class="prev" href="#image{prev_index}">&lt;</a>
@@ -241,8 +237,6 @@ def create_html(image_folder):
            index=index,
            prev_index=str(index - 1),
            next_index=str(index + 1))
-        # if index % column_num == 0:
-        #     body += '</tr>\n'
 
     body = '<div class="shots">\n    {}\n</div>'.format(body)
     body = '<body>\n    {}\n</body>'.format(body)
@@ -250,18 +244,22 @@ def create_html(image_folder):
         head = f.read()
     html_page = head + body
     save_path = os.path.abspath(os.path.join(image_folder, u'../色板.html'))
-    with open(save_path.encode(OS_ENCODING), 'w') as f:
+    with open(get_encoded(save_path), 'w') as f:
         f.write(html_page.encode('UTF-8'))
     print(u'生成: {}'.format(save_path))
     return save_path
 
 
-def unicode_popen(args, **kwargs):
-    """Return Popen object use encoded args.  """
-
-    if isinstance(args, unicode):
-        args = args.encode(OS_ENCODING)
-    return Popen(args, **kwargs)
+def dialog_create_html():
+    """A dialog for create_html.  """
+    folder_input_name = '文件夹'
+    panel = nuke.Panel('创建HTML色板')
+    panel.addFilenameSearch(folder_input_name, '')
+    confirm = panel.show()
+    if confirm:
+        csheet = create_html(panel.value(folder_input_name))
+        if csheet:
+            url_open(csheet, isfile=True)
 
 
 class FootageError(Exception):

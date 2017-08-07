@@ -6,17 +6,19 @@ import re
 import shutil
 import locale
 import string
+import warnings
 from subprocess import call, Popen
 
 from wlf.config import Config
 
-__version__ = '0.3.0'
-OS_ENCODING = locale.getdefaultlocale()[1]
+__version__ = '0.3.4'
 
-REDSHIFT_LAYERS = ('DiffuseLighting', 'DiffuseFilter', 'SSS', 'Reflections',
+
+REDSHIFT_LAYERS = ('DiffuseLighting', 'SSS', 'Reflections',
                    'Refractions', 'GI', 'Emission', 'Caustics',
-                   'SpecularLighting', 'TransTint', 'Z', 'MotionVectors',
-                   'BumpNormals', 'P', 'PuzzleMatte')
+                   'SpecularLighting', 'Z', 'P', 'BumpNormals',
+                   'DiffuseFilter', 'MotionVectors', 'TransTint',
+                   'PuzzleMatte')
 
 
 def copy(src, dst):
@@ -32,7 +34,7 @@ def copy(src, dst):
     try:
         shutil.copy2(src, dst)
     except WindowsError:
-        call(u'XCOPY /V /Y "{}" "{}"'.format(src, dst).encode(OS_ENCODING))
+        call(get_encoded(u'XCOPY /V /Y "{}" "{}"'.format(src, dst)))
 
 
 def version_filter(iterable):
@@ -130,31 +132,60 @@ def map_drivers():
     call(cmd, shell=True)
 
 
-def url_open(url):
+def url_open(url, isfile=False):
     """Open url in explorer. """
+    if isfile:
+        url = 'file://{}'.format(url)
     _cmd = u"rundll32.exe url.dll,FileProtocolHandler {}".format(url)
     unicode_popen(_cmd)
 
 
 def unicode_popen(args, **kwargs):
     """Return Popen object use encoded args.  """
-
+    with warnings.catch_warnings():
+        warnings.simplefilter('always')
+        warnings.warn(
+            'Use Popen(get_encoded(arg) Instead.', DeprecationWarning)
     if isinstance(args, unicode):
-        args = args.encode(OS_ENCODING)
+        args = get_encoded(args)
     return Popen(args, **kwargs)
 
 
-def get_unicode(input_str, codecs=('UTF-8', OS_ENCODING)):
+def get_unicode(input_str, codecs=('UTF-8', 'GBK')):
     """Return unicode by try decode @string with @codecs.  """
 
     if isinstance(input_str, unicode):
         return input_str
 
-    for i in codecs:
+    for i in tuple(codecs) + tuple(locale.getdefaultlocale()[1]):
         try:
             return unicode(input_str, i)
         except UnicodeDecodeError:
             continue
+
+
+def get_encoded(input_str, encoding=None):
+    """Return unicode by try decode @string with @encodeing.  """
+    if encoding is None:
+        encoding = locale.getdefaultlocale()[1]
+
+    return get_unicode(input_str).encode(encoding)
+
+
+def is_ascii(text):
+    """Return true if @text can be convert to ascii.
+
+    >>> is_ascii('a')
+    True
+    >>> is_ascii('测试')
+    False
+
+    """
+    try:
+        get_unicode(text).encode('ASCII')
+        return True
+    except UnicodeEncodeError:
+        return False
 
 
 def get_layer(filename):
