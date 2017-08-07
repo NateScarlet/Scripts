@@ -6,10 +6,11 @@ import sys
 import locale
 from subprocess import call
 
-import PySide.QtCore, PySide.QtGui
+import PySide.QtCore
+import PySide.QtGui
 from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
-from ui_CGTeamWorkTool import Ui_MainWindow
+from ui_downloader import Ui_MainWindow
 from config import Config
 from sync import Sync
 from sync import LoginError
@@ -18,9 +19,10 @@ VERSION = 0.11
 SYS_CODEC = locale.getdefaultlocale()[1]
 SCRIPT_CODEC = 'UTF-8'
 
- 
+
 def pause():
     call('PAUSE', shell=True)
+
 
 class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
 
@@ -31,14 +33,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
         self.setupUi(self)
         self.versionLabel.setText('v{}'.format(VERSION))
 
-        self.edits_key = {  
-                            self.databaseEdit: 'DATABASE',
-                            self.moduleEdit: 'MODULE',
-                            self.serverEdit: 'SERVER', 
-                            self.pipelineEdit: 'PIPELINE',
-                            self.destEdit: 'DEST',
-                            self.shotPrefixEdit: 'SHOT_PREFIX'
-                         }
+        self.edits_key = {
+            self.databaseEdit: 'DATABASE',
+            self.moduleEdit: 'MODULE',
+            self.serverEdit: 'SERVER',
+            self.pipelineEdit: 'PIPELINE',
+            self.destEdit: 'DEST',
+            self.shotPrefixEdit: 'SHOT_PREFIX'
+        }
 
         self.update()
 
@@ -52,13 +54,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
     def connect_edits(self):
         for edit, key in self.edits_key.iteritems():
             if type(edit) == PySide.QtGui.QLineEdit:
-                edit.textChanged.connect(lambda text, k=key: self.editConfig(k, text))
+                edit.textChanged.connect(
+                    lambda text, k=key: self.editConfig(k, text))
                 edit.textChanged.connect(self.update)
             elif type(edit) == PySide.QtGui.QCheckBox:
-                edit.stateChanged.connect(lambda state, k=key: self.editConfig(k, state))
+                edit.stateChanged.connect(
+                    lambda state, k=key: self.editConfig(k, state))
                 edit.stateChanged.connect(self.update)
             elif type(edit) == PySide.QtGui.QComboBox:
-                edit.editTextChanged.connect(lambda text, k=key: self.editConfig(k, text))
+                edit.editTextChanged.connect(
+                    lambda text, k=key: self.editConfig(k, text))
             else:
                 print(u'待处理的控件: {} {}'.format(type(edit), edit))
 
@@ -73,7 +78,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
                 if isinstance(q, PySide.QtGui.QLineEdit):
                     q.setText(self.config[k])
                 if isinstance(q, PySide.QtGui.QCheckBox):
-                    q.setCheckState(PySide.QtCore.Qt.CheckState(self.config[k]))
+                    q.setCheckState(
+                        PySide.QtCore.Qt.CheckState(self.config[k]))
             except KeyError as e:
                 print(e)
 
@@ -85,27 +91,31 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
         list.clear()
         for i in cfg['video_list']:
             list.addItem(u'将下载: {}'.format(i))
-                
+
     def exec_dest_button(self):
         fileDialog = QFileDialog()
-        dir = fileDialog.getExistingDirectory(dir=os.path.dirname(self.config['DEST']))
+        dir = fileDialog.getExistingDirectory(
+            dir=os.path.dirname(self.config['DEST']))
         if dir:
             self.config['DEST'] = dir
             self.update()
 
     def downlowd(self):
         self.download_videos()
-        
+
     def set_button_enabled(self):
         self.downloadButton.setEnabled(bool(self.config['DEST']))
 
+
 def main():
-    call(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(VERSION).encode(SYS_CODEC), shell=True)
+    call(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(
+        VERSION).encode(SYS_CODEC), shell=True)
     app = QApplication(sys.argv)
     frame = MainWindow()
     frame.show()
     sys.exit(app.exec_())
-  
+
+
 if __name__ == '__main__':
     try:
         main()
