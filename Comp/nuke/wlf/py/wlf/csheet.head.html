@@ -58,6 +58,9 @@
         .lightbox .full {
             visibility: hidden;
             position: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             height: 100%;
             width: 100%;
             background-color: rgba(0, 0, 0, 0.8);
@@ -68,22 +71,25 @@
             z-index: 1;
         }
         
-        .lightbox .full img {
-            position: fixed;
+        .lightbox .full a.viewer {
             z-index: 2;
-            background-color: white;
-            margin: 0;
-            padding: 0;
+            position: fixed;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            top: 5%;
+            height: 70%;
             opacity: 0;
-            max-height: 70%;
-            max-width: 90%;
-            top: 50%;
-            left: 50%;
-            margin-right: -50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px black;
+            pointer-events: none;
             transition: 0.5s ease-in-out;
             -webkit-transition: 0.5s ease-in-out;
+        }
+        
+        .lightbox .full img {
+            height: 100%;
+            max-width: 90%;
+            object-fit: contain;
+            pointer-events: auto;
         }
         
         .lightbox .full figcaption {
@@ -96,6 +102,7 @@
             transition: 0.5s ease-in-out;
             -webkit-transition: 0.5s ease-in-out;
             background: rgba(0, 0, 0, 0.7);
+            pointer-events: auto;
         }
         
         .lightbox .full a.prev,
@@ -161,9 +168,9 @@
             right: 1%;
         }
         
-        .lightbox a:target~.full img {
+        .lightbox a:target~.full a.viewer {
             opacity: 1;
-            max-height: 90%;
+            height: 90%;
         }
         
         .lightbox a:target~.full figcaption {
