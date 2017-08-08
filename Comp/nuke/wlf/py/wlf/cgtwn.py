@@ -11,7 +11,9 @@ from subprocess import Popen, PIPE
 
 import nuke
 
+from . import cgtwq, csheet, files
 from .asset import copy
+from .files import url_open
 
 CGTW_PATH = r"C:\cgteamwork\bin\base"
 MODULE_ENABLE = True
@@ -26,7 +28,7 @@ except ImportError:
     MODULE_ENABLE = False
 
 
-__version__ = '0.4.11'
+__version__ = '0.5.1'
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 
@@ -243,12 +245,12 @@ class Shot(CGTeamWork):
         return ret
 
     @check_login
-    def submit(self, files, folders=None, note=u'自nuke提交'):
+    def submit(self, file_list, folders=None, note=u'自nuke提交'):
         """Submit this shot to cgtw."""
         if not folders:
             folders = []
-        print(u'提交: {}'.format(files + folders))
-        ret = self._task_module.submit(files, note, folders)
+        print(u'提交: {}'.format(file_list + folders))
+        ret = self._task_module.submit(file_list, note, folders)
         if not ret:
             print('提交失败')
         return ret
@@ -347,6 +349,39 @@ def on_close_callback():
         Shot().upload_image()
     except IDError:
         print(u'CGTW上未找到对应镜头')
+
+
+def dialog_create_csheet():
+    """A dialog for create html from cgtwq.  """
+    folder_input_name = '输出文件夹'
+    database_input_name = '数据库'
+    prefix_input_name = '镜头名前缀限制'
+    check_input_name = '忽略不存在的图像'
+    panel = nuke.Panel('为项目创建HTML色板')
+    panel.addSingleLineInput(database_input_name, 'proj_qqfc_2017')
+    panel.addSingleLineInput(prefix_input_name, '')
+    panel.addFilenameSearch(folder_input_name, 'E:/')
+    panel.addBooleanCheckBox(check_input_name, True)
+    confirm = panel.show()
+    if not confirm:
+        return
+
+    task = nuke.ProgressTask('创建色板')
+    database = panel.value(database_input_name)
+    save_path = os.path.join(panel.value(
+        folder_input_name), u'{}色板.html'.format(database))
+    prefix = panel.value(prefix_input_name)
+    checked = panel.value(check_input_name)
+
+    task.setProgress(10)
+    images = cgtwq.Shots(database).get_all_image(prefix)
+    task.setProgress(20)
+    if checked:
+        images = files.checked_exists(images)
+    created_file = csheet.create_html(images, save_path,
+                                      title=u'色板 {}'.format(database))
+    if created_file:
+        url_open(created_file, isfile=True)
 
 
 class IDError(Exception):

@@ -3,25 +3,21 @@
 
 import os
 import sys
-import locale
 from subprocess import call
 
 import PySide.QtCore
 import PySide.QtGui
 from PySide.QtGui import QMainWindow, QApplication, QFileDialog
 
-from ui_downloader import Ui_MainWindow
+from ui_mainwindow import Ui_MainWindow
 from config import Config
 from sync import Sync
 from sync import LoginError
 
-VERSION = 0.11
-SYS_CODEC = locale.getdefaultlocale()[1]
-SCRIPT_CODEC = 'UTF-8'
+from files import get_encoded
+import console
 
-
-def pause():
-    call('PAUSE', shell=True)
+__version__ = '0.1.1'
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
@@ -31,7 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
         Config.__init__(self)
         Sync.__init__(self)
         self.setupUi(self)
-        self.versionLabel.setText('v{}'.format(VERSION))
+        self.versionLabel.setText('v{}'.format(__version__))
 
         self.edits_key = {
             self.databaseEdit: 'DATABASE',
@@ -84,20 +80,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
                 print(e)
 
     def set_list_widget(self):
-        list = self.listWidget
+        widget = self.listWidget
         cfg = self.config
 
         self.get_file_list()
-        list.clear()
+        widget.clear()
         for i in cfg['video_list']:
-            list.addItem(u'将下载: {}'.format(i))
+            widget.addItem(u'将下载: {}'.format(i))
 
     def exec_dest_button(self):
         fileDialog = QFileDialog()
-        dir = fileDialog.getExistingDirectory(
-            dir=os.path.dirname(self.config['DEST']))
-        if dir:
-            self.config['DEST'] = dir
+        dest = fileDialog.getExistingDirectory(
+            dest=os.path.dirname(self.config['DEST']))
+        if dest:
+            self.config['DEST'] = dest
             self.update()
 
     def downlowd(self):
@@ -108,8 +104,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, Sync, Config):
 
 
 def main():
-    call(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(
-        VERSION).encode(SYS_CODEC), shell=True)
+    call(get_encoded(u'CHCP 936 & TITLE CGTWBatchDownload_v{} & CLS'.format(
+        __version__)), shell=True)
     app = QApplication(sys.argv)
     frame = MainWindow()
     frame.show()
@@ -119,11 +115,8 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except SystemExit as e:
-        exit(e)
-    except LoginError as e:
-        print(e)
-        pause()
-    except:
-        import traceback
-        traceback.print_exc()
+    except SystemExit as ex:
+        exit(ex)
+    except LoginError as ex:
+        print(ex)
+        console.pause()
