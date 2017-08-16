@@ -2,34 +2,18 @@
 """
 cgteamwork integration with nuke.
 """
-# TODO: check account
-import locale
 import os
-import re
-import sys
-from subprocess import Popen, PIPE
 
 import nuke
 
 from . import cgtwq, csheet, files
 from .asset import copy
-from .files import url_open
-
-CGTW_PATH = r"C:\cgteamwork\bin\base"
-MODULE_ENABLE = True
-try:
-    if os.path.isdir(CGTW_PATH):
-        sys.path.append(CGTW_PATH)
-        import cgtw
-    else:
-        raise ImportError(u'not a dir: {}'.format(CGTW_PATH))
-except ImportError:
-    print(u'**错误**导入cgtw模块失败, CGTeamWork相关功能失效。')
-    MODULE_ENABLE = False
+from .files import url_open, traytip, remove_version
+from .node import wlf_write_node
+from .config import Config
 
 
-__version__ = '0.5.1'
-SYS_CODEC = locale.getdefaultlocale()[1]
+__version__ = '0.8.5'
 
 
 def abort_modified(func):
@@ -46,22 +30,25 @@ def abort_when_module_not_enable(func):
     """(Decorator)Abort function if MODULE_ENABLE is not true."""
 
     def _func():
-        if not MODULE_ENABLE:
+        if not cgtwq.MODULE_ENABLE:
             return
         func()
     return _func
 
 
-def check_login(func):
+def check_login(update=False):
     """(Decorator)Abort funciton if not logged in."""
-
-    def _func(*args, **kwargs):
-        if CGTeamWork.is_logged_in:
-            func(*args, **kwargs)
-        else:
-            print(func.__name__, 'not login, abort.')
-
-    return _func
+    def _deco(func):
+        def _func(*args, **kwargs):
+            if update:
+                cgtwq.CGTeamWork.update_status()
+            if cgtwq.CGTeamWork.is_logged_in:
+                return func(*args, **kwargs)
+            else:
+                if nuke.GUI:
+                    traytip('警告', 'CGTeamWork未登录', options=2)
+        return _func
+    return _deco
 
 
 def proj_info():
@@ -79,225 +66,40 @@ def proj_info():
     return ret
 
 
-class CGTeamWork(object):
-    """Base class for cgtw action."""
-
-    is_logged_in = False
+class CurrentShot(cgtwq.Shot):
+    """The shot of current script.  """
 
     def __init__(self):
-        self._tw = cgtw.tw()
-
-    @property
-    def database(self):
-        """database on cgtw.  """
-        return proj_info()['database']
-
-    @staticmethod
-    def update_status():
-        """Return and set if cls.is_logged_in."""
-
-        task = nuke.ProgressTask('尝试连接CGTeamWork')
-        task.setProgress(50)
-        if not CGTeamWork.is_running():
-            ret = False
-        else:
-            ret = cgtw.tw().sys().get_socket_status()
-        CGTeamWork.is_logged_in = ret
-        print(u'CGTeamWork连接正常' if ret else u'CGTeamWork未连接')
-        return ret
-
-    @classmethod
-    def set_database(cls, database):
-        """Set class.database attribute."""
-
-        cls.database = database
-
-    @classmethod
-    def ask_database(cls):
-        """Show a dialog ask user database then set."""
-
-        database = nuke.getInput(u'工程英文名称'.encode('UTF-8'), cls.database)
-        if database:
-            cls.set_database(database)
-
-    @staticmethod
-    def is_running():
-        """Return is CgTeamWork.exe is running.  """
-
-        ret = True
-        if sys.platform == 'win32':
-            tasklist = Popen('TASKLIST', stdout=PIPE).communicate()[0]
-            if '\nCgTeamWork.exe ' not in tasklist:
-                ret = False
-                print(u'未运行 CGTeamWork.exe 。')
-        return ret
-
-
-class Shot(CGTeamWork):
-    """Methods for shot action."""
-
-    pipeline = u'合成'
-    pipeline_name = u'comp'
-    module = u'shot_task'
-    work_folder = u'work'
-
-    image_folder = u'Image'
-    server = u'Z:\\CGteamwork_Test'
-
-    def __init__(self):
-        super(Shot, self).__init__()
-        self._task_module = self._tw.task_module(
-            self.database, self.module)
-
-        self._task_module.init_with_id(self.shot_id)
-
-    @property
-    def shot_task_folder(self):
-        """shot_task_folder on server.  """
-        return proj_info()['shot_task_folder']
+        cgtwq.Shot.__init__(self, self.name)
 
     @property
     def name(self):
-        """The shot.shot name for cgtw."""
-
-        ret = nuke.value('root.name', '')
-        ret = os.path.basename(ret)
-        ret = os.path.splitext(ret)[0]
-        ret = re.sub(r'_v\d+$', '', ret)
-        return ret
+        """The current shot name.  """
+        return remove_version(os.path.splitext(os.path.basename(nuke.scriptName()))[0])
 
     @property
-    def shot_id(self):
-        """The id attribute of shot on cgtw."""
-
-        id_list = self._task_module.get_with_filter(
-            [], [['shot.shot', '=', self.name], ['shot_task.pipeline', '=', self.pipeline]])
-        if not id_list:
-            raise IDError(self.database, self.module,
-                          self.pipeline, self.name)
-        elif len(id_list) is not 1:
-            raise IDError(u'多个符合的条目'.encode('UTF-8'), id_list)
-        ret = id_list[0]['id']
-        return ret
-
-    def get_property(self, property_name):
-        """Return property value from cgtw."""
-
-        info = self._task_module.get([property_name])[0]
-        return info[property_name]
+    def workfile(self):
+        """The path of current nk_file.  """
+        return nuke.scriptName()
 
     @property
-    def workfile_dest(self):
-        """The .nk file upload destination."""
-
-        infos = self._task_module.get(
-            ['shot.shot', 'eps.project_code', 'eps.eps_name'])[0]
-        ret = os.path.join(
-            self.server,
-            infos['eps.project_code'],
-            self.shot_task_folder,
-            self.pipeline_name,
-            infos['eps.eps_name'],
-            infos['shot.shot'],
-            self.work_folder
-        ) + '\\'
-        if not os.path.isdir(os.path.dirname(ret)):
-            raise FolderError(ret)
-        return ret
+    def image(self):
+        """The rendered single image.  """
+        return os.path.join(nuke.value(
+            'root.project_directory', ''), nuke.filename(wlf_write_node().node('Write_JPG_1')))
 
     @property
-    def image_dest(self):
-        """The .jpg file upload destination."""
+    def video(self):
+        """The rendered single image.  """
+        return os.path.join(nuke.value(
+            'root.project_directory', ''), nuke.filename(wlf_write_node().node('Write_MOV_1')))
 
-        infos = self._task_module.get(
-            ['shot.shot', 'eps.project_code', 'eps.eps_name'])[0]
-        ret = os.path.join(
-            self.server,
-            infos['eps.project_code'],
-            self.shot_task_folder,
-            self.pipeline_name,
-            infos['eps.eps_name'],
-            infos['shot.shot'],
-            self.image_folder,
-            infos['shot.shot'] + '.jpg'
-        )
-        if not os.path.isdir(os.path.dirname(ret)):
-            raise FolderError(ret)
-        return ret
-
-    @property
-    def video_dest(self):
-        """The .mov file upload destination."""
-
-        infos = self._task_module.get(
-            ['shot.shot', 'eps.project_code', 'eps.eps_name'])[0]
-        ret = os.path.join(
-            self.server,
-            infos['eps.project_code'],
-            'shot/avi',
-            self.pipeline_name,
-            infos['eps.eps_name'],
-            'check',
-            infos['shot.shot'] + '.mov'
-        )
-        if not os.path.isdir(os.path.dirname(ret)):
-            raise FolderError(ret)
-        return ret
-
-    @check_login
-    def submit(self, file_list, folders=None, note=u'自nuke提交'):
-        """Submit this shot to cgtw."""
-        if not folders:
-            folders = []
-        print(u'提交: {}'.format(file_list + folders))
-        ret = self._task_module.submit(file_list, note, folders)
-        if not ret:
-            print('提交失败')
-        return ret
-
-    @check_login
-    def upload_nk_file(self):
-        """Upload .nk file to server."""
-
-        src = nuke.scriptName()
-        dst = self.workfile_dest
-        copy(src, dst)
-
-    @check_login
     def upload_image(self):
-        """Uploade .jpg file to server."""
-
-        n = nuke.toNode('_Write') or nuke.toNode(
-            'wlf_Write1') or nuke.allNodes('wlf_Write')
-        if isinstance(n, list):
-            n = n[0]
-        if n:
-            src = os.path.join(nuke.value(
-                'root.project_directory', ''), nuke.filename(n.node('Write_JPG_1')))
-            if not os.path.exists(src):
-                return
-            dst = self.image_dest
-            if not (os.path.exists(dst) and (
-                    os.path.getmtime(src) - os.path.getmtime(dst) < 1e-06)):
-                copy(src, dst)
-            return dst
-
-    @check_login
-    def upload_video(self):
-        """Uploade .mov file to server."""
-
-        n = nuke.toNode('_Write') or nuke.toNode(
-            'wlf_Write1') or nuke.allNodes('wlf_Write')
-        if isinstance(n, list):
-            n = n[0]
-        if n:
-            src = os.path.join(nuke.value(
-                'root.project_directory', ''), nuke.filename(n.node('Write_MOV_1')))
-            dst = self.video_dest
-            if not (os.path.exists(dst) and (
-                    os.path.getmtime(src) - os.path.getmtime(dst) < 1e-06)):
-                copy(src, dst)
-            return dst
+        """Upload imge to server and record it to cgtw database.  """
+        ret = copy(self.image, self.image_dest)
+        if ret:
+            self.shot_image = ret
+        return ret
 
     def submit_image(self):
         """Upload .jpg to server then sumbit these files."""
@@ -307,15 +109,10 @@ class Shot(CGTeamWork):
     def submit_video(self):
         """Upload .mov to server then sumbit these files."""
 
-        self.upload_video()
+        copy(self.video, self.video_dest)
         self.submit([self.video_dest])
 
-    def add_note(self, note):
-        """Add note for this shot on cgtw."""
-
-        self._task_module.create_note(note)
-
-    @check_login
+    @check_login(False)
     def ask_add_note(self):
         """Show a dialog for self.add_note function."""
 
@@ -328,53 +125,97 @@ class Shot(CGTeamWork):
 
 
 @abort_when_module_not_enable
-@abort_modified
-@check_login
-def on_save_callback():
-    """Try upload nk file to server."""
-
+@check_login(False)
+def on_load_callback():
+    """Show cgtwn status"""
     try:
-        CGTeamWork.update_status()
-        Shot().upload_nk_file()
-    except IDError:
-        print(u'CGTW上未找到对应镜头')
+        traytip('当前CGTeamWork项目', '{}:合成'.format(
+            CurrentShot().info.get('name')))
+    except cgtwq.LoginError:
+        traytip('Nuke无法访问数据库', '请登录CGTeamWork')
+    except cgtwq.IDError as ex:
+        traytip('CGteamwork找不到对应条目', str(ex))
 
 
 @abort_when_module_not_enable
 @abort_modified
-@check_login
+@check_login(True)
+def on_save_callback():
+    """Try upload nk file to server."""
+    try:
+        shot = CurrentShot()
+        shot.check_account()
+        dst = copy(shot.workfile, shot.workfile_dest)
+        if dst:
+            traytip('更新文件', dst)
+    except cgtwq.IDError:
+        traytip('更新文件', u'CGTW上未找到对应镜头')
+    except cgtwq.AccountError as ex:
+        traytip('未更新文件',
+                '当前镜头已被分配给:\t{}\n当前用户:\t\t{}'.format(ex.owner or '<未分配>', ex.current))
+
+
+@abort_when_module_not_enable
+@abort_modified
+@check_login(False)
 def on_close_callback():
     """Try upload image to server."""
     try:
-        Shot().upload_image()
-    except IDError:
-        print(u'CGTW上未找到对应镜头')
+        nuke.scriptName()
+    except RuntimeError:
+        return
+
+    task = nuke.ProgressTask('上传单帧')
+    try:
+        shot = CurrentShot()
+        shot.check_account()
+        dst = shot.upload_image()
+        task.setMessage(dst)
+        if dst:
+            traytip('更新单帧', dst)
+    except cgtwq.IDError:
+        traytip('更新单帧', u'CGTW上未找到对应镜头')
+    except cgtwq.AccountError as ex:
+        traytip('未更新单帧',
+                '当前镜头已被分配给:\t{}\n当前用户:\t\t{}'.format(ex.owner or '<未分配>', ex.current))
 
 
+@check_login(True)
 def dialog_create_csheet():
     """A dialog for create html from cgtwq.  """
+    config = Config()
+
     folder_input_name = '输出文件夹'
     database_input_name = '数据库'
     prefix_input_name = '镜头名前缀限制'
     check_input_name = '忽略不存在的图像'
     panel = nuke.Panel('为项目创建HTML色板')
-    panel.addSingleLineInput(database_input_name, 'proj_qqfc_2017')
-    panel.addSingleLineInput(prefix_input_name, '')
-    panel.addFilenameSearch(folder_input_name, 'E:/')
-    panel.addBooleanCheckBox(check_input_name, True)
+    panel.addSingleLineInput(
+        database_input_name, config.get('csheet_database'))
+    panel.addSingleLineInput(prefix_input_name, config.get('csheet_prefix'))
+    panel.addFilenameSearch(folder_input_name, config.get('csheet_outdir'))
+    panel.addBooleanCheckBox(check_input_name, config.get('csheet_checked'))
     confirm = panel.show()
     if not confirm:
         return
 
     task = nuke.ProgressTask('创建色板')
     database = panel.value(database_input_name)
-    save_path = os.path.join(panel.value(
-        folder_input_name), u'{}色板.html'.format(database))
+    config['csheet_database'] = database
+    out_dir = panel.value(folder_input_name)
+    config['csheet_outdir'] = out_dir
+    save_path = os.path.join(out_dir, u'{}色板.html'.format(database))
     prefix = panel.value(prefix_input_name)
+    config['csheet_prefix'] = prefix
     checked = panel.value(check_input_name)
+    config['csheet_checked'] = checked
 
     task.setProgress(10)
-    images = cgtwq.Shots(database).get_all_image(prefix)
+    try:
+        images = cgtwq.Shots(database, prefix=prefix).get_all_image()
+    except cgtwq.IDError as ex:
+        nuke.message('找不到对应条目\n{}'.format(ex))
+        return
     task.setProgress(20)
     if checked:
         images = files.checked_exists(images)
@@ -384,30 +225,57 @@ def dialog_create_csheet():
         url_open(created_file, isfile=True)
 
 
-class IDError(Exception):
-    """Indicate can't specify shot id on cgtw."""
+def dialog_login():
+    """Login teamwork.  """
+    account = '帐号'
+    password = '密码'
+    panel = nuke.Panel('登录CGTeamWork')
+    panel.addSingleLineInput('帐号', '')
+    panel.addPasswordInput('密码', '')
 
-    def __init__(self, *args):
-        Exception.__init__(self)
-        self.message = args
-
-    def __str__(self):
-        return '找不到对应条目:{}'.format(self.message)
-
-
-class FolderError(Exception):
-    """Indicate can't found destination folder."""
-
-    def __init__(self, *args):
-        Exception.__init__(self)
-        self.message = args
-
-    def __str__(self):
-        return '服务器上无对应文件夹:{}'.format(self.message)
+    success = False
+    while not success:
+        confirm = panel.show()
+        if confirm:
+            success = cgtwq.CGTeamWork().login(panel.value(account), panel.value(password))
+            if not success:
+                traytip('CGTeamWork', '登录失败')
+            else:
+                traytip('CGTeamWork', '登录成功')
+        else:
+            break
 
 
-class LoginError(Exception):
-    """Indicate haven't been login to cgtw."""
+@check_login(True)
+def dialog_create_dirs():
+    """A dialog for create dirs from cgtwq.  """
 
-    def __str__(self):
-        return 'CGTeamWork服务器未连接'
+    folder_input_name = '输出文件夹'
+    database_input_name = '数据库'
+    prefix_input_name = '镜头名前缀限制'
+    panel = nuke.Panel('为项目创建文件夹')
+    panel.addSingleLineInput(database_input_name, 'proj_qqfc_2017')
+    panel.addSingleLineInput(prefix_input_name, '')
+    panel.addFilenameSearch(folder_input_name, 'E:/temp')
+    confirm = panel.show()
+    if not confirm:
+        return
+
+    task = nuke.ProgressTask('创建文件夹')
+    database = panel.value(database_input_name)
+    save_path = panel.value(folder_input_name)
+    prefix = panel.value(prefix_input_name)
+
+    task.setProgress(10)
+    try:
+        names = cgtwq.Shots(database, prefix=prefix).names
+    except cgtwq.IDError as ex:
+        nuke.message('找不到对应条目\n{}'.format(ex))
+        return
+    task.setProgress(20)
+
+    for name in names:
+        _path = os.path.join(save_path, name)
+        if not os.path.exists(_path):
+            os.makedirs(_path)
+    url_open(save_path, isfile=True)

@@ -13,26 +13,15 @@ from subprocess import PIPE, Popen
 import nuke
 import nukescripts
 
-from wlf.files import url_open, get_encoded, get_unicode
-from wlf.edit import autoplace_all, get_max
+from wlf.files import url_open, get_encoded, get_unicode, escape_batch
+from wlf.edit import get_max, delete_unused_nodes
 from wlf.config import Config
-from wlf.node import ReadNode
+from wlf.node import ReadNode, get_upstream_nodes
+from wlf.orgnize import create_backdrop
 
 import wlf.precomp
 
-__version__ = '0.15.3'
-
-
-def escape_batch(text):
-    """Return escaped text for windows shell.
-
-    >>> escape_batch('test_text "^%~1"')
-    u'test_text \\\\"^^%~1\\\\"'
-    >>> escape_batch(u'中文 \"^%1\"')
-    u'\\xe4\\xb8\\xad\\xe6\\x96\\x87 \\\\"^^%1\\\\"'
-    """
-
-    return text.replace(u'"', r'\"').replace(u'^', r'^^')
+__version__ = '0.16.4'
 
 
 class Comp(object):
@@ -198,7 +187,8 @@ class Comp(object):
         map(nuke.delete, nuke.allNodes('Viewer'))
         nuke.nodes.Viewer(inputs=[n, n.input(0), n, _read_jpg])
 
-        autoplace_all()
+        map(nuke.autoplace, nodes)
+        delete_unused_nodes()
 
     @staticmethod
     def _merge_mp(input_node, mp_file='', lut=''):
@@ -263,7 +253,7 @@ class Comp(object):
         """Save .nk file and render .jpg file."""
 
         print(u'{:-^30s}'.format(u'开始 输出'))
-        _path = self._config['save_path'].replace('\\', '/').lower()
+        _path = self._config['save_path'].replace('\\', '/')
         _dir = os.path.dirname(_path)
         if not os.path.exists(_dir):
             os.makedirs(_dir)
@@ -274,16 +264,17 @@ class Comp(object):
         nuke.scriptSave(_path)
 
         # Render png
-        for n in nuke.allNodes('Read'):
-            name = n.name()
-            if name in ('MP', 'Read_Write_JPG'):
-                continue
-            for frame in (n.firstFrame(), n.lastFrame(), int(nuke.numvalue(u'_Write.knob.frame'))):
-                try:
-                    render_png(n, frame)
-                    break
-                except RuntimeError:
+        if self._config.get('RENDER_JPG'):
+            for n in nuke.allNodes('Read'):
+                name = n.name()
+                if name in ('MP', 'Read_Write_JPG'):
                     continue
+                for frame in (n.firstFrame(), n.lastFrame(), int(nuke.numvalue(u'_Write.knob.frame'))):
+                    try:
+                        render_png(n, frame)
+                        break
+                    except RuntimeError:
+                        continue
 
         # Render Single Frame
         n = nuke.toNode(u'_Write')
@@ -334,7 +325,11 @@ class Comp(object):
             tag_nodes_dict.setdefault(tag, [])
             tag_nodes_dict[tag].append(n)
 
-        for tag, nodes in tag_nodes_dict.items():
+        def _tag_order(tag):
+            return (u'_' + tag.replace(u'_BG', '1_').replace(u'_CH', '0_'))
+        tags = sorted(tag_nodes_dict.keys(), key=_tag_order)
+        for tag in tags:
+            nodes = tag_nodes_dict[tag]
             try:
                 n = wlf.precomp.redshift(nodes)
                 ret.append(n)
@@ -433,6 +428,7 @@ class Comp(object):
         n = nuke.nodes.Crop(
             inputs=[n],
             box='0 0 root.width root.height')
+        # create_backdrop(get_upstream_nodes(n), autoplace_nodes=True)
         return n
 
     @staticmethod
@@ -652,6 +648,7 @@ class CompDialog(nukescripts.PythonPanel):
         elif knob is self.knobs()['info']:
             self.update()
         else:
+            Config()[knob.name()] = knob.value()
             self._config[knob.name()] = knob.value()
             self.update()
 

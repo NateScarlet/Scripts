@@ -6,9 +6,9 @@ import os
 import nuke
 from autolabel import autolabel
 
-from . import asset, cgtwn
+from . import asset, cgtwq
 
-__version__ = '0.2.3'
+__version__ = '0.2.6'
 
 
 def add_menu():
@@ -17,6 +17,8 @@ def add_menu():
     def _edit(menu):
         m = menu.addMenu("编辑")
 
+        m.addCommand(
+            "禁用所有调色和滤镜除了虚焦", "import wlf.edit; wlf.edit.no_cc()")
         m.addCommand(
             "分离rgba", "import wlf.edit; wlf.edit.shuffle_rgba(nuke.selectedNode())")
         m.addCommand('分离所有通道', 'import wlf.edit; wlf.edit.split_layers(nuke.selectedNode())',
@@ -31,6 +33,8 @@ def add_menu():
         m.addSeparator()
         m.addCommand(
             "修正错误读取节点", "import wlf.edit; wlf.edit.fix_error_read()", 'F6')
+        m.addCommand(
+            "Reload所有读取节点", "import wlf.edit; wlf.edit.reload_all_read_node()")
         m.addCommand("显示所有缺帧",
                      "import wlf.asset; wlf.asset.DropFrameCheck.show_dialog(True)")
         m.addCommand("单帧转序列",
@@ -43,8 +47,9 @@ def add_menu():
         m.addCommand("所有Gizmo转Group",
                      "import wlf.edit; wlf.edit.all_gizmo_to_group()")
         n = m.addMenu('整理文件')
-        n.addCommand('创建背板', 'import wlf.backdrop; wlf.backdrop.create_backdrop()',
-                     'ctrl+alt+b', icon="backdrops.png")
+        n.addCommand("竖式自动摆放节点",
+                     "import wlf.orgnize; wlf.orgnize.autoplace()")
+
         n.addCommand("根据背板重命名所有节点",
                      "import wlf.edit; wlf.edit.rename_all_nodes()")
         n.addCommand("根据背板分割为多个文件文件",
@@ -85,19 +90,23 @@ def add_menu():
         m = menu.addMenu('CGTeamWork', icon='cgteamwork.png')
         # m.addCommand('设置工程', "import wlf.cgtwn; wlf.cgtwn.CGTeamWork.ask_database()")
         m.addCommand(
-            '添加note', "import wlf.cgtwn; wlf.cgtwn.Shot().ask_add_note()")
+            '帐号登录', "import wlf.cgtwn; wlf.cgtwn.dialog_login()")
+        m.addCommand(
+            '添加note', "import wlf.cgtwn; wlf.cgtwn.CurrentShot().ask_add_note()")
         # m.addCommand('上传nk文件', "import wlf.cgtwn; wlf.cgtwn.Shot().upload_nk_file()")
         # m.addCommand('上传单帧', "import wlf.cgtwn; wlf.cgtwn.Shot().upload_image()")
         m.addCommand(
-            '提交单帧', "import wlf.cgtwn; wlf.cgtwn.Shot().submit_image()")
+            '提交单帧', "import wlf.cgtwn; wlf.cgtwn.CurrentShot().submit_image()")
         m.addCommand(
-            '提交视频', "import wlf.cgtwn; wlf.cgtwn.Shot().submit_video()")
+            '提交视频', "import wlf.cgtwn; wlf.cgtwn.CurrentShot().submit_video()")
         m.addCommand(
             "批量下载",
             r'import subprocess;'
             r'subprocess.Popen(r"\\SERVER\scripts\cgteamwork\downloader\run.bat")')
         m.addCommand(
             '为项目创建色板', 'import wlf.cgtwn; wlf.cgtwn.dialog_create_csheet()')
+        m.addCommand(
+            '为项目创建文件夹', 'import wlf.cgtwn; wlf.cgtwn.dialog_create_dirs()')
         # m.addCommand('重新登录', "import wlf.cgtwn; wlf.cgtwn.CGTeamWork.update_status()")
 
     def _create_node_menu():
@@ -115,7 +124,7 @@ def add_menu():
 
     _edit(menubar)
     _comp(menubar)
-    if cgtwn.MODULE_ENABLE:
+    if cgtwq.MODULE_ENABLE:
         _cgtw(menubar)
     _create_node_menu()
 

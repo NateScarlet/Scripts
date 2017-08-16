@@ -77,7 +77,7 @@
         .lightbox figcaption {
             word-break: keep-all;
             text-overflow: ellipsis;
-            width: 10em;
+            width: 100%;
             overflow: hidden;
             margin: auto;
             transition: opacity 0.4s ease-in-out;
@@ -113,10 +113,15 @@
         }
 
         .lightbox .full img {
-            height: 100%;
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-height: 70%;
             max-width: 90%;
-            object-fit: contain;
             pointer-events: auto;
+            transition: 0.5s ease-in-out;
+            -webkit-transition: 0.5s ease-in-out;
         }
 
         .lightbox .full figcaption {
@@ -132,6 +137,7 @@
             background: rgba(0, 0, 0, 0.2);
             pointer-events: auto;
         }
+
 
         .lightbox .full a.prev,
         .lightbox .full a.next {
@@ -178,8 +184,18 @@
             color: grey
         }
 
+        .lightbox a:link .highlight {
+            color: black;
+            background: grey;
+        }
+
         .lightbox a:visited {
             color: burlywood;
+        }
+
+        .lightbox a:visited .highlight {
+            color: black;
+            background: burlywood;
         }
         /* full view final style */
 
@@ -199,6 +215,10 @@
         .lightbox a:target~.full a.viewer {
             opacity: 1;
             height: 90%;
+        }
+        .lightbox a:target~.full img {
+            top:50%;
+            max-height: 90%;
         }
 
         .lightbox a:target~.full figcaption {

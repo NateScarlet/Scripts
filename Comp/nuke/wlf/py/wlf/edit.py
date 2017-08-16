@@ -11,7 +11,7 @@ import nukescripts
 
 from .asset import dropdata_handler
 
-__version__ = '1.3.2'
+__version__ = '1.3.5'
 
 
 def rename_all_nodes():
@@ -360,7 +360,7 @@ def fix_error_read():
             break
 
 
-def delete_unused_nodes(message=False):
+def delete_unused_nodes(nodes=None, message=False):
     """Delete all unused nodes."""
 
     def _is_used(n):
@@ -373,11 +373,18 @@ def delete_unused_nodes(message=False):
                                 if n.Class() not in [''] or n.name().startswith('_'))
         return any(nodes_dependent_this)
 
+    task = nuke.ProgressTask('清除无用节点')
+    if nodes is None:
+        nodes = nuke.allNodes()
     count = 0
     while True:
-        for i in nuke.allNodes():
-            if not _is_used(i):
-                nuke.delete(i)
+        all_num = len(nodes)
+        for index, n in enumerate(nodes):
+            task.setMessage(n.name())
+            task.setProgress(index * 100 / all_num)
+            if not _is_used(n):
+                nuke.delete(n)
+                nodes.remove(n)
                 count += 1
                 break
         else:
@@ -406,7 +413,7 @@ def replace_sequence():
 
     confirm = panel.show()
     if confirm:
-        render_path = panel.value(render_path_text)
+        render_path = os.path.normcase(panel.value(render_path_text))
 
         first = int(panel.value(first_text))
         last = int(panel.value(last_text))
@@ -416,9 +423,9 @@ def replace_sequence():
         nuke.Root()['first_frame'].setValue(first)
         nuke.Root()['last_frame'].setValue(last)
 
-        for i in nuke.allNodes('Read'):
-            file_path = nuke.filename(i)
-            if file_path.startswith(render_path):
+        for n in nuke.allNodes('Read'):
+            file_path = nuke.filename(n)
+            if os.path.normcase(file_path).startswith(render_path):
                 search_result = re.search(r'\.([\d]+)\.', file_path)
                 if search_result:
                     flag_frame = search_result.group(1)
@@ -426,12 +433,12 @@ def replace_sequence():
                     r'\.([\d#]+)\.',
                     lambda matchobj: r'.%0{}d.'.format(len(matchobj.group(1))),
                     file_path)
-                i['file'].setValue(file_path)
-                i['format'].setValue('HD_1080')
-                i['first'].setValue(first)
-                i['origfirst'].setValue(first)
-                i['last'].setValue(last)
-                i['origlast'].setValue(last)
+                n['file'].setValue(file_path)
+                n['format'].setValue('HD_1080')
+                n['first'].setValue(first)
+                n['origfirst'].setValue(first)
+                n['last'].setValue(last)
+                n['origlast'].setValue(last)
 
         n = nuke.toNode('_Write')
         if n:
@@ -630,3 +637,23 @@ def get_max(node, channel='rgb'):
     nuke.delete(n)
 
     return ret
+
+
+def reload_all_read_node():
+    """Reload all read node by reload button.  """
+    for n in nuke.allNodes('Read'):
+        n['reload'].execute()
+
+
+def no_cc():
+    for n in nuke.allNodes():
+        node_class = n.Class()
+        node_name = n.name()
+        if node_class in ('ColorCorrect', 'VectorBlur2', 'Grade', 'HueCorrect', 'Aberration', 'OFXcom.revisionfx.rsmb_v3')\
+                or nuke.value('{}.tile_color'.format(node_name), '') in ('0xff7524ff', '0x7aa9ffff')\
+                and node_class not in ('ZDefocus2'):
+            n['disable'].setValue(True)
+    name = os.path.splitext(nuke.scriptName())[0]
+    if not name.endswith('_no_cc'):
+        name += '_no_cc.nk'
+        nuke.scriptSaveAs(name)

@@ -6,7 +6,7 @@ import nuke
 
 import wlf.files
 
-__version__ = '0.1.1'
+__version__ = '0.2.1'
 
 
 def append_knob(node, knob):
@@ -54,3 +54,36 @@ class ReadNode(object):
     def layer(self):
         """Return Read node layer.  """
         return wlf.files.get_layer(self._filename)
+
+
+def wlf_write_node():
+    """Return founded wlf_write node.  """
+
+    n = nuke.toNode('_Write')\
+        or nuke.toNode('wlf_Write1')\
+        or (nuke.allNodes('wlf_Write') and nuke.allNodes('wlf_Write')[0])
+
+    return n
+
+
+def get_upstream_nodes(n):
+    """ Return all nodes in the tree of the node. """
+    ret = []
+    nodes = [n]
+    while nodes:
+        deps = nuke.dependencies(nodes, nuke.INPUTS | nuke.HIDDEN_INPUTS)
+        nodes = [n for n in deps if n not in ret]
+        ret += deps
+
+    return ret
+
+
+def parent_backdrop(node):
+    """ Return direct parent backdrop for @node.  """
+    backdrops = nuke.allNodes('BackdropNode')
+    nodes = set()
+    list(nodes.union(n.getNodes()) for n in backdrops)
+    backdrops = set(backdrops) - nodes
+    for n in backdrops:
+        if node in n.getNodes():
+            return n

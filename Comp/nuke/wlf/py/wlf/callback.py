@@ -6,7 +6,8 @@ import os
 import nuke
 import nukescripts
 
-from . import asset, csheet, edit, ui, cgtwn
+from . import asset, csheet, edit, ui, cgtwn, orgnize
+from .node import wlf_write_node
 
 
 def init():
@@ -31,6 +32,7 @@ def menu():
     nuke.addOnScriptSave(lambda: asset.DropFrameCheck().start())
     nuke.addOnScriptLoad(_add_root_info)
     nuke.addOnScriptLoad(_eval_proj_dir)
+    nuke.addOnScriptLoad(cgtwn.on_load_callback)
 
     nuke.addOnScriptSave(_autoplace)
     nuke.addOnScriptSave(_enable_node)
@@ -79,7 +81,7 @@ def enable_node(prefix='_'):
 def _create_csheet():
     if nuke.numvalue('preferences.wlf_create_csheet', 0.0):
         if nuke.value('root.name'):
-            csheet.create_html(os.path.join(
+            csheet.create_html_from_dir(os.path.join(
                 nuke.value('root.project_directory'), 'images'))
 
 
@@ -148,16 +150,6 @@ def _render_jpg():
             n['bt_render_JPG'].execute()
 
 
-def wlf_write_node():
-    """Return founded wlf_write node.  """
-
-    n = nuke.toNode('_Write')\
-        or nuke.toNode('wlf_Write1')\
-        or (nuke.allNodes('wlf_Write') and nuke.allNodes('wlf_Write')[0])
-
-    return n
-
-
 def _gizmo_to_group_on_create():
     n = nuke.thisNode()
     if not nuke.numvalue('preferences.wlf_gizmo_to_group', 0.0):
@@ -186,7 +178,7 @@ def _gizmo_to_group_update_ui():
 
 def _autoplace():
     if nuke.numvalue('preferences.wlf_autoplace', 0.0) and nuke.Root().modified():
-        map(nuke.autoplace, nuke.allNodes())
+        orgnize.autoplace()
 
 
 def _print_name():

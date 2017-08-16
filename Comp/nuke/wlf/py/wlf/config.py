@@ -4,20 +4,24 @@
 import os
 import json
 
-__version__ = '0.1.0'
+__version__ = '0.1.2'
 
 
 class Config(dict):
     """Comp config.  """
     default = {
-        'footage_pat': r'^.*_?sc.+_.+\.exr[0-9\- ]*$',
-        'dir_pat': r'^.{3,}$',
+        'footage_pat': r'^.+\.exr[0-9\- ]*$',
+        'dir_pat': r'^.{4,}$',
         'tag_pat': r'(?i)(?:[^_]+_)?(?:ep\d+_)?(?:\d+[a-zA-Z]*_)?(?:sc\d+[a-zA-Z]*_)?((?:[a-zA-Z][^\._]*_?){,2})',
         'output_dir': 'E:/precomp',
         'input_dir': 'Z:/SNJYW/Render/EP',
         'mp': r"Z:\QQFC2017\Comp\mp\Panorama202_v2.jpg",
         'autograde': False,
         'exclude_existed': True,
+        'csheet_database': 'proj_big',
+        'csheet_prefix': 'SNJYW_EP14_',
+        'csheet_outdir': 'E:/',
+        'csheet_checked': True,
     }
     path = os.path.expanduser(u'~/.nuke/wlf.config.json')
     instance = None
