@@ -4,14 +4,18 @@ import nuke
 from wlf.files import get_layer, REDSHIFT_LAYERS
 from wlf.edit import add_layer
 
-__version__ = '0.1.10'
+__version__ = '0.1.12'
 
 
 def redshift(nodes):
     """Precomp reshift footage from layer."""
-    task = nuke.ProgressTask('Redshift预合成')
+    if isinstance(nodes, nuke.Node):
+        nodes = [nodes]
+    nodes = list(n for n in nodes if n.Class() == 'Read')
+    if not nodes:
+        raise ValueError('预合成没有读取节点')
 
-    if isinstance(nodes, nuke.Node) or len(nodes) == 1:
+    if len(nodes) == 1:
         n = nodes if isinstance(nodes, nuke.Node) else nodes[0]
         layers = nuke.layers(n)
 
@@ -38,14 +42,17 @@ def redshift(nodes):
                     source.get('DiffuseFilter'), source.get('DiffuseLightingRaw'))
     _merge_multiply('GI', source.get('DiffuseFilter'), source.get('GIRaw'))
 
-    assert source.get('DiffuseLighting'), '没有DiffuseLighting层'
     n = source.get('DiffuseLighting')
+    if not n:
+        raise ValueError('没有DiffuseLighting层')
 
     def _layer_order(name):
         try:
             return '{:05d}_{}'.format(REDSHIFT_LAYERS.index(name), name)
         except ValueError:
             return '~{}'.format(name)
+
+    task = nuke.ProgressTask('Redshift预合成')
     layers = sorted((i for i in source.keys() if i), key=_layer_order)
     for index, layer in enumerate(layers):
         task.setMessage(layer)

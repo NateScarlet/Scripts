@@ -6,7 +6,7 @@ import os
 import nuke
 import nukescripts
 
-from . import asset, csheet, edit, ui, cgtwn, orgnize
+from . import asset, csheet, edit, ui, cgtwn
 from .node import wlf_write_node
 
 
@@ -178,7 +178,8 @@ def _gizmo_to_group_update_ui():
 
 def _autoplace():
     if nuke.numvalue('preferences.wlf_autoplace', 0.0) and nuke.Root().modified():
-        orgnize.autoplace()
+        # orgnize.autoplace()
+        map(nuke.autoplace, nuke.allNodes())
 
 
 def _print_name():

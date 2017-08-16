@@ -269,7 +269,8 @@ class Comp(object):
                 name = n.name()
                 if name in ('MP', 'Read_Write_JPG'):
                     continue
-                for frame in (n.firstFrame(), n.lastFrame(), int(nuke.numvalue(u'_Write.knob.frame'))):
+                for frame in (n.firstFrame(), n.lastFrame(),
+                              int(nuke.numvalue(u'_Write.knob.frame'))):
                     try:
                         render_png(n, frame)
                         break
@@ -428,7 +429,7 @@ class Comp(object):
         n = nuke.nodes.Crop(
             inputs=[n],
             box='0 0 root.width root.height')
-        # create_backdrop(get_upstream_nodes(n), autoplace_nodes=True)
+        create_backdrop(get_upstream_nodes(n), autoplace_nodes=True)
         return n
 
     @staticmethod

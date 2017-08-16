@@ -4,78 +4,16 @@ import random
 
 import nuke
 
-__version__ = '0.1.3'
+from .node import get_upstream_nodes
+
+__version__ = '0.4.0'
 
 
 def autoplace(nodes=None):
     """Auto place nodes."""
-
-    backdrops_dict = {n: Nodes(n.getNodes())
-                      for n in nuke.allNodes('BackdropNode')}
-
-    nodes = nodes or list(n for n in nuke.allNodes()
-                          if not any(n for n in n.dependent(nuke.INPUTS)
-                                     if n.Class() not in ('Viewer', 'BackdropNode'))
-                          and n.Class() not in ('BackdropNode',))
-    # nodes.sort(key=lambda n: len(Branches(n)), reverse=False)
-    branches = list(Branches(n) for n in nodes)
-    # availeble_nodes = set(nuke.allNodes())
-    # for n in nodes:
-    #     this_branches = Branches(n, nodes=availeble_nodes)
-    #     branches.append(this_branches)
-    #     availeble_nodes.difference_update(this_branches.nodes)
-    #     print(availeble_nodes)
-    branches.sort(key=len, reverse=True)
-
-    Branch.placed_nodes = set()
-    last = None
-    for i in branches:
-        # print(i)
-        i.autoplace()
-        if last:
-            last_nodes = Nodes(last.nodes)
-            new_nodes = Nodes(n for n in i.nodes if n not in last_nodes)
-            print(new_nodes, 'new_nodes')
-            if new_nodes:
-                new_nodes.xpos = last_nodes.right + 20
-        i.nodes.ypos = 0
-        last = i
-    for backdrop, nodes in backdrops_dict.items():
-        if not nodes:
-            continue
-        nodes.autoplace()
-        left, top, right, bottom = (-10, -80, 10, 10)
-        xpos = nodes.xpos + left
-        ypos = nodes.ypos + top
-        width = nodes.width + (right - left)
-        height = nodes.height + (bottom - top)
-        backdrop.setXYpos(xpos, ypos)
-        backdrop['bdwidth'].setValue(width)
-        backdrop['bdheight'].setValue(height)
-        # Move other nodes out.
-        other_nodes = (n for n in nuke.allNodes()
-                       if n not in nodes and n is not backdrop)
-        for n in other_nodes:
-            xpos = n.xpos()
-            ypos = n.ypos()
-            if nodes.xpos <= xpos <= nodes.right:
-                ypos = ypos + bottom if ypos > nodes.ypos else ypos + top
-            n.setXYpos(xpos, ypos)
-
-
-def orgnize_nodes(nodes):
-    """orgnize node posion and add backdrops.  """
-    # TODO
-    meta_input_dict = {}
-    for n in nodes:
-        meta_input = n.metadata('input/filename')
-        if meta_input:
-            meta_input_dict.setdefault(meta_input, [])
-            meta_input_dict[meta_input].append(n)
-
-    for meta_input, nodes in meta_input_dict.items():
-        map(nuke.autoplace, nodes)
-        n = create_backdrop(nodes)
+    if not nodes:
+        nodes = nuke.allNodes()
+    Nodes(nodes).autoplace()
 
 
 def is_node_inside(node, backdrop):
@@ -96,18 +34,11 @@ def is_node_inside(node, backdrop):
     return topleft and bottomright
 
 
-# def autoplace(node):
-#     """Autoplace given node."""
-#     if node.Class() == 'BackdropNode':
-#         autoplace_backdrop(node)
-#     else:
-#         autoplace_input(node)
-
-
 class Nodes(list):
     """Geometry boder size of @nodes.  """
     y_gap = 10
     x_gap = 10
+    placed_nodes = set()
 
     def __init__(self, nodes=None):
         if nodes is None:
@@ -122,8 +53,6 @@ class Nodes(list):
     @property
     def xpos(self):
         """The x position.  """
-        for n in self:
-            print(n.xpos, n)
         return min(n.xpos() for n in self)
 
     @xpos.setter
@@ -194,25 +123,53 @@ class Nodes(list):
 
     def autoplace(self):
         """Auto place nodes."""
-        for n in self.outputs():
-            branches = Branches(n, nodes=self)
+        backdrops_dict = {n: Nodes(n.getNodes())
+                          for n in nuke.allNodes('BackdropNode')}
+
+        Nodes.placed_nodes.clear()
+
+        for n in self.endnodes():
+            branches = Branches(
+                n, nodes=list(n for n in nuke.allNodes() if n not in Nodes.placed_nodes))
+
             branches.autoplace()
-        # self.auto_margin()
+            if Nodes.placed_nodes and branches.nodes:
+                branches.nodes.xpos = Nodes(Nodes.placed_nodes).right + 20
+            Nodes.placed_nodes.update(set(branches.nodes))
 
-    def outputs(self):
+        for backdrop, nodes_in_backdrop in backdrops_dict.items():
+            if not nodes_in_backdrop:
+                continue
+            backdrop_nodes = Nodes(nodes_in_backdrop)
+            backdrop_nodes.append(backdrop)
+            left, top, right, bottom = (-10, -80, 10, 10)
+            backdrop.setXYpos(nodes_in_backdrop.xpos + left,
+                              nodes_in_backdrop.ypos + top)
+            backdrop['bdwidth'].setValue(
+                nodes_in_backdrop.width + (right - left))
+            backdrop['bdheight'].setValue(
+                nodes_in_backdrop.height + (bottom - top))
+            # Move other nodes out.
+
+            other_nodes = Nodes(n for n in nuke.allNodes()
+                                if n not in nodes_in_backdrop and n is not backdrop)
+            up_nodes = Nodes(n for n in other_nodes if n.ypos()
+                             < backdrop_nodes.bottom)
+            down_nodes = Nodes(n for n in other_nodes if n.ypos()
+                               >= backdrop_nodes.bottom)
+            if up_nodes:
+                up_nodes.bottom = backdrop_nodes.ypos - backdrop_nodes.y_gap
+            if down_nodes:
+                down_nodes.ypos = backdrop_nodes.bottom + backdrop_nodes.y_gap
+
+        nuke.Root().setModified(True)
+
+    def endnodes(self):
         """Return Nodes that has no contained downstream founded in given nodes.  """
-        ret = (n for n in self if all(n not in self for n in n.dependent()))
+        ret = Nodes(n for n in self
+                    if all(n not in self for n in n.dependent(nuke.INPUTS)))
+        ret.sort(key=get_upstream_nodes, reverse=True)
         return ret
-
-    def auto_margin(self):
-        left_nodes = Nodes(n for n in nuke.allNodes()
-                           if n not in self and n.xpos < self.xpos)
-        if left_nodes:
-            self.xpos = left_nodes.right + self.x_gap
-        top_nodes = Nodes(n for n in nuke.allNodes()
-                          if n not in self and n.ypos < self.ypos)
-        if top_nodes:
-            self.xpos = top_nodes.bottom + self.y_gap
 
 
 def autoplace_backdrop(backdrop):
@@ -237,19 +194,17 @@ def autoplace_backdrop(backdrop):
 class Branch(Nodes):
     """A branch is a list of connected nodes. (e.g. [node1, node2, ... node_n]).  """
     depth = 0
-    placed_nodes = set()
+    _parent_branch = None
+    _parent_nodes = None
+    _expanded = None
+    big_branch_thershold = 10
 
     def __init__(self, node=None):
-        self._origin = None
-        self._origin_branch = None
-        self._origin_nodes = Nodes()
         if isinstance(node, nuke.Node):
             node = [node]
         elif node is None:
             node = []
         Nodes.__init__(self, node)
-        self._expanded = None
-        self._y_autopalced = False
 
     def expand(self, nodes=None):
         """Expand self to upstream 1 time, can limit in @nodes.  """
@@ -258,8 +213,7 @@ class Branch(Nodes):
             return False
         ret = Branches()
         nodes = nodes or nuke.allNodes()
-        end = self[-1]
-        input_nodes = end.dependencies(nuke.INPUTS)
+        input_nodes = self[-1].dependencies(nuke.INPUTS)
         for index, input_node in enumerate(input_nodes):
             if input_node not in nodes:
                 continue
@@ -267,9 +221,8 @@ class Branch(Nodes):
                 branch = self
             else:
                 branch = Branch()
-                branch.origin = end
-                branch.origin_nodes = Nodes(self)
-                branch.origin_branch = self
+                branch.parent_nodes = Nodes(self[:-1])
+                branch.parent_branch = self
                 branch.depth = self.depth + len(self)
             branch.append(input_node)
             ret.append(branch)
@@ -279,107 +232,113 @@ class Branch(Nodes):
     def expanded(self):
         """Return if this branch is expanded to end.  """
         if not self._expanded:
-            origin = self[-1]
-            input_nodes = origin.dependencies(nuke.INPUTS)
+            startnode = self[-1]
+            input_nodes = startnode.dependencies(nuke.INPUTS)
             self._expanded = not bool(input_nodes)
         return self._expanded
 
+    def new_nodes(self):
+        """Return nodes that need to be autoplaced in this branch.  """
+        return Nodes(n for n in self if n not in Branches.placed_nodes)
+
+    def base_node(self, length_filter=None):
+        """Return the base node this branch splitted from.  """
+        if length_filter is None:
+            length_filter = self.big_branch_thershold
+        ret = self[0]
+        parent = self.parent_branch
+        nodes = self.parent_nodes
+        while parent:
+            ret = nodes[-1]
+            if len(parent) >= length_filter:
+                break
+            nodes = parent.parent_nodes
+            parent = parent.parent_branch
+        return ret
+
+    def prev_nodes(self):
+        """Return previous autoplaced nodes.  """
+        ret = Nodes()
+        if self.parent_nodes:
+            ret = Nodes(n for n in get_upstream_nodes(self.base_node())
+                        if n not in self.new_nodes()
+                        and n in Branches.placed_nodes)
+        return ret
+
     def autoplace(self):
         """Autoplace nodes in this branch.  """
-        # print(self)
-        self._new_nodes = Nodes(
-            n for n in self if n not in self.origin_branch) if self.origin_branch else self
-        self.autoplace_y()
-        # if self.origin_branch:
-        #     self.origin_branch.autoplace_x()
-        self.autoplace_x()
-        Branch.placed_nodes.update(set(self))
-
-    def autoplace_x(self):
-        """Autoplace on x axis.  """
-
-        xpos = 0 if not self.origin else self.origin_nodes.right + self.x_gap
-
-        left_nodes = Nodes(n for n in Branch.placed_nodes
-                           if n.ypos() >= self._new_nodes.ypos
-                           and Nodes(n).bottom <= self._new_nodes.bottom
-                           and n not in self._new_nodes)
-        # print('self', str(self))
-        # print('new_nodes', new_nodes)
-        # print('left_nodes', left_nodes)
-        if left_nodes:
-            xpos = left_nodes.right + self.x_gap
-        for n in self._new_nodes:
-            if n in Branch.placed_nodes:
-                continue
-            # print('x', n.name(),  xpos +
-            #       (new_nodes.max_width - n.screenWidth()) / 2, xpos)
-            n.setXpos(xpos + (self._new_nodes.max_width - n.screenWidth()) / 2)
-
-    def autoplace_y(self):
-        """Autoplace on y axis.  """
-        ypos = 0
-        nodes = Nodes(
-            n for n in self._new_nodes if n not in Branch.placed_nodes)
+        nodes = self.new_nodes()
         if not nodes:
             return
+
+        nuke.zoomToFitSelected()
+        if not nuke.ask(str(self.base_node().name())):
+            raise RuntimeError
+
+        # Y-axis.
+        ypos = 0
         for n in nodes:
-            print(n.name(), 'y', ypos)
-            n.setYpos(ypos)
             ypos -= n.screenHeight() + self.y_gap
-            nuke.zoomToFitSelected()
-            nuke.ask('autoplace_y')
-        if self.origin:
-            nodes.bottom = self.origin.ypos() - self.y_gap
+            n.setYpos(ypos)
+        if len(nodes) < self.big_branch_thershold:
+            # Place nodes accroding parent.
+            if self.parent_nodes:
+                nodes.bottom = self.parent_nodes.ypos - self.y_gap
+            # Move other nodes up.
+            up_nodes = Nodes(n for n in self.prev_nodes()
+                             if Nodes(n).bottom <= nodes.bottom)
+            if up_nodes:
+                up_nodes.bottom = nodes.ypos - nodes.y_gap
+        elif self.parent_nodes:
+            nodes.bottom = self.parent_nodes.ypos - self.y_gap
 
-        up_nodes = Nodes(n for n in Branch.placed_nodes
-                         if Nodes(n).bottom <= nodes.bottom)
-        print('up_nodes', up_nodes)
-        if up_nodes:
-            print('up_bottom', nodes.ypos - nodes.y_gap)
-            up_nodes.bottom = nodes.ypos - nodes.y_gap
-
-    @property
-    def origin(self):
-        """The node branch expand from."""
-        return self._origin
-
-    @origin.setter
-    def origin(self, value):
-        if isinstance(value, nuke.Node):
-            self._origin = value
+        # X-axis.
+        if len(nodes) >= self.big_branch_thershold and Branches.placed_nodes:
+            xpos = Nodes(Branches.placed_nodes).right + self.x_gap * 50
         else:
-            raise TypeError('Expected nuke.Node type.')
+            xpos = 0
+
+        if self.parent_nodes:
+            left_nodes = Nodes(n for n in self.prev_nodes()
+                               if n.ypos() >= nodes.ypos
+                               and Nodes(n).bottom <= nodes.bottom)
+            if left_nodes:
+                xpos = max([left_nodes.right + self.x_gap, xpos])
+
+        if self.parent_nodes:
+            xpos = max([Nodes(self.parent_nodes[-1]).right + self.x_gap, xpos])
+        for n in nodes:
+            n.setXpos(xpos + (nodes.max_width - n.screenWidth()) / 2)
 
     @property
-    def origin_nodes(self):
+    def parent_nodes(self):
         """The nodes branch expand from."""
-        return self._origin_nodes
+        return self._parent_nodes
 
-    @origin_nodes.setter
-    def origin_nodes(self, value):
+    @parent_nodes.setter
+    def parent_nodes(self, value):
         if not isinstance(value, list):
             raise TypeError('Expected list type.  ')
-        self._origin_nodes = Nodes(value)
+        self._parent_nodes = Nodes(value)
 
     @property
-    def origin_branch(self):
+    def parent_branch(self):
         """The branch this branch expand from."""
-        return self._origin_branch
+        return self._parent_branch
 
-    @origin_branch.setter
-    def origin_branch(self, value):
+    @parent_branch.setter
+    def parent_branch(self, value):
         if not isinstance(value, Branch):
             raise TypeError('Expected Branch type.  ')
-        self._origin_branch = value
+        self._parent_branch = value
 
     def total_length(self):
         """Return length of this branch and branched to the start. """
-        origin_branch = self.origin_branch
+        parent_branch = self.parent_branch
         ret = len(self)
-        while origin_branch:
-            ret += len(origin_branch)
-            origin_branch = origin_branch.origin_branch
+        while parent_branch:
+            ret += len(parent_branch)
+            parent_branch = parent_branch.parent_branch
         return ret
 
     def __str__(self):
@@ -388,6 +347,7 @@ class Branch(Nodes):
 
 class Branches(list):
     """A branches is a list of branch. (e.g. [branch1, branch2, ... branch_n]).  """
+    placed_nodes = set()
 
     def __init__(self, branches=None, nodes=None):
         if isinstance(branches, nuke.Node):
@@ -441,26 +401,10 @@ class Branches(list):
 
     def autoplace(self):
         """Auto place branches.  """
-
-        # self.sort(key=lambda x: x.depth, reverse=False)
-        # last = None
+        Branches.placed_nodes.clear()
         for branch in self:
-            print('branches', str(branch))
             branch.autoplace()
-            # branch.xpos = 0
-            # if last:
-            #     print(1)
-            #     new_nodes = Nodes(n for n in branch if n not in list(last))
-            #     new_nodes.xpos = last.right + branch.x_gap
-            # branch.ypos = 0
-
-            # if branch.origin:
-            #     branch.bottom = branch.origin.ypos() - branch.y_gap
-            # nodes = Nodes(set(branch.origin_branch).difference(
-            #     set(branch.origin_nodes)))
-            # if nodes:
-            #     nodes.ypos -= branch.height
-            # last = branch
+            Branches.placed_nodes.update(branch)
 
     def __str__(self):
         return 'Branches[ {} ]'.format(', '.join(str(i) for i in self))
@@ -498,45 +442,36 @@ def create_backdrop(nodes, autoplace_nodes=False):
     '''
     if autoplace_nodes:
         map(nuke.autoplace, nodes)
-        # autoplace(nodes)
-        pass
     if not nodes:
         return nuke.nodes.BackdropNode()
+    nodes = Nodes(nodes)
 
-    # Calculate bounds for the backdrop node.
-    bdX = min([node.xpos() for node in nodes])
-    bdY = min([node.ypos() for node in nodes])
-    bdW = max([node.xpos() + node.screenWidth() for node in nodes]) - bdX
-    bdH = max([node.ypos() + node.screenHeight() for node in nodes]) - bdY
-
-    zOrder = 0
-    selectedBackdropNodes = nuke.selectedNodes("BackdropNode")
+    z_order = 0
+    selected_backdropnodes = nuke.selectedNodes("BackdropNode")
     # if there are backdropNodes selected put the new one immediately behind the farthest one
-    if len(selectedBackdropNodes):
-        zOrder = min([node.knob("z_order").value()
-                      for node in selectedBackdropNodes]) - 1
+    if selected_backdropnodes:
+        z_order = min([node.knob("z_order").value()
+                       for node in selected_backdropnodes]) - 1
     else:
-        # otherwise (no backdrop in selection) find the nearest backdrop if exists and set the new one in front of it
-        nonSelectedBackdropNodes = nuke.allNodes("BackdropNode")
-    for nonBackdrop in nodes:
-        for backdrop in nonSelectedBackdropNodes:
-            if is_node_inside(nonBackdrop, backdrop):
-                zOrder = max(zOrder, backdrop.knob("z_order").value() + 1)
+        # otherwise (no backdrop in selection) find the nearest backdrop
+        # if exists and set the new one in front of it
+        non_selected_backdropnodes = nuke.allNodes("BackdropNode")
+    for non_backdrop in nodes:
+        for backdrop in non_selected_backdropnodes:
+            if is_node_inside(non_backdrop, backdrop):
+                z_order = max(z_order, backdrop.knob("z_order").value() + 1)
 
-    # Expand the bounds to leave a little border. Elements are offsets for left, top, right and bottom edges respectively
+    # Expand the bounds to leave a little border. Elements are offsets for left,
+    # top, right and bottom edges respectively
     left, top, right, bottom = (-10, -80, 10, 10)
-    bdX += left
-    bdY += top
-    bdW += (right - left)
-    bdH += (bottom - top)
 
-    n = nuke.nodes.BackdropNode(xpos=bdX,
-                                bdwidth=bdW,
-                                ypos=bdY,
-                                bdheight=bdH,
+    n = nuke.nodes.BackdropNode(xpos=nodes.xpos + left,
+                                bdwidth=nodes.width + (right - left),
+                                ypos=nodes.ypos + top,
+                                bdheight=nodes.height + (bottom - top),
                                 tile_color=int(
                                     (random.random() * (16 - 10))) + 10,
                                 note_font_size=42,
-                                z_order=zOrder)
+                                z_order=z_order)
 
     return n
