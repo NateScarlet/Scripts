@@ -6,7 +6,7 @@ import nuke
 
 from .node import get_upstream_nodes
 
-__version__ = '0.4.0'
+__version__ = '0.4.2'
 
 
 def autoplace(nodes=None):
@@ -137,38 +137,38 @@ class Nodes(list):
                 branches.nodes.xpos = Nodes(Nodes.placed_nodes).right + 20
             Nodes.placed_nodes.update(set(branches.nodes))
 
+        left, top, right, bottom = (-10, -80, 10, 10)
         for backdrop, nodes_in_backdrop in backdrops_dict.items():
             if not nodes_in_backdrop:
                 continue
-            backdrop_nodes = Nodes(nodes_in_backdrop)
-            backdrop_nodes.append(backdrop)
-            left, top, right, bottom = (-10, -80, 10, 10)
+            up_nodes = Nodes(n for n in get_upstream_nodes(nodes_in_backdrop)
+                             if n.ypos() < nodes_in_backdrop.bottom
+                             and n not in nodes_in_backdrop)
+            if up_nodes:
+                up_nodes.bottom = nodes_in_backdrop.ypos + top
+            up_nodes.extend(nodes_in_backdrop)
+            up_nodes.ypos -= bottom
+
+        for backdrop, nodes_in_backdrop in backdrops_dict.items():
+            if not nodes_in_backdrop:
+                continue
             backdrop.setXYpos(nodes_in_backdrop.xpos + left,
                               nodes_in_backdrop.ypos + top)
             backdrop['bdwidth'].setValue(
                 nodes_in_backdrop.width + (right - left))
             backdrop['bdheight'].setValue(
                 nodes_in_backdrop.height + (bottom - top))
-            # Move other nodes out.
-
-            other_nodes = Nodes(n for n in nuke.allNodes()
-                                if n not in nodes_in_backdrop and n is not backdrop)
-            up_nodes = Nodes(n for n in other_nodes if n.ypos()
-                             < backdrop_nodes.bottom)
-            down_nodes = Nodes(n for n in other_nodes if n.ypos()
-                               >= backdrop_nodes.bottom)
-            if up_nodes:
-                up_nodes.bottom = backdrop_nodes.ypos - backdrop_nodes.y_gap
-            if down_nodes:
-                down_nodes.ypos = backdrop_nodes.bottom + backdrop_nodes.y_gap
 
         nuke.Root().setModified(True)
 
     def endnodes(self):
         """Return Nodes that has no contained downstream founded in given nodes.  """
-        ret = Nodes(n for n in self
-                    if all(n not in self for n in n.dependent(nuke.INPUTS)))
-        ret.sort(key=get_upstream_nodes, reverse=True)
+        available_nodes = Nodes(
+            n for n in self if n.Class() not in ('Viewer',))
+        ret = Nodes(n for n in available_nodes
+                    if all(n not in available_nodes for n in n.dependent(nuke.INPUTS)))
+        ret.sort(key=lambda x: len(get_upstream_nodes(x)), reverse=True)
+        ret.extend(n for n in self if n not in available_nodes)
         return ret
 
 
@@ -246,14 +246,15 @@ class Branch(Nodes):
         if length_filter is None:
             length_filter = self.big_branch_thershold
         ret = self[0]
-        parent = self.parent_branch
-        nodes = self.parent_nodes
-        while parent:
-            ret = nodes[-1]
-            if len(parent) >= length_filter:
+        branch = self
+        while branch:
+            if branch.parent_nodes:
+                ret = branch.parent_nodes[-1]
+            else:
                 break
-            nodes = parent.parent_nodes
-            parent = parent.parent_branch
+            branch = branch.parent_branch
+            if len(branch) >= length_filter:
+                break
         return ret
 
     def prev_nodes(self):
@@ -271,9 +272,9 @@ class Branch(Nodes):
         if not nodes:
             return
 
-        nuke.zoomToFitSelected()
-        if not nuke.ask(str(self.base_node().name())):
-            raise RuntimeError
+        # nuke.zoomToFitSelected()
+        # if not nuke.ask(str(self.base_node().name())):
+        #     raise RuntimeError
 
         # Y-axis.
         ypos = 0

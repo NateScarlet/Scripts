@@ -6,7 +6,7 @@ import os
 import nuke
 import nukescripts
 
-from . import asset, csheet, edit, ui, cgtwn
+from . import asset, csheet, edit, ui, cgtwn, orgnize
 from .node import wlf_write_node
 
 
@@ -29,7 +29,6 @@ def menu():
 
     nuke.addOnUserCreate(_gizmo_to_group_on_create)
 
-    nuke.addOnScriptSave(lambda: asset.DropFrameCheck().start())
     nuke.addOnScriptLoad(_add_root_info)
     nuke.addOnScriptLoad(_eval_proj_dir)
     nuke.addOnScriptLoad(cgtwn.on_load_callback)
@@ -41,8 +40,9 @@ def menu():
     nuke.addOnScriptSave(_lock_connections)
     nuke.addOnScriptSave(_jump_frame)
     nuke.addOnScriptSave(cgtwn.on_save_callback)
-    nuke.addOnScriptSave(asset.DropFrameCheck.show_dialog)
 
+    nuke.addOnScriptClose(lambda: asset.DropFrameCheck().start())
+    nuke.addOnScriptClose(asset.DropFrameCheck.show_dialog)
     nuke.addOnScriptClose(_send_to_render_dir)
     nuke.addOnScriptClose(_render_jpg)
     nuke.addOnScriptClose(cgtwn.on_close_callback)
@@ -178,8 +178,10 @@ def _gizmo_to_group_update_ui():
 
 def _autoplace():
     if nuke.numvalue('preferences.wlf_autoplace', 0.0) and nuke.Root().modified():
-        # orgnize.autoplace()
-        map(nuke.autoplace, nuke.allNodes())
+        if nuke.numvalue('preferences.wlf_autoplace_type', 0.0) == 0.0:
+            orgnize.autoplace()
+        else:
+            map(nuke.autoplace, nuke.allNodes())
 
 
 def _print_name():
