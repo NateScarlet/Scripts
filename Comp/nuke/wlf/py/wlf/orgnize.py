@@ -13,7 +13,11 @@ def autoplace(nodes=None):
     """Auto place nodes."""
     if not nodes:
         nodes = nuke.allNodes()
-    Nodes(nodes).autoplace()
+    nodes = Nodes(nodes)
+    xpos, ypos = nodes.xpos, nodes.ypos
+    nodes.autoplace()
+    if nodes != nuke.allNodes():
+        nodes.xpos, nodes.ypos = xpos, ypos
 
 
 def is_node_inside(node, backdrop):
