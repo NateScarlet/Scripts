@@ -6,7 +6,7 @@ import nuke
 
 from .node import get_upstream_nodes
 
-__version__ = '0.4.3'
+__version__ = '0.4.4'
 
 
 def autoplace(nodes=None):
