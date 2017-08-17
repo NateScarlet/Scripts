@@ -10,18 +10,23 @@ import os
 import sys
 
 try:
-    from PySide import QtCore, QtGui
-    from PySide.QtCore import Qt
+    from PySide2 import QtCore, QtGui, QtWidgets
+    from PySide2.QtCore import Qt
 except ImportError:
-    import sip
-    for mod in ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant"):
-        sip.setapi(mod, 2)
+    try:
+        from PySide import QtCore, QtGui, QtGui as QtWidgets
+        from PySide.QtCore import Qt
+    except ImportError:
+        import sip
+        for mod in ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant"):
+            sip.setapi(mod, 2)
 
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtCore import Qt
-    QtCore.Signal = QtCore.pyqtSignal
+        from PyQt4 import QtCore, QtGui
+        from PyQt4.QtCore import Qt
+        QtCore.Signal = QtCore.pyqtSignal
 
-def find_menu_items(menu, _path = None):
+
+def find_menu_items(menu, _path=None):
     """Extracts items from a given Nuke menu
 
     Returns a list of strings, with the path to each item
@@ -48,7 +53,7 @@ def find_menu_items(menu, _path = None):
                 # Remove all ToolSets delete commands
                 continue
 
-            sub_found = find_menu_items(menu = i, _path = subpath)
+            sub_found = find_menu_items(menu=i, _path=subpath)
             found.extend(sub_found)
         elif isinstance(i, nuke.MenuItem):
             if i.name() == "":
@@ -64,7 +69,7 @@ def find_menu_items(menu, _path = None):
     return found
 
 
-def nonconsec_find(needle, haystack, anchored = False):
+def nonconsec_find(needle, haystack, anchored=False):
     """checks if each character of "needle" can be found in order (but not
     necessarily consecutivly) in haystack.
     For example, "mm" can be found in "matchmove", but not "move2d"
@@ -111,7 +116,6 @@ def nonconsec_find(needle, haystack, anchored = False):
         # ..?
         return True
 
-
     # Turn haystack into list of characters (as strings are immutable)
     haystack = [hay for hay in str(haystack)]
 
@@ -144,7 +148,7 @@ def nonconsec_find(needle, haystack, anchored = False):
 
 
 class NodeWeights(object):
-    def __init__(self, fname = None):
+    def __init__(self, fname=None):
         self.fname = fname
         self._weights = {}
         self._successful_load = False
@@ -190,12 +194,12 @@ class NodeWeights(object):
                 try:
                     os.makedirs(ndir)
                 except OSError, e:
-                    if e.errno != 17: # errno 17 is "already exists"
+                    if e.errno != 17:  # errno 17 is "already exists"
                         raise
 
             f = open(self.fname, "w")
             # TODO: Limit number of saved items to some sane number
-            json.dump(self._weights, fp = f)
+            json.dump(self._weights, fp=f)
             f.close()
 
         # Catch any errors, print traceback and continue
@@ -206,7 +210,7 @@ class NodeWeights(object):
             import traceback
             traceback.print_exc()
 
-    def get(self, k, default = 0):
+    def get(self, k, default=0):
         if len(self._weights.values()) == 0:
             maxval = 1.0
         else:
@@ -222,7 +226,7 @@ class NodeWeights(object):
 
 
 class NodeModel(QtCore.QAbstractListModel):
-    def __init__(self, mlist, weights, num_items = 15, filtertext = ""):
+    def __init__(self, mlist, weights, num_items=15, filtertext=""):
         super(NodeModel, self).__init__()
 
         self.weights = weights
@@ -249,28 +253,29 @@ class NodeModel(QtCore.QAbstractListModel):
         for n in self._all:
             # Turn "3D/Shader/Phong" into "Phong [3D/Shader]"
             menupath = n['menupath'].replace("&", "")
-            uiname = "%s [%s]" % (menupath.rpartition("/")[2], menupath.rpartition("/")[0])
+            uiname = "%s [%s]" % (menupath.rpartition(
+                "/")[2], menupath.rpartition("/")[0])
 
             if nonconsec_find(filtertext, uiname.lower(), anchored=True):
                 # Matches, get weighting and add to list of stuff
                 score = self.weights.get(n['menupath'])
 
                 scored.append({
-                        'text': uiname,
-                        'menupath': n['menupath'],
-                        'menuobj': n['menuobj'],
-                        'score': score})
+                    'text': uiname,
+                    'menupath': n['menupath'],
+                    'menuobj': n['menuobj'],
+                    'score': score})
 
         # Store based on scores (descending), then alphabetically
-        s = sorted(scored, key = lambda k: (-k['score'], k['text']))
+        s = sorted(scored, key=lambda k: (-k['score'], k['text']))
 
         self._items = s
         self.modelReset.emit()
 
-    def rowCount(self, parent = QtCore.QModelIndex()):
+    def rowCount(self, parent=QtCore.QModelIndex()):
         return min(self.num_items, len(self._items))
 
-    def data(self, index, role = Qt.DisplayRole):
+    def data(self, index, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
             # Return text to display
             raw = self._items[index.row()]['text']
@@ -296,7 +301,7 @@ class NodeModel(QtCore.QAbstractListModel):
             weight = self._items[index.row()]['score']
 
             hue = 0.4
-            sat = weight ** 2 # gamma saturation to make faster falloff
+            sat = weight ** 2  # gamma saturation to make faster falloff
 
             sat = min(1.0, sat)
 
@@ -325,10 +330,9 @@ class NodeModel(QtCore.QAbstractListModel):
         return selected_data
 
 
-class TabyLineEdit(QtGui.QLineEdit):
+class TabyLineEdit(QtWidgets.QLineEdit):
     pressed_arrow = QtCore.Signal(str)
     cancelled = QtCore.Signal()
-
 
     def event(self, event):
         """Make tab trigger returnPressed
@@ -360,9 +364,9 @@ class TabyLineEdit(QtGui.QLineEdit):
             return super(TabyLineEdit, self).event(event)
 
 
-class TabTabTabWidget(QtGui.QDialog):
-    def __init__(self, on_create = None, parent = None, winflags = None):
-        super(TabTabTabWidget, self).__init__(parent = parent)
+class TabTabTabWidget(QtWidgets.QDialog):
+    def __init__(self, on_create=None, parent=None, winflags=None):
+        super(TabTabTabWidget, self).__init__(parent=parent)
         if winflags is not None:
             self.setWindowFlags(winflags)
 
@@ -376,19 +380,21 @@ class TabTabTabWidget(QtGui.QDialog):
         self.input = TabyLineEdit()
 
         # Node weighting
-        self.weights = NodeWeights(os.path.expanduser("~/.nuke/tabtabtab_weights.json"))
-        self.weights.load() # weights.save() called in close method
+        self.weights = NodeWeights(os.path.expanduser(
+            "~/.nuke/tabtabtab_weights.json"))
+        self.weights.load()  # weights.save() called in close method
 
         import nuke
-        nodes = find_menu_items(nuke.menu("Nodes")) + find_menu_items(nuke.menu("Nuke"))
+        nodes = find_menu_items(nuke.menu("Nodes")) + \
+            find_menu_items(nuke.menu("Nuke"))
 
         # List of stuff, and associated model
-        self.things_model = NodeModel(nodes, weights = self.weights)
-        self.things = QtGui.QListView()
+        self.things_model = NodeModel(nodes, weights=self.weights)
+        self.things = QtWidgets.QListView()
         self.things.setModel(self.things_model)
 
         # Add input and items to layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.input)
         layout.addWidget(self.things)
 
@@ -400,8 +406,9 @@ class TabTabTabWidget(QtGui.QDialog):
         self.input.textChanged.connect(self.update)
 
         # Reset selection on text change
-        self.input.textChanged.connect(lambda: self.move_selection(where="first"))
-        self.move_selection(where = "first") # Set initial selection
+        self.input.textChanged.connect(
+            lambda: self.move_selection(where="first"))
+        self.move_selection(where="first")  # Set initial selection
 
         # Create node when enter/tab is pressed, or item is clicked
         self.input.returnPressed.connect(self.create)
@@ -419,15 +426,16 @@ class TabTabTabWidget(QtGui.QDialog):
 
         # Get cursor position, and screen dimensions on active screen
         cursor = QtGui.QCursor().pos()
-        screen = QtGui.QDesktopWidget().screenGeometry(cursor)
+        screen = QtWidgets.QDesktopWidget().screenGeometry(cursor)
 
         # Get window position so cursor is just over text input
-        xpos = cursor.x() - (self.width()/2)
+        xpos = cursor.x() - (self.width() / 2)
         ypos = cursor.y() - 13
 
         # Clamp window location to prevent it going offscreen
         xpos = clamp(xpos, screen.left(), screen.right() - self.width())
-        ypos = clamp(ypos, screen.top(), screen.bottom() - (self.height()-13))
+        ypos = clamp(ypos, screen.top(), screen.bottom() -
+                     (self.height() - 13))
 
         # Move window
         self.move(xpos, ypos)
@@ -435,7 +443,7 @@ class TabTabTabWidget(QtGui.QDialog):
     def move_selection(self, where):
         if where not in ["first", "up", "down"]:
             raise ValueError("where should be either 'first', 'up', 'down', not %r" % (
-                    where))
+                where))
 
         first = where == "first"
         up = where == "up"
@@ -453,7 +461,7 @@ class TabTabTabWidget(QtGui.QDialog):
         elif down:
             new = cur.row() + 1
             count = self.things_model.rowCount()
-            if new > count-1:
+            if new > count - 1:
                 new = 0
 
         self.things.setCurrentIndex(self.things_model.index(new))
@@ -516,12 +524,14 @@ class TabTabTabWidget(QtGui.QDialog):
         self.input.setText(prev_string)
 
         # Create node, increment weight and close
-        self.cb_on_create(thing = thing)
+        self.cb_on_create(thing=thing)
         self.weights.increment(thing['menupath'])
         self.close()
 
 
 _tabtabtab_instance = None
+
+
 def main():
     global _tabtabtab_instance
 
@@ -542,7 +552,7 @@ def main():
         except ImportError:
             print "Error creating %s" % thing
 
-    t = TabTabTabWidget(on_create = on_create, winflags = Qt.FramelessWindowHint)
+    t = TabTabTabWidget(on_create=on_create, winflags=Qt.FramelessWindowHint)
 
     # Make dialog appear under cursor, as Nuke's builtin one does
     t.under_cursor()
