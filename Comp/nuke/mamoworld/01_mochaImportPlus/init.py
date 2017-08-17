@@ -1,3 +1,0 @@
-import loadMochaImport
-
-loadMochaImport.load()
