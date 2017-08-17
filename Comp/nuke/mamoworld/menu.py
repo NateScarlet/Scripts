@@ -1,4 +1,3 @@
-import loadAllMamoworldTools
-loadAllMamoworldTools.load()
+import nuke
 
-mamomenu = nuke.menu( 'Nodes' ).addMenu( 'mamoworld', icon='Mamoworld.png' )
+mamomenu = nuke.menu('Nodes').addMenu('mamoworld', icon='Mamoworld.png')

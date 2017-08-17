@@ -1,3 +1,4 @@
-import loadAllMamoworldTools
-loadAllMamoworldTools.load()
-    
+import nuke
+
+nuke.pluginAddPath('mochaImportPlus')
+nuke.pluginAddPath('workflow')
