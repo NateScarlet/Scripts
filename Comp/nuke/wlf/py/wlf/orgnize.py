@@ -6,7 +6,7 @@ import nuke
 
 from .node import get_upstream_nodes
 
-__version__ = '0.4.4'
+__version__ = '0.4.6'
 
 
 def autoplace(nodes=None):
@@ -149,7 +149,7 @@ class Nodes(list):
                              if n.ypos() < nodes_in_backdrop.bottom
                              and n not in nodes_in_backdrop)
             if up_nodes:
-                up_nodes.bottom = nodes_in_backdrop.ypos + top
+                up_nodes.bottom = nodes_in_backdrop.ypos + top - self.y_gap
             up_nodes.extend(nodes_in_backdrop)
             up_nodes.ypos -= bottom
 
@@ -174,25 +174,6 @@ class Nodes(list):
         ret.sort(key=lambda x: len(get_upstream_nodes(x)), reverse=True)
         ret.extend(n for n in self if n not in available_nodes)
         return ret
-
-
-def autoplace_backdrop(backdrop):
-    """autoplace nodes by @backdrop.  """
-    assert backdrop.Class() == 'BackdropNode', '请选择BackdropNode节点'
-    nodes = Nodes(backdrop.getNodes())
-    other_nodes = list(n for n in nuke.allNodes()
-                       if n not in nodes and n is not backdrop)
-    width, height = nodes.width, nodes.height
-    map(autoplace, nodes)
-    extend_x, extend_y = nodes.width - width, nodes.height - height
-    for n in other_nodes:
-        xpos = n.xpos()
-        ypos = n.ypos()
-        xpos = xpos + extend_x if xpos > nodes.xpos else xpos
-        ypos = ypos + extend_y if ypos > nodes.ypos else ypos
-        n.setXYpos(xpos, ypos)
-    backdrop['bdwidth'].setValue(backdrop['bdwidth'].value() + extend_x)
-    backdrop['bdheight'].setValue(backdrop['bdheight'].value() + extend_y)
 
 
 class Branch(Nodes):

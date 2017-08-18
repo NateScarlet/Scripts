@@ -8,7 +8,11 @@ from autolabel import autolabel
 
 from . import asset, cgtwq
 
-__version__ = '0.2.8'
+__version__ = '0.2.11'
+
+WINDOW_CONTEXT = 0
+APPLICATION_CONTEXT = 1
+DAG_CONTEXT = 2
 
 
 def add_menu():
@@ -48,13 +52,13 @@ def add_menu():
                      "import wlf.edit; wlf.edit.all_gizmo_to_group()")
         n = m.addMenu('整理文件')
         n.addCommand("竖式自动摆放节点",
-                     "import wlf.orgnize; wlf.orgnize.autoplace(nuke.selectedNodes())", 'L')
+                     "import wlf.orgnize; wlf.orgnize.autoplace(nuke.selectedNodes())",
+                     "L", shortcutContext=DAG_CONTEXT)
         try:
             nuke.menu("Nuke").findItem('Edit').findItem(
-                'Node').findItem('Autoplace').setShortcut('Ctrl+L')
+                'Node').findItem('Autoplace').setShortcut("Ctrl+L")
         except AttributeError as ex:
             print(ex)
-
         n.addCommand("根据背板重命名所有节点",
                      "import wlf.edit; wlf.edit.rename_all_nodes()")
         n.addCommand("根据背板分割为多个文件文件",
@@ -76,8 +80,8 @@ def add_menu():
         m.addCommand('redshift预合成',
                      "import wlf.precomp; wlf.precomp.redshift(nuke.selectedNodes())",
                      icon='autocomp.png')
-        m.addCommand('arnold预合成', "import wlf.precomp; wlf.precomp.arnold()",
-                     icon='autocomp.png')
+        # m.addCommand('arnold预合成', "import wlf.precomp; wlf.precomp.arnold()",
+        #              icon='autocomp.png')
         _path = os.path.abspath(os.path.join(
             __file__, '../../../scenetools/scenetools.exe'))
         m.addCommand(
@@ -93,13 +97,10 @@ def add_menu():
     def _cgtw(menu):
 
         m = menu.addMenu('CGTeamWork', icon='cgteamwork.png')
-        # m.addCommand('设置工程', "import wlf.cgtwn; wlf.cgtwn.CGTeamWork.ask_database()")
         m.addCommand(
             '帐号登录', "import wlf.cgtwn; wlf.cgtwn.dialog_login()")
         m.addCommand(
             '添加note', "import wlf.cgtwn; wlf.cgtwn.CurrentShot().ask_add_note()")
-        # m.addCommand('上传nk文件', "import wlf.cgtwn; wlf.cgtwn.Shot().upload_nk_file()")
-        # m.addCommand('上传单帧', "import wlf.cgtwn; wlf.cgtwn.Shot().upload_image()")
         m.addCommand(
             '提交单帧', "import wlf.cgtwn; wlf.cgtwn.CurrentShot().submit_image()")
         m.addCommand(
@@ -112,7 +113,6 @@ def add_menu():
             '为项目创建色板', 'import wlf.cgtwn; wlf.cgtwn.dialog_create_csheet()')
         m.addCommand(
             '为项目创建文件夹', 'import wlf.cgtwn; wlf.cgtwn.dialog_create_dirs()')
-        # m.addCommand('重新登录', "import wlf.cgtwn; wlf.cgtwn.CGTeamWork.update_status()")
 
     def _create_node_menu():
         _plugin_path = '../../../plugins'
