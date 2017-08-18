@@ -1,3 +1,6 @@
 [submodule "Comp/nuke/wlf"]
 	path = Comp/nuke/wlf
 	url = https://github.com/NateScarlet/wlf_nuke_plugins.git
+[submodule "Comp/nuke/batchrender"]
+	path = Comp/nuke/batchrender
+	url = https://github.com/NateScarlet/NukeBatchRender.git
