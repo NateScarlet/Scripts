@@ -4,3 +4,6 @@
 [submodule "Comp/nuke/batchrender"]
 	path = Comp/nuke/batchrender
 	url = https://github.com/NateScarlet/NukeBatchRender.git
+[submodule "Comp/nuke/cryptomatte"]
+	path = Comp/nuke/cryptomatte
+	url = https://github.com/Psyop/Cryptomatte.git
