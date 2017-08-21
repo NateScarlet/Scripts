@@ -8,3 +8,6 @@
 	path = Comp/nuke/cryptomatte
 	url = https://github.com/NateScarlet/Cryptomatte.git
 
+[submodule "Comp/nuke/tabtabtab"]
+	path = Comp/nuke/tabtabtab
+	url = https://github.com/NateScarlet/tabtabtab-nuke.git
