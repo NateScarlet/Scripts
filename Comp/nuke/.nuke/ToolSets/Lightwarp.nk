@@ -1,0 +1,38 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot1
+ gl_color 0xa132ff00
+ note_font 微软雅黑
+ selected true
+ xpos 131
+ ypos -480
+}
+set Nff11000 [stack 0]
+bm_Lightwrap {
+ name bm_Lightwrap1
+ gl_color 0xff327800
+ note_font 微软雅黑
+ selected true
+ xpos 187
+ ypos -458
+ effectOnly true
+ grp01 1
+ grp3 1
+ grp2 0
+ flickerOutput {{"(1*(noise((frame)*flickerSpeed, (flickerSeed*5), 0)*2-1)*(flickerAmount))+(flickerCentre+.5)+(flickerAmount)"}}
+}
+push $Nff11000
+Merge2 {
+ inputs 2
+ operation screen
+ bbox B
+ output rgb
+ name Merge54
+ gl_color 0x71ff3200
+ note_font 微软雅黑
+ selected true
+ xpos 97
+ ypos -426
+}
