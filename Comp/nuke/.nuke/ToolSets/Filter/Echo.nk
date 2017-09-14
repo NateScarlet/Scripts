@@ -1,0 +1,45 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot1
+ gl_color 0xff328200
+ note_font 微软雅黑
+ selected true
+ xpos 1554
+ ypos -394
+}
+set N485b2400 [stack 0]
+TimeOffset {
+ time_offset 1
+ time ""
+ name TimeOffset1
+ gl_color 0x32ff3400
+ note_font 微软雅黑
+ selected true
+ xpos 1580
+ ypos -378
+}
+MotionBlur {
+ shutterSamples 20
+ shutterTime 2
+ motionEstimation Regularized
+ vectorDetailReg 1
+ name MotionBlur1
+ gl_color 0xffc33200
+ note_font 微软雅黑
+ selected true
+ xpos 1580
+ ypos -346
+}
+push $N485b2400
+Merge2 {
+ inputs 2
+ operation under
+ name Merge66
+ gl_color 0x32ff3800
+ note_font 微软雅黑
+ selected true
+ xpos 1514
+ ypos -289
+}
