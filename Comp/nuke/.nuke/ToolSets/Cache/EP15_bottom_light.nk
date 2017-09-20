@@ -1,0 +1,60 @@
+set cut_paste_input [stack 0]
+version 10.0 v4
+push $cut_paste_input
+Dot {
+ name Dot4
+ gl_color 0xff327100
+ note_font 微软雅黑
+ selected true
+ xpos 34
+ ypos -4628
+}
+set N1e3e5c00 [stack 0]
+add_layer {BumpNormals BumpNormals.red BumpNormals.green BumpNormals.blue BumpNormals.alpha}
+add_layer {P P.red P.green P.blue P.alpha}
+DirectionLightKeyer {
+ name DirectionLightKeyer1
+ gl_color 0xbcff3200
+ note_font 微软雅黑
+ selected true
+ xpos 90
+ ypos -4606
+ normal BumpNormals
+ position P
+ rx 65
+ ry 225
+ output rgba.alpha
+}
+PositionKeyer {
+ name PositionKeyer7
+ gl_color 0xff5d3200
+ note_font 微软雅黑
+ selected true
+ xpos 90
+ ypos -4558
+ in P
+ sampler 1
+ p0 {909 822}
+ p1 {990 178}
+ blackpoint {-352.25 88.0625 -68.875}
+ whitepoint {-352 67.4375 -72.125}
+ x false
+ y true
+ output rgba.alpha
+ combine intersect
+ g_presets 1
+ __initiated true
+}
+push $N1e3e5c00
+add_layer {mask_extra mask_extra.FangYuTing mask_extra.YuanXiaoTang mask_extra.HuaDaoChang mask_extra.ShiYaoShan mask_extra.bottom_light}
+Copy {
+ inputs 2
+ from0 rgba.alpha
+ to0 mask_extra.bottom_light
+ name Copy2
+ gl_color 0xff326a00
+ note_font 微软雅黑
+ selected true
+ xpos 0
+ ypos -4510
+}
