@@ -68,6 +68,10 @@ else
     Run, "%USERPROFILE%\Shortcut\txt.lnk"
 return
 
+$!^t::
+Run, posh
+return
+
 $#e:: 
 IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe
 {
@@ -91,3 +95,4 @@ else
 	Run %Shortcut%\Q-Dir
 }
 return
+
