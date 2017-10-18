@@ -1,5 +1,10 @@
 # -*- coding: UTF-8 -*-
+import logging
+
 import nuke
+
+logging.getLogger('').setLevel(logging.DEBUG)
+
 
 nuke.pluginAddPath('wlf')
 nuke.pluginAddPath('cryptomatte/nuke')
