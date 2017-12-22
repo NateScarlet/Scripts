@@ -83,5 +83,9 @@ else
 }
 return
 
+^!t::
+Run, posh
+return
+
 ; LButton::Send, % "{" (A_TimeSincePriorHotkey > 50 ? A_ThisHotkey " Down" : "") "}"
 ; LButton Up::Send, {%A_ThisHotkey%}
