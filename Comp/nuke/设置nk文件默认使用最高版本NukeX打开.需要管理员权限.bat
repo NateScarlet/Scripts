@@ -44,5 +44,7 @@ SET "NUKE_MAIN_VERSION=%NUKE_VERSION:~0,-2%"
 
 ASSOC .nk=NukeScript
 FTYPE NukeScript="C:\Program Files\Nuke%NUKE_VERSION%\Nuke%NUKE_MAIN_VERSION%.exe" --nukex "%%1"
+ASSOC .hrox=NukeStudioProject
+FTYPE NukeStudioProject="C:\Program Files\Nuke%NUKE_VERSION%\Nuke%NUKE_MAIN_VERSION%.exe" --studio "%%1"
 
 PAUSE
