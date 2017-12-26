@@ -41,6 +41,7 @@ def convert(folder, output):
   stringstyle=\\color{Black},
   keywordstyle=\\bfseries\\color{OliveGreen},
   identifierstyle=\\color{blue},
+  numbers=left,
 }
 \\lstdefinestyle{.py}{
   language=Python
