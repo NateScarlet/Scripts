@@ -15,79 +15,56 @@ def convert(folder, output):
     with open(output, 'w') as f:
         f.write('''
 \\documentclass{article}
-\\usepackage{listings}
+
+\\usepackage{xeCJK}
+\\setCJKmainfont{simsun.ttc}
+\\setCJKsansfont{simhei.ttf}
+\\setCJKmonofont{simfang.ttf}
+
 \\usepackage[usenames,dvipsnames]{color}  %% Allow color names
-\\lstdefinestyle{.py}{
+
+\\usepackage{fancyhdr}
+\\pagestyle{fancy}
+\\fancyhead{}
+\\fancyhead[L]{<项目> 源代码}
+\\fancyhead[R]{\\thepage}
+\\fancyfoot{}
+
+\\usepackage{listings}
+\\lstset{
   belowcaptionskip=1\\baselineskip,
   xleftmargin=\\parindent,
-  language=Python,   %% Change this to whatever you write in
   breaklines=true, %% Wrap long lines
   basicstyle=\\footnotesize\\ttfamily,
+  xleftmargin=-8em,
   commentstyle=\\itshape\\color{Gray},
   stringstyle=\\color{Black},
   keywordstyle=\\bfseries\\color{OliveGreen},
   identifierstyle=\\color{blue},
-  xleftmargin=-8em,
+}
+\\lstdefinestyle{.py}{
+  language=Python
 }
 \\lstdefinestyle{.gizmo}{
-  belowcaptionskip=1\\baselineskip,
-  xleftmargin=\\parindent,
-  language=Tcl,   %% Change this to whatever you write in
-  breaklines=true, %% Wrap long lines
-  basicstyle=\\footnotesize\\ttfamily,
-  commentstyle=\\itshape\\color{Gray},
-  stringstyle=\\color{Black},
-  keywordstyle=\\bfseries\\color{OliveGreen},
-  identifierstyle=\\color{blue},
-  xleftmargin=-8em,
+  language=Tcl
 }
 \\lstdefinestyle{.cpp}{
-  belowcaptionskip=1\\baselineskip,
-  xleftmargin=\\parindent,
-  language=C++,   %% Change this to whatever you write in
-  breaklines=true, %% Wrap long lines
-  basicstyle=\\footnotesize\\ttfamily,
-  commentstyle=\\itshape\\color{Gray},
-  stringstyle=\\color{Black},
-  keywordstyle=\\bfseries\\color{OliveGreen},
-  identifierstyle=\\color{blue},
-  xleftmargin=-8em,
+  language=C++
 }
 \\lstdefinestyle{.ui}{
-  belowcaptionskip=1\\baselineskip,
-  xleftmargin=\\parindent,
-  language=XML,   %% Change this to whatever you write in
-  breaklines=true, %% Wrap long lines
-  basicstyle=\\footnotesize\\ttfamily,
-  commentstyle=\\itshape\\color{Gray},
-  stringstyle=\\color{Black},
-  keywordstyle=\\bfseries\\color{OliveGreen},
-  identifierstyle=\\color{blue},
-  xleftmargin=-8em,
+  language=XML
 }
 \\lstdefinestyle{.css}{
-  xleftmargin=-8em,
-  breaklines=true, %% Wrap long lines
 }
 \\lstdefinestyle{.js}{
-  xleftmargin=-8em,
-  breaklines=true, %% Wrap long lines
 }
 \\lstdefinestyle{.html}{
-  belowcaptionskip=1\\baselineskip,
-  xleftmargin=\\parindent,
-  language=HTML,   %% Change this to whatever you write in
-  breaklines=true, %% Wrap long lines
-  basicstyle=\\footnotesize\\ttfamily,
-  commentstyle=\\itshape\\color{Gray},
-  stringstyle=\\color{Black},
-  keywordstyle=\\bfseries\\color{OliveGreen},
-  identifierstyle=\\color{blue},
-  xleftmargin=-8em,
+  language=HTML
 }
 \\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
 \\begin{document}
-\\tableofcontents''')
+\\tableofcontents
+'''.encode('UTF-8'))
         for dirpath, dirnames, filenames in walk(folder):
             if ('site-packages' in dirpath
                     or '.venv' in dirpath
