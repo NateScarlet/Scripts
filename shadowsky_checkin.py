@@ -21,33 +21,39 @@ CACHE = {}
 @contextmanager
 def session():
     """Get global requets session. """
-    jar = get_cookie_jar(COOKIE_PATH)
+
     sess = CACHE.get('session')
     if not isinstance(session, Session):
         sess = Session()
-    sess.cookies = jar
+        jar = get_cookie_jar(COOKIE_PATH)
+        sess.cookies = jar
+        CACHE['session'] = sess
     try:
         yield sess
     finally:
-        jar.save()
+        sess.cookies.save()
 
 
 def get_cookie_jar(path):
     """Get disk cookie from @path.  """
-    jar = MozillaCookieJar(path)
-    if exists(path):
-        jar.load()
-    else:
-        try:
-            makedirs(dirname(path))
-        except OSError:
-            pass
-        jar.save()
+
+    jar = CACHE.get('cookies')
+    if not isinstance(jar, MozillaCookieJar):
+        jar = MozillaCookieJar(path)
+        if exists(path):
+            jar.load()
+        else:
+            try:
+                makedirs(dirname(path))
+            except OSError:
+                pass
+            jar.save()
     return jar
 
 
-def is_loged_in():
+def is_logged_in():
     """Check if logged in.  """
+
     url = SITE_URL + USER_PAGE
     with session() as s:
         resp = s.get(url)
@@ -81,9 +87,8 @@ def checkin():
 def main():
     """Script entry.  """
 
-    if not is_loged_in():
+    while not is_logged_in():
         login()
-        print('登录成功' if is_loged_in() else '登录失败')
     checkin()
 
 
