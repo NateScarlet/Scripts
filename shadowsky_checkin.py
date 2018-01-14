@@ -48,6 +48,7 @@ def get_cookie_jar(path):
             except OSError:
                 pass
             jar.save()
+        CACHE['cookies'] = jar
     return jar
 
 
