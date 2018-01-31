@@ -3,13 +3,15 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+import re
 from contextlib import contextmanager
 from cookielib import MozillaCookieJar
 from getpass import getpass
 from os import makedirs
 from os.path import dirname, exists, expanduser
+from collections import namedtuple
 
-from requests import Session
+from requests import Response, Session
 
 SITE_URL = 'https://www.shadowsky.xyz'
 LOGIN_PAGE = '/auth/login'
@@ -63,6 +65,26 @@ def is_logged_in():
     return resp.url == url
 
 
+Status = namedtuple('Status', ['used', 'remain'])
+
+
+def get_status():
+    """Get data flow status.  """
+
+    url = SITE_URL + USER_PAGE
+    with session() as s:
+        resp = s.get(url)
+    assert isinstance(resp, Response)
+    try:
+        used = re.search(r'var used = ([1-9\.]+);', resp.text).group(1)
+        remain = re.search(r'var remain = ([1-9\.]+);', resp.text).group(1)
+        return Status(float(used), float(remain))
+    except:
+        import traceback
+        logging.error(traceback.format_exc())
+        raise RuntimeError('Can not get status')
+
+
 def login():
     """CGI login.  """
 
@@ -103,6 +125,11 @@ def main():
     while not is_logged_in():
         login()
     checkin()
+    try:
+        msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
+        logging.info(msg)
+    except RuntimeError:
+        logging.error('获取流量信息失败')
 
 
 if __name__ == '__main__':
