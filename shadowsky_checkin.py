@@ -76,8 +76,8 @@ def get_status():
         resp = s.get(url)
     assert isinstance(resp, Response)
     try:
-        used = re.search(r'var used = ([1-9\.]+);', resp.text).group(1)
-        remain = re.search(r'var remain = ([1-9\.]+);', resp.text).group(1)
+        used = re.search(r'var used = ([\d\.]+);', resp.text).group(1)
+        remain = re.search(r'var remain = ([\d\.]+);', resp.text).group(1)
         return Status(float(used), float(remain))
     except:
         import traceback
