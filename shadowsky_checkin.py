@@ -4,12 +4,12 @@ from __future__ import print_function, unicode_literals
 
 import logging
 import re
+from collections import namedtuple
 from contextlib import contextmanager
 from cookielib import MozillaCookieJar
 from getpass import getpass
 from os import makedirs
 from os.path import dirname, exists, expanduser
-from collections import namedtuple
 
 from requests import Response, Session
 
