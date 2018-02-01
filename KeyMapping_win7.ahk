@@ -39,6 +39,7 @@ IfWinNotExist, ahk_exe CgTeamWork.exe
 	Run, CGTeamWork 
 	}
 GroupAdd, G_WORK, ahk_class QWidget ahk_exe Nuke10.0.exe, , , Hiero
+GroupAdd, G_WORK, ahk_class QWidget ahk_exe Nuke10.5.exe, , , Hiero
 GroupAdd, G_WORK, ahk_class Qt5QWindowIcon ahk_exe CgTeamWork.exe
 GroupActivate, G_WORK
 return

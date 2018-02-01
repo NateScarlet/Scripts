@@ -1,72 +1,97 @@
 set cut_paste_input [stack 0]
-version 10.0 v4
+version 10.5 v7
 push $cut_paste_input
-Dot {
- name Dot4
- gl_color 0xff3f3200
+Group {
+ name EdgeFix1
+ gl_color 0xbeff3200
  note_font 微软雅黑
  selected true
- xpos -1386
- ypos -3329
+ xpos -60
+ ypos -16
+ addUserKnob {20 tab_1 l "EdgeFix v0.1.0"}
+ addUserKnob {41 size_1 l erode T FilterErode2.size}
+ addUserKnob {41 size T FilterErode2.size}
+ addUserKnob {41 alpha l by T Unpremult7.alpha}
 }
-set Ne4383400 [stack 0]
-FilterErode {
- name FilterErode2
- gl_color 0xff32d600
- note_font 微软雅黑
- selected true
- xpos -1420
- ypos -3311
-}
-LevelSet {
- output -rgba.alpha
- create_matte true
- matte_limit 18
- extrapolated rgb
- name LevelSet3
- gl_color 0x32ff3f00
- note_font 微软雅黑
- selected true
- xpos -1420
- ypos -3267
-}
-push $Ne4383400
-Merge2 {
- inputs 2
- Bchannels none
- output rgb
- name Merge7
- gl_color 0xff813200
- note_font 微软雅黑
- selected true
- xpos -1310
- ypos -3272
-}
-add_layer {mask_extra mask_extra.flags mask_extra.road mask_extra.trees mask_extra.highlight mask_extra.shadow mask_extra.mountain_right mask_extra.rock}
-Unpremult {
- channels alpha
- alpha mask_extra.rock
- name Unpremult7
- gl_color 0xff327e00
- note_font 微软雅黑
- selected true
- xpos -1310
- ypos -3244
-}
-Premult {
- name Premult11
- gl_color 0xff703200
- note_font 微软雅黑
- selected true
- xpos -1259
- ypos -3203
-}
-Clamp {
- channels alpha
- name Clamp2
- gl_color 0x34ff3200
- note_font 微软雅黑
- selected true
- xpos -1259
- ypos -3175
-}
+ Input {
+  inputs 0
+  name Input
+  gl_color 0x8732ff00
+  xpos -77
+  ypos -135
+ }
+ FilterErode {
+  name FilterErode1
+  gl_color 0xffb53200
+  note_font 微软雅黑
+  xpos -77
+  ypos -109
+ }
+ Dot {
+  name Dot4
+  gl_color 0xff3f3200
+  note_font 微软雅黑
+  xpos -43
+  ypos -69
+ }
+set N28848400 [stack 0]
+ FilterErode {
+  name FilterErode2
+  gl_color 0xff32d600
+  note_font 微软雅黑
+  xpos -77
+  ypos -51
+ }
+ LevelSet {
+  output -rgba.alpha
+  create_matte true
+  matte_limit 18
+  extrapolated rgb
+  name LevelSet3
+  gl_color 0x32ff3f00
+  note_font 微软雅黑
+  xpos -77
+  ypos -7
+ }
+push $N28848400
+ Merge2 {
+  inputs 2
+  Bchannels none
+  output rgb
+  name Merge7
+  gl_color 0xff813200
+  note_font 微软雅黑
+  xpos 33
+  ypos -12
+ }
+ Unpremult {
+  channels alpha
+  alpha mask.a
+  name Unpremult7
+  gl_color 0xff327e00
+  note_font 微软雅黑
+  xpos 33
+  ypos 16
+ }
+ Premult {
+  name Premult11
+  gl_color 0xff703200
+  note_font 微软雅黑
+  xpos 84
+  ypos 57
+ }
+ Clamp {
+  channels alpha
+  name Clamp2
+  gl_color 0x34ff3200
+  note_font 微软雅黑
+  xpos 84
+  ypos 85
+ }
+ Output {
+  name Output1
+  gl_color 0x9a32ff00
+  xpos 84
+  ypos 185
+ }
+end_group
