@@ -12,3 +12,5 @@ nuke.pluginAddPath('mamoworld')
 nuke.pluginAddPath('tabtabtab')
 nuke.pluginAddPath('batchrender', addToSysPath=False)
 nuke.pluginAddPath('olm_smoother')
+if nuke.env['NukeVersionString'].startswith('10.5v'):
+    nuke.pluginAddPath('optical_flares')

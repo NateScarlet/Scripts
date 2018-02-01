@@ -41,6 +41,7 @@ def convert(folder, output):
   stringstyle=\\color{Black},
   keywordstyle=\\bfseries\\color{OliveGreen},
   identifierstyle=\\color{blue},
+  numbers=left,
 }
 \\lstdefinestyle{.py}{
   language=Python
@@ -54,12 +55,14 @@ def convert(folder, output):
 \\lstdefinestyle{.ui}{
   language=XML
 }
+\\lstdefinestyle{.html}{
+  language=HTML
+}
 \\lstdefinestyle{.css}{
 }
 \\lstdefinestyle{.js}{
 }
-\\lstdefinestyle{.html}{
-  language=HTML
+\\lstdefinestyle{.json}{
 }
 \\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
 \\begin{document}
@@ -70,11 +73,11 @@ def convert(folder, output):
                     or '.venv' in dirpath
                     or '.vscode' in dirpath
                     or 'Documentation' in dirpath
-                    ):
+                ):
                 continue
             for i in filenames:
                 ext = splitext(i)[1]
-                if ext in ('.py', '.gizmo', '.cpp', '.ui', '.css', '.js', '.html'):
+                if ext in ('.py', '.gizmo', '.cpp', '.ui', '.css', '.js', '.html', '.json'):
                     f.write('\\newpage\n')
                     f.write('\\section{{{}}}\n'.format(
                         escape_tex(normpath(join(dirpath, i)).replace(normpath(folder), ''))))

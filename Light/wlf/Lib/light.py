@@ -1,6 +1,7 @@
 # -*- coding=UTF-8 -*-
 
-from pymel.all import *
+from pymel.all import (ls, lightlink, setAttr, move, spaceLocator,
+                       mel, aimConstraint, autoPlace, rename, modelEditor)
 
 
 def breakAllLightLink():
