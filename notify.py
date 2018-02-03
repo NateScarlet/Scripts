@@ -79,7 +79,7 @@ class QMLNotifyView(QDeclarativeView):
                        QDeclarativeView.setWindowOpacity)
 
 
-def qml_notify(qml_file, data=None):
+def qml_notify(qml_file, **data):
     """Show a qml file as a bubble.
 
     Args:
@@ -96,7 +96,6 @@ def qml_notify(qml_file, data=None):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    qml_notify('notify.qml', {'text': 'test1<b>测试消息1</b>'})
-    qml_notify('notify.qml', {
-               'text': 'test2<i>测试消息2</i> too loooooooooooooong'})
+    qml_notify('notify.qml', text='test1<b>测试消息1</b>')
+    qml_notify('notify.qml', text='test2<i>测试消息2</i> too loooooooooooooong')
     sys.exit(app.exec_())

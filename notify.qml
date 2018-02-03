@@ -1,7 +1,7 @@
 import QtQuick 1.0
 
 Rectangle {
-    width: Math.min(Math.max(100, DATA.text.length * 10), 800)
+    width: Math.min(Math.max(150, DATA.text.length * 10), 800)
     height: 100
     radius:10 
     color: "grey"

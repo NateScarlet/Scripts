@@ -3,6 +3,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+import logging.config
 import re
 import sys
 from collections import namedtuple
@@ -12,10 +13,7 @@ from getpass import getpass
 from os import makedirs
 from os.path import dirname, exists, expanduser
 
-from Qt.QtWidgets import QApplication
 from requests import Response, Session
-
-from notify import qml_notify
 
 SITE_URL = 'https://www.shadowsky.xyz'
 LOGIN_PAGE = '/auth/login'
@@ -24,6 +22,32 @@ USER_PAGE = '/user'
 COOKIE_PATH = expanduser('~/.shadowsky/cookies')
 LOG_PATH = expanduser('~/.shadowsky/.log')
 CACHE = {}
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)-6s[%(asctime)s]: %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG'
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'simple',
+            'level': 'INFO',
+            'filename': LOG_PATH,
+            'encoding': 'utf-8'
+        }
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'DEBUG'
+    }
+}
 
 
 @contextmanager
@@ -89,13 +113,13 @@ def get_status():
         raise RuntimeError('Can not get status')
 
 
-def login():
+def login(email, password):
     """CGI login.  """
 
     url = SITE_URL + LOGIN_PAGE
     payload = {
-        'email': raw_input('Email: '),
-        'passwd': getpass(str('Password: ')),
+        'email': email,
+        'passwd': password,
         'remember_me': True
     }
     with session() as s:
@@ -111,35 +135,20 @@ def checkin():
         resp = s.post(SITE_URL + CHECKIN_PAGE)
     msg = resp.json().get('msg')
     logging.info(msg)
-    qml_notify('notify.qml', {'text': msg})
     return resp
 
 
 def main():
-    """Script entry.  """
-    APP = QApplication(sys.argv)
-
-    # setup logging
-    handler = logging.FileHandler(LOG_PATH, encoding='UTF-8')
-    formatter = logging.Formatter(
-        '%(levelname)-6s[%(asctime)s]: %(message)s')
-    handler.setFormatter(formatter)
-    logger = logging.getLogger()
-    logger.addHandler(handler)
-    logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.INFO)
+    logging.config.dictConfig(LOGGING_CONFIG)
 
     while not is_logged_in():
-        login()
+        login(raw_input('Email: '), getpass(str('Password: ')))
     checkin()
     try:
         msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
         logging.info(msg)
-        qml_notify('notify.qml', {'text': msg})
     except RuntimeError:
         logging.error('获取流量信息失败')
-
-    sys.exit(APP.exec_())
 
 
 if __name__ == '__main__':
