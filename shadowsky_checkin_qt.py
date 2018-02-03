@@ -57,6 +57,7 @@ LoginInfo = namedtuple('LoginInfo', ['email', 'password'])
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super(LoginDialog, self).__init__(parent)
+        self.setWindowTitle('shadowsky签到')
 
         layout = QVBoxLayout(self)
         self.emailEdit = QLineEdit(self)
