@@ -4,6 +4,7 @@ from __future__ import print_function, unicode_literals
 
 import logging
 import re
+import sys
 from collections import namedtuple
 from contextlib import contextmanager
 from cookielib import MozillaCookieJar
@@ -11,7 +12,10 @@ from getpass import getpass
 from os import makedirs
 from os.path import dirname, exists, expanduser
 
+from Qt.QtWidgets import QApplication
 from requests import Response, Session
+
+from notify import qml_notify
 
 SITE_URL = 'https://www.shadowsky.xyz'
 LOGIN_PAGE = '/auth/login'
@@ -105,12 +109,15 @@ def checkin():
 
     with session() as s:
         resp = s.post(SITE_URL + CHECKIN_PAGE)
-    logging.info(resp.json().get('msg'))
+    msg = resp.json().get('msg')
+    logging.info(msg)
+    qml_notify('notify.qml', {'text': msg})
     return resp
 
 
 def main():
     """Script entry.  """
+    APP = QApplication(sys.argv)
 
     # setup logging
     handler = logging.FileHandler(LOG_PATH, encoding='UTF-8')
@@ -128,8 +135,11 @@ def main():
     try:
         msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
         logging.info(msg)
+        qml_notify('notify.qml', {'text': msg})
     except RuntimeError:
         logging.error('获取流量信息失败')
+
+    sys.exit(APP.exec_())
 
 
 if __name__ == '__main__':
