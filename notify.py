@@ -103,15 +103,30 @@ def qml_notify(qml_file, **data):
 if __name__ == "__main__":
     import os
     import time
+    import random
     app = QApplication(sys.argv)
+    all_msg = [
+        'test1<b>测试消息1</b>',
+        'test2<i>测试消息2</i> too loooooooooooooong',
+        'test3<span style="color:red">测试消息3</span>',
+        'test4 测试消息4'
+    ]
+    all_timer = []
     qml_file = os.path.abspath(os.path.join(__file__, '../notify.qml'))
-    qml_notify(qml_file, text='test1<b>测试消息1</b>')
-    time.sleep(1)
-    qml_notify(qml_file,
-               text='test2<i>测试消息2</i> too loooooooooooooong')
-    time.sleep(0.5)
-    qml_notify(qml_file,
-               text='test2<span style="color:red">测试消息3</span>')
-    time.sleep(0.5)
-    qml_notify(qml_file, text='test2 测试消息4')
+
+    def _run():
+        qml_notify(qml_file, text=random.choice(all_msg))
+
+    def _delay_run(times):
+        if times <= 0:
+            return
+        timer = QTimer()
+        all_timer.append(timer)
+        timer.setSingleShot(True)
+        timer.timeout.connect(_run)
+        timer.timeout.connect(lambda: _delay_run(times-1))
+        timer.start(random.randint(0, 1000))
+
+    _delay_run(20)
+
     sys.exit(app.exec_())
