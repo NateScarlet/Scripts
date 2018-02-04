@@ -92,6 +92,7 @@ def qml_notify(qml_file, **data):
     context.setContextProperty('DATA', data)
     view.setSource(QUrl.fromLocalFile(qml_file))
     view.show()
+    QApplication.processEvents()
 
 
 if __name__ == "__main__":

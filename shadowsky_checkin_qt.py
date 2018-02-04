@@ -91,9 +91,7 @@ def main():
 
     while not is_logged_in():
         login(*ask_login_info())
-        APP.processEvents()
     checkin()
-    APP.processEvents()
     try:
         msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
         logging.info(msg)
