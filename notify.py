@@ -4,9 +4,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
-from Qt.QtCore import (Property, QObject, QPoint, QPropertyAnimation, Qt,
-                       QTimer, QUrl, QSize, Signal, Slot)
-from Qt.QtWidgets import QApplication, QWidget, QBoxLayout
+from Qt.QtCore import (Property, QEasingCurve, QObject, QPoint,
+                       QPropertyAnimation, QSize, Qt, QTimer, QUrl, Signal,
+                       Slot)
+from Qt.QtWidgets import QApplication, QBoxLayout, QWidget
 
 try:
     from PySide.QtDeclarative import QDeclarativeView as QQuickView
@@ -19,7 +20,6 @@ class NotifyContainer(QWidget):
         super(NotifyContainer, self).__init__(parent)
         layout = QBoxLayout(QBoxLayout.BottomToTop, self)
         layout.setAlignment(Qt.AlignRight | Qt.AlignBottom)
-        # layout.setSizeConstraint(layout.SetNoConstraint)
         self.setWindowFlags(Qt.Window
                             | Qt.Tool
                             | Qt.FramelessWindowHint
@@ -59,6 +59,7 @@ class QMLNotifyView(QQuickView):
         anim = QPropertyAnimation(self, b'view_height')
         anim.setEndValue(0)
         anim.setDuration(1000)
+        anim.setEasingCurve(QEasingCurve.InQuad)
         anim.finished.connect(self.close)
         self._close_anim = anim
 
