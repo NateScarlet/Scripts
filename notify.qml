@@ -14,7 +14,7 @@ Rectangle {
     Timer {
         running:true
         id: autoclose_timer
-        interval: 4000;
+        interval: 3000 + DATA.text.length * 400;
         onTriggered: disapear.start()
     }
     MouseArea {
