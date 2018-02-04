@@ -27,13 +27,14 @@ class NotifyContainer(QWidget):
         self.setStyleSheet("background:transparent;")
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WA_QuitOnClose, True)
-        self.showFullScreen()
+        self.geo = QApplication.desktop().availableGeometry(self)
+        self.setGeometry(self.geo)
+        self.show()
 
     def childEvent(self, event):
         if event.child().isWidgetType():
-            geo = QApplication.desktop().availableGeometry(self)
-            if not geo.contains(self.geometry()):
-                self.resize(geo.size())
+            if not self.geo.contains(self.geometry()):
+                self.resize(self.geo.size())
             if event.removed():
                 for i in self.children():
                     if i.isWidgetType():
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         all_timer.append(timer)
         timer.setSingleShot(True)
         timer.timeout.connect(_run)
-        timer.timeout.connect(lambda: _delay_run(times-1))
+        timer.timeout.connect(lambda: _delay_run(times - 1))
         timer.start(random.randint(0, 1000))
 
     _delay_run(30)
