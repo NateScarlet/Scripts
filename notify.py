@@ -58,7 +58,7 @@ class QMLNotifyView(QQuickView):
         self.is_closing = False
         anim = QPropertyAnimation(self, b'view_height')
         anim.setEndValue(0)
-        anim.setDuration(1000)
+        anim.setDuration(500)
         anim.setEasingCurve(QEasingCurve.InQuad)
         anim.finished.connect(self.close)
         self._close_anim = anim
@@ -75,7 +75,6 @@ class QMLNotifyView(QQuickView):
 
         event.ignore()
         self.is_closing = True
-        self.setResizeMode(QQuickView.SizeRootObjectToView)
         self._close_anim.start()
 
     view_height = Property(int,
