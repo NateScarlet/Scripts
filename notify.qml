@@ -2,23 +2,27 @@ import QtQuick 1.0
 
 Rectangle {
     id: rect
-    width: Math.min(Math.max(150, DATA.text.length * 10), 800)
-    height: 100
-    radius:10
+ 
+    Component.onCompleted: {
+        autoclose_timer.interval = 3000 + text.width * 20;
+        text.width = Math.min(text.width, 300);
+        autoclose_timer.restart();
+    }
+ 
+    height: text.height + 50
+    width: text.width + 50
+    radius: 10
     color: "#b1bccd"
     border {
         width: 2
         color: "#dae2fe"
     }
-
     Timer {
-        running:true
         id: autoclose_timer
-        interval: 3000 + DATA.text.length * 400;
         onTriggered: disapear.start()
     }
     MouseArea {
-        z:0
+        z: 0
         id: mousearea
         hoverEnabled: true
         onEntered: {
@@ -42,7 +46,7 @@ Rectangle {
         wrapMode: Text.Wrap
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
-        anchors.fill: parent
+        anchors.centerIn: parent
     }
     Rectangle{
         id: close_button

@@ -4,14 +4,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
-from Qt.QtCore import (Property, QEasingCurve, QObject, QPoint,
-                       QPropertyAnimation, QSize, Qt, QTimer, QUrl, Signal,
-                       Slot)
+from Qt.QtCore import (Property, QEasingCurve, QPropertyAnimation, Qt, QTimer,
+                       QUrl)
 from Qt.QtWidgets import QApplication, QBoxLayout, QWidget
 
 try:
     from PySide.QtDeclarative import QDeclarativeView as QQuickView
-except:
+except ImportError:
     from PySide2.QtQuick import QQuickView
 
 
@@ -31,11 +30,15 @@ class NotifyContainer(QWidget):
         self.showFullScreen()
 
     def childEvent(self, event):
-        if event.removed() and event.child().isWidgetType():
-            for i in self.children():
-                if i.isWidgetType():
-                    return
-            self.close()
+        if event.child().isWidgetType():
+            geo = QApplication.desktop().availableGeometry(self)
+            if not geo.contains(self.geometry()):
+                self.resize(geo.size())
+            if event.removed():
+                for i in self.children():
+                    if i.isWidgetType():
+                        return
+                self.close()
 
     def closeEvent(self, event):
         if QMLNotifyView.container is self:
@@ -126,6 +129,6 @@ if __name__ == "__main__":
         timer.timeout.connect(lambda: _delay_run(times-1))
         timer.start(random.randint(0, 1000))
 
-    _delay_run(20)
+    _delay_run(30)
 
     sys.exit(app.exec_())
