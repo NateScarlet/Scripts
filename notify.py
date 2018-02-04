@@ -100,16 +100,17 @@ def qml_notify(qml_file, **data):
 
 
 if __name__ == "__main__":
+    import os
     import time
     app = QApplication(sys.argv)
-    qml_notify('notify.qml', text='test1<b>测试消息1</b>')
+    qml_file = os.path.abspath(os.path.join(__file__, '../notify.qml'))
+    qml_notify(qml_file, text='test1<b>测试消息1</b>')
     time.sleep(1)
-    qml_notify('notify.qml', text='test2<i>测试消息2</i> too loooooooooooooong')
+    qml_notify(qml_file,
+               text='test2<i>测试消息2</i> too loooooooooooooong')
     time.sleep(0.5)
-    qml_notify('notify.qml', text='test2<span style="color:red">测试消息3</span>')
+    qml_notify(qml_file,
+               text='test2<span style="color:red">测试消息3</span>')
     time.sleep(0.5)
-    qml_notify('notify.qml', text='test2 测试消息4')
-    try:
-        sys.exit(app.exec_())
-    except KeyboardInterrupt:
-        app.exit()
+    qml_notify(qml_file, text='test2 测试消息4')
+    sys.exit(app.exec_())
