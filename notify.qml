@@ -3,12 +3,14 @@ import QtQuick 1.0
 Rectangle {
     id: rect
  
-    Component.onCompleted: {
+     Component.onCompleted: {
         autoclose_timer.interval = 3000 + text.width * 20;
         text.width = Math.min(text.width, 300);
         autoclose_timer.start();
     }
- 
+
+    PropertyAnimation on x{ from: 200; to: 0; duration: 200; easing.type: Easing.OutQuad; }
+    PropertyAnimation on opacity{ from: 0; to: 1; duration: 200 }
     height: text.height + 50
     width: text.width + 50
     radius: 10
@@ -32,12 +34,11 @@ Rectangle {
         }
         onExited:autoclose_timer.restart()
         anchors.fill: parent
-
     }
     Text {
         id: text
         color: "#0e0c0a"
-        opacity: 0
+        PropertyAnimation on opacity { from: 0; to:1; duration: 300 }
         font{
             family: "微软雅黑,SimHei"
             pointSize: 15
@@ -67,7 +68,7 @@ Rectangle {
         MouseArea{
             acceptedButtons: Qt.LeftButton
             anchors.fill: close_button
-            onClicked: VIEW.close()
+            onClicked: close.start()
             hoverEnabled: true
             onEntered: {
                 parent.color = "#e81123"
@@ -79,34 +80,20 @@ Rectangle {
             }
         }
     }
-
-    ParallelAnimation {
-        running:true
-        NumberAnimation {
-            target: rect;
-            property: "opacity"
-            from: 0; to: 1
-            duration: 200 
-        }
-        NumberAnimation {
-            target: rect;
-            property: "x"
-            from: 200; to: 0
-            duration: 200
-        }
-        NumberAnimation {
-            target: text;
-            property: "opacity"
-            from: 0; to: 1
-            duration: 300
-        }
-    }
     SequentialAnimation {
         id: disapear
         NumberAnimation { target: rect; property: "opacity"; to: 0; duration: 500 }
-        ScriptAction { script: { mousearea.enabled = false; }
+        ScriptAction { script: close.start(); }
+    }
+    SequentialAnimation {
+        id: close
+        NumberAnimation {
+            target: VIEW
+            property: "height_"
+            to: 0
+            duration: 300
+            easing.type: Easing.InOutQuad
         }
-        NumberAnimation { target: VIEW; property: "height_"; to: 0; duration: 500 }
         ScriptAction { script: VIEW.close(); }
     }
 }
