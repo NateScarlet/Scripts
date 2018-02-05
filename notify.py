@@ -42,6 +42,8 @@ class NotifyContainer(QWidget):
 
         self.__is_initiated = True
 
+        self.show()
+
     def paintEvent(self, event):
         # Match to target geo.
         if self.geometry() != self.geo:
@@ -51,16 +53,12 @@ class NotifyContainer(QWidget):
         super(NotifyContainer, self).paintEvent(event)
 
     def childEvent(self, event):
+        super(NotifyContainer, self).childEvent(event)
         if event.child().isWidgetType():
-            child_widgets = (i for i in self.children()
-                             if i.isWidgetType())
-            widget = event.child()
-            if event.added():
-                layout = self.layout()
-                layout.addWidget(widget, alignment=layout.alignment())
-                self.show()
-            elif event.removed():
-                if not any(child_widgets):
+            if event.removed():
+                child_widgets = [i for i in self.children()
+                                 if i.isWidgetType()]
+                if not child_widgets:
                     self.close()
 
 
@@ -73,13 +71,13 @@ class Notify(QQuickView):
                       QQuickView.setFixedWidth)
 
     def __init__(self, parent=None):
-        super(Notify, self).__init__()
+        parent = parent or NotifyContainer()
+        super(Notify, self).__init__(parent)
+        layout = parent.layout()
+        if layout:
+            layout.addWidget(self, alignment=layout.alignment())
         self.setStyleSheet("background:transparent;")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
-
-        # Set parent after QObject init, otherwise container will
-        # cause AttributeError raise.
-        self.setParent(parent or NotifyContainer())
 
     @classmethod
     def from_file(cls, file, **data):
@@ -126,6 +124,7 @@ if __name__ == "__main__":
         timer.timeout.connect(lambda: _delay_run(times - 1))
         timer.start(random.randint(0, 300))
 
+    _delay_run(1)
     _delay_run(3)
     _delay_run(30)
 
