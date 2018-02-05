@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import sys
 
 from Qt.QtCore import Property, Qt, QTimer, QUrl
-from Qt.QtWidgets import QApplication, QBoxLayout, QWidget
+from Qt.QtWidgets import QApplication, QBoxLayout, QDesktopWidget
 
 try:
     from PySide.QtDeclarative import QDeclarativeView as QQuickView
@@ -13,14 +13,15 @@ except ImportError:
     from PySide2.QtQuick import QQuickView
 
 
-class NotifyContainer(QWidget):
-    instance = None
+class NotifyContainer(QDesktopWidget):
+    screen = -1
+    __instance = None
     __is_initiated = False
 
     def __new__(cls, parent=None):
-        if not isinstance(cls.instance, NotifyContainer):
-            cls.instance = super(NotifyContainer, cls).__new__(cls, parent)
-        return cls.instance
+        if not isinstance(cls.__instance, NotifyContainer):
+            cls.__instance = super(NotifyContainer, cls).__new__(cls, parent)
+        return cls.__instance
 
     def __init__(self, parent=None):
         if self.__is_initiated:
@@ -38,7 +39,6 @@ class NotifyContainer(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_QuitOnClose, True)
-        self.geo = QApplication.desktop().availableGeometry(self)
 
         self.__is_initiated = True
 
@@ -46,9 +46,10 @@ class NotifyContainer(QWidget):
 
     def paintEvent(self, event):
         # Match to target geo.
-        if self.geometry() != self.geo:
+        geo = self.availableGeometry(self.screen)
+        if self.geometry() != geo:
             self.setUpdatesEnabled(False)
-            self.setGeometry(self.geo)
+            self.setGeometry(geo)
             self.setUpdatesEnabled(True)
         super(NotifyContainer, self).paintEvent(event)
 
