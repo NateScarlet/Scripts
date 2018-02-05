@@ -4,8 +4,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
-from Qt.QtCore import (Property, QEasingCurve, QPropertyAnimation, Qt, QTimer,
-                       QUrl)
+from Qt.QtCore import Property, Qt, QTimer, QUrl
 from Qt.QtWidgets import QApplication, QBoxLayout, QWidget
 
 try:
@@ -15,92 +14,89 @@ except ImportError:
 
 
 class NotifyContainer(QWidget):
+    instance = None
+    __is_initiated = False
+
+    def __new__(cls, parent=None):
+        if not isinstance(cls.instance, NotifyContainer):
+            cls.instance = super(NotifyContainer, cls).__new__(cls, parent)
+        return cls.instance
+
     def __init__(self, parent=None):
+        if self.__is_initiated:
+            return
+
         super(NotifyContainer, self).__init__(parent)
         layout = QBoxLayout(QBoxLayout.BottomToTop, self)
         layout.setAlignment(Qt.AlignRight | Qt.AlignBottom)
-        self.setWindowFlags(Qt.Window
-                            | Qt.Tool
-                            | Qt.FramelessWindowHint
-                            | Qt.WindowStaysOnTopHint
-                            | Qt.X11BypassWindowManagerHint)
-        self.setStyleSheet("background:transparent;")
+        self.setWindowFlags(
+            Qt.Tool
+            | Qt.FramelessWindowHint
+            | Qt.WindowStaysOnTopHint
+            # | Qt.X11BypassWindowManagerHint
+        )
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_QuitOnClose, True)
         self.geo = QApplication.desktop().availableGeometry(self)
-        self.setGeometry(self.geo)
-        self.show()
+
+        self.__is_initiated = True
+
+    def paintEvent(self, event):
+        # Match to target geo.
+        if self.geometry() != self.geo:
+            self.setUpdatesEnabled(False)
+            self.setGeometry(self.geo)
+            self.setUpdatesEnabled(True)
+        super(NotifyContainer, self).paintEvent(event)
 
     def childEvent(self, event):
         if event.child().isWidgetType():
-            if not self.geo.contains(self.geometry()):
-                self.resize(self.geo.size())
-            if event.removed():
-                for i in self.children():
-                    if i.isWidgetType():
-                        return
-                self.close()
+            child_widgets = (i for i in self.children()
+                             if i.isWidgetType())
+            widget = event.child()
+            if event.added():
+                layout = self.layout()
+                layout.addWidget(widget, alignment=layout.alignment())
+                self.show()
+            elif event.removed():
+                if not any(child_widgets):
+                    self.close()
 
-    def closeEvent(self, event):
-        if QMLNotifyView.container is self:
-            QMLNotifyView.container = None
 
-
-class QMLNotifyView(QQuickView):
-    display_time = 3000
-    container = None
+class Notify(QQuickView):
+    height_ = Property(int,
+                       QQuickView.height,
+                       QQuickView.setFixedHeight)
+    width_ = Property(int,
+                      QQuickView.width,
+                      QQuickView.setFixedWidth)
 
     def __init__(self, parent=None):
-        parent = parent or self.get_container()
-        super(QMLNotifyView, self).__init__(parent)
-        parent_layout = parent.layout()
-        parent_layout.addWidget(self, alignment=parent_layout.alignment())
-        self.setContentsMargins(8, 8, 8, 8)
+        super(Notify, self).__init__()
+        self.setStyleSheet("background:transparent;")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
-        # For closing animation.
-        self.is_closing = False
-        anim = QPropertyAnimation(self, b'view_height')
-        anim.setEndValue(0)
-        anim.setDuration(500)
-        anim.setEasingCurve(QEasingCurve.InQuad)
-        anim.finished.connect(self.close)
-        self._close_anim = anim
+        # Set parent after QObject init, otherwise container will
+        # cause AttributeError raise.
+        self.setParent(parent or NotifyContainer())
 
-    def get_container(self):
-        if not isinstance(QMLNotifyView.container, QWidget):
-            QMLNotifyView.container = NotifyContainer()
-        return QMLNotifyView.container
+    @classmethod
+    def from_file(cls, file, **data):
+        """Construct from file path.
 
-    def closeEvent(self, event):
-        if self.is_closing:
-            event.accept()
-            return
+        Args:
+            file (str): qml file path.
+            data (dict, optional): Data will be used in qml as `DATA`.
+        """
 
-        event.ignore()
-        self.is_closing = True
-        self._close_anim.start()
-
-    view_height = Property(int,
-                           QQuickView.height,
-                           QQuickView.setFixedHeight)
-
-
-def qml_notify(qml_file, **data):
-    """Show a qml file as a bubble.
-
-    Args:
-        qml_file (str): qml file path.
-        data (dict, optional): Data will be used in qml as `DATA`.
-    """
-
-    view = QMLNotifyView()
-    context = view.rootContext()
-    context.setContextProperty('DATA', data)
-    context.setContextProperty('VIEW', view)
-    view.setSource(QUrl.fromLocalFile(qml_file))
-    view.show()
-    QApplication.processEvents()
+        ret = Notify()
+        context = ret.rootContext()
+        context.setContextProperty('DATA', data)
+        context.setContextProperty('VIEW', ret)
+        ret.setSource(QUrl.fromLocalFile(file))
+        QApplication.processEvents()
+        return ret
 
 
 if __name__ == "__main__":
@@ -118,7 +114,7 @@ if __name__ == "__main__":
     qml_file = os.path.abspath(os.path.join(__file__, '../notify.qml'))
 
     def _run():
-        qml_notify(qml_file, text=random.choice(all_msg))
+        Notify.from_file(qml_file, text=random.choice(all_msg))
 
     def _delay_run(times):
         if times <= 0:
@@ -128,8 +124,9 @@ if __name__ == "__main__":
         timer.setSingleShot(True)
         timer.timeout.connect(_run)
         timer.timeout.connect(lambda: _delay_run(times - 1))
-        timer.start(random.randint(0, 1000))
+        timer.start(random.randint(0, 300))
 
+    _delay_run(3)
     _delay_run(30)
 
     sys.exit(app.exec_())

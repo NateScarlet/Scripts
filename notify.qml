@@ -6,7 +6,7 @@ Rectangle {
     Component.onCompleted: {
         autoclose_timer.interval = 3000 + text.width * 20;
         text.width = Math.min(text.width, 300);
-        autoclose_timer.restart();
+        autoclose_timer.start();
     }
  
     height: text.height + 50
@@ -30,7 +30,7 @@ Rectangle {
             disapear.stop();
             rect.opacity = 1;
         }
-        onExited:autoclose_timer.start()
+        onExited:autoclose_timer.restart()
         anchors.fill: parent
 
     }
@@ -106,6 +106,7 @@ Rectangle {
         NumberAnimation { target: rect; property: "opacity"; to: 0; duration: 500 }
         ScriptAction { script: { mousearea.enabled = false; }
         }
+        NumberAnimation { target: VIEW; property: "height_"; to: 0; duration: 500 }
         ScriptAction { script: VIEW.close(); }
     }
 }
