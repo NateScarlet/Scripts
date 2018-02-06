@@ -1,16 +1,23 @@
+#! /usr/bin/env python
 # -*- coding=UTF-8 -*-
 """Show a notify bubble.   """
 from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
+from Qt import __binding__
 from Qt.QtCore import Property, Qt, QTimer, QUrl
 from Qt.QtWidgets import QApplication, QBoxLayout, QDesktopWidget
 
-try:
-    from PySide.QtDeclarative import QDeclarativeView as QQuickView
-except ImportError:
+if __binding__ == 'PySide2':
+    # TODO: Adapt PySide2
     from PySide2.QtQuick import QQuickView
+elif __binding__ == 'PySide':
+    from PySide.QtDeclarative import QDeclarativeView as QQuickView
+    QQuickView.setHeight = QQuickView.setFixedHeight
+    QQuickView.setWidth = QQuickView.setFixedWidth
+else:
+    raise NotImplementedError
 
 
 class NotifyContainer(QDesktopWidget):
@@ -34,7 +41,7 @@ class NotifyContainer(QDesktopWidget):
             Qt.Tool
             | Qt.FramelessWindowHint
             | Qt.WindowStaysOnTopHint
-            # | Qt.X11BypassWindowManagerHint
+            | Qt.X11BypassWindowManagerHint
         )
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
@@ -66,10 +73,10 @@ class NotifyContainer(QDesktopWidget):
 class Notify(QQuickView):
     height_ = Property(int,
                        QQuickView.height,
-                       QQuickView.setFixedHeight)
+                       QQuickView.setHeight)
     width_ = Property(int,
                       QQuickView.width,
-                      QQuickView.setFixedWidth)
+                      QQuickView.setWidth)
 
     def __init__(self, parent=None):
         parent = parent or NotifyContainer()

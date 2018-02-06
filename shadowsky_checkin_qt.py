@@ -1,24 +1,26 @@
 # -*- coding=UTF-8 -*-
-from __future__ import print_function, unicode_literals, absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
+
 import logging
 import logging.config
-from notify import qml_notify
-
-import sys
 import os
-from shadowsky_checkin import is_logged_in, login, checkin, get_status, LOG_PATH
-
-from Qt.QtWidgets import QApplication, QDialog, QVBoxLayout, QLineEdit, QLabel, QDialogButtonBox
-
-
+import sys
 from collections import namedtuple
+
+from Qt.QtCore import QTimer
+from Qt.QtWidgets import (QApplication, QDialog, QDialogButtonBox, QLabel,
+                          QLineEdit, QVBoxLayout)
+
+from notify import Notify
+from shadowsky_checkin import (LOG_PATH, checkin, get_status, is_logged_in,
+                               login)
 
 
 class QtHandler(logging.Handler):
     qml_file = os.path.abspath(os.path.join(__file__, '../notify.qml'))
 
     def emit(self, record):
-        qml_notify(self.qml_file, text=self.format(record))
+        Notify.from_file(self.qml_file, text=self.format(record))
 
 
 LOGGING_CONFIG = {
@@ -87,17 +89,24 @@ def ask_login_info():
 def main():
     logging.config.dictConfig(LOGGING_CONFIG)
 
-    APP = QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
-    while not is_logged_in():
-        login(*ask_login_info())
-    checkin()
-    try:
-        msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
-        logging.info(msg)
-    except RuntimeError:
-        logging.error('获取流量信息失败')
-    sys.exit(APP.exec_())
+    def _main():
+        while not is_logged_in():
+            login(*ask_login_info())
+        checkin()
+        try:
+            msg = '已用 {0.used} GB, 剩余 {0.remain} GB'.format(get_status())
+            logging.info(msg)
+        except RuntimeError:
+            logging.error('获取流量信息失败')
+
+    timer = QTimer()
+    timer.setSingleShot(True)
+    timer.timeout.connect(_main)
+    timer.start(0)
+
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
