@@ -6,6 +6,7 @@ import locale
 import logging
 import os
 import sys
+from pypinyin import slug
 
 try:
     _file = __file__
@@ -98,7 +99,7 @@ def main():
         autoplace_all()
         filename = u'{}/{num}#{tag}.nk'.format(args.dir,
                                                tag=tag, num=len(files))
-        nuke.scriptSave(filename.encode('UTF-8'))
+        nuke.scriptSave(slug(filename, separator='').encode('UTF-8'))
 
 
 if __name__ == '__main__':
