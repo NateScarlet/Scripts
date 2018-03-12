@@ -1,9 +1,10 @@
 # -*- coding=UTF-8 -*-
 
 from __future__ import absolute_import
-from pymel.all import setParent, shelfLayout, shelfButton, deleteUI
 
-from Lib.cgteamwork import CGTeamWork
+from maya.cmds import deleteUI, setParent, shelfButton, shelfLayout
+
+from _cgteamwork import CGTeamWork
 
 SHELF_NAME = 'CgTeamWork'
 

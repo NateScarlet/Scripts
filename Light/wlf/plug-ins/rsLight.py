@@ -1,9 +1,9 @@
 # -*- coding=UTF-8 -*-
 from __future__ import absolute_import
 
-from pymel.all import setParent, shelfLayout, shelfButton, deleteUI
+from maya.cmds import setParent, shelfLayout, shelfButton, deleteUI
 
-from Lib.light import rsPhysicalLight, breakAllLightLink
+from _rsLight import rsPhysicalLight, breakAllLightLink
 
 
 def initializePlugin(mobject):

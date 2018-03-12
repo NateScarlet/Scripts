@@ -1,7 +1,7 @@
 # -*- coding=UTF-8 -*-
-
-from pymel.all import (ls, lightlink, setAttr, move, spaceLocator,
-                       mel, aimConstraint, autoPlace, rename, modelEditor)
+from maya.cmds import (aimConstraint, autoPlace, lightlink, modelEditor,
+                       spaceLocator)
+from pymel.all import ls, mel, move, rename, setAttr
 
 
 def breakAllLightLink():
