@@ -13,3 +13,9 @@
 [submodule "Pipeline/CGTeamWork"]
 	path = Pipeline/CGTeamWork
 	url = git@github.com:WuLiFang/CGTeamWork.git
+[submodule "ImageRetouch/types"]
+	path = ImageRetouch/types
+	url = git@github.com:pravdomil/Types-for-Adobe.git
+[submodule "ImageRetouch/Types-for-Adobe"]
+	path = ImageRetouch/Types-for-Adobe
+	url = git@github.com:pravdomil/Types-for-Adobe.git

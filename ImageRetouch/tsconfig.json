@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "target": "es3",
+        "jsx": "preserve",
+        "module": "none",
+        "noLib": true,
+        "strict": true,
+        "outDir": "dist",
+    },
+    "exclude": [
+        "dist",
+        "node_modules",
+        "**/node_modules/*"
+    ]
+}
