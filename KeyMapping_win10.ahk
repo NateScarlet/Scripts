@@ -7,6 +7,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 Loop
 {
+    sleep 100
 	IfWinActive, ahk_exe tldenoise5_x64.exe
 		WinMinimize
 	PrevWin := CurrentWin
