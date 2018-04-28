@@ -68,18 +68,23 @@ def convert(folder, output):
 }
 \\lstdefinestyle{.ts}{
 }
+\\lstdefinestyle{.txt}{
+}
 \\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
 \\begin{document}
 \\tableofcontents
 '''.encode('UTF-8'))
 
         def _write_file(filename, dirpath):
+            if filename.endswith('bundle.js'):
+                return
             i = filename
             ext = splitext(i)[1]
-            if ext.lower() in ('.py', '.gizmo', '.cpp',
-                               '.ui', '.css', '.js',
-                               '.html', '.json', '.vue',
-                               '.ts'):
+            if (ext.lower() in ('.py', '.gizmo', '.cpp',
+                                '.ui', '.css', '.js',
+                                '.html', '.json', '.vue',
+                                '.ts', '.ps1')
+                    or i in ('requirements.txt', 'Pipfile', 'Dockerfile')):
                 f.write('\\newpage\n')
                 section = escape_tex(normpath(join(dirpath, i)).replace(
                     normpath(folder), ''))
@@ -88,10 +93,12 @@ def convert(folder, output):
                 print(path_)
                 f.write(
                     '\\lstinputlisting[style={}]{{{}}}\n'.format(
-                        ext, path_))
+                        ext or '.txt', path_))
+            else:
+                print('# Ignore: ' + i)
 
         def _scan_dir(dirpath):
-            for i in listdir(dirpath):
+            for i in sorted(listdir(dirpath), key=lambda x: (not x.startswith('_'), x)):
                 path = join(dirpath, i)
                 print(path)
                 if isfile(path):
@@ -99,6 +106,8 @@ def convert(folder, output):
                 elif i in ('site-packages',
                            '.venv',
                            '.vscode',
+                           'dist',
+                           'build',
                            'Documentation',
                            'node_modules'):
                     continue
