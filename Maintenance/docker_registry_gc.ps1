@@ -1,0 +1,1 @@
+docker exec registry registry garbage-collect /etc/docker/registry/config.yml

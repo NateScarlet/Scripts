@@ -2,8 +2,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-from os import walk
-from os.path import join, normpath, splitext
+from os import listdir
+from os.path import join, normpath, splitext, isfile
 import sys
 
 
@@ -64,26 +64,48 @@ def convert(folder, output):
 }
 \\lstdefinestyle{.json}{
 }
+\\lstdefinestyle{.vue}{
+}
+\\lstdefinestyle{.ts}{
+}
 \\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
 \\begin{document}
 \\tableofcontents
 '''.encode('UTF-8'))
-        for dirpath, dirnames, filenames in walk(folder):
-            if ('site-packages' in dirpath
-                    or '.venv' in dirpath
-                    or '.vscode' in dirpath
-                    or 'Documentation' in dirpath
-                ):
-                continue
-            for i in filenames:
-                ext = splitext(i)[1]
-                if ext in ('.py', '.gizmo', '.cpp', '.ui', '.css', '.js', '.html', '.json'):
-                    f.write('\\newpage\n')
-                    f.write('\\section{{{}}}\n'.format(
-                        escape_tex(normpath(join(dirpath, i)).replace(normpath(folder), ''))))
-                    f.write(
-                        '\\lstinputlisting[style={}]{{{}}}\n'.format(ext, join(dirpath, i).replace('\\', '/')))
 
+        def _write_file(filename, dirpath):
+            i = filename
+            ext = splitext(i)[1]
+            if ext.lower() in ('.py', '.gizmo', '.cpp',
+                               '.ui', '.css', '.js',
+                               '.html', '.json', '.vue',
+                               '.ts'):
+                f.write('\\newpage\n')
+                section = escape_tex(normpath(join(dirpath, i)).replace(
+                    normpath(folder), ''))
+                f.write('\\section{{{}}}\n'.format(section))
+                path_ = join(dirpath, i).replace('\\', '/')
+                print(path_)
+                f.write(
+                    '\\lstinputlisting[style={}]{{{}}}\n'.format(
+                        ext, path_))
+
+        def _scan_dir(dirpath):
+            for i in listdir(dirpath):
+                path = join(dirpath, i)
+                print(path)
+                if isfile(path):
+                    _write_file(i, dirpath)
+                elif i in ('site-packages',
+                           '.venv',
+                           '.vscode',
+                           'Documentation',
+                           'node_modules'):
+                    continue
+                else:
+                    _scan_dir(path)
+
+        _scan_dir(folder)
         f.write('\\end{document}\n')
 
 

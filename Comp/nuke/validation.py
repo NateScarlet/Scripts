@@ -10,7 +10,7 @@ import sys
 
 from __about__ import __version__
 
-EXPIRE_AT = time.date(2018, 1, 1)
+EXPIRE_AT = time.date(2018, 7, 1)
 IS_EXPIRED = EXPIRE_AT < time.date.today()
 
 if IS_EXPIRED:
@@ -22,7 +22,10 @@ if IS_EXPIRED:
 def setup():
     print('-' * 20)
     msg = '吾立方插件 {}\n许可至: {}'.format(__version__, EXPIRE_AT)
-    print(msg.encode(sys.getfilesystemencoding(), 'replace'))
+    try:
+        print(msg.encode(sys.getfilesystemencoding(), 'replace'))
+    except UnicodeDecodeError:
+        print(msg)
     print('-' * 20)
 
-    del globals()['EXPIRE_AT']
+    # del globals()['EXPIRE_AT']
