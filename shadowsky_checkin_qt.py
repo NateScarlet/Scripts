@@ -15,6 +15,9 @@ from notify import Notify
 from shadowsky_checkin import (LOG_PATH, checkin, get_status, is_logged_in,
                                login)
 
+if getattr(sys, 'frozen', False):
+    __file__ = os.path.join(getattr(sys, '_MEIPASS', ''), __file__)
+
 
 class QtHandler(logging.Handler):
     qml_file = os.path.abspath(os.path.join(__file__, '../notify.qml'))

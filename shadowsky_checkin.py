@@ -15,7 +15,7 @@ from os.path import dirname, exists, expanduser
 
 from requests import Response, Session
 
-SITE_URL = 'https://www.shadowsky.xyz'
+SITE_URL = 'https://www.shadowsky.stream'
 LOGIN_PAGE = '/auth/login'
 CHECKIN_PAGE = '/user/checkin'
 USER_PAGE = '/user'
