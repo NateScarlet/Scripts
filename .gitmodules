@@ -10,6 +10,3 @@
 [submodule "Comp/nuke/tabtabtab"]
 	path = Comp/nuke/tabtabtab
 	url = git@github.com:NateScarlet/tabtabtab-nuke.git
-[submodule "Pipeline/CGTeamWork"]
-	path = Pipeline/CGTeamWork
-	url = git@github.com:WuLiFang/CGTeamWork.git
