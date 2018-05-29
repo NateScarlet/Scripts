@@ -1,0 +1,18 @@
+[NewRequest]
+    FriendlyName = "Server"
+    Exportable = TRUE   ; TRUE = Private key is exportable
+    KeyLength = 2048     ; Valid key sizes: 1024, 2048, 4096, 8192, 16384
+    KeySpec = 1          ; Key Exchange �C Required for encryption
+    KeyUsage = 0xA0      ; Digital Signature, Key Encipherment
+    MachineKeySet = True
+    ProviderName = "Microsoft RSA SChannel Cryptographic Provider"
+
+    RequestType = PKCS10 ; or CMC.
+
+[Extensions]
+    2.5.29.17 = "{text}"
+    _continue_ = "DNS=localhost&"
+    _continue_ = "IPAddress=127.0.0.1&"
+
+[RequestAttributes]
+    CertificateTemplate = WebServer
