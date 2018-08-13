@@ -5,16 +5,16 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 #SingleInstance force
 
-Loop
-{
-	IfWinActive, ahk_exe tldenoise5_x64.exe
-		WinMinimize
-	PrevWin := CurrentWin
-    WinGet, CurrentWin, ID, A
-	If (CurrentWin != PrevWin) {
-	    OnWinChange()
-	}
-}
+; Loop
+; {
+	; IfWinActive, ahk_exe tldenoise5_x64.exe
+		; WinMinimize
+	; PrevWin := CurrentWin
+    ; WinGet, CurrentWin, ID, A
+	; If (CurrentWin != PrevWin) {
+	    ; OnWinChange()
+	; }
+; }
 
 OnWinChange()
 {
