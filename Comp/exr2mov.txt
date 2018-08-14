@@ -1,0 +1,1 @@
+ffmpeg -y -gamma 2.2 -pix_fmt yuv420p -i <input>.%d.exr -vcodec prores -profile:3 -o <output>.mov

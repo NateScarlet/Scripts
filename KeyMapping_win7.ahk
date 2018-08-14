@@ -3,13 +3,13 @@
 Shortcut = %UserProfile%\Shortcut
 
 
-Loop {
-	PrevWin := CurrentWin
-    WinGet, CurrentWin, ID, A
-	If (CurrentWin != PrevWin) {
-	    OnWinChange()
-	}
-}
+;~ Loop {
+	;~ PrevWin := CurrentWin
+    ;~ WinGet, CurrentWin, ID, A
+	;~ If (CurrentWin != PrevWin) {
+	    ;~ OnWinChange()
+	;~ }
+;~ }
 
 OnWinChange()
 {
