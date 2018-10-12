@@ -20,7 +20,7 @@ OnWinChange()
 		WinClose,
 }
 
-$#f:: Run %Shortcut%\Everything
+$#f:: Run Everything
 
 $#1:: 
 IfWinExist, ahk_exe chrome.exe
@@ -60,17 +60,20 @@ else
 return
 
 $#3:: 
-IfWinExist, ahk_exe Typora.exe 
+IfWinExist, ahk_exe code.exe 
 {
-	GroupAdd, G_TYPORA, ahk_exe Typora.exe
-	GroupActivate, G_TYPORA
+	GroupAdd, G_CODE, ahk_exe code.exe
+	GroupActivate, G_CODE
 }
 else
-    Run, "%USERPROFILE%\Shortcut\txt.lnk"
+	Run, code
 return
 
 $!^t::
-Run, posh
+IfWinExist, ahk_exe ConEmu64.exe
+	WinActivate
+else
+	Run, ConEmu64.exe
 return
 
 $#e:: 
