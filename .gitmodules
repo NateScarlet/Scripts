@@ -1,15 +1,3 @@
-[submodule "Comp/nuke/wlf"]
-	path = Comp/nuke/wlf
-	url = git@github.com:WuLiFang/Nuke.git
-[submodule "Comp/nuke/batchrender"]
-	path = Comp/nuke/batchrender
-	url = git@github.com:NateScarlet/NukeBatchRender.git
 [submodule "Comp/nuke/cryptomatte"]
 	path = Comp/nuke/cryptomatte
 	url = git@github.com:NateScarlet/Cryptomatte.git
-[submodule "Comp/nuke/tabtabtab"]
-	path = Comp/nuke/tabtabtab
-	url = git@github.com:NateScarlet/tabtabtab-nuke.git
-[submodule "Light/wlf"]
-	path = Light/wlf
-	url = git@github.com:WuLiFang/Maya.git
