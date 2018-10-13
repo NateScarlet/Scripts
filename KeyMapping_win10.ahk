@@ -41,19 +41,18 @@ Run, Krita
 return
 
 $#3:: 
-IfWinNotExist, ahk_exe notepad++.exe
+IfWinNotExist, ahk_exe code.exe
 {
-    Run, "%USERPROFILE%\Shortcut\txt.lnk"
+    Run, code
 }
 
-GroupAdd, G_TXT, ahk_exe notepad++.exe
-GroupAdd, G_TXT, ahk_exe Typora.exe
+GroupAdd, G_TXT, ahk_exe code.exe
 GroupActivate, G_TXT
 
 return
 
 $#f:: 
-Run, "%USERPROFILE%\Shortcut\Everything.lnk"
+Run, Everything
 return
 
 $#e:: 
