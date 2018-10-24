@@ -5,17 +5,6 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 #SingleInstance force
 
-; Loop
-; {
-	; IfWinActive, ahk_exe tldenoise5_x64.exe
-		; WinMinimize
-	; PrevWin := CurrentWin
-    ; WinGet, CurrentWin, ID, A
-	; If (CurrentWin != PrevWin) {
-	    ; OnWinChange()
-	; }
-; }
-
 OnWinChange()
 {
 	WinWaitNotActive, ahk_exe NeptuniaReBirth2.exe
@@ -37,13 +26,12 @@ return
 
 $#2:: 
 Run, Krita
-;~ Run, XnView
 return
 
 $#3:: 
 IfWinNotExist, ahk_exe code.exe
 {
-    Run, code
+    Run, "%LocalAppdata%\Programs\Microsoft VS Code\Code.exe"
 }
 
 GroupAdd, G_TXT, ahk_exe code.exe
@@ -71,20 +59,10 @@ else
 }
 return
 
-$^#e:: 
-IfWinExist, ahk_exe Q-Dir.exe
-{
+$!^t::
+IfWinExist, ahk_exe ConEmu64.exe
 	WinActivate
-}
 else
-{
-	Run Q-Dir
-}
+	Run, ConEmu64.exe
 return
 
-^!t::
-Run, posh
-return
-
-; LButton::Send, % "{" (A_TimeSincePriorHotkey > 50 ? A_ThisHotkey " Down" : "") "}"
-; LButton Up::Send, {%A_ThisHotkey%}
