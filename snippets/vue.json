@@ -19,7 +19,7 @@
       "import { Component, Vue } from 'vue-property-decorator'",
       "",
       "",
-      "@Component({",
+      "@Component<$1>({",
       "  components: {},",
       "})",
       "export default class $1 extends Vue {}",
