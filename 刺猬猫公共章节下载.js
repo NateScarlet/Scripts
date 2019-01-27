@@ -12,7 +12,9 @@
   });
   const anchor = document.createElement("a");
   anchor.href = URL.createObjectURL(file);
-  anchor.download = `${chapter}.txt`;
+  anchor.download = `${
+    location.pathname.split("/").slice(-1)[0]
+  }_${chapter}.txt`;
   anchor.style["display"] = "none";
   document.body.append(anchor);
   anchor.click();
