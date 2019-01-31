@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     刺猬猫公共章节自动下载
-// @version  1
+// @version  2
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
@@ -11,18 +11,25 @@
   const chapter = document.querySelector("#J_BookCnt h3.chapter").firstChild
     .textContent;
   const lines = [];
-  for (const i of element.querySelectorAll("p")) {
-    lines.push(i.firstChild.textContent);
+  for (const i of element.querySelectorAll("p:not(.author-say)")) {
+    let line = i.firstChild.textContent.replace(/^\s+|\s+$/g, "");
+    if (line.length === 0) {
+      continue;
+    }
+    if (i.classList.contains("author_say")) {
+      line = `    ${line}`;
+    }
+    lines.push(line);
   }
 
-  const file = new Blob([`# ${chapter}\n\n`, lines.join("\n")], {
-    type: "text/plain"
+  const file = new Blob([`# ${chapter}\n\n`, lines.join("\n\n")], {
+    type: "text/markdown"
   });
   const anchor = document.createElement("a");
   anchor.href = URL.createObjectURL(file);
   anchor.download = `${location.pathname.split("/").slice(-1)[0]} ${
     document.title
-  }.txt`;
+  }.md`;
   anchor.style["display"] = "none";
   document.body.append(anchor);
   anchor.click();
