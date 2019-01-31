@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     刺猬猫章节自动下载
-// @version  6
+// @version  7
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
@@ -17,9 +17,7 @@ function image2line(img) {
   canvas.height = img.naturalHeight;
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0);
-  return `<img title="${img.title}" alt="${
-    img.alt
-  }" src="${canvas.toDataURL()}" />`;
+  return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
 }
 
 /** @param {string} url  */
