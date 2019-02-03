@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     刺猬猫章节自动下载
-// @version  7
+// @version  8
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
@@ -20,6 +20,17 @@ function image2line(img) {
   return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
 }
 
+/** @param {Element} element */
+function getElementRootText(element) {
+  let ret = "";
+  for (const i of element.childNodes) {
+    if (i.nodeType === i.TEXT_NODE) {
+      ret += i.nodeValue;
+    }
+  }
+  return strip(ret);
+}
+
 /** @param {string} url  */
 async function imageUrl2line(url) {
   return new Promise((resolve, reject) => {
@@ -30,12 +41,14 @@ async function imageUrl2line(url) {
     img.src = url;
   });
 }
+
 /** @param {string} str
  * @return {string} str
  */
 function strip(str) {
   return str.replace(/^\s+|\s+$/g, "");
 }
+
 (async function() {
   const chapter = document.querySelector("#J_BookCnt h3.chapter").firstChild
     .textContent;
@@ -50,7 +63,7 @@ function strip(str) {
   }
   // 免费章节
   for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
-    let line = strip(i.firstChild.textContent);
+    let line = getElementRootText(i);
     lines.push(line);
     for (const img of i.querySelectorAll("img")) {
       lines.push(image2line(img));
@@ -58,7 +71,7 @@ function strip(str) {
   }
   // 作者说
   for (const i of document.querySelectorAll("p.author_say")) {
-    let line = strip(i.firstChild.textContent);
+    let line = getElementRootText(i);
     lines.push(`    ${line}`);
     for (const img of i.querySelectorAll("img")) {
       lines.push(image2line(img));
