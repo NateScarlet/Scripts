@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
-// @version  1
+// @version  2
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @run-at   document-idle
@@ -8,7 +8,11 @@
 
 const __name__ = "小説家になろう book downloader";
 const statusIndicator = document.createElement("span");
-
+let finishedCount = 0;
+let totalCount = 0;
+function updateStatus() {
+  statusIndicator.innerText = `(${finishedCount}/${totalCount})`;
+}
 async function downloadChapter(ncode, chapter) {
   const url =
     `https://ncode.syosetu.com/txtdownload/dlstart/ncode` +
@@ -25,6 +29,7 @@ async function downloadChapter(ncode, chapter) {
   }
   return await resp.text();
 }
+
 /** @type {HTMLDivElement[]} */
 const messageNodes = [];
 function addMessage(text, title, color = "red") {
@@ -62,29 +67,10 @@ function getMetaData() {
   ].join("\n");
 }
 
-/** @param {HTMLButtonElement} button */
-async function main(button) {
-  log("start downloading");
-  clearMessage();
-  const ncode = getLatestPart(
-    document.querySelector(
-      "#novel_footer > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)"
-    ).href
-  );
-  log(`ncode: ${ncode}`);
-  const chapters = [];
-  let finishedCount = 0;
-  for (const i of document.querySelectorAll(
-    "dl.novel_sublist2 > dd:nth-child(1) > a:nth-child(1)"
-  )) {
-    chapters.push({ chapter: getLatestPart(i.href), title: i.innerText });
-  }
-
-  statusIndicator.innerText = `(${finishedCount}/${chapters.length})`;
-  const pms = Promise.all(
+async function downloadChapterChunk(ncode, chapters) {
+  return Promise.all(
     chapters.map(i =>
       (async function() {
-        log(`chapter start downloading: ${i.chapter} ${i.title}`);
         const ret = await Promise.all(
           (await downloadChapter(ncode, i.chapter))
             .split("\n")
@@ -94,25 +80,62 @@ async function main(button) {
             .map(convertImage)
         );
         ret.splice(0, 0, `# ${i.title}`);
-        log(`chapter downloaded: ${i.chapter} ${i.title}`);
         finishedCount += 1;
-        statusIndicator.innerText = `(${finishedCount}/${chapters.length})`;
+        updateStatus();
         return ret;
       })()
     )
+  ).then(i => {
+    /** @type {string[]} */
+    const ret = [];
+    i.map(j => {
+      ret.push(...j);
+    });
+    return ret;
+  });
+}
+/** @param {HTMLButtonElement} button */
+async function main(button) {
+  clearMessage();
+  const ncode = getLatestPart(
+    document.querySelector(
+      "#novel_footer > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)"
+    ).href
   );
-
-  const lines = [];
-  for (const i of await pms) {
-    lines.push(...i);
+  log(`"start downloading: ${ncode}`);
+  const chapters = [];
+  for (const i of document.querySelectorAll(
+    "dl.novel_sublist2 > dd:nth-child(1) > a:nth-child(1)"
+  )) {
+    chapters.push({ chapter: getLatestPart(i.href), title: i.innerText });
   }
-  statusIndicator.innerText = "";
+
+  finishedCount = 0;
+  totalCount = chapters.length;
+  updateStatus();
+  const lines = [];
+  const chunkSize = 10;
+  for (let i = 0; i < chapters.length; i += chunkSize) {
+    lines.push(
+      ...(await downloadChapterChunk(ncode, chapters.slice(i, i + chunkSize)))
+    );
+    // Avoid rate limiter
+    await sleep(5000);
+  }
   log(`got ${lines.length} lines`);
 
-  // Download file
-  const file = new Blob([getMetaData(), "\n\n", lines.join("\n\n")], {
-    type: "text/markdown"
-  });
+  function download() {
+    downloadFile(
+      new Blob([getMetaData(), "\n\n", lines.join("\n\n")], {
+        type: "text/markdown"
+      })
+    );
+  }
+  button.onclick = download;
+  button.click();
+}
+
+function downloadFile(file) {
   const anchor = document.createElement("a");
   anchor.href = URL.createObjectURL(file);
   anchor.download = `${getLatestPart(location.pathname)} ${document.title}.md`;
@@ -155,6 +178,10 @@ function injectStyleSheet(url) {
   document.querySelector("#novel_ex").after(button, statusIndicator);
   log("activated");
 })();
+
+function sleep(duration) {
+  return new Promise(resolve => setTimeout(resolve, duration));
+}
 
 // Image utils
 
