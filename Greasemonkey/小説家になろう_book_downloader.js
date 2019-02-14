@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
-// @version  3
+// @version  4
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @run-at   document-idle
@@ -132,7 +132,7 @@ async function main(button) {
     );
   }
   button.onclick = download;
-  button.click();
+  download()
 }
 
 function downloadFile(file) {
