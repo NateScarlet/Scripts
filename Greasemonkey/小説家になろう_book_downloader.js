@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
-// @version  2
+// @version  3
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @run-at   document-idle
@@ -192,6 +192,7 @@ async function imageUrl2line(url) {
     img.onload = () => {
       resolve(image2line(img));
     };
+    img.onerror = reject;
     img.src = url;
     img.alt = url;
   });
@@ -213,11 +214,15 @@ function image2line(img) {
 async function convertImage(line) {
   const match = line.match(/^<(.+)\|(.+)>$/);
   if (match) {
-    return await imageUrl2line(
-      `https://${match[2]}.mitemin.net/userpageimage/viewimagebig/icode/${
-        match[1]
-      }/`
-    );
+    const url = `https://${
+      match[2]
+    }.mitemin.net/userpageimage/viewimagebig/icode/${match[1]}/`;
+    try {
+      return await imageUrl2line(url);
+    } catch (err) {
+      addMessage([url, JSON.stringify(err)], "Image download failed", 'orange')
+      return `![${line}](${url})`;
+    }
   }
   return line;
 }
