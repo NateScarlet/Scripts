@@ -12,7 +12,7 @@ const __name__ = "刺猬猫章节自动下载";
 
 /** @param {HTMLImageElement} img  */
 function image2line(img) {
-  const canvas = document.createElement("canvas");
+const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
   const ctx = canvas.getContext("2d");
