@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  4
+// @version  5
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -36,6 +36,7 @@ const reservedUsername = [
   'issues',
   'marketplace',
   'explore',
+  'discover',
   'notifications',
   'new',
   'organizations',
