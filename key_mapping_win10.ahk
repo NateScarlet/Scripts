@@ -5,15 +5,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 #SingleInstance force
 
-OnWinChange()
-{
-	WinWaitNotActive, ahk_exe NeptuniaReBirth2.exe
-	{
-        PostMessage, 0x06, 1, 0,
-	}
-}
-
-$#1:: 
+$#1::
 IfWinExist, ahk_exe firefox.exe
 {
 	WinActivate
@@ -24,11 +16,11 @@ else
 }
 return
 
-$#2:: 
+$#2::
 Run, Krita
 return
 
-$#3:: 
+$#3::
 IfWinNotExist, ahk_exe code.exe
 {
     Run, "%LocalAppdata%\Programs\Microsoft VS Code\Code.exe"
@@ -39,18 +31,15 @@ GroupActivate, G_TXT
 
 return
 
-$#f:: 
+$#f::
 Run, Everything
 return
 
-$#e:: 
+$#e::
 IfWinNotExist, ahk_class CabinetWClass ahk_exe explorer.exe
 {
-	IfWinExist, ahk_exe doublecmd.exe
-		WinActivate
-	else
-		Run explorer.exe
-		Run explorer.exe
+	Run explorer.exe
+	Run explorer.exe
 }
 else
 {
@@ -65,4 +54,3 @@ IfWinExist, ahk_exe ConEmu64.exe
 else
 	Run, ConEmu64.exe
 return
-
