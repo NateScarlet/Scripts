@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  3
+// @version  4
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -28,16 +28,33 @@
   );
 })();
 
+const reservedUsername = [
+  'topics',
+  'search',
+  'ghost',
+  'pulls',
+  'issues',
+  'marketplace',
+  'explore',
+  'notifications',
+  'new',
+  'organizations',
+  'settings'
+];
+
 /**
  *
  * @param {HTMLAnchorElement} el
  */
 async function appendStarsBadge(el) {
   const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/]+)$/);
+    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/\?]+)$/);
 
   if (match) {
     const [_, user, repository] = match;
+    if (reservedUsername.includes(user)) {
+      return;
+    }
     await appendBadge(
       el,
       'added-stars-badge',
@@ -51,10 +68,13 @@ async function appendStarsBadge(el) {
  */
 async function appendLastCommitBadge(el) {
   const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/]+)$/);
+    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/\?]+)$/);
 
   if (match) {
     const [_, user, repository] = match;
+    if (reservedUsername.includes(user)) {
+      return;
+    }
     await appendBadge(
       el,
       'added-last-commit-badge',
@@ -67,10 +87,13 @@ async function appendLastCommitBadge(el) {
  * @param {HTMLAnchorElement} el
  */
 async function appendFollowersBadge(el) {
-  const match = el.href && el.href.match(/https:\/\/github.com\/([^\/]+)$/);
+  const match = el.href && el.href.match(/https:\/\/github.com\/([^\/\?]+)$/);
 
   if (match) {
     const [_, user] = match;
+    if (reservedUsername.includes(user)) {
+      return;
+    }
     await appendBadge(
       el,
       'added-followers-badge',
