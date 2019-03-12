@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  5
+// @version  6
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -40,7 +40,11 @@ const reservedUsername = [
   'notifications',
   'new',
   'organizations',
-  'settings'
+  'settings',
+  'site',
+  'about',
+  'contact',
+  'pricing'
 ];
 
 /**
