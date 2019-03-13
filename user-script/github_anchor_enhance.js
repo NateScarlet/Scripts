@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  6
+// @version  7
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -17,7 +17,7 @@
           await Promise.all([
             appendStarsBadge(el),
             appendLastCommitBadge(el),
-            appendFollowersBadge(el)
+            appendFollowersBadge(el),
           ]);
         } catch (err) {
           console.error(err);
@@ -44,7 +44,7 @@ const reservedUsername = [
   'site',
   'about',
   'contact',
-  'pricing'
+  'pricing',
 ];
 
 /**
@@ -123,16 +123,20 @@ async function appendBadge(el, className, url) {
       onload: resp => {
         if (resp.status === 200) {
           if (!el.classList.contains(className)) {
-            const span = document.createElement('span');
-            span.innerHTML = resp.response;
-            el.append(span);
+            const img = document.createElement('img');
+            const data = new Blob([resp.response], { type: 'image/svg+xml' });
+            img.src = URL.createObjectURL(data);
+            img.onload = () => {
+              URL.revokeObjectURL(img.src);
+            };
+            el.append(img);
             el.classList.add(className);
           }
           resolve();
         }
         reject(`${resp.status}: ${url}`);
       },
-      onerror: reject
+      onerror: reject,
     });
   });
 }
