@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  7
+// @version  8
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -45,6 +45,12 @@ const reservedUsername = [
   'about',
   'contact',
   'pricing',
+];
+
+const allBadgeClasses = [
+  'added-stars-badge',
+  'added-last-commit-badge',
+  'added-followers-badge',
 ];
 
 /**
@@ -129,7 +135,19 @@ async function appendBadge(el, className, url) {
             img.onload = () => {
               URL.revokeObjectURL(img.src);
             };
-            el.append(img);
+            const containerClassNames = [
+              'natescarlet-gmail-com',
+              'badge-container',
+            ];
+            const selector = containerClassNames.map(i => '.' + i).join('');
+            const container =
+              el.querySelector(selector) || document.createElement('span');
+            el.appendChild(container);
+            container.classList.add(...containerClassNames);
+            container.append(img);
+
+            img.style.order = allBadgeClasses.indexOf(className);
+            container.style.display = 'inline-flex';
             el.classList.add(className);
           }
           resolve();
