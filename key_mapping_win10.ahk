@@ -52,5 +52,5 @@ $!^t::
 IfWinExist, ahk_exe ConEmu64.exe
 	WinActivate
 else
-	Run, ConEmu64.exe
+	Run, ConEmu64.exe -Dir %UserProfile%
 return
