@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  8
+// @version  9
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -45,6 +45,7 @@ const reservedUsername = [
   'about',
   'contact',
   'pricing',
+  'apps',
 ];
 
 const allBadgeClasses = [
