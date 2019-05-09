@@ -21,7 +21,7 @@
         }
       ],
       "background": {
-        "beginsPattern": "^Type checking and linting in progress...$",
+        "beginsPattern": "^Type checking( and linting)? in progress\\.\\.\\.$",
         "endsPattern": "^Time: \\d+ms$"
       }
     }
