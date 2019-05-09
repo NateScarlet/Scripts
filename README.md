@@ -1,27 +1,52 @@
-# 个人日常使用的脚本
+# 个人脚本
 
-## [Comp](Comp)
+## [comp](comp)
 
 视频合成相关:
 
-- Nuke节点、插件
-- python写的小工具
-- Nuke工具集、预设
+- Nuke 节点、插件
+- python 写的小工具
+- Nuke 工具集、预设
 
-## [ImageRetouch](ImageRetouch)
+## [image-retouch](image-retouch)
 
 修图相关:
 
-* PS动作和批处理
-* nConvert动作
-* python脚本
+- PS 动作和批处理
+- nConvert 动作
+- python 脚本
 
-## [Light](Light)
+## [light](light)
+
 灯光相关:
 
-* Maya插件
-* python库
+- Maya 插件
+- python 库
 
-## [Maintenance](Maintenance)
+## [maintenance](maintenance)
 
-维护电脑用的脚本
+运维脚本
+
+## [user-script](user-script)
+
+浏览器用户脚本(GreaseMonkey, TamperMonkey)
+
+## [vscode-tasks](vscode-tasks)
+
+vscode 任务配置
+
+## [snippets](snippets)
+
+vscode 代码片段
+
+## [game](game)
+
+游戏脚本
+
+## [certification](certification)
+
+处理证书使用的脚本
+
+## [boot2docker](boot2docker)
+
+boot2docker 系统的脚本
