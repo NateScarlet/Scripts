@@ -1,0 +1,15 @@
+{
+  "root": true,
+  "extends": ["eslint:recommended"],
+  "env": {
+    "greasemonkey": true,
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2017
+  },
+  "rules": {
+    "no-console": "off"
+  }
+}
