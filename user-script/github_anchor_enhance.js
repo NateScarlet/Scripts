@@ -46,6 +46,7 @@ const reservedUsername = [
   'contact',
   'pricing',
   'apps',
+  'features',
 ];
 
 const allBadgeClasses = [
