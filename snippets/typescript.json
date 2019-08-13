@@ -25,5 +25,13 @@
       "  this.\\$emit('input', value)",
       "}"
     ]
+  },
+  "eslint disable no any": {
+      "prefix": "/* eslint-disable @typescript-eslint/no-explicit-any */",
+      "body":["/* eslint-disable @typescript-eslint/no-explicit-any */"]
+  },
+  "eslint disable no any nextline": {
+      "prefix": "// eslint-disable-next-line @typescript-eslint/no-explicit-any",
+      "body":["// eslint-disable-next-line @typescript-eslint/no-explicit-any"]
   }
 }
