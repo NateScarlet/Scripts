@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  9
+// @version  10
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -61,10 +61,10 @@ const allBadgeClasses = [
  */
 async function appendStarsBadge(el) {
   const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/\?]+)$/);
+    el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
 
   if (match) {
-    const [_, user, repository] = match;
+    const [, user, repository] = match;
     if (reservedUsername.includes(user)) {
       return;
     }
@@ -81,10 +81,10 @@ async function appendStarsBadge(el) {
  */
 async function appendLastCommitBadge(el) {
   const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^\/]+)\/([^\/\?]+)$/);
+    el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
 
   if (match) {
-    const [_, user, repository] = match;
+    const [, user, repository] = match;
     if (reservedUsername.includes(user)) {
       return;
     }
@@ -100,10 +100,10 @@ async function appendLastCommitBadge(el) {
  * @param {HTMLAnchorElement} el
  */
 async function appendFollowersBadge(el) {
-  const match = el.href && el.href.match(/https:\/\/github.com\/([^\/\?]+)$/);
+  const match = el.href && el.href.match(/https:\/\/github.com\/([^/?]+)$/);
 
   if (match) {
-    const [_, user] = match;
+    const [, user] = match;
     if (reservedUsername.includes(user)) {
       return;
     }
@@ -132,11 +132,7 @@ async function appendBadge(el, className, url) {
         if (resp.status === 200) {
           if (!el.classList.contains(className)) {
             const img = document.createElement('img');
-            const data = new Blob([resp.response], { type: 'image/svg+xml' });
-            img.src = URL.createObjectURL(data);
-            img.onload = () => {
-              URL.revokeObjectURL(img.src);
-            };
+            img.src = `data:image/svg+xml;base64,${btoa(resp.response)}`;
             const containerClassNames = [
               'natescarlet-gmail-com',
               'badge-container',
