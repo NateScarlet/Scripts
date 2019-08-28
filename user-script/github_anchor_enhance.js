@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  10
+// @version  11
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -13,6 +13,14 @@
       if (e.target && e.target.nodeName == 'A') {
         /** @type {HTMLAnchorElement} */
         const el = e.target;
+        const u = new URL(el);
+        if (
+          location.hostname === u.hostname &&
+          location.pathname === u.pathname
+        ) {
+          // Skip self link
+          return;
+        }
         try {
           await Promise.all([
             appendStarsBadge(el),
