@@ -55,6 +55,7 @@ const reservedUsername = [
   'pricing',
   'apps',
   'features',
+  'password_reset',
 ];
 
 const allBadgeClasses = [
