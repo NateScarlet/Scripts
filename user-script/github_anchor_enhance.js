@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  11
+// @version  12
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -10,10 +10,9 @@
   document.addEventListener(
     'mouseover',
     async e => {
-      if (e.target && e.target.nodeName == 'A') {
-        /** @type {HTMLAnchorElement} */
+      if (e.target instanceof HTMLAnchorElement) {
         const el = e.target;
-        const u = new URL(el);
+        const u = new URL(el.href);
         if (
           location.hostname === u.hostname &&
           location.pathname === u.pathname
@@ -147,13 +146,14 @@ async function appendBadge(el, className, url) {
               'badge-container',
             ];
             const selector = containerClassNames.map(i => '.' + i).join('');
+            /** @type {HTMLElement} */
             const container =
               el.querySelector(selector) || document.createElement('span');
             el.appendChild(container);
             container.classList.add(...containerClassNames);
             container.append(img);
 
-            img.style.order = allBadgeClasses.indexOf(className);
+            img.style.order = allBadgeClasses.indexOf(className).toString();
             container.style.display = 'inline-flex';
             el.classList.add(className);
           }
