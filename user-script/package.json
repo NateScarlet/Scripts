@@ -1,0 +1,14 @@
+{
+  "name": "user-script",
+  "version": "1.0.0",
+  "description": "浏览器用户脚本(GreaseMonkey, TamperMonkey)",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/greasemonkey": "^4.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "NateScarlet",
+  "license": "MIT"
+}
