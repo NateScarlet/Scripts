@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "lib": ["es2017", "dom"],
-    "types": ["@types/greasemonkey"],
-    "outDir": "dist"
+    "module": "es2015",
+    "target": "es2017",
+    "alwaysStrict": true,
+    "outDir": "dist",
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "types": ["@types/greasemonkey"]
   },
-  "include": ["*.js"]
+  "include": ["**/*.ts"]
 }

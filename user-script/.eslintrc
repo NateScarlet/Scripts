@@ -1,15 +1,44 @@
 {
   "root": true,
-  "extends": ["eslint:recommended"],
+  "extends": [
+    "eslint:recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
   "env": {
     "greasemonkey": true,
     "browser": true,
     "es6": true
   },
   "parserOptions": {
-    "ecmaVersion": 2017
+    "ecmaVersion": 2017,
+    "sourceType": "script"
   },
   "rules": {
-    "no-console": "off"
-  }
+    "no-console": "off",
+    "camelcase": ["error", { "allow": ["^\\$_"] }],
+    "@typescript-eslint/camelcase": "off",
+    "require-atomic-updates": "off", // https://github.com/eslint/eslint/issues/11899
+    "@typescript-eslint/no-namespace": "off"
+  },
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/explicit-function-return-type": "off"
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "no-undef": "off",
+        "no-inner-declarations": "off"
+      }
+    }
+  ]
 }

@@ -1,18 +1,17 @@
 // ==UserScript==
 // @name     刺猬猫章节自动下载
-// @version  8
+// @version  9
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
 // ==/UserScript==
 
-"use strict";
+export {};
 
 const __name__ = "刺猬猫章节自动下载";
 
-/** @param {HTMLImageElement} img  */
-function image2line(img) {
-const canvas = document.createElement("canvas");
+function image2line(img: HTMLImageElement): string {
+  const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
   const ctx = canvas.getContext("2d");
@@ -20,8 +19,11 @@ const canvas = document.createElement("canvas");
   return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
 }
 
-/** @param {Element} element */
-function getElementRootText(element) {
+function strip(str: string): string {
+  return str.replace(/^\s+|\s+$/g, "");
+}
+
+function getElementRootText(element: Element): string {
   let ret = "";
   for (const i of element.childNodes) {
     if (i.nodeType === i.TEXT_NODE) {
@@ -31,39 +33,32 @@ function getElementRootText(element) {
   return strip(ret);
 }
 
-/** @param {string} url  */
-async function imageUrl2line(url) {
-  return new Promise((resolve, reject) => {
+async function imageUrl2line(url: string): Promise<string> {
+  return new Promise((resolve): void => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = (): void => {
       resolve(image2line(img));
     };
     img.src = url;
   });
 }
 
-/** @param {string} str
- * @return {string} str
- */
-function strip(str) {
-  return str.replace(/^\s+|\s+$/g, "");
-}
-
-(async function() {
+(async function(): Promise<void> {
   const chapter = document.querySelector("#J_BookCnt h3.chapter").firstChild
     .textContent;
   let lines = [];
 
   // 收费章节
-  for (const i of document.querySelectorAll("#J_BookImage")) {
-    /** @type {string} */
-    const url = i.style["background-image"].match(/(?:url\(")?(.+)(?:"\))?/)[1];
+  for (const i of document.querySelectorAll<HTMLElement>("#J_BookImage")) {
+    const url: string = i.style["background-image"].match(
+      /(?:url\(")?(.+)(?:"\))?/
+    )[1];
     const line = await imageUrl2line(url);
     lines.push(line);
   }
   // 免费章节
   for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
-    let line = getElementRootText(i);
+    const line = getElementRootText(i);
     lines.push(line);
     for (const img of i.querySelectorAll("img")) {
       lines.push(image2line(img));
@@ -71,7 +66,7 @@ function strip(str) {
   }
   // 作者说
   for (const i of document.querySelectorAll("p.author_say")) {
-    let line = getElementRootText(i);
+    const line = getElementRootText(i);
     lines.push(`    ${line}`);
     for (const img of i.querySelectorAll("img")) {
       lines.push(image2line(img));
@@ -82,7 +77,7 @@ function strip(str) {
   lines = lines.filter(i => i.length > 0);
   console.log(`${__name__}: 获取到 ${lines.length} 行`);
   const file = new Blob([`# ${chapter}\n\n`, lines.join("\n\n")], {
-    type: "text/markdown"
+    type: "text/markdown",
   });
   const anchor = document.createElement("a");
   anchor.href = URL.createObjectURL(file);
@@ -94,6 +89,6 @@ function strip(str) {
   anchor.click();
   setTimeout(() => {
     document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(anchor.href);
   }, 0);
 })();
