@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
-// @version  4
+// @version  5
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @run-at   document-idle

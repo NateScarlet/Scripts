@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  12
+// @version  13
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *

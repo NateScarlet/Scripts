@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     刺猬猫章节自动下载
-// @version  8
+// @version  9
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
