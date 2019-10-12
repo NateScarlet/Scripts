@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  13
+// @version  14
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -35,6 +35,11 @@ const allBadgeClasses = [
   "added-last-commit-badge",
   "added-followers-badge",
 ];
+
+function getURL(el: HTMLAnchorElement): URL {
+  const href = el.href.replace(/\.git$/, "");
+  return new URL(href);
+}
 
 async function appendBadge(
   el: HTMLElement,
@@ -79,8 +84,9 @@ async function appendBadge(
 }
 
 async function appendStarsBadge(el: HTMLAnchorElement): Promise<void> {
-  const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
+  const match = getURL(el).href.match(
+    /https:\/\/github.com\/([^/]+)\/([^/?]+)$/
+  );
 
   if (match) {
     const [, user, repository] = match;
@@ -96,8 +102,9 @@ async function appendStarsBadge(el: HTMLAnchorElement): Promise<void> {
 }
 
 async function appendLastCommitBadge(el: HTMLAnchorElement): Promise<void> {
-  const match =
-    el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
+  const match = getURL(el).href.match(
+    /https:\/\/github.com\/([^/]+)\/([^/?]+)$/
+  );
 
   if (match) {
     const [, user, repository] = match;
@@ -113,7 +120,7 @@ async function appendLastCommitBadge(el: HTMLAnchorElement): Promise<void> {
 }
 
 async function appendFollowersBadge(el: HTMLAnchorElement): Promise<void> {
-  const match = el.href && el.href.match(/https:\/\/github.com\/([^/?]+)$/);
+  const match = getURL(el).href.match(/https:\/\/github.com\/([^/?]+)$/);
 
   if (match) {
     const [, user] = match;
@@ -134,7 +141,7 @@ async function appendFollowersBadge(el: HTMLAnchorElement): Promise<void> {
     async e => {
       if (e.target instanceof HTMLAnchorElement) {
         const el = e.target;
-        const u = new URL(el.href);
+        const u = getURL(el);
         if (
           location.hostname === u.hostname &&
           location.pathname === u.pathname

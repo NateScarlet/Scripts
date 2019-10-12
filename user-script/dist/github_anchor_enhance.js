@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  13
+// @version  14
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -31,6 +31,10 @@ const allBadgeClasses = [
     "added-last-commit-badge",
     "added-followers-badge",
 ];
+function getURL(el) {
+    const href = el.href.replace(/\.git$/, "");
+    return new URL(href);
+}
 async function appendBadge(el, className, url) {
     if (el.classList.contains(className)) {
         return;
@@ -67,7 +71,7 @@ async function appendBadge(el, className, url) {
     });
 }
 async function appendStarsBadge(el) {
-    const match = el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
+    const match = getURL(el).href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
     if (match) {
         const [, user, repository] = match;
         if (reservedUsername.includes(user)) {
@@ -77,7 +81,7 @@ async function appendStarsBadge(el) {
     }
 }
 async function appendLastCommitBadge(el) {
-    const match = el.href && el.href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
+    const match = getURL(el).href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
     if (match) {
         const [, user, repository] = match;
         if (reservedUsername.includes(user)) {
@@ -87,7 +91,7 @@ async function appendLastCommitBadge(el) {
     }
 }
 async function appendFollowersBadge(el) {
-    const match = el.href && el.href.match(/https:\/\/github.com\/([^/?]+)$/);
+    const match = getURL(el).href.match(/https:\/\/github.com\/([^/?]+)$/);
     if (match) {
         const [, user] = match;
         if (reservedUsername.includes(user)) {
@@ -100,7 +104,7 @@ async function appendFollowersBadge(el) {
     document.addEventListener("mouseover", async (e) => {
         if (e.target instanceof HTMLAnchorElement) {
             const el = e.target;
-            const u = new URL(el.href);
+            const u = getURL(el);
             if (location.hostname === u.hostname &&
                 location.pathname === u.pathname) {
                 // Skip self link
