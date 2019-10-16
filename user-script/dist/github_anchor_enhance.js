@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     Github anchor enhance
-// @version  14
+// @version  15
 // @grant    GM.xmlHttpRequest
 // @run-at   document-idle
 // @include	 *
@@ -31,9 +31,28 @@ const allBadgeClasses = [
     "added-last-commit-badge",
     "added-followers-badge",
 ];
-function getURL(el) {
-    const href = el.href.replace(/\.git$/, "");
-    return new URL(href);
+class URLParseResult {
+    constructor({ user, repo }) {
+        this.user = user;
+        this.repo = repo;
+    }
+    equals(other) {
+        return other.repo === this.repo && other.user === this.user;
+    }
+}
+URLParseResult.EMPTY = new URLParseResult({});
+function parseURL(v) {
+    const match = v.match(/^https?:\/\/github.com\/([^/]*?)(?:\/([^/]*?))?(?:\.git)?(?:[#?].*)?$/);
+    if (!match) {
+        return URLParseResult.EMPTY;
+    }
+    if (reservedUsername.includes(match[1])) {
+        return URLParseResult.EMPTY;
+    }
+    return new URLParseResult({
+        user: match[1],
+        repo: match[2],
+    });
 }
 async function appendBadge(el, className, url) {
     if (el.classList.contains(className)) {
@@ -71,42 +90,31 @@ async function appendBadge(el, className, url) {
     });
 }
 async function appendStarsBadge(el) {
-    const match = getURL(el).href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
-    if (match) {
-        const [, user, repository] = match;
-        if (reservedUsername.includes(user)) {
-            return;
-        }
-        await appendBadge(el, "added-stars-badge", `https://img.shields.io/github/stars/${user}/${repository}.svg?style=social`);
+    const { repo, user } = parseURL(el.href);
+    if (!(user && repo)) {
+        return;
     }
+    await appendBadge(el, "added-stars-badge", `https://img.shields.io/github/stars/${user}/${repo}.svg?style=social`);
 }
 async function appendLastCommitBadge(el) {
-    const match = getURL(el).href.match(/https:\/\/github.com\/([^/]+)\/([^/?]+)$/);
-    if (match) {
-        const [, user, repository] = match;
-        if (reservedUsername.includes(user)) {
-            return;
-        }
-        await appendBadge(el, "added-last-commit-badge", `https://img.shields.io/github/last-commit/${user}/${repository}.svg`);
+    const { repo, user } = parseURL(el.href);
+    if (!(user && repo)) {
+        return;
     }
+    await appendBadge(el, "added-last-commit-badge", `https://img.shields.io/github/last-commit/${user}/${repo}.svg`);
 }
 async function appendFollowersBadge(el) {
-    const match = getURL(el).href.match(/https:\/\/github.com\/([^/?]+)$/);
-    if (match) {
-        const [, user] = match;
-        if (reservedUsername.includes(user)) {
-            return;
-        }
-        await appendBadge(el, "added-followers-badge", `https://img.shields.io/github/followers/${user}.svg?style=social`);
+    const { user } = parseURL(el.href);
+    if (!user) {
+        return;
     }
+    await appendBadge(el, "added-followers-badge", `https://img.shields.io/github/followers/${user}.svg?style=social`);
 }
 (async function () {
     document.addEventListener("mouseover", async (e) => {
         if (e.target instanceof HTMLAnchorElement) {
             const el = e.target;
-            const u = getURL(el);
-            if (location.hostname === u.hostname &&
-                location.pathname === u.pathname) {
+            if (parseURL(location.href).equals(parseURL(el.href))) {
                 // Skip self link
                 return;
             }
