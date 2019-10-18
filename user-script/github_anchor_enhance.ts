@@ -1,4 +1,5 @@
 // ==UserScript==
+// @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     Github anchor enhance
 // @description Enhance all github link with badges
 // @version  16

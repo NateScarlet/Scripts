@@ -1,4 +1,5 @@
 // ==UserScript==
+// @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     Auto meta viewport
 // @description Use <meta name="viewport" content="width=device-width, initial-scale=1"> as default.
 // @version  2
