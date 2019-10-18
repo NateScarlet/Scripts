@@ -4,6 +4,7 @@
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
+// @description 打开刺猬猫章节页面时自动保存文章到本地, 支持付费章节。
 // ==/UserScript==
 
 export {};

@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
+// @description Add `download all chapter` button to syosetu.com
 // @version  5
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
