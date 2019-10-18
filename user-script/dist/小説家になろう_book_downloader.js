@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name     小説家になろう book downloader
 // @description Add `download all chapter` button to syosetu.com
-// @version  5
+// @version  6
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
-// @run-at   document-idle
+// @run-at   document-end
 // ==/UserScript==
 const __name__ = "小説家になろう book downloader";
 const statusIndicator = document.createElement("span");

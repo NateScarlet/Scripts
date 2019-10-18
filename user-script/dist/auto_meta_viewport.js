@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name     Auto meta viewport
 // @description Use <meta name="viewport" content="width=device-width, initial-scale=1"> as default.
-// @version  1
-// @run-at   document-idle
+// @version  2
+// @run-at   document-end
 // @include	 *
 // ==/UserScript==
 function main() {

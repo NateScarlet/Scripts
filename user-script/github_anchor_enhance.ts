@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name     Github anchor enhance
 // @description Enhance all github link with badges
-// @version  15
+// @version  16
 // @grant    GM.xmlHttpRequest
-// @run-at   document-idle
+// @run-at   document-end
 // @include	 *
 // ==/UserScript==
 
