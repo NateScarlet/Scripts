@@ -2,7 +2,7 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     Github anchor enhance
 // @description Enhance all github link with badges
-// @version  16
+// @version  17
 // @grant    GM.xmlHttpRequest
 // @run-at   document-end
 // @include	 *
@@ -54,7 +54,7 @@ class URLParseResult {
 
 function parseURL(v: string): URLParseResult {
   const match = v.match(
-    /^https?:\/\/github.com\/([^/]*?)(?:\/([^/]*?))?(?:\.git)?(?:[#?].*)?$/
+    /^https?:\/\/github.com\/([^/]*?)(?:\/([^/]*?))?(?:\.git)?(?:[#?].*)?(?:$|\/)/
   );
   if (!match) {
     return URLParseResult.EMPTY;
