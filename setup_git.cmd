@@ -1,6 +1,10 @@
-cmd /c setup_gitproxy.cmd
-git config --global core.editor "code.cmd --wait --reuse"
+git config --global user.email "NateScarlet@Gmail.com"
+git config --global user.name "NateScarlet"
+git config --global core.editor "code.cmd --wait"
 git config --global core.autocrlf input
+git config --global commit.gpgsign true
+git config --global user.signingkey 5C242793B070309C
+git config --global gpg.program "C:\Program Files (x86)\GnuPG\bin\gpg.exe"
 git config --global push.followTags true
 git config --global alias.amend "commit --amend --no-edit"
 REM https://hub.github.com/hub.1.html
