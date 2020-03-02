@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 from os import listdir
-from os.path import join, normpath, splitext, isfile, abspath
+from os.path import join, normpath, splitext, isfile, abspath, relpath
 import sys
 import subprocess
 
@@ -100,8 +100,7 @@ def convert(folder, output):
             ext = splitext(filename)[1]
 
             f.write('\\newpage\n')
-            section = escape_tex(normpath(join(folder, filename)).replace(
-                normpath(folder), ''))
+            section = escape_tex(filename)
             f.write('\\section{{{}}}\n'.format(section))
             print(path_)
             f.write(
