@@ -1,0 +1,91 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000010]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000011]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000012]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000070]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000071]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000072]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000201]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000202]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000203]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000010]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000011]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000012]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000070]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000071]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000072]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000201]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000202]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
+
+[HKEY_USER\.DEFAULT\Control Panel\Input Method\Hot Keys\00000203]
+“Virtual Key”=hex:ff,00,00,00
+“Key Modifiers”=hex:00,c0,00,00
+“Target IME”=hex:00,00,00,00
