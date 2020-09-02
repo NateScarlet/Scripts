@@ -2,15 +2,33 @@
 # -*- coding=UTF-8 -*-
 
 import fileinput
-
 import os
+import subprocess
+import sys
+from os import listdir
+from os.path import abspath, splitext
 
-def tex_escape(text):
+
+def escape_tex(text):
     return text.replace('\\', '/').replace('_', '\\_')
 
 
-def main():
-    print('''
+def is_binary(filename):
+    """
+    https://stackoverflow.com/a/11301631/8495483
+    Return true if the given filename appears to be binary.
+    File is considered to be binary if it contains a NULL byte.
+    FIXME: This approach incorrectly reports UTF-16 as binary.
+    """
+    with open(filename, 'rb') as f:
+        for block in f:
+            if b'\0' in block:
+                return True
+    return False
+
+
+def convert(files, ):
+    ret = ('''
 \\documentclass{article}
 
 \\usepackage{xeCJK}
@@ -43,6 +61,9 @@ def main():
 \\lstdefinestyle{.py}{
   language=Python
 }
+\\lstdefinestyle{.go}{
+  language=GO
+}
 \\lstdefinestyle{.gizmo}{
   language=Tcl
 }
@@ -72,14 +93,30 @@ def main():
 \\tableofcontents
 ''')
 
-    for i in fileinput.input():
-        i = i.strip() # type: str
-        _, ext = os.path.splitext(i)
-        print('\\newpage\n')
-        print('\\section{{{}}}\n'.format(tex_escape(i)))
-        print(
-            '\\lstinputlisting[style={}]{{{}}}\n'.format(ext or '.txt', i.replace('\\', ' / ')))
-    print('\\end{document}\n')
+    for filename in files:
+        filename = filename.strip("\n")
+        path_ = abspath(filename).replace('\\', '/')
+        if is_binary(path_):
+            sys.stderr.write(f'# skip: {path_}\n')
+            return
+
+        ext = splitext(filename)[1]
+
+        ret += ('\\newpage\n')
+        section = escape_tex(filename)
+        ret += ('\\section{{{}}}\n'.format(section))
+        sys.stderr.write(f'{path_}\n')
+        ret += (
+            '\\lstinputlisting[style={}]{{{}}}\n'.format(
+                ext or '.txt', path_))
+
+    ret += ('\\end{document}\n')
+    return ret
+
+
+def main():
+    print(convert(fileinput.input()))
+
 
 if __name__ == '__main__':
     main()
