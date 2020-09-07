@@ -98,7 +98,7 @@ def convert(files, ):
         path_ = abspath(filename).replace('\\', '/')
         if is_binary(path_):
             sys.stderr.write(f'# skip: {path_}\n')
-            return
+            continue
 
         ext = splitext(filename)[1]
 
@@ -115,7 +115,7 @@ def convert(files, ):
 
 
 def main():
-    print(convert(fileinput.input()))
+    print(convert(fileinput.input(openhook=fileinput.hook_encoded("utf8"))))
 
 
 if __name__ == '__main__':
