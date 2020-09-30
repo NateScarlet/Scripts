@@ -2,7 +2,7 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     Github anchor enhance
 // @description Enhance all github link with badges
-// @version  17
+// @version  18
 // @grant    GM.xmlHttpRequest
 // @run-at   document-end
 // @include	 *
@@ -30,6 +30,9 @@ const reservedUsername = [
   "apps",
   "features",
   "password_reset",
+  "trending",
+  "collections",
+  "events",
 ];
 
 const allBadgeClasses = [
