@@ -2,10 +2,12 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     SF轻小说章节自动下载
 // @description 打开SF轻小说章节页面时自动保存文章到本地, 支持付费章节。
-// @version  1
+// @version  2
 // @grant    none
 // @include	 http://book.sfacg.com/Novel/*/*/*/
 // @include	 http://book.sfacg.com/vip/c/*/
+// @include	 https://book.sfacg.com/Novel/*/*/*/
+// @include	 https://book.sfacg.com/vip/c/*/
 // @run-at   document-idle
 // ==/UserScript==
 const __name__ = "SF轻小说章节自动下载";
