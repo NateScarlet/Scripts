@@ -1,5 +1,8 @@
 # https://github.com/PowerShell/PSReadLine/issues/779
-Remove-Module -ErrorAction SilentlyContinue PSReadLine
+if ((Get-Module -Name PSReadLine).Version.Major -eq 2) {
+    Install-Module -Name PSReadLine -RequiredVersion 1.2 -SkipPublisherCheck
+    Import-Module -Name PSReadLine
+}
 
 # Refresh env
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
@@ -9,6 +12,6 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";
 
 function prompt {
     $p = (Get-Location)
-    $p = ($p -replace (":\\Users\\" + [Environment]::UserName), ":\~")
+    $p = ($p -replace [regex]::Escape(($env:USERPROFILE -replace '^.+:', ':')), ":\~")
     "PS $p> "
 }
