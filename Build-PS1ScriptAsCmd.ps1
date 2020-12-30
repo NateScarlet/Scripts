@@ -2,20 +2,23 @@ Param (
     [Parameter(
         Mandatory,
         Position = 0,
-        HelpMessage="Script file path"
+        HelpMessage = "Script file path"
     )]
     [string]
-    $Path
+    $Path,
+    [Parameter()]
+    [string]
+    $LaunchArguments = "-Version 2 -NoProfile"
 )
 
 # https://stackoverflow.com/a/65314841
-$launch_code = @'
+$launch_code = @"
 @echo off
-PowerShell -Command "Get-Content '%~dpnx0' -Encoding UTF8 | Select-Object -Skip 5 | Out-String | Invoke-Expression"
+PowerShell $LaunchArguments -Command "Get-Content '%~dpnx0' -Encoding UTF8 | Select-Object -Skip 5 | Out-String | Invoke-Expression"
 IF ERRORLEVEL 1 PAUSE
 GOTO :EOF
 
 
-'@ -replace "`n","`r`n"
+"@ -replace "`n", "`r`n"
 
 Get-Content $Path | Join-String -Separator "`r`n" -OutputPrefix $launch_code | Set-Content -Encoding UTF8 "$Path.cmd"
