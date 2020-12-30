@@ -8,7 +8,7 @@ Param (
     $Path,
     [Parameter()]
     [string]
-    $LaunchArguments = "-Version 2 -NoProfile"
+    $LaunchArguments = "-Version 2 -NoProfile -Sta"
 )
 
 # https://stackoverflow.com/a/65314841
