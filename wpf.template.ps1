@@ -2,15 +2,15 @@
 
 $ErrorActionPreference = "Stop"
 
-Add-Type –assemblyName PresentationFramework
-Add-Type –assemblyName PresentationCore
-Add-Type –assemblyName WindowsBase
+Add-Type –AssemblyName PresentationFramework
+Add-Type –AssemblyName PresentationCore
+Add-Type –AssemblyName WindowsBase
 
 [xml]$xaml = @'
 <Window 
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="180.769" Width="294.617" MinHeight="250" MaxHeight="250">
+        Title="MainWindow" Height="180.769" Width="294.617" MinHeight="250" MaxHeight="250" WindowStartupLocation ="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -26,12 +26,16 @@ Add-Type –assemblyName WindowsBase
 $xamlReader = (New-Object System.Xml.XmlNodeReader $xaml)
 $mainwindow = [Windows.Markup.XamlReader]::Load( $xamlReader )
 
-$mainwindow.Content.FindName('button1').add_Click( {
+$mainwindow.Content.FindName('button1').add_Click( 
+    {
         Write-Host "button1 clicked"
-    })
-$mainwindow.Content.FindName('button2').add_Click( {
+    }
+)
+$mainwindow.Content.FindName('button2').add_Click( 
+    {
         Write-Host "button2 clicked"
-    })
+    }
+)
 
 $mainwindow.ShowDialog()
 $mainwindow.Content.FindName('textBox1').Text
