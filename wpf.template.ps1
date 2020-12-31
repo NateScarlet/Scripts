@@ -14,7 +14,6 @@ $mainWindow = [Windows.Markup.XamlReader]::Load( (New-Object System.Xml.XmlNodeR
   Height="250"
   Width="300"
   Topmost="True"
-  WindowStartupLocation="CenterScreen"
 >
   <Grid>
     <Grid.ColumnDefinitions>
