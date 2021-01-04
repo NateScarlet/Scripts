@@ -122,21 +122,9 @@ function Invoke-NativeCommand {
 }
 
 Invoke-NativeCommand chcp.com 936 | Out-Null
-
-$tries = 0 
-for ($true) {
-    $tries ++
-    try {
-        Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
-        break
-    } catch {
-        if ($tries -ge 3) {
-            throw $_
-        }
-        Write-Host "将在 10 秒后重试, 已尝试 $tries 次."
-        Start-Sleep 10
-    }
-}
+Write-Host "等待 WebClient 服务启动"
+(Get-Service WebClient).WaitForStatus("Running")
+Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
 
 '@) -replace "`r?`n","`r`n") 
     "创建: $startupScriptPath"
