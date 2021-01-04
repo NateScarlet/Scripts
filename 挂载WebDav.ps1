@@ -82,7 +82,7 @@ if ($isAutoMount) {
     "设置开机自动挂载"
 
     $startupScriptPath = "${env:Appdata}\Microsoft\Windows\Start Menu\Programs\Startup\map-drive-$($deviceName -replace ":").cmd"
-    Set-Content -Path "$startupScriptPath" (@'
+    Set-Content -Path "$startupScriptPath" ((@'
 @echo off
 PowerShell -Version 2 -NoProfile -Sta -Command "Get-Content '%~dpnx0' -Encoding UTF8 | Select-Object -Skip 5 | Out-String | Invoke-Expression"
 IF ERRORLEVEL 1 PAUSE
@@ -121,44 +121,24 @@ function Invoke-NativeCommand {
     }
 }
 
-function Wait-Connection {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position = 0, Mandatory = $true)]
-        [string[]]
-        $TargetName,
+Invoke-NativeCommand chcp.com 936 | Out-Null
 
-        [int]
-        $MaxRetry = 3,
-
-        [int]
-        $RetrySleepSeconds = 10
-
-    )
-
-    $tries = 0
-    for ($true) {
-        $tries ++
-        try {
-            Test-Connection -Count 1 $TargetName -ErrorAction Stop | Out-Null
-            return
+$tries = 0 
+for ($true) {
+    $tries ++
+    try {
+        Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
+        break
+    } catch {
+        if ($tries -ge 3) {
+            throw $_
         }
-        catch {
-            if ($tries -ge $MaxRetry) {
-                throw $_
-            }
-            Write-Error "Retry connect to $TargetName after $RetrySleepSeconds seconds, tried $tries times."
-            Start-Sleep $RetrySleepSeconds
-        }
+        Write-Host "将在 10 秒后重试, 已尝试 $tries 次."
+        Start-Sleep 10
     }
 }
 
-
-Invoke-NativeCommand chcp.com 936 | Out-Null
-Wait-Connection $url.Host
-Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
-
-'@)
+'@) -replace "`r?`n","`r`n") 
     "创建: $startupScriptPath"
 }
 
