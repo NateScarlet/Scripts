@@ -90,6 +90,8 @@ GOTO :EOF
 
 # Version: 2021.01.04
 
+$ErrorActionPreference = "Stop"
+
 function Convert-SecureStringToText {
     Param
     (
