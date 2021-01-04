@@ -9,6 +9,24 @@ Add-Type –AssemblyName PresentationFramework
 Add-Type –AssemblyName PresentationCore
 Add-Type –AssemblyName WindowsBase
 
+if ((Get-Service WebClient).Status -eq "Stopped") {
+    if ([System.Windows.MessageBox]::Show("使用管理员权限启用 WebClient 服务?", "WebClient 服务未启动", "YesNo", "Question") -eq "Yes") {
+        $process = Start-Process -Wait -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $("-Command", @'
+$srv = (Get-Service WebClient)
+$srv | Set-Service -StartupType 'Automatic'
+$srv.Start()
+'@)
+        if ($process.ExitCode) {
+            Throw "启动 WebClient 服务失败"   
+        }
+    }
+    else {
+        return
+    }
+
+}
+
+
 $mainWindow = [Windows.Markup.XamlReader]::Load( (New-Object System.Xml.XmlNodeReader ([xml]@"
 <Window
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -126,7 +144,7 @@ Write-Host "等待 WebClient 服务启动"
 (Get-Service WebClient).WaitForStatus("Running")
 Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
 
-'@) -replace "`r?`n","`r`n") 
+'@) -replace "`r?`n", "`r`n") 
     "创建: $startupScriptPath"
 }
 
