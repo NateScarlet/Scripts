@@ -11,7 +11,11 @@ Add-Type –AssemblyName WindowsBase
 
 if ((Get-Service WebClient).Status -eq "Stopped") {
     if ([System.Windows.MessageBox]::Show("使用管理员权限启用 WebClient 服务?", "WebClient 服务未启动", "YesNo", "Question") -eq "Yes") {
-        $process = Start-Process -Wait -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $("-Command", @'
+        $process = Start-Process -Wait -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $(
+            "-Version", "2", 
+            "-NoProfile", 
+            "-Sta"
+            "-Command", @'
 $srv = (Get-Service WebClient)
 $srv | Set-Service -StartupType 'Automatic'
 $srv.Start()
