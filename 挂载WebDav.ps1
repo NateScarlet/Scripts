@@ -143,7 +143,7 @@ function Invoke-NativeCommand {
     }
 }
 
-Invoke-NativeCommand chcp.com 936 | Out-
+Invoke-NativeCommand chcp.com 936 | Out-Null
 if ((Get-Service WebClient).StartType -eq 'Disabled') {
     Throw "WebClient 服务被禁用，无法挂载"
 }
