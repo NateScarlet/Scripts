@@ -1,7 +1,7 @@
 $DAV_URL = "https://example.com/dav" 
 $DEVICENAME = "V:"
 
-# Version: 2021.01.04
+# Version: 2021.01.08
 
 $ErrorActionPreference = "Stop"
 
@@ -9,8 +9,8 @@ Add-Type –AssemblyName PresentationFramework
 Add-Type –AssemblyName PresentationCore
 Add-Type –AssemblyName WindowsBase
 
-if ((Get-Service WebClient).Status -eq "Stopped") {
-    if ([System.Windows.MessageBox]::Show("使用管理员权限启用 WebClient 服务?", "WebClient 服务未启动", "YesNo", "Question") -eq "Yes") {
+if ((Get-Service WebClient).StartType -eq 'Disabled') {
+    if ([System.Windows.MessageBox]::Show("使用管理员权限启用 WebClient 服务?", "WebClient 服务被禁用", "YesNo", "Question") -eq "Yes") {
         $process = Start-Process -Wait -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $(
             "-Version", "2", 
             "-NoProfile", 
@@ -24,7 +24,7 @@ $srv.Start()
             Throw "启动 WebClient 服务失败"   
         }
     }
-    else {
+    elseif ((Get-Service WebClient).Status -eq 'Stopped') {
         return
     }
 
@@ -143,9 +143,10 @@ function Invoke-NativeCommand {
     }
 }
 
-Invoke-NativeCommand chcp.com 936 | Out-Null
-Write-Host "等待 WebClient 服务启动"
-(Get-Service WebClient).WaitForStatus("Running")
+Invoke-NativeCommand chcp.com 936 | Out-
+if ((Get-Service WebClient).StartType -eq 'Disabled') {
+    Throw "WebClient 服务被禁用，无法挂载"
+}
 Invoke-NativeCommand net use $deviceName $url /PERSISTENT:NO /USER:$username $password
 
 '@) -replace "`r?`n", "`r`n") 
