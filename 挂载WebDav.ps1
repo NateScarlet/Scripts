@@ -9,9 +9,37 @@ Add-Type –AssemblyName PresentationFramework
 Add-Type –AssemblyName PresentationCore
 Add-Type –AssemblyName WindowsBase
 
+# https://stackoverflow.com/a/57535324/8495483
+$Shlwapi = Add-Type -MemberDefinition '
+    [DllImport("Shlwapi.dll", CharSet=CharSet.Auto)]public static extern int StrFormatByteSize(long fileSize, System.Text.StringBuilder pwszBuff, int cchBuff);
+' -Name "ShlwapiFunctions" -namespace ShlwapiFunctions -PassThru
+
+Function Format-ByteSize([Long]$Size) {
+    $Bytes = New-Object Text.StringBuilder 20
+    $Return = $Shlwapi::StrFormatByteSize($Size, $Bytes, $Bytes.Capacity)
+    If ($Return) {$Bytes.ToString()}
+}
+
+$serviceParam = (Get-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters)
+if ($serviceParam.FileSizeLimitInBytes -ne -1 -and $serviceParam.FileSizeLimitInBytes -lt 4GB-1) {
+    if ([System.Windows.MessageBox]::Show("使用管理员权限提升文件大小限制到 4 GB? (重启后生效)", "当前系统限制最大文件为 $(Format-ByteSize($serviceParam.FileSizeLimitInBytes))", "YesNo", "Question") -eq "Yes") {
+        $process = Start-Process -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $(
+            "-Version", "2", 
+            "-NoProfile", 
+            "-Sta"
+            "-Command", @'
+Set-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters -Name FileSizeLimitInBytes -Type Dword -Value -1
+'@)
+        $process.WaitForExit()
+        if ($process.ExitCode) {
+            Throw "设置文件大小限制失败"
+        }
+    }
+}
+
 if ((Get-Service WebClient).StartType -eq 'Disabled') {
     if ([System.Windows.MessageBox]::Show("使用管理员权限启用 WebClient 服务?", "WebClient 服务被禁用", "YesNo", "Question") -eq "Yes") {
-        $process = Start-Process -Wait -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $(
+        $process = Start-Process -PassThru -Verb RunAs -FilePath PowerShell -ArgumentList $(
             "-Version", "2", 
             "-NoProfile", 
             "-Sta"
@@ -20,6 +48,7 @@ $srv = (Get-Service WebClient)
 $srv | Set-Service -StartupType 'Automatic'
 $srv.Start()
 '@)
+        $process.WaitForExit()
         if ($process.ExitCode) {
             Throw "启动 WebClient 服务失败"   
         }
