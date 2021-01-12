@@ -2,9 +2,10 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     小説家になろう book downloader
 // @description Add `download all chapter` button to syosetu.com
-// @version  6
+// @version  2021.01.12
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
+// @include	 /^https?://novel18\.syosetu\.com/\w+/$/
 // @run-at   document-end
 // ==/UserScript==
 const __name__ = "小説家になろう book downloader";
@@ -79,8 +80,9 @@ function updateStatus() {
     statusIndicator.innerText = `(${finishedCount}/${totalCount})`;
 }
 async function downloadChapter(ncode, chapter) {
-    const url = `https://ncode.syosetu.com/txtdownload/dlstart/ncode` +
+    const url = `https://${location.host}/txtdownload/dlstart/ncode` +
         `/${ncode}/?no=${chapter}&hankaku=0&code=utf-8&kaigyo=lf`;
+    log(`fetch chapter: ${chapter}`);
     const resp = await fetch(url);
     if (resp.status !== 200) {
         addMessage([`${resp.status} ${resp.statusText}`, url], "Fetch chapter failed");
@@ -108,7 +110,7 @@ function getMetaData() {
 function getLatestPart(url) {
     return url
         .split("/")
-        .filter(i => i)
+        .filter((i) => i)
         .slice(-1)[0];
 }
 function unescapeHTML(input) {
@@ -136,21 +138,21 @@ function sleep(duration) {
     });
 }
 async function downloadChapterChunk(ncode, chapters) {
-    return Promise.all(chapters.map(i => (async function () {
+    return Promise.all(chapters.map((i) => (async function () {
         const ret = await Promise.all((await downloadChapter(ncode, i.chapter))
             .split("\n")
             .map(strip)
-            .filter(i => i.length > 0)
+            .filter((i) => i.length > 0)
             .map(unescapeHTML)
             .map(util.image.convertOnDemand));
         ret.splice(0, 0, `# ${i.title}`);
         finishedCount += 1;
         updateStatus();
         return ret;
-    })())).then(i => {
+    })())).then((i) => {
         /** @type {string[]} */
         const ret = [];
-        i.map(j => {
+        i.map((j) => {
             ret.push(...j);
         });
         return ret;
@@ -183,22 +185,14 @@ async function main(button) {
     button.onclick = download;
     download();
 }
-function injectStyleSheet(url) {
-    const link = document.createElement("link");
-    link.href = url;
-    link.rel = "stylesheet";
-    document.head.append(link);
-}
 (async function () {
-    injectStyleSheet("https://cdn.bootcss.com/semantic-ui/2.4.1/components/button.min.css");
-    injectStyleSheet("https://cdn.bootcss.com/semantic-ui/2.4.1/components/message.min.css");
     const button = document.createElement("button");
-    button.innerText = "Download all chapter";
-    button.className = "ui button";
+    button.innerText = "Download all chapters";
+    button.className = "button";
     button.onclick = async () => {
         try {
             button.disabled = true;
-            button.classList.add("loading");
+            button.style.opacity = "50%";
             await main(button);
         }
         catch (err) {
@@ -206,7 +200,7 @@ function injectStyleSheet(url) {
         }
         finally {
             button.disabled = false;
-            button.classList.remove("loading");
+            button.style.opacity = "";
         }
     };
     document.querySelector("#novel_ex").after(button, statusIndicator);

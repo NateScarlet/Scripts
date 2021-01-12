@@ -2,9 +2,10 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     小説家になろう book downloader
 // @description Add `download all chapter` button to syosetu.com
-// @version  6
+// @version  2021.01.12
 // @grant    none
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
+// @include	 /^https?://novel18\.syosetu\.com/\w+/$/
 // @run-at   document-end
 // ==/UserScript==
 
@@ -88,8 +89,9 @@ async function downloadChapter(
   chapter: string
 ): Promise<string> {
   const url =
-    `https://ncode.syosetu.com/txtdownload/dlstart/ncode` +
+    `https://${location.host}/txtdownload/dlstart/ncode` +
     `/${ncode}/?no=${chapter}&hankaku=0&code=utf-8&kaigyo=lf`;
+  log(`fetch chapter: ${chapter}`);
   const resp = await fetch(url);
   if (resp.status !== 200) {
     addMessage(
@@ -126,7 +128,7 @@ function getMetaData(): string {
 function getLatestPart(url: string): string {
   return url
     .split("/")
-    .filter(i => i)
+    .filter((i) => i)
     .slice(-1)[0];
 }
 
@@ -161,13 +163,13 @@ async function downloadChapterChunk(
   chapters: { chapter: string; title: string }[]
 ): Promise<string[]> {
   return Promise.all(
-    chapters.map(i =>
-      (async function(): Promise<string[]> {
+    chapters.map((i) =>
+      (async function (): Promise<string[]> {
         const ret = await Promise.all(
           (await downloadChapter(ncode, i.chapter))
             .split("\n")
             .map(strip)
-            .filter(i => i.length > 0)
+            .filter((i) => i.length > 0)
             .map(unescapeHTML)
             .map(util.image.convertOnDemand)
         );
@@ -177,10 +179,10 @@ async function downloadChapterChunk(
         return ret;
       })()
     )
-  ).then(i => {
+  ).then((i) => {
     /** @type {string[]} */
     const ret: string[] = [];
-    i.map(j => {
+    i.map((j) => {
       ret.push(...j);
     });
     return ret;
@@ -227,33 +229,20 @@ async function main(button: HTMLButtonElement): Promise<void> {
   download();
 }
 
-function injectStyleSheet(url: string): void {
-  const link = document.createElement("link");
-  link.href = url;
-  link.rel = "stylesheet";
-  document.head.append(link);
-}
-
-(async function(): Promise<void> {
-  injectStyleSheet(
-    "https://cdn.bootcss.com/semantic-ui/2.4.1/components/button.min.css"
-  );
-  injectStyleSheet(
-    "https://cdn.bootcss.com/semantic-ui/2.4.1/components/message.min.css"
-  );
+(async function (): Promise<void> {
   const button = document.createElement("button");
-  button.innerText = "Download all chapter";
-  button.className = "ui button";
+  button.innerText = "Download all chapters";
+  button.className = "button";
   button.onclick = async (): Promise<void> => {
     try {
       button.disabled = true;
-      button.classList.add("loading");
+      button.style.opacity = "50%";
       await main(button);
     } catch (err) {
       console.error(err);
     } finally {
       button.disabled = false;
-      button.classList.remove("loading");
+      button.style.opacity = "";
     }
   };
   document.querySelector("#novel_ex").after(button, statusIndicator);
