@@ -69,12 +69,6 @@ namespace util {
     }
     export async function url2line(url: string): Promise<string> {
       return new Promise((resolve, reject): void => {
-        const img = new Image();
-        img.onload = (): void => {
-          resolve(img2line(img));
-        };
-        img.onerror = reject;
-        img.alt = url;
         GM.xmlHttpRequest({
           method: "GET",
           url,

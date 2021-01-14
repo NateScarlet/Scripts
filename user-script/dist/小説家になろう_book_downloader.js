@@ -68,12 +68,6 @@ var util;
         image.img2line = img2line;
         async function url2line(url) {
             return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    resolve(img2line(img));
-                };
-                img.onerror = reject;
-                img.alt = url;
                 GM.xmlHttpRequest({
                     method: "GET",
                     url,
