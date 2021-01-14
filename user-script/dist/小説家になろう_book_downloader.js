@@ -2,8 +2,8 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     小説家になろう book downloader
 // @description Add `download all chapter` button to syosetu.com
-// @version  2021.01.12
-// @grant    none
+// @version  2021.01.15
+// @grant    GM.xmlHttpRequest
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @include	 /^https?://novel18\.syosetu\.com/\w+/$/
 // @run-at   document-end
@@ -36,6 +36,25 @@ function addMessage(text, title, color = "red") {
 }
 var util;
 (function (util) {
+    function parseHeader(headers) {
+        const ret = new Map();
+        for (const line of headers.split("\r\n")) {
+            if (!line) {
+                continue;
+            }
+            const match = /^(.+?): ?(.+)$/.exec(line);
+            if (!match) {
+                throw new Error(`malformed header: ${line}`);
+            }
+            const [_, key, value] = match;
+            if (!ret.has(key)) {
+                ret.set(key, []);
+            }
+            ret.get(key).push(value);
+        }
+        return ret;
+    }
+    util.parseHeader = parseHeader;
     let image;
     (function (image) {
         function img2line(img) {
@@ -54,8 +73,32 @@ var util;
                     resolve(img2line(img));
                 };
                 img.onerror = reject;
-                img.src = url;
                 img.alt = url;
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url,
+                    // https://github.com/greasemonkey/greasemonkey/issues/1834#issuecomment-37084558
+                    overrideMimeType: "text/plain; charset=x-user-defined",
+                    onload: ({ responseText, responseHeaders }) => {
+                        var _a, _b;
+                        const headers = parseHeader(responseHeaders);
+                        const data = new Blob([
+                            Uint8Array.from(responseText.split("").map((i) => i.charCodeAt(0))),
+                        ], { type: (_b = (_a = headers.get("content-type")) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : "image/jpeg" });
+                        const src = URL.createObjectURL(data);
+                        const img = new Image();
+                        img.onload = () => {
+                            resolve(img2line(img));
+                            URL.revokeObjectURL(src);
+                        };
+                        img.onerror = reject;
+                        img.alt = url;
+                        img.src = src;
+                    },
+                    onerror: ({ context }) => {
+                        reject({ context });
+                    },
+                });
             });
         }
         image.url2line = url2line;
@@ -161,7 +204,7 @@ async function downloadChapterChunk(ncode, chapters) {
 async function main(button) {
     clearMessage();
     const ncode = getLatestPart(document.querySelector("#novel_footer > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)").href);
-    log(`"start downloading: ${ncode}`);
+    log(`start downloading: ${ncode}`);
     const chapters = [];
     for (const i of document.querySelectorAll("dl.novel_sublist2 > dd:nth-child(1) > a:nth-child(1)")) {
         chapters.push({ chapter: getLatestPart(i.href), title: i.innerText });
