@@ -55,13 +55,18 @@ else
 return
 
 F2::
-SoundSet, 0,,Mute,11
-SoundSet, 100,,Volume,11
-SoundPlay, %A_WinDir%\Media\Speech On.wav
+; https://www.autohotkey.com/docs/commands/SoundSet.htm#Soundcard
+mic_device:=11
+SoundGet,mic_mute,,Mute,%mic_device%
+if mic_mute=On
+{
+	SoundSet, 0,,Mute,%mic_device%
+	SoundSet, 100,,Volume,%mic_device%
+	SoundPlay, %A_WinDir%\Media\Speech On.wav
+} 
+else
+{
+	SoundSet, 1,,Mute,%mic_device%
+	SoundPlay, %A_WinDir%\Media\Speech Off.wav
+}
 return
-
-+F2::
-SoundSet, 1,,Mute,11
-SoundPlay, %A_WinDir%\Media\Speech Off.wav
-return
-
