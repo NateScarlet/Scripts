@@ -1,9 +1,8 @@
-﻿; #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
+﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#Warn  ; Enable warnings to assist with detecting common errors.
+#SingleInstance force
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
-
-#SingleInstance force
 
 $#1::
 IfWinExist, ahk_exe firefox.exe
@@ -54,3 +53,15 @@ IfWinExist, ahk_exe ConEmu64.exe
 else
 	Run, ConEmu64.exe -Dir %UserProfile%
 return
+
+F2::
+SoundSet, 0,,Mute,11
+SoundSet, 100,,Volume,11
+SoundPlay, %A_WinDir%\Media\Speech On.wav
+return
+
++F2::
+SoundSet, 1,,Mute,11
+SoundPlay, %A_WinDir%\Media\Speech Off.wav
+return
+
