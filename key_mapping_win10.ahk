@@ -54,7 +54,7 @@ else
 	Run, ConEmu64.exe -Dir %UserProfile%
 return
 
-F2::
+~F2::
 ; https://www.autohotkey.com/docs/commands/SoundSet.htm#Soundcard
 mic_device:=11
 SoundGet,mic_mute,,Mute,%mic_device%
