@@ -58,6 +58,12 @@ return
 ; https://www.autohotkey.com/docs/commands/SoundSet.htm#Soundcard
 mic_device:=11
 SoundGet,mic_mute,,Mute,%mic_device%
+if ErrorLevel 
+{
+	TrayTip, 获取麦克风失败, %ErrorLevel%, , 0x3
+	SoundPlay, %A_WinDir%\Media\Windows Error.wav
+	return
+}
 if mic_mute=On
 {
 	SoundSet, 0,,Mute,%mic_device%
