@@ -1,7 +1,10 @@
 ﻿#Warn  ; Enable warnings to assist with detecting common errors.
+#NoEnv
 #SingleInstance force
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+
+EnvGet, UserProfile, UserProfile
 
 $#1::
 IfWinExist, ahk_exe firefox.exe
@@ -21,7 +24,7 @@ return
 $#3::
 IfWinNotExist, ahk_exe code.exe
 {
-    Run, Code.exe
+    Run, Code
 }
 
 GroupAdd, G_TXT, ahk_exe code.exe
@@ -50,7 +53,7 @@ $!^t::
 IfWinExist, ahk_exe ConEmu64.exe
 	WinActivate
 else
-	Run, ConEmu64.exe -Dir %UserProfile%
+	Run, ConEmu64 -Dir %UserProfile%
 return
 
 ~F2::
