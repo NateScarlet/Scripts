@@ -6,6 +6,13 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 EnvGet, UserProfile, UserProfile
 
+MouseState() {
+	CoordMode, Mouse, Screen
+	MouseGetPos, xpos, ypos
+	return xpos ":" ypos
+}
+
+
 $#1::
 IfWinExist, ahk_exe firefox.exe
 {
@@ -58,7 +65,7 @@ return
 
 ~F2::
 ; https://www.autohotkey.com/docs/commands/SoundSet.htm#Soundcard
-mic_device:=11
+mic_device:=10
 SoundGet,mic_mute,,Mute,%mic_device%
 if ErrorLevel 
 {
@@ -77,4 +84,17 @@ else
 	SoundSet, 1,,Mute,%mic_device%
 	SoundPlay, %A_WinDir%\Media\Speech Off.wav
 }
+return
+
++ScrollLock::
+Winset, Alwaysontop, , A
+return
+
+!ScrollLock::
+enable_state:=MouseState()
+While, enable_state=MouseState() {
+	Click
+	Sleep 100
+}
+SoundPlay, %A_WinDir%\Media\Windows Print complete.wav
 return
