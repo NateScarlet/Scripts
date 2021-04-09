@@ -6,7 +6,7 @@ Add-Type –AssemblyName PresentationFramework
 Add-Type –AssemblyName PresentationCore
 Add-Type –AssemblyName WindowsBase
 
-$mainWindow = [Windows.Markup.XamlReader]::Load( (New-Object System.Xml.XmlNodeReader ([xml]@'
+[System.Windows.Window]$mainWindow = [Windows.Markup.XamlReader]::Load( (New-Object System.Xml.XmlNodeReader ([xml]@'
 <Window
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
