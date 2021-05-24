@@ -1,8 +1,8 @@
 // ==UserScript==
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     小説家になろう book downloader
-// @description Add `download all chapter` button to syosetu.com
-// @version  2021.01.15
+// @description Add `download all chapter` button to syosetu.com (you need login to download chapters )
+// @version  2021.05.24
 // @grant    GM.xmlHttpRequest
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @include	 /^https?://novel18\.syosetu\.com/\w+/$/
@@ -151,15 +151,23 @@ function clearMessage(): void {
   }
 }
 function getMetaData(): string {
-  /** @type {HTMLAnchorElement} */
-  const anchor: HTMLAnchorElement = document.querySelector(
+  const data: Record<string, string> = {
+    link: document.location.href,
+  };
+  const authorContainer = document.querySelector(".novel_writername");
+  const authorAnchor = document.querySelector(
     ".novel_writername > a:nth-child(1)"
   );
+  if (authorAnchor instanceof HTMLAnchorElement) {
+    data["author"] = authorAnchor.innerText;
+    data["author_link"] = authorAnchor.href;
+  } else if (authorContainer instanceof HTMLDivElement) {
+    data["author"] = authorContainer.innerText.replace(/^作者：/, "");
+  }
+
   return [
     "---",
-    `author: ${anchor.innerText}`,
-    `author_link: ${anchor.href}`,
-    `link: ${document.location.href}`,
+    ...Object.entries(data).map(([k, v]) => `${k}: ${v}`),
     "---",
   ].join("\n");
 }
@@ -206,7 +214,9 @@ async function downloadChapterChunk(
     chapters.map((i) =>
       (async function (): Promise<string[]> {
         const ret = await Promise.all(
-          (await downloadChapter(ncode, i.chapter))
+          (
+            await downloadChapter(ncode, i.chapter)
+          )
             .split("\n")
             .map(strip)
             .filter((i) => i.length > 0)

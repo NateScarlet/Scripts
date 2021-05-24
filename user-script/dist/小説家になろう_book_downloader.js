@@ -1,8 +1,8 @@
 // ==UserScript==
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     小説家になろう book downloader
-// @description Add `download all chapter` button to syosetu.com
-// @version  2021.01.15
+// @description Add `download all chapter` button to syosetu.com (you need login to download chapters )
+// @version  2021.05.24
 // @grant    GM.xmlHttpRequest
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @include	 /^https?://novel18\.syosetu\.com/\w+/$/
@@ -133,13 +133,21 @@ function clearMessage() {
     }
 }
 function getMetaData() {
-    /** @type {HTMLAnchorElement} */
-    const anchor = document.querySelector(".novel_writername > a:nth-child(1)");
+    const data = {
+        link: document.location.href,
+    };
+    const authorContainer = document.querySelector(".novel_writername");
+    const authorAnchor = document.querySelector(".novel_writername > a:nth-child(1)");
+    if (authorAnchor instanceof HTMLAnchorElement) {
+        data["author"] = authorAnchor.innerText;
+        data["author_link"] = authorAnchor.href;
+    }
+    else if (authorContainer instanceof HTMLDivElement) {
+        data["author"] = authorContainer.innerText.replace(/^作者：/, "");
+    }
     return [
         "---",
-        `author: ${anchor.innerText}`,
-        `author_link: ${anchor.href}`,
-        `link: ${document.location.href}`,
+        ...Object.entries(data).map(([k, v]) => `${k}: ${v}`),
         "---",
     ].join("\n");
 }
