@@ -15,7 +15,7 @@ Param (
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-[String]$result = & "${env:ProgramFiles(x86)}\Tesseract-OCR\tesseract.exe" -l eng+jpn+chi_sim $Path -
+[String]$result = & tesseract.exe -l eng+jpn+chi_sim $Path -
 if ($LASTEXITCODE) {
     exit $LASTEXITCODE
 }
