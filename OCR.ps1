@@ -8,10 +8,12 @@ Param (
     $Path,
 
     [switch]
-    $ToClipboard
+    $ToClipboard,
+    [switch]
+    $ImageToClipboard
 )
 
-[String]$result = & "${env:ProgramFiles}\Tesseract-OCR\tesseract.exe" $Path -
+[String]$result = & "${env:ProgramFiles(x86)}\Tesseract-OCR\tesseract.exe" $Path -
 if ($LASTEXITCODE) {
     exit $LASTEXITCODE
 }
@@ -22,24 +24,30 @@ if ($ToClipboard) {
     Add-Type -AssemblyName PresentationCore
     $img = [System.Windows.Media.Imaging.BitmapImage]::new($Path)
     $do = [System.Windows.DataObject]::new()
-    $do.SetImage($img)
+    if ($ImageToClipboard){
+        $do.SetImage($img)
+    }
     $do.SetText($result.Trim())
     $do.SetData("HTML Format", @"
-<img src=`"file:///$Path`">
-<dl>
+<html>
+<body>
+<!--StartFragment-->
+<img src=`"file:///$Path`"><br>
 "@ + @(If ($result) {
                 @"
-    <dt>文本识别</dt>
-    <dd>$result</dd>
+文本识别：<br>
+$($result.Replace("`n", "<br>"))<br>
 "@             
             }
             Else { "" }
         ) + @"
-    <dt>文件名</dt>
-    <dd>$(Split-Path -Leaf $Path)</dd>
-    <dt>分辨率</dt>
-    <dd>$([int]$img.Width)x$([int]$img.Height)</dd>
-</dl>
+文件名：<br>
+$(Split-Path -Leaf $Path)<br>
+分辨率：<br>
+$([int]$img.Width)x$([int]$img.Height)
+<!--EndFragment-->
+</body>
+</html>
 "@)
     [System.Windows.Clipboard]::SetDataObject($do, $true)
 }
