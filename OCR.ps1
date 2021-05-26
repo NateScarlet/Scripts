@@ -13,7 +13,9 @@ Param (
     $ImageToClipboard
 )
 
-[String]$result = & "${env:ProgramFiles(x86)}\Tesseract-OCR\tesseract.exe" $Path -
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+[String]$result = & "${env:ProgramFiles(x86)}\Tesseract-OCR\tesseract.exe" -l eng+jpn+chi_sim --psm 13 $Path -
 if ($LASTEXITCODE) {
     exit $LASTEXITCODE
 }
