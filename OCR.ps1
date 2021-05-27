@@ -15,6 +15,8 @@ Param (
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+$env:Path = "${env:Path};${env:ProgramFiles}\Tesseract-OCR;${env:ProgramFiles(x86)}\Tesseract-OCR;"
+
 [String]$result = & tesseract.exe -l eng+jpn+chi_sim $Path -
 if ($LASTEXITCODE) {
     exit $LASTEXITCODE
@@ -26,7 +28,7 @@ if ($ToClipboard) {
     Add-Type -AssemblyName PresentationCore
     $img = [System.Windows.Media.Imaging.BitmapImage]::new($Path)
     $do = [System.Windows.DataObject]::new()
-    if ($ImageToClipboard){
+    if ($ImageToClipboard) {
         $do.SetImage($img)
     }
     $do.SetText($result.Trim())
