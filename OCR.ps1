@@ -17,7 +17,12 @@ Param (
 
 $env:Path = "${env:Path};${env:ProgramFiles}\Tesseract-OCR;${env:ProgramFiles(x86)}\Tesseract-OCR;"
 
-[String]$result = & tesseract.exe -l eng+jpn+chi_sim $Path -
+$tmpImage = [System.IO.Path]::GetTempFileName()+".png"
+
+& magick.exe $Path -normalize $tmpImage
+
+[String]$result = & tesseract.exe -l eng+jpn+chi_sim $tmpImage -
+Remove-Item $tmpImage
 if ($LASTEXITCODE) {
     exit $LASTEXITCODE
 }
