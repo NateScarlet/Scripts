@@ -18,6 +18,7 @@ Add-Type –AssemblyName WindowsBase
 >
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="40"/>
       <RowDefinition />
       <RowDefinition Height="40"/>
       <RowDefinition Height="24"/>
@@ -27,18 +28,32 @@ Add-Type –AssemblyName WindowsBase
       <ColumnDefinition />
       <ColumnDefinition />
     </Grid.ColumnDefinitions>
+    <Grid Grid.ColumnSpan="2" Margin="8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="40"/>
+        <ColumnDefinition />
+        <ColumnDefinition Width="60"/>
+      </Grid.ColumnDefinitions>
+      
+      <Label Content="Dir1" />
+      <TextBox x:Name="dirInput1" Grid.Column="1" Text="{Binding Dir1}" MaxLines="1"/>
+      <Button x:Name="chooseDir1Button" Grid.Column="2">choose...</Button>
+    </Grid>
+
     <TextBox
       x:Name="textBox1"
       TextWrapping="Wrap"
       Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}"
+      Grid.Row="1"
       Grid.ColumnSpan="2"
       AcceptsReturn="True"
-    />
-
+      />
+      
     <CheckBox
-      IsChecked="{Binding Bool1}" Grid.Row="1"  VerticalAlignment="Center"
-      Content="Bool1"
-    />
+      IsChecked="{Binding Bool1}"
+      Grid.Row="2"
+      VerticalAlignment="Center"
+    >Bool1</CheckBox>
 
     <ComboBox
       x:Name="comboBox1"
@@ -46,15 +61,19 @@ Add-Type –AssemblyName WindowsBase
       SelectedValuePath="Value"
       DisplayMemberPath="Label"
       SelectedValue="{Binding SelectedOption1}"
-      Grid.Row="2"
+      Grid.Row="3"
       Grid.ColumnSpan="2"
     />
 
-    <Button x:Name="button1" Content="Button1" Grid.Row="3"/>
+    <Button
+      x:Name="button1"
+      Content="Button1"
+      Grid.Row="4"
+    />
     <Button
       x:Name="button2"
       Content="Button2"
-      Grid.Row="3"
+      Grid.Row="4"
       Grid.Column="1"
     />
   </Grid>
@@ -66,6 +85,7 @@ Add-Type –AssemblyName WindowsBase
 Add-Type -Language CSharp @'
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace NateScarlet.WPFTemplate {
   public class Option {
@@ -96,8 +116,14 @@ namespace NateScarlet.WPFTemplate {
       }
   }
 
-  public class DataContext {
-
+  public class DataContext: INotifyPropertyChanged {
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChangedEventHandler handler = PropertyChanged;
+        if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+    }
+  
     private const string RegistryPath = @"Software\NateScarlet\wpf-template";
 
     private RegistryKey key;
@@ -127,6 +153,7 @@ namespace NateScarlet.WPFTemplate {
         set
         {
             key.SetValue("Text1", value);
+            OnPropertyChanged("Text1");
         }
     }
 
@@ -139,6 +166,7 @@ namespace NateScarlet.WPFTemplate {
         set
         {
             key.SetValue("MultiText1", value, RegistryValueKind.MultiString);
+            OnPropertyChanged("MultiText1");
         }
     }
 
@@ -151,19 +179,29 @@ namespace NateScarlet.WPFTemplate {
         set
         {
             key.SetValue("Bool1", value, RegistryValueKind.DWord);
+            OnPropertyChanged("Bool1");
         }
     }
 
     public string TempText1
     { get; set; }
-    
+
     public string SelectedOption1
     { get; set; }
-
+    
     public Options Options1
     { get; set; }
+
+    private string dir1 = "C:\\";
+    public string Dir1
+    {
+      get { return dir1; }
+      set { 
+        dir1 = value;
+        OnPropertyChanged("Dir1");
+      }
+    }
   }
-    
 }
 '@
 
@@ -180,6 +218,20 @@ $mainWindow.Content.FindName('button2').add_Click(
     Write-Host "button2 clicked"
   }
 )
+$mainWindow.Content.FindName('chooseDir1Button').add_Click( 
+  {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog -Property @{
+      SelectedPath = $data.Dir1
+    }
+    if ($dialog.ShowDialog() -eq "OK") {
+      $data.Dir1 = $dialog.SelectedPath
+    }
+  }
+)
+
+
+
 
 [void]$mainWindow.ShowDialog()
 $data.Text1
