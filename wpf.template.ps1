@@ -17,6 +17,10 @@ Add-Type –AssemblyName WindowsBase
   Topmost="True"
 >
   <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition />
+      <RowDefinition Height="40"/>
+    </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition />
       <ColumnDefinition />
@@ -25,17 +29,15 @@ Add-Type –AssemblyName WindowsBase
       x:Name="textBox1"
       TextWrapping="Wrap"
       Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}"
-      Margin="0,25,-1,0"
-      Height="88"
-      VerticalAlignment="Top"
       Grid.ColumnSpan="2"
+      AcceptsReturn="True"
     />
-    <Button x:Name="button1" Content="Button1" Margin="0,177,0,10" />
+    <Button x:Name="button1" Content="Button1" Grid.Row="1"/>
     <Button
       x:Name="button2"
       Content="Button2"
+      Grid.Row="1"
       Grid.Column="1"
-      Margin="0,177,0,10"
     />
   </Grid>
 </Window>
@@ -98,14 +100,14 @@ public class AppDataContext {
 $data = New-Object AppDataContext
 $mainWindow.DataContext = $data
 $mainWindow.Content.FindName('button1').add_Click( 
-    {
-        Write-Host "button1 clicked"
-    }
+  {
+    Write-Host "button1 clicked"
+  }
 )
 $mainWindow.Content.FindName('button2').add_Click( 
-    {
-        Write-Host "button2 clicked"
-    }
+  {
+    Write-Host "button2 clicked"
+  }
 )
 
 [void]$mainWindow.ShowDialog()
