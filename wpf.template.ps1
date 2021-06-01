@@ -35,8 +35,10 @@ Add-Type –AssemblyName WindowsBase
       AcceptsReturn="True"
     />
 
-    <Label Content="Bool1" Margin="8" Grid.Row="1"/>
-    <CheckBox IsChecked="{Binding Bool1}" Grid.Row="1"  Margin="60,0,8,0" VerticalAlignment="Center"/>
+    <CheckBox
+      IsChecked="{Binding Bool1}" Grid.Row="1"  VerticalAlignment="Center"
+      Content="Bool1"
+    />
 
     <ComboBox
       x:Name="comboBox1"
