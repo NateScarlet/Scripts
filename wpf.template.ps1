@@ -1,4 +1,5 @@
-# https://devblogs.microsoft.com/powershell/wpf-powershell-part-1-hello-world-welcome-to-the-week-of-wpf/
+﻿# https://devblogs.microsoft.com/powershell/wpf-powershell-part-1-hello-world-welcome-to-the-week-of-wpf/
+# https://social.technet.microsoft.com/wiki/contents/articles/7804.powershell-creating-custom-objects.aspx
 
 $ErrorActionPreference = "Stop"
 
@@ -23,7 +24,7 @@ Add-Type –AssemblyName WindowsBase
     <TextBox
       x:Name="textBox1"
       TextWrapping="Wrap"
-      Text="TextBox"
+      Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}"
       Margin="0,25,-1,0"
       Height="88"
       VerticalAlignment="Top"
@@ -40,6 +41,62 @@ Add-Type –AssemblyName WindowsBase
 </Window>
 '@)) )
 
+
+
+Add-Type -Language CSharp @'
+using Microsoft.Win32;
+
+public class AppDataContext {
+
+  private const string RegistryPath = @"Software\NateScarlet\wpf-template";
+
+  private RegistryKey key;
+
+  public AppDataContext()
+  {
+      this.key = Registry.CurrentUser.OpenSubKey(RegistryPath, true);
+      if (this.key == null)
+      {
+          this.key = Registry.CurrentUser.CreateSubKey(RegistryPath);
+      }
+  }
+  ~AppDataContext()
+  {
+    key.Dispose();
+  }
+
+  public string Text1
+  {
+      get
+      {
+          return (string)key.GetValue("Text1", "Text1 default");
+      }
+      set
+      {
+          key.SetValue("Text1", value);
+      }
+  }
+
+  public string[] MultiText1
+  {
+      get
+      {
+          return (string[])key.GetValue("MultiText1", new string[]{ "text1", "text2" });
+      }
+      set
+      {
+          key.SetValue("MultiText1", value, RegistryValueKind.MultiString);
+      }
+  }
+
+  public string TempText1
+  { get; set; }
+}
+'@
+
+
+$data = New-Object AppDataContext
+$mainWindow.DataContext = $data
 $mainWindow.Content.FindName('button1').add_Click( 
     {
         Write-Host "button1 clicked"
@@ -51,5 +108,5 @@ $mainWindow.Content.FindName('button2').add_Click(
     }
 )
 
-$mainWindow.ShowDialog()
-$mainWindow.Content.FindName('textBox1').Text
+[void]$mainWindow.ShowDialog()
+$data.Text1
