@@ -20,6 +20,7 @@ Add-Type –AssemblyName WindowsBase
     <Grid.RowDefinitions>
       <RowDefinition />
       <RowDefinition Height="40"/>
+      <RowDefinition Height="24"/>
       <RowDefinition Height="40"/>
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
@@ -37,11 +38,21 @@ Add-Type –AssemblyName WindowsBase
     <Label Content="Bool1" Margin="8" Grid.Row="1"/>
     <CheckBox IsChecked="{Binding Bool1}" Grid.Row="1"  Margin="60,0,8,0" VerticalAlignment="Center"/>
 
-    <Button x:Name="button1" Content="Button1" Grid.Row="2"/>
+    <ComboBox
+      x:Name="comboBox1"
+      ItemsSource="{Binding Options1}"
+      SelectedValuePath="Value"
+      DisplayMemberPath="Label"
+      SelectedValue="{Binding SelectedOption1}"
+      Grid.Row="2"
+      Grid.ColumnSpan="2"
+    />
+
+    <Button x:Name="button1" Content="Button1" Grid.Row="3"/>
     <Button
       x:Name="button2"
       Content="Button2"
-      Grid.Row="2"
+      Grid.Row="3"
       Grid.Column="1"
     />
   </Grid>
@@ -52,69 +63,110 @@ Add-Type –AssemblyName WindowsBase
 
 Add-Type -Language CSharp @'
 using Microsoft.Win32;
+using System.Collections.ObjectModel;
 
-public class AppDataContext {
+namespace NateScarlet.WPFTemplate {
+  public class Option {
+    public string Label
+    { get; set; }
 
-  private const string RegistryPath = @"Software\NateScarlet\wpf-template";
+    public string Value
+    { get; set; }
+  }
 
-  private RegistryKey key;
+  public class Options : ObservableCollection<Option>  {
+      public Options() {
+        Add(new Option()
+        {
+          Label = "option1",
+          Value = "1",
+        });
+        Add(new Option()
+        {
+          Label = "option2",
+          Value = "2",
+        });
+        Add(new Option()
+        {
+          Label = "option3",
+          Value = "3",
+        });
+      }
+  }
 
-  public AppDataContext()
-  {
-      this.key = Registry.CurrentUser.OpenSubKey(RegistryPath, true);
-      if (this.key == null)
-      {
+  public class DataContext {
+
+    private const string RegistryPath = @"Software\NateScarlet\wpf-template";
+
+    private RegistryKey key;
+
+    public DataContext()
+    {
+        this.key = Registry.CurrentUser.OpenSubKey(RegistryPath, true);
+        if (this.key == null)
+        {
           this.key = Registry.CurrentUser.CreateSubKey(RegistryPath);
-      }
-  }
-  ~AppDataContext()
-  {
-    key.Dispose();
-  }
+        }
 
-  public string Text1
-  {
-      get
-      {
-          return (string)key.GetValue("Text1", "Text1 default");
-      }
-      set
-      {
-          key.SetValue("Text1", value);
-      }
-  }
+        this.Options1 = new Options();
+        this.SelectedOption1 = "1";
+    }
+    ~DataContext()
+    {
+      key.Dispose();
+    }
 
-  public string[] MultiText1
-  {
-      get
-      {
-          return (string[])key.GetValue("MultiText1", new string[]{ "text1", "text2" });
-      }
-      set
-      {
-          key.SetValue("MultiText1", value, RegistryValueKind.MultiString);
-      }
-  }
+    public string Text1
+    {
+        get
+        {
+            return (string)key.GetValue("Text1", "Text1 default");
+        }
+        set
+        {
+            key.SetValue("Text1", value);
+        }
+    }
 
-  public bool Bool1
-  {
-      get
-      {
-          return (bool)key.GetValue("Bool1", 0);
-      }
-      set
-      {
-          key.SetValue("Bool1", value, RegistryValueKind.DWord);
-      }
-  }
+    public string[] MultiText1
+    {
+        get
+        {
+            return (string[])key.GetValue("MultiText1", new string[]{ "text1", "text2" });
+        }
+        set
+        {
+            key.SetValue("MultiText1", value, RegistryValueKind.MultiString);
+        }
+    }
 
-  public string TempText1
-  { get; set; }
+    public bool Bool1
+    {
+        get
+        {
+            return (bool)key.GetValue("Bool1", 0);
+        }
+        set
+        {
+            key.SetValue("Bool1", value, RegistryValueKind.DWord);
+        }
+    }
+
+    public string TempText1
+    { get; set; }
+    
+    public string SelectedOption1
+    { get; set; }
+
+    public Options Options1
+    { get; set; }
+  }
+    
 }
 '@
 
 
-$data = New-Object AppDataContext
+$data = New-Object NateScarlet.WPFTemplate.DataContext
 $mainWindow.DataContext = $data
 $mainWindow.Content.FindName('button1').add_Click( 
   {
@@ -129,3 +181,4 @@ $mainWindow.Content.FindName('button2').add_Click(
 
 [void]$mainWindow.ShowDialog()
 $data.Text1
+$data.SelectedOption1
