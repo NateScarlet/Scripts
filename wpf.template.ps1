@@ -4,8 +4,6 @@
 $ErrorActionPreference = "Stop"
 
 Add-Type –AssemblyName PresentationFramework
-Add-Type –AssemblyName PresentationCore
-Add-Type –AssemblyName WindowsBase
 
 [System.Windows.Window]$mainWindow = [Windows.Markup.XamlReader]::Load( (New-Object System.Xml.XmlNodeReader ([xml]@'
 <Window
