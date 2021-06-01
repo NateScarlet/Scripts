@@ -20,6 +20,7 @@ Add-Type –AssemblyName WindowsBase
     <Grid.RowDefinitions>
       <RowDefinition />
       <RowDefinition Height="40"/>
+      <RowDefinition Height="40"/>
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition />
@@ -32,11 +33,15 @@ Add-Type –AssemblyName WindowsBase
       Grid.ColumnSpan="2"
       AcceptsReturn="True"
     />
-    <Button x:Name="button1" Content="Button1" Grid.Row="1"/>
+
+    <Label Content="Bool1" Margin="8" Grid.Row="1"/>
+    <CheckBox IsChecked="{Binding Bool1}" Grid.Row="1"  Margin="60,0,8,0" VerticalAlignment="Center"/>
+
+    <Button x:Name="button1" Content="Button1" Grid.Row="2"/>
     <Button
       x:Name="button2"
       Content="Button2"
-      Grid.Row="1"
+      Grid.Row="2"
       Grid.Column="1"
     />
   </Grid>
@@ -88,6 +93,18 @@ public class AppDataContext {
       set
       {
           key.SetValue("MultiText1", value, RegistryValueKind.MultiString);
+      }
+  }
+
+  public bool Bool1
+  {
+      get
+      {
+          return (bool)key.GetValue("Bool1", 0);
+      }
+      set
+      {
+          key.SetValue("Bool1", value, RegistryValueKind.DWord);
       }
   }
 
