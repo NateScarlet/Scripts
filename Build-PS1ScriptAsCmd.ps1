@@ -8,7 +8,7 @@ Param (
     $Path,
     [Parameter()]
     [string]
-    $LaunchArguments = "-Version 3 -NoProfile"
+    $LaunchArguments = "-Version 3 -NoProfile -ExecutionPolicy Bypass"
 )
 
 # https://stackoverflow.com/a/65314841
