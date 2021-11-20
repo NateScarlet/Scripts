@@ -2,14 +2,13 @@
   "name": "user-script",
   "version": "1.0.0",
   "description": "浏览器用户脚本(GreaseMonkey, TamperMonkey)",
-  "dependencies": {},
   "devDependencies": {
-    "@types/greasemonkey": "^4.0.0",
-    "@typescript-eslint/eslint-plugin": "^2.3.1",
-    "@typescript-eslint/parser": "^2.3.1",
-    "eslint": "^6.4.0",
-    "eslint-config-prettier": "^6.3.0",
-    "typescript": "^3.9.7"
+    "@types/greasemonkey": "^4.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.2.0",
+    "eslint-config-prettier": "^8.3.0",
+    "typescript": "3.9.10"
   },
   "scripts": {
     "build": "tsc",
