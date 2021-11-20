@@ -6,7 +6,7 @@
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @include	 /^https?://novel18\.syosetu\.com/\w+/$/
 // @run-at   document-end
-// @version   2021.11.20+9cec66da
+// @version   2021.11.20+4e6efffe
 // ==/UserScript==
 
 (() => {
@@ -30,6 +30,107 @@
       step((generator = generator.apply(__this, __arguments)).next());
     });
   };
+
+  // utils/urlLastPart.ts
+  function urlLastPart(url) {
+    return url.split("/").filter((i) => i).slice(-1)[0];
+  }
+
+  // utils/downloadFile.ts
+  function downloadFile(file, filename = `${urlLastPart(location.pathname)} ${document.title}.md`) {
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(file);
+    anchor.download = filename;
+    anchor.style["display"] = "none";
+    document.body.append(anchor);
+    anchor.click();
+    setTimeout(() => {
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(anchor.href);
+    }, 0);
+  }
+
+  // utils/imageToMarkdown.ts
+  function imageToMarkdown(img, {
+    background
+  } = {}) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(img, 0, 0);
+    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+  }
+
+  // utils/loadImage.ts
+  function loadImage(url) {
+    return __async(this, null, function* () {
+      const img = new Image();
+      img.src = url;
+      img.alt = url;
+      yield img.decode();
+      return img;
+    });
+  }
+
+  // utils/parseHeader.ts
+  function parseHeader(headers) {
+    const ret = new Map();
+    for (const line of headers.split("\r\n")) {
+      if (!line) {
+        continue;
+      }
+      const match = /^(.+?): ?(.+)$/.exec(line);
+      if (!match) {
+        throw new Error(`malformed header: ${line}`);
+      }
+      const [_, key, value] = match;
+      if (!ret.has(key)) {
+        ret.set(key, []);
+      }
+      ret.get(key).push(value);
+    }
+    return ret;
+  }
+
+  // utils/loadImageCORS.ts
+  function loadImageCORS(url) {
+    return __async(this, null, function* () {
+      return new Promise((resolve, reject) => {
+        GM.xmlHttpRequest({
+          method: "GET",
+          url,
+          overrideMimeType: "text/plain; charset=x-user-defined",
+          onload: (_0) => __async(this, [_0], function* ({ responseText, responseHeaders }) {
+            var _a, _b;
+            const headers = parseHeader(responseHeaders);
+            const data = new Blob([Uint8Array.from(responseText.split("").map((i) => i.charCodeAt(0)))], { type: (_b = (_a = headers.get("content-type")) == null ? void 0 : _a[0]) != null ? _b : "image/jpeg" });
+            const src = URL.createObjectURL(data);
+            const image = yield loadImage(src);
+            image.alt = url;
+            resolve(image);
+            URL.revokeObjectURL(src);
+          }),
+          onerror: ({ context }) => {
+            reject({ context });
+          }
+        });
+      });
+    });
+  }
+
+  // utils/sleep.ts
+  function sleep(duration) {
+    return __async(this, null, function* () {
+      return new Promise((resolve) => {
+        setTimeout(resolve, duration);
+      });
+    });
+  }
 
   // 小説家になろう_book_downloader.ts
   var __name__ = "小説家になろう book downloader";
@@ -58,94 +159,28 @@
       div.appendChild(p);
     }
   }
-  var util;
-  (function(util2) {
-    function parseHeader(headers) {
-      const ret = new Map();
-      for (const line of headers.split("\r\n")) {
-        if (!line) {
-          continue;
+  function chapterImageToMarkdown(line) {
+    return __async(this, null, function* () {
+      const match = line.match(/^<(.+)\|(.+)>$/);
+      if (match) {
+        const url = `https://${match[2]}.mitemin.net/userpageimage/viewimagebig/icode/${match[1]}/`;
+        try {
+          return imageToMarkdown(yield loadImageCORS(url));
+        } catch (err) {
+          addMessage([url, JSON.stringify(err)], "Image download failed", "orange");
+          return `![${line}](${url})`;
         }
-        const match = /^(.+?): ?(.+)$/.exec(line);
-        if (!match) {
-          throw new Error(`malformed header: ${line}`);
-        }
-        const [_, key, value] = match;
-        if (!ret.has(key)) {
-          ret.set(key, []);
-        }
-        ret.get(key).push(value);
       }
-      return ret;
-    }
-    util2.parseHeader = parseHeader;
-    let image;
-    (function(image2) {
-      function img2line(img) {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
-      }
-      image2.img2line = img2line;
-      function url2line(url) {
-        return __async(this, null, function* () {
-          return new Promise((resolve, reject) => {
-            GM.xmlHttpRequest({
-              method: "GET",
-              url,
-              overrideMimeType: "text/plain; charset=x-user-defined",
-              onload: ({ responseText, responseHeaders }) => {
-                var _a, _b;
-                const headers = parseHeader(responseHeaders);
-                const data = new Blob([
-                  Uint8Array.from(responseText.split("").map((i) => i.charCodeAt(0)))
-                ], { type: (_b = (_a = headers.get("content-type")) == null ? void 0 : _a[0]) != null ? _b : "image/jpeg" });
-                const src = URL.createObjectURL(data);
-                const img = new Image();
-                img.onload = () => {
-                  resolve(img2line(img));
-                  URL.revokeObjectURL(src);
-                };
-                img.onerror = reject;
-                img.alt = url;
-                img.src = src;
-              },
-              onerror: ({ context }) => {
-                reject({ context });
-              }
-            });
-          });
-        });
-      }
-      image2.url2line = url2line;
-      function convertOnDemand(line) {
-        return __async(this, null, function* () {
-          const match = line.match(/^<(.+)\|(.+)>$/);
-          if (match) {
-            const url = `https://${match[2]}.mitemin.net/userpageimage/viewimagebig/icode/${match[1]}/`;
-            try {
-              return yield url2line(url);
-            } catch (err) {
-              addMessage([url, JSON.stringify(err)], "Image download failed", "orange");
-              return `![${line}](${url})`;
-            }
-          }
-          return line;
-        });
-      }
-      image2.convertOnDemand = convertOnDemand;
-    })(image = util2.image || (util2.image = {}));
-  })(util || (util = {}));
+      return line;
+    });
+  }
   function updateStatus() {
     statusIndicator.innerText = `(${finishedCount}/${totalCount})`;
   }
   function downloadChapter(ncode, chapter) {
     return __async(this, null, function* () {
       const url = `https://${location.host}/txtdownload/dlstart/ncode/${ncode}/?no=${chapter}&hankaku=0&code=utf-8&kaigyo=lf`;
-      log(`fetch chapter: ${chapter}`);
+      log(`fetch chapter: ${chapter}: ${url}`);
       const resp = yield fetch(url);
       if (resp.status !== 200) {
         addMessage([`${resp.status} ${resp.statusText}`, url], "Fetch chapter failed");
@@ -177,38 +212,11 @@
       "---"
     ].join("\n");
   }
-  function getLatestPart(url) {
-    return url.split("/").filter((i) => i).slice(-1)[0];
-  }
-  function unescapeHTML(input) {
-    const doc = new DOMParser().parseFromString(input, "text/html");
-    return doc.documentElement.textContent;
-  }
-  function downloadFile(file) {
-    const anchor = document.createElement("a");
-    anchor.href = URL.createObjectURL(file);
-    anchor.download = `${getLatestPart(location.pathname)} ${document.title}.md`;
-    anchor.style["display"] = "none";
-    document.body.append(anchor);
-    anchor.click();
-    setTimeout(() => {
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(anchor.href);
-    }, 0);
-  }
-  function strip(str) {
-    return str.replace(/^\s+|\s+$/g, "");
-  }
-  function sleep(duration) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, duration);
-    });
-  }
   function downloadChapterChunk(ncode, chapters) {
     return __async(this, null, function* () {
       return Promise.all(chapters.map((i) => function() {
         return __async(this, null, function* () {
-          const ret = yield Promise.all((yield downloadChapter(ncode, i.chapter)).split("\n").map(strip).filter((i2) => i2.length > 0).map(unescapeHTML).map(util.image.convertOnDemand));
+          const ret = yield Promise.all((yield downloadChapter(ncode, i.chapter)).split("\n").map((i2) => i2.trim()).filter((i2) => i2.length > 0).map(chapterImageToMarkdown));
           ret.splice(0, 0, `# ${i.title}`);
           finishedCount += 1;
           updateStatus();
@@ -226,11 +234,11 @@
   function main(button) {
     return __async(this, null, function* () {
       clearMessage();
-      const ncode = getLatestPart(document.querySelector("#novel_footer > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)").href);
+      const ncode = urlLastPart(document.querySelector("#novel_footer > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)").href);
       log(`start downloading: ${ncode}`);
       const chapters = [];
       for (const i of document.querySelectorAll("dl.novel_sublist2 > dd:nth-child(1) > a:nth-child(1)")) {
-        chapters.push({ chapter: getLatestPart(i.href), title: i.innerText });
+        chapters.push({ chapter: urlLastPart(i.href), title: i.innerText });
       }
       finishedCount = 0;
       totalCount = chapters.length;

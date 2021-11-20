@@ -8,7 +8,7 @@
 // @include	 https://book.sfacg.com/Novel/*/*/*/
 // @include	 https://book.sfacg.com/vip/c/*/
 // @run-at   document-idle
-// @version  2+fedfc01e
+// @version   2021.11.20+33a65ce8
 // ==/UserScript==
 
 (() => {
@@ -33,32 +33,54 @@
     });
   };
 
-  // SF轻小说章节自动下载.ts
-  var __name__ = "SF轻小说章节自动下载";
-  function image2line(img, bgStyle) {
-    const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d");
-    if (bgStyle) {
-      ctx.fillStyle = bgStyle;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    ctx.drawImage(img, 0, 0);
-    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+  // utils/urlLastPart.ts
+  function urlLastPart(url) {
+    return url.split("/").filter((i) => i).slice(-1)[0];
   }
-  function strip(str) {
-    return str.replace(/^\s+|\s+$/g, "");
+
+  // utils/downloadFile.ts
+  function downloadFile(file, filename = `${urlLastPart(location.pathname)} ${document.title}.md`) {
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(file);
+    anchor.download = filename;
+    anchor.style["display"] = "none";
+    document.body.append(anchor);
+    anchor.click();
+    setTimeout(() => {
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(anchor.href);
+    }, 0);
   }
-  function getElementRootText(element) {
+
+  // utils/elementRootText.ts
+  function elementRootText(element) {
     let ret = "";
     for (const i of element.childNodes) {
       if (i.nodeType === i.TEXT_NODE) {
         ret += i.nodeValue;
       }
     }
-    return strip(ret);
+    return ret.trim();
   }
+
+  // utils/imageToMarkdown.ts
+  function imageToMarkdown(img, {
+    background
+  } = {}) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(img, 0, 0);
+    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+  }
+
+  // SF轻小说章节自动下载.ts
+  var __name__ = "SF轻小说章节自动下载";
   (function() {
     return __async(this, null, function* () {
       const chapter = document.querySelector("#article .article-title").textContent;
@@ -73,14 +95,14 @@
         console.log(`${__name__}: 等待图片加载`);
         yield i.decode();
         console.log(`${__name__}: 图片加载完毕`);
-        const line = image2line(i, "white");
+        const line = imageToMarkdown(i, { background: "white" });
         lines.push(line);
       }
       for (const i of document.querySelectorAll("#ChapterBody p")) {
-        const line = getElementRootText(i);
+        const line = elementRootText(i);
         lines.push(line);
         for (const img of i.querySelectorAll("img")) {
-          lines.push(image2line(img));
+          lines.push(imageToMarkdown(img));
         }
       }
       lines = lines.filter((i) => i.length > 0);
@@ -88,16 +110,7 @@
       const file = new Blob([lines.join("\n\n"), "\n"], {
         type: "text/markdown"
       });
-      const anchor = document.createElement("a");
-      anchor.href = URL.createObjectURL(file);
-      anchor.download = `${keywords.join(" ")}.md`;
-      anchor.style["display"] = "none";
-      document.body.append(anchor);
-      anchor.click();
-      setTimeout(() => {
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(anchor.href);
-      }, 0);
+      downloadFile(file, `${keywords.join(" ")}.md`);
     });
   })();
 })();

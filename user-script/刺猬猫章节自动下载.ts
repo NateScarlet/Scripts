@@ -7,42 +7,12 @@
 // @run-at   document-idle
 // ==/UserScript==
 
+import elementRootText from "./utils/elementRootText";
+import imageToMarkdown from "./utils/imageToMarkdown";
+import loadImage from "./utils/loadImage";
 import sleep from "./utils/sleep";
 
 const __name__ = "刺猬猫章节自动下载";
-
-function image2line(img: HTMLImageElement): string {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
-}
-
-function strip(str: string): string {
-  return str.replace(/^\s+|\s+$/g, "");
-}
-
-function getElementRootText(element: Element): string {
-  let ret = "";
-  for (const i of element.childNodes) {
-    if (i.nodeType === i.TEXT_NODE) {
-      ret += i.nodeValue;
-    }
-  }
-  return strip(ret);
-}
-
-async function imageUrl2line(url: string): Promise<string> {
-  return new Promise((resolve): void => {
-    const img = new Image();
-    img.onload = (): void => {
-      resolve(image2line(img));
-    };
-    img.src = url;
-  });
-}
 
 (async function (): Promise<void> {
   const chapter = document.querySelector("#J_BookCnt .chapter").firstChild
@@ -58,23 +28,25 @@ async function imageUrl2line(url: string): Promise<string> {
       const url: string = i.style["background-image"].match(
         /(?:url\(")?(.+)(?:"\))?/
       )[1];
-      const line = await imageUrl2line(url);
+      const line = imageToMarkdown(await loadImage(url));
       lines.push(line);
     }
     // 免费章节
     for (const i of document.querySelectorAll("#J_BookRead p.chapter")) {
-      const line = getElementRootText(i);
+      const line = elementRootText(i);
       lines.push(line);
       for (const img of i.querySelectorAll("img")) {
-        lines.push(image2line(img));
+        await img.decode();
+        lines.push(imageToMarkdown(img));
       }
     }
     // 作者说
     for (const i of document.querySelectorAll("p.author_say")) {
-      const line = getElementRootText(i);
+      const line = elementRootText(i);
       lines.push(`    ${line}`);
       for (const img of i.querySelectorAll("img")) {
-        lines.push(image2line(img));
+        await img.decode();
+        lines.push(imageToMarkdown(img));
       }
     }
     lines = lines.filter((i) => i.length > 0);

@@ -5,7 +5,7 @@
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
-// @version   2021.11.20+caf75223
+// @version   2021.11.20+6bca8a06
 // ==/UserScript==
 
 (() => {
@@ -30,6 +30,44 @@
     });
   };
 
+  // utils/elementRootText.ts
+  function elementRootText(element) {
+    let ret = "";
+    for (const i of element.childNodes) {
+      if (i.nodeType === i.TEXT_NODE) {
+        ret += i.nodeValue;
+      }
+    }
+    return ret.trim();
+  }
+
+  // utils/imageToMarkdown.ts
+  function imageToMarkdown(img, {
+    background
+  } = {}) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(img, 0, 0);
+    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+  }
+
+  // utils/loadImage.ts
+  function loadImage(url) {
+    return __async(this, null, function* () {
+      const img = new Image();
+      img.src = url;
+      img.alt = url;
+      yield img.decode();
+      return img;
+    });
+  }
+
   // utils/sleep.ts
   function sleep(duration) {
     return __async(this, null, function* () {
@@ -41,37 +79,6 @@
 
   // 刺猬猫章节自动下载.ts
   var __name__ = "刺猬猫章节自动下载";
-  function image2line(img) {
-    const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
-  }
-  function strip(str) {
-    return str.replace(/^\s+|\s+$/g, "");
-  }
-  function getElementRootText(element) {
-    let ret = "";
-    for (const i of element.childNodes) {
-      if (i.nodeType === i.TEXT_NODE) {
-        ret += i.nodeValue;
-      }
-    }
-    return strip(ret);
-  }
-  function imageUrl2line(url) {
-    return __async(this, null, function* () {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          resolve(image2line(img));
-        };
-        img.src = url;
-      });
-    });
-  }
   (function() {
     return __async(this, null, function* () {
       const chapter = document.querySelector("#J_BookCnt .chapter").firstChild.textContent;
@@ -81,21 +88,23 @@
         yield sleep(1e3);
         for (const i of document.querySelectorAll("#J_BookImage")) {
           const url = i.style["background-image"].match(/(?:url\(")?(.+)(?:"\))?/)[1];
-          const line = yield imageUrl2line(url);
+          const line = imageToMarkdown(yield loadImage(url));
           lines.push(line);
         }
         for (const i of document.querySelectorAll("#J_BookRead p.chapter")) {
-          const line = getElementRootText(i);
+          const line = elementRootText(i);
           lines.push(line);
           for (const img of i.querySelectorAll("img")) {
-            lines.push(image2line(img));
+            yield img.decode();
+            lines.push(imageToMarkdown(img));
           }
         }
         for (const i of document.querySelectorAll("p.author_say")) {
-          const line = getElementRootText(i);
+          const line = elementRootText(i);
           lines.push(`    ${line}`);
           for (const img of i.querySelectorAll("img")) {
-            lines.push(image2line(img));
+            yield img.decode();
+            lines.push(imageToMarkdown(img));
           }
         }
         lines = lines.filter((i) => i.length > 0);
