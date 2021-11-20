@@ -5,7 +5,7 @@
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
-// @version   v2021.11.20+caf75223
+// @version   2021.11.20+caf75223
 // ==/UserScript==
 
 (() => {

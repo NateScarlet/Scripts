@@ -21,7 +21,7 @@ function autoVersion(p: string): string {
     console.warn(`can not get commit date: ${p}`);
   }
 
-  return moment(date).format("vYYYY.MM.DD");
+  return moment(date).format("YYYY.MM.DD");
 }
 
 async function getMetadataBlock(p: string): Promise<string> {

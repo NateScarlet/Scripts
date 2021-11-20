@@ -6,7 +6,7 @@
 // @include	 /^https?://ncode\.syosetu\.com/\w+/$/
 // @include	 /^https?://novel18\.syosetu\.com/\w+/$/
 // @run-at   document-end
-// @version   v2021.05.24+9cec66da
+// @version   2021.11.20+9cec66da
 // ==/UserScript==
 
 (() => {
