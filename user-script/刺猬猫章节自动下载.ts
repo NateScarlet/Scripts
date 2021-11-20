@@ -62,9 +62,7 @@ async function imageUrl2line(url: string): Promise<string> {
       lines.push(line);
     }
     // 免费章节
-    for (const i of document.querySelectorAll(
-      "#J_BookRead p:not(.author_say)"
-    )) {
+    for (const i of document.querySelectorAll("#J_BookRead p.chapter")) {
       const line = getElementRootText(i);
       lines.push(line);
       for (const img of i.querySelectorAll("img")) {
@@ -84,7 +82,7 @@ async function imageUrl2line(url: string): Promise<string> {
 
   // 下载文件
   console.log(`${__name__}: 获取到 ${lines.length} 行`);
-  const file = new Blob([`# ${chapter}\n\n`, lines.join("\n\n")], {
+  const file = new Blob([`# ${chapter}\n\n`, lines.join("\n\n") + "\n"], {
     type: "text/markdown",
   });
   const anchor = document.createElement("a");

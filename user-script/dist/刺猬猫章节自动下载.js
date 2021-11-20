@@ -5,7 +5,7 @@
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
-// @version   v2021.11.20+8aa09dfb
+// @version   v2021.11.20+caf75223
 // ==/UserScript==
 
 (() => {
@@ -84,7 +84,7 @@
           const line = yield imageUrl2line(url);
           lines.push(line);
         }
-        for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
+        for (const i of document.querySelectorAll("#J_BookRead p.chapter")) {
           const line = getElementRootText(i);
           lines.push(line);
           for (const img of i.querySelectorAll("img")) {
@@ -103,7 +103,7 @@
       console.log(`${__name__}: 获取到 ${lines.length} 行`);
       const file = new Blob([`# ${chapter}
 
-`, lines.join("\n\n")], {
+`, lines.join("\n\n") + "\n"], {
         type: "text/markdown"
       });
       const anchor = document.createElement("a");
