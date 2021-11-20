@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2018",
+    "forceConsistentCasingInFileNames": true,
+    "types": ["@types/node"],
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

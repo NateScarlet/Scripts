@@ -4,14 +4,18 @@
   "description": "浏览器用户脚本(GreaseMonkey, TamperMonkey)",
   "devDependencies": {
     "@types/greasemonkey": "^4.0.2",
+    "@types/node": "^16.11.9",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "esbuild": "^0.13.14",
     "eslint": "^8.2.0",
     "eslint-config-prettier": "^8.3.0",
+    "moment": "^2.29.1",
+    "ts-node": "^10.4.0",
     "typescript": "3.9.10"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "make",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "NateScarlet",
