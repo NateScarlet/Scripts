@@ -2,13 +2,12 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     刺猬猫章节自动下载
 // @description 打开刺猬猫章节页面时自动保存文章到本地, 支持付费章节。
-// @version  10
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
 // ==/UserScript==
 
-export {};
+import sleep from "./utils/sleep";
 
 const __name__ = "刺猬猫章节自动下载";
 
@@ -45,38 +44,45 @@ async function imageUrl2line(url: string): Promise<string> {
   });
 }
 
-(async function(): Promise<void> {
+(async function (): Promise<void> {
   const chapter = document.querySelector("#J_BookCnt .chapter").firstChild
     .textContent;
   let lines = [];
 
-  // 收费章节
-  for (const i of document.querySelectorAll<HTMLElement>("#J_BookImage")) {
-    const url: string = i.style["background-image"].match(
-      /(?:url\(")?(.+)(?:"\))?/
-    )[1];
-    const line = await imageUrl2line(url);
-    lines.push(line);
-  }
-  // 免费章节
-  for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
-    const line = getElementRootText(i);
-    lines.push(line);
-    for (const img of i.querySelectorAll("img")) {
-      lines.push(image2line(img));
+  let startTime = Date.now();
+
+  while (lines.length === 0 && Date.now() - startTime < 60e3) {
+    await sleep(1e3);
+    // 收费章节
+    for (const i of document.querySelectorAll<HTMLElement>("#J_BookImage")) {
+      const url: string = i.style["background-image"].match(
+        /(?:url\(")?(.+)(?:"\))?/
+      )[1];
+      const line = await imageUrl2line(url);
+      lines.push(line);
     }
-  }
-  // 作者说
-  for (const i of document.querySelectorAll("p.author_say")) {
-    const line = getElementRootText(i);
-    lines.push(`    ${line}`);
-    for (const img of i.querySelectorAll("img")) {
-      lines.push(image2line(img));
+    // 免费章节
+    for (const i of document.querySelectorAll(
+      "#J_BookRead p:not(.author_say)"
+    )) {
+      const line = getElementRootText(i);
+      lines.push(line);
+      for (const img of i.querySelectorAll("img")) {
+        lines.push(image2line(img));
+      }
     }
+    // 作者说
+    for (const i of document.querySelectorAll("p.author_say")) {
+      const line = getElementRootText(i);
+      lines.push(`    ${line}`);
+      for (const img of i.querySelectorAll("img")) {
+        lines.push(image2line(img));
+      }
+    }
+    lines = lines.filter((i) => i.length > 0);
   }
 
   // 下载文件
-  lines = lines.filter(i => i.length > 0);
   console.log(`${__name__}: 获取到 ${lines.length} 行`);
   const file = new Blob([`# ${chapter}\n\n`, lines.join("\n\n")], {
     type: "text/markdown",

@@ -5,7 +5,7 @@
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
-// @version  10+e119fc12
+// @version   v2021.11.20+8aa09dfb
 // ==/UserScript==
 
 (() => {
@@ -29,6 +29,15 @@
       step((generator = generator.apply(__this, __arguments)).next());
     });
   };
+
+  // utils/sleep.ts
+  function sleep(duration) {
+    return __async(this, null, function* () {
+      return new Promise((resolve) => {
+        setTimeout(resolve, duration);
+      });
+    });
+  }
 
   // 刺猬猫章节自动下载.ts
   var __name__ = "刺猬猫章节自动下载";
@@ -67,26 +76,30 @@
     return __async(this, null, function* () {
       const chapter = document.querySelector("#J_BookCnt .chapter").firstChild.textContent;
       let lines = [];
-      for (const i of document.querySelectorAll("#J_BookImage")) {
-        const url = i.style["background-image"].match(/(?:url\(")?(.+)(?:"\))?/)[1];
-        const line = yield imageUrl2line(url);
-        lines.push(line);
-      }
-      for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
-        const line = getElementRootText(i);
-        lines.push(line);
-        for (const img of i.querySelectorAll("img")) {
-          lines.push(image2line(img));
+      let startTime = Date.now();
+      while (lines.length === 0 && Date.now() - startTime < 6e4) {
+        yield sleep(1e3);
+        for (const i of document.querySelectorAll("#J_BookImage")) {
+          const url = i.style["background-image"].match(/(?:url\(")?(.+)(?:"\))?/)[1];
+          const line = yield imageUrl2line(url);
+          lines.push(line);
         }
-      }
-      for (const i of document.querySelectorAll("p.author_say")) {
-        const line = getElementRootText(i);
-        lines.push(`    ${line}`);
-        for (const img of i.querySelectorAll("img")) {
-          lines.push(image2line(img));
+        for (const i of document.querySelectorAll("#J_BookRead p:not(.author_say)")) {
+          const line = getElementRootText(i);
+          lines.push(line);
+          for (const img of i.querySelectorAll("img")) {
+            lines.push(image2line(img));
+          }
         }
+        for (const i of document.querySelectorAll("p.author_say")) {
+          const line = getElementRootText(i);
+          lines.push(`    ${line}`);
+          for (const img of i.querySelectorAll("img")) {
+            lines.push(image2line(img));
+          }
+        }
+        lines = lines.filter((i) => i.length > 0);
       }
-      lines = lines.filter((i) => i.length > 0);
       console.log(`${__name__}: 获取到 ${lines.length} 行`);
       const file = new Blob([`# ${chapter}
 
