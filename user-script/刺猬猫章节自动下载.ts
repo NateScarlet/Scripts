@@ -2,7 +2,7 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     刺猬猫章节自动下载
 // @description 打开刺猬猫章节页面时自动保存文章到本地, 支持付费章节。
-// @version  9
+// @version  10
 // @grant    none
 // @include	 https://www.ciweimao.com/chapter/*
 // @run-at   document-idle
@@ -46,7 +46,7 @@ async function imageUrl2line(url: string): Promise<string> {
 }
 
 (async function(): Promise<void> {
-  const chapter = document.querySelector("#J_BookCnt h3.chapter").firstChild
+  const chapter = document.querySelector("#J_BookCnt .chapter").firstChild
     .textContent;
   let lines = [];
 
