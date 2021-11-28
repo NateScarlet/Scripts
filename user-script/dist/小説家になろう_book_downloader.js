@@ -55,8 +55,8 @@
     return `![${alt}](${canvas.toDataURL()} "${title}")`;
   }
 
-  // utils/imageToMarkdown.ts
-  function imageToMarkdown(img, {
+  // utils/imageToCanvas.ts
+  function imageToCanvas(img, {
     background
   } = {}) {
     const canvas = document.createElement("canvas");
@@ -68,7 +68,14 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.drawImage(img, 0, 0);
-    return canvasToMarkdown(canvas, img.alt, img.title);
+    return canvas;
+  }
+
+  // utils/imageToMarkdown.ts
+  function imageToMarkdown(img, {
+    background
+  } = {}) {
+    return canvasToMarkdown(imageToCanvas(img, { background }), img.alt, img.title);
   }
 
   // utils/loadImage.ts
