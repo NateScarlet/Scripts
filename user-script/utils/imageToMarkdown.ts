@@ -1,3 +1,5 @@
+import canvasToMarkdown from "./canvasToMarkdown";
+
 export default function imageToMarkdown(
   img: HTMLImageElement,
   {
@@ -15,5 +17,5 @@ export default function imageToMarkdown(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   ctx.drawImage(img, 0, 0);
-  return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+  return canvasToMarkdown(canvas, img.alt, img.title);
 }

@@ -41,6 +41,11 @@
     return ret.trim();
   }
 
+  // utils/canvasToMarkdown.ts
+  function canvasToMarkdown(canvas, alt = "", title = "") {
+    return `![${alt}](${canvas.toDataURL()} "${title}")`;
+  }
+
   // utils/imageToMarkdown.ts
   function imageToMarkdown(img, {
     background
@@ -54,7 +59,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.drawImage(img, 0, 0);
-    return `![${img.alt}](${canvas.toDataURL()} "${img.title}")`;
+    return canvasToMarkdown(canvas, img.alt, img.title);
   }
 
   // utils/loadImage.ts
