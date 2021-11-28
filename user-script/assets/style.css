@@ -664,6 +664,10 @@ video {
   }
 }
 
+.border {
+  border-width: 1px;
+}
+
 .text-center {
   text-align: center;
 }
@@ -700,9 +704,19 @@ video {
 }
 
 @media (min-width: 640px) {
+  .sm\:space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+  }
 }
 
 @media (min-width: 768px) {
+  .md\:space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+  }
 }
 
 @media (min-width: 1024px) {

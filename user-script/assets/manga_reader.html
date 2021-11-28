@@ -19,14 +19,16 @@
         href="<%- window.location.href %>"
         ><%- window.location.href %></a
       >
-      <% for (const image of images) { %>
-      <img
-        class="block m-auto"
-        src="<%- image.src %>"
-        alt="<%- image.alt %>"
-        title="<%- image.title %>"
-      />
-      <% } %>
+      <div class="sm:space-y-2 md:space-y-4">
+        <% for (const image of images) { %>
+        <img
+          class="block m-auto border"
+          src="<%- image.src %>"
+          alt="<%- image.alt %>"
+          title="<%- image.title %>"
+        />
+        <% } %>
+      </div>
     </div>
   </body>
 </html>
