@@ -1,4 +1,5 @@
 import canvasToMarkdown from "./canvasToMarkdown";
+import imageToCanvas from "./imageToCanvas";
 
 export default function imageToMarkdown(
   img: HTMLImageElement,
@@ -8,14 +9,9 @@ export default function imageToMarkdown(
     background?: string | CanvasGradient | CanvasPattern;
   } = {}
 ): string {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  if (background) {
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-  ctx.drawImage(img, 0, 0);
-  return canvasToMarkdown(canvas, img.alt, img.title);
+  return canvasToMarkdown(
+    imageToCanvas(img, { background }),
+    img.alt,
+    img.title
+  );
 }

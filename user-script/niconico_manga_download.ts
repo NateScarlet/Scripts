@@ -12,6 +12,8 @@ import sleep from "./utils/sleep";
 import mangaReaderHTML from "./assets/manga_reader.html";
 import { template } from "lodash-es";
 import style from "./assets/style.css";
+import loadImage from "./utils/loadImage";
+import imageToCanvas from "./utils/imageToCanvas";
 
 const __name__ = "NicoNico manga download";
 
@@ -23,7 +25,7 @@ const __name__ = "NicoNico manga download";
       ?.content ?? document.title;
 
   const startTime = Date.now();
-  const timeout = () => {
+  const loopNext = () => {
     if (Date.now() - startTime < 300e3) {
       return true;
     }
@@ -32,17 +34,21 @@ const __name__ = "NicoNico manga download";
   const pages = document.querySelectorAll<HTMLLIElement>("li.page");
   for (let index = 0; index < pages.length; index += 1) {
     const li = pages.item(index);
-    while (timeout()) {
-      const canvas = li.querySelector<HTMLCanvasElement>(
-        "canvas:not(.balloon)"
-      );
+    while (loopNext()) {
       const pageIndex = Number.parseInt(li.dataset.pageIndex, 10) || index;
-      if (!canvas) {
+      let canvas = li.querySelector<HTMLCanvasElement>("canvas:not(.balloon)");
+      const image = li.querySelector<HTMLImageElement>("img[data-image-id]");
+      if (image) {
+        canvas ??= imageToCanvas(image);
+        
+      }
+      if (!canvas || canvas.width === 1) {
         li.scrollIntoView();
         console.log(`${__name__}: waiting page: ${pageIndex}`);
         await sleep(1e3);
         continue;
       }
+
       images.push({
         src: canvas.toDataURL(),
         alt: li.id,
