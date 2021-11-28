@@ -68,6 +68,10 @@ async function getMetadataBlock(p: string): Promise<string> {
           target: "es2015",
           outfile,
           charset: "utf8",
+          loader: {
+            ".html": "text",
+            ".css": "text",
+          },
         });
         res.warnings.forEach((i) => {
           console.warn(i);
