@@ -9,6 +9,6 @@ scripts/.sentinel: *.ts
 	touch $@
 
 build:
-	NODE_ENV=production pnpx tailwindcss -o ./assets/style.css
+	NODE_ENV=production pnpx tailwindcss --minify -o ./assets/style.css
 	pnpx ts-node-script ./scripts/build.ts
 
