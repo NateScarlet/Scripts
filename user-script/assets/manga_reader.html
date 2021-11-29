@@ -4,30 +4,28 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%- title %></title>
-    <%= `
+    <title>{{ title }}</title>
     <style>
-      ${style}
+      {{{style}}}
     </style>
-    ` %>
   </head>
   <body>
     <div class="container m-auto">
-      <h1 class="text-lg font-bold text-center"><%- title %></h1>
+      <h1 class="text-lg font-bold text-center">{{ title }}</h1>
       <a
         class="block text-center text-blue-400 underline"
-        href="<%- window.location.href %>"
-        ><%- window.location.href %></a
+        href="{{ window.location.href }}"
+        >{{ window.location.href }}</a
       >
       <div class="sm:space-y-2 md:space-y-4">
-        <% for (const image of images) { %>
+        {{#images}}
         <img
           class="block m-auto border"
-          src="<%- image.src %>"
-          alt="<%- image.alt %>"
-          title="<%- image.title %>"
+          src="{{src}}"
+          alt="{{alt}}"
+          title="{{title}}"
         />
-        <% } %>
+        {{/images}}
       </div>
     </div>
   </body>

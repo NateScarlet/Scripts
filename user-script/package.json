@@ -25,6 +25,8 @@
   "license": "MIT",
   "dependencies": {
     "@types/lodash-es": "^4.17.5",
-    "lodash-es": "^4.17.21"
+    "@types/mustache": "^4.1.2",
+    "lodash-es": "^4.17.21",
+    "mustache": "^4.2.0"
   }
 }

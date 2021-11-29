@@ -10,9 +10,8 @@
 import downloadFile from "./utils/downloadFile";
 import sleep from "./utils/sleep";
 import mangaReaderHTML from "./assets/manga_reader.html";
-import { template } from "lodash-es";
+import mustache from "mustache";
 import style from "./assets/style.css";
-import loadImage from "./utils/loadImage";
 import imageToCanvas from "./utils/imageToCanvas";
 
 const __name__ = "NicoNico manga download";
@@ -40,7 +39,6 @@ const __name__ = "NicoNico manga download";
       const image = li.querySelector<HTMLImageElement>("img[data-image-id]");
       if (image) {
         canvas ??= imageToCanvas(image);
-        
       }
       if (!canvas || canvas.width === 1) {
         li.scrollIntoView();
@@ -60,7 +58,7 @@ const __name__ = "NicoNico manga download";
   pages.item(0)?.scrollIntoView();
 
   // render
-  const data = template(mangaReaderHTML)({
+  const data = mustache.render(mangaReaderHTML, {
     title,
     window,
     images,

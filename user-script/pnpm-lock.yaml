@@ -3,6 +3,7 @@ lockfileVersion: 5.3
 specifiers:
   '@types/greasemonkey': ^4.0.2
   '@types/lodash-es': ^4.17.5
+  '@types/mustache': ^4.1.2
   '@types/node': ^16.11.9
   '@typescript-eslint/eslint-plugin': ^5.4.0
   '@typescript-eslint/parser': ^5.4.0
@@ -12,6 +13,7 @@ specifiers:
   eslint-config-prettier: ^8.3.0
   lodash-es: ^4.17.21
   moment: ^2.29.1
+  mustache: ^4.2.0
   postcss: ^8.4.4
   tailwindcss: ^2.2.19
   ts-node: ^10.4.0
@@ -19,7 +21,9 @@ specifiers:
 
 dependencies:
   '@types/lodash-es': registry.npmmirror.com/@types/lodash-es/4.17.5
+  '@types/mustache': registry.npmmirror.com/@types/mustache/4.1.2
   lodash-es: registry.nlark.com/lodash-es/4.17.21
+  mustache: 4.2.0
 
 devDependencies:
   '@types/greasemonkey': registry.npmmirror.com/@types/greasemonkey/4.0.2
@@ -272,6 +276,11 @@ packages:
   /ms/2.1.2:
     resolution: {integrity: sha1-0J0fNXtEP0kzgqjrPM0YOHKuYAk=, tarball: ms/download/ms-2.1.2.tgz}
     dev: true
+
+  /mustache/4.2.0:
+    resolution: {integrity: sha1-5YkjJNYKEuycKnM1ntylKXK/b2Q=, tarball: mustache/download/mustache-4.2.0.tgz}
+    hasBin: true
+    dev: false
 
   /natural-compare/1.4.0:
     resolution: {integrity: sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=, tarball: natural-compare/download/natural-compare-1.4.0.tgz}
@@ -1263,6 +1272,12 @@ packages:
     resolution: {integrity: sha512-0fDwydE2clKe9MNfvXHBHF9WEahRuj+msTuQqOmAApNORFvhMYZKNGGJdCzuhheVjMps/ti0Ak/iJPACMaevvw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/lodash/download/@types/lodash-4.14.177.tgz}
     name: '@types/lodash'
     version: 4.14.177
+    dev: false
+
+  registry.npmmirror.com/@types/mustache/4.1.2:
+    resolution: {integrity: sha1-0OFYATyBZ0pbbYeAvD/iNOGATq8=, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/mustache/download/@types/mustache-4.1.2.tgz}
+    name: '@types/mustache'
+    version: 4.1.2
     dev: false
 
   registry.npmmirror.com/@types/node/16.11.9:
