@@ -2,34 +2,36 @@
 # -*- coding=UTF-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 
-import argparse
-from os import listdir
-from os.path import join, normpath, splitext, isfile, abspath, relpath
+from os.path import splitext, abspath
+import fileinput
 import sys
-import subprocess
+import logging
+from typing import Iterator, Text
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def escape_tex(text):
-    return text.replace('\\', '/').replace('_', '\\_')
+    return text.replace("\\", "/").replace("_", "\\_")
 
 
 def is_binary(filename):
-    """ 
+    """
     https://stackoverflow.com/a/11301631/8495483
     Return true if the given filename appears to be binary.
     File is considered to be binary if it contains a NULL byte.
     FIXME: This approach incorrectly reports UTF-16 as binary.
     """
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         for block in f:
-            if b'\0' in block:
+            if b"\0" in block:
                 return True
     return False
 
 
-def convert(folder, output):
-    with open(output, 'w', encoding='utf-8') as f:
-        f.write('''
+def convert(files: Iterator[Text]) -> Iterator[Text]:
+    yield (
+        """
 \\documentclass{article}
 
 \\usepackage{xeCJK}
@@ -74,6 +76,9 @@ def convert(folder, output):
 \\lstdefinestyle{.html}{
   language=HTML
 }
+\\lstdefinestyle{.go}{
+  language=Go
+}
 \\lstdefinestyle{.css}{
 }
 \\lstdefinestyle{.js}{
@@ -89,40 +94,37 @@ def convert(folder, output):
 \\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
 \\begin{document}
 \\tableofcontents
-''')
+"""
+    )
 
-        def _write_file(filename):
-            path_ = abspath(join(folder, filename).replace('\\', '/'))
-            if is_binary(path_):
-                print(f'# skip: {path_}')
-                return
+    def _write_file(filename):
+        path_ = abspath(filename).replace("\\", "/")
+        if is_binary(path_):
+            _LOGGER.info(f"# skip: {path_}")
+            return
 
-            ext = splitext(filename)[1]
+        ext = splitext(filename)[1]
 
-            f.write('\\newpage\n')
-            section = escape_tex(filename)
-            f.write('\\section{{{}}}\n'.format(section))
-            print(path_)
-            f.write(
-                '\\lstinputlisting[style={}]{{{}}}\n'.format(
-                    ext or '.txt', path_))
+        yield ("\\newpage\n")
+        section = escape_tex(filename)
+        yield ("\\section{{{}}}\n".format(section))
+        yield ("\\lstinputlisting[style={}]{{{}}}\n".format(ext or ".txt", path_))
 
-        files = subprocess.check_output(
-            ['git', 'ls-files'], cwd=folder, encoding='utf-8').splitlines()
-        for i in files:
-            _write_file(i)
+    for i in files:
+        _LOGGER.debug(i)
+        yield from _write_file(i)
 
-        f.write('\\end{document}\n')
+    yield ("\\end{document}\n")
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('folder')
-    parser.add_argument('output')
-    args = parser.parse_args()
+    logging.basicConfig(level="DEBUG")
 
-    convert(args.folder, args.output)
+    for line in convert(
+        (i for i in (i.strip("\n") for i in fileinput.FileInput()) if i),
+    ):
+        sys.stdout.write(line)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
