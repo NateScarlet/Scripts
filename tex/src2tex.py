@@ -15,19 +15,14 @@ def escape_tex(text):
     return text.replace("\\", "/").replace("_", "\\_")
 
 
-def is_binary(filename):
-    """
-    https://stackoverflow.com/a/11301631/8495483
-    Return true if the given filename appears to be binary.
-    File is considered to be binary if it contains a NULL byte.
-    FIXME: This approach incorrectly reports UTF-16 as binary.
-    """
-    with open(filename, "rb") as f:
-        for block in f:
-            if b"\0" in block:
-                return True
-    return False
-
+def is_utf8(filename):
+    try:
+        with open(filename, "r",encoding="utf8") as f:
+            for _ in f:
+              pass
+        return True
+    except UnicodeDecodeError:
+      return False
 
 def convert(files: Iterator[Text]) -> Iterator[Text]:
     yield (
@@ -99,7 +94,7 @@ def convert(files: Iterator[Text]) -> Iterator[Text]:
 
     def _write_file(filename):
         path_ = abspath(filename).replace("\\", "/")
-        if is_binary(path_):
+        if not is_utf8(path_):
             _LOGGER.info(f"# skip: {path_}")
             return
 
