@@ -14,11 +14,10 @@ function shell(command) {
 }
 
 function autoVersion(p: string): string {
-  let date = new Date();
-  try {
-    date = new Date(parseInt(shell(`git log -1 --pretty=%at ${p}`)) * 1e3);
-  } catch {
+  let date = new Date(parseInt(shell(`git log -1 --pretty=%at ${p}`)) * 1e3);
+  if (!Number.isFinite(date.getTime())) {
     console.warn(`can not get commit date: ${p}`);
+    date = new Date();
   }
 
   return moment(date).format("YYYY.MM.DD");
