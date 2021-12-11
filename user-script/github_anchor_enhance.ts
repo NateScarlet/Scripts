@@ -33,6 +33,7 @@ const reservedUsername = [
   "trending",
   "collections",
   "events",
+  "stars",
 ];
 
 const allBadgeClasses = [

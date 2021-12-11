@@ -5,7 +5,7 @@
 // @grant    GM.xmlHttpRequest
 // @run-at   document-end
 // @include	 *
-// @version  18+67f89173
+// @version  18+46ea19a7
 // ==/UserScript==
 
 (() => {
@@ -53,7 +53,8 @@
     "password_reset",
     "trending",
     "collections",
-    "events"
+    "events",
+    "stars"
   ];
   var allBadgeClasses = [
     "added-stars-badge",
