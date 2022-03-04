@@ -30,7 +30,7 @@ def prompt(html: Text) -> Dict[Any, Any]:
                 if ct in ("application/json", "text/json"):
                     o = json.loads(data)
                     ret.update(o)
-                elif ct in ("application/x-www-form-urlencoded"):
+                elif ct in ("application/x-www-form-urlencoded",):
                     o = urllib.parse.parse_qs(data, strict_parsing=True)
                     ret.update(o)
                 else:
