@@ -65,6 +65,7 @@ def prompt(html: Text) -> Dict[Any, Any]:
 
         def _read_body(self):
             data = self.rfile.read(int(self.headers["Content-Length"]))
+            self.rfile.close()
             return data
 
     with http.server.HTTPServer(("127.0.0.1", 0), _Handler) as httpd:
