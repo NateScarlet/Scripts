@@ -7,23 +7,27 @@ import threading
 import http.server
 import http
 from typing import Any, Dict, Text
+from uuid import uuid4
 import webbrowser
 import json
 import urllib.parse
 
 import logging
 _LOGGER = logging.getLogger(__name__)
+    
 
-
-def prompt(html: Text) -> Dict[Any, Any]:
+def prompt(html: Text, port: int = 8300, max_port: int= 65535) -> Dict[Any, Any]:
     ret: Dict[Any, Any] = {}
-
+    token = uuid4().hex
     class _Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
             # self.send_response(http.HTTPStatus.OK)
             self._render_html(http.HTTPStatus.OK, html)
 
         def do_POST(self):
+            if self.path != f"/?token={token}":
+                self._render_html(http.HTTPStatus.UNAUTHORIZED, "invalid token")
+                return
             data = self._read_body()
             ct = self.headers["Content-Type"]
             try:
@@ -68,9 +72,21 @@ def prompt(html: Text) -> Dict[Any, Any]:
             self.rfile.close()
             return data
 
-    with http.server.HTTPServer(("127.0.0.1", 0), _Handler) as httpd:
+    with http.server.ThreadingHTTPServer(("127.0.0.1", port), _Handler, bind_and_activate=False) as httpd:
+        httpd.allow_reuse_address = False
+        while True:
+            try:
+                httpd.server_bind()
+                break
+            except OSError:
+                if port == max_port:
+                    raise
+                port += 1
+                httpd.server_address = (httpd.server_address[0], port)
+
+        httpd.server_activate()
         host, port = httpd.server_address
-        url = f"http://{host}:{port}"
+        url = f"http://{host}:{port}?token={token}"
         _LOGGER.info(f"temporary http server at: {url}")
         webbrowser.open(url)
         httpd.serve_forever()
