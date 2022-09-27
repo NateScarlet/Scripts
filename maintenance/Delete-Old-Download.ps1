@@ -9,6 +9,4 @@ function Move-To-RecycleBin {
     InvokeVerb('Delete')
 }
 
-Get-ChildItem $folder | Where-Object { $_.LastAccessTime -lt (Get-Date).AddDays(-90) } | ForEach-Object { Move-To-RecycleBin $_ }
-
-
+Get-ChildItem $folder | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-90) } | ForEach-Object { Move-To-RecycleBin $_ }
