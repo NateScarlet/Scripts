@@ -5,23 +5,10 @@
 // @grant    none
 // @run-at   document-idle
 // @include	 *
-// @version   2022.12.02+ce456bb8
+// @version   2022.12.02+7debd933
 // ==/UserScript==
 
 (() => {
-  // utils/injectStyle.ts
-  function injectStyle(css) {
-    const style = document.createElement("style");
-    style.innerHTML = css;
-    document.head.appendChild(style);
-    const dispose = () => {
-      style.remove();
-    };
-    return {
-      dispose
-    };
-  }
-
   // remove_global_filter.ts
-  injectStyle("html { filter: none !important; }");
+  document.body.parentElement.style.filter = "none";
 })();

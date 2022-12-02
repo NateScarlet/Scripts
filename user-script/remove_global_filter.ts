@@ -7,8 +7,6 @@
 // @include	 *
 // ==/UserScript==
 
-import injectStyle from "./utils/injectStyle";
-
 export {};
 
-injectStyle("html { filter: none !important; }");
+document.body.parentElement.style.filter = "none";
