@@ -5,10 +5,10 @@ DIST_FILES = $(patsubst %.ts,dist/%.js,$(wildcard *.ts))
 default: build
 
 scripts/.sentinel: *.ts
-	cd scripts && pnpx tsc
+	cd scripts && pnpm exec tsc
 	touch $@
 
 build:
-	NODE_ENV=production pnpx tailwindcss --minify -o ./assets/style.css
-	pnpx ts-node-script ./scripts/build.ts
+	NODE_ENV=production pnpm exec tailwindcss --minify -o ./assets/style.css
+	pnpm exec ts-node-script ./scripts/build.ts
 
