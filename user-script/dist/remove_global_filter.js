@@ -5,14 +5,23 @@
 // @grant    none
 // @run-at   document-idle
 // @include	 *
-// @version   2022.12.02+e58f6c32
+// @version   2022.12.02+ce456bb8
 // ==/UserScript==
 
 (() => {
+  // utils/injectStyle.ts
+  function injectStyle(css) {
+    const style = document.createElement("style");
+    style.innerHTML = css;
+    document.head.appendChild(style);
+    const dispose = () => {
+      style.remove();
+    };
+    return {
+      dispose
+    };
+  }
+
   // remove_global_filter.ts
-  (function() {
-    const style = new CSSStyleSheet();
-    style.replaceSync("html { filter: none !important; }");
-    document.adoptedStyleSheets.push(style);
-  })();
+  injectStyle("html { filter: none !important; }");
 })();

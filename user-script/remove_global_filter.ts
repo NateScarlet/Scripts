@@ -7,19 +7,8 @@
 // @include	 *
 // ==/UserScript==
 
+import injectStyle from "./utils/injectStyle";
+
 export {};
 
-declare global {
-  interface CSSStyleSheet {
-    replaceSync(body: string): string;
-  }
-  interface Document {
-    readonly adoptedStyleSheets: CSSStyleSheet[];
-  }
-}
-
-(function () {
-  const style = new CSSStyleSheet();
-  style.replaceSync("html { filter: none !important; }");
-  document.adoptedStyleSheets.push(style);
-})();
+injectStyle("html { filter: none !important; }");
