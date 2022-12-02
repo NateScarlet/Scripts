@@ -3,9 +3,9 @@
 // @name     Remove Global Filter 移除全局滤镜
 // @description remove global filter (e.g. grayscale) 移除全局滤镜（例如黑白效果）
 // @grant    none
-// @run-at   document-end
+// @run-at   document-idle
 // @include	 *
-// @version   2022.12.02+af3e7da6
+// @version   2022.12.02+e58f6c32
 // ==/UserScript==
 
 (() => {
