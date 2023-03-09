@@ -65,7 +65,7 @@ return
 
 ~F2::
 ; https://www.autohotkey.com/docs/commands/SoundSet.htm#Soundcard
-mic_device:=9
+mic_device:=11
 SoundGet,mic_mute,,Mute,%mic_device%
 if ErrorLevel 
 {
