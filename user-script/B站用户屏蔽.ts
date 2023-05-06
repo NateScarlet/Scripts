@@ -2,7 +2,7 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     B站用户屏蔽
 // @description 避免看到指定用户上传的视频，在用户个人主页会多出一个屏蔽按钮。
-// @version  2
+// @version  3
 // @grant    GM.getValue
 // @grant    GM.setValue
 // @include	 https://search.bilibili.com/*
@@ -16,6 +16,7 @@
 import obtainHTMLElement from "./utils/obtainHTMLElement";
 import toggleArrayItem from "./utils/toggleArrayItem";
 import useGMValue from "./utils/useGMValue";
+import usePolling from "./utils/usePolling";
 
 export {};
 
@@ -25,10 +26,7 @@ const blockedUserIDs = useGMValue(
 );
 
 function renderBlockButton(userID: string) {
-  const { isLoading } = blockedUserIDs;
-
   const isBlocked = blockedUserIDs.value.includes(userID);
-
   const el = obtainHTMLElement(
     "button",
     "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
@@ -38,13 +36,7 @@ function renderBlockButton(userID: string) {
   el.style.width = "auto";
   el.style.minWidth = "76px";
   el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-  if (isLoading) {
-    el.textContent = "加载屏蔽列表...";
-  }
-  el.onclick = () => {
-    if (isLoading) {
-      return;
-    }
+  el.onclick = async () => {
     const arr = blockedUserIDs.value.slice();
     toggleArrayItem(arr, userID);
     blockedUserIDs.value = arr;
@@ -89,10 +81,13 @@ function main() {
       return;
     }
     const userID = match[1];
-    renderBlockButton(userID);
-    setInterval(() => renderBlockButton(userID), 200);
+    usePolling({
+      update: () => renderBlockButton(userID),
+    });
   } else {
-    setInterval(() => renderVideoCard(), 200);
+    usePolling({
+      update: () => renderVideoCard(),
+    });
   }
 }
 

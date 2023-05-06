@@ -1,15 +1,21 @@
+import usePolling from "./usePolling";
+
 export default function useGMValue<T>(
   key: string,
   defaultValue: T
 ): {
   value: T;
   readonly isLoading: boolean;
+  dispose(): void;
 } {
   const state = {
     value: defaultValue,
     loadingCount: 0,
   };
   async function read() {
+    if (state.loadingCount > 0) {
+      return;
+    }
     state.loadingCount += 1;
     try {
       const value = await GM.getValue(key);
@@ -37,6 +43,10 @@ export default function useGMValue<T>(
     }
   }
   read();
+  const polling = usePolling({
+    update: () => read(),
+    scheduleNext: (update) => setTimeout(update, 500),
+  });
 
   return {
     get value() {
@@ -49,5 +59,6 @@ export default function useGMValue<T>(
     get isLoading() {
       return state.loadingCount > 0;
     },
+    dispose: polling.dispose,
   };
 }
