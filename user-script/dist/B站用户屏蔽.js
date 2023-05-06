@@ -8,7 +8,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version  1+439f11e7
+// @version  2+1a789d8d
 // ==/UserScript==
 
 (() => {
@@ -154,10 +154,11 @@
       }
       const userID = match[1];
       const isBlocked = blockedUserIDs.value.includes(userID);
+      const container = i.parentElement.classList.contains("video-list-item") ? i.parentElement : i;
       if (isBlocked) {
-        i.setAttribute("hidden", "");
+        container.setAttribute("hidden", "");
       } else {
-        i.removeAttribute("hidden");
+        container.removeAttribute("hidden");
       }
     });
   }
