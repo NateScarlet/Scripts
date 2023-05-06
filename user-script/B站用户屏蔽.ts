@@ -11,7 +11,7 @@
 // @run-at   document-idle
 // ==/UserScript==
 
-// spell-checker: word bili bilibili
+// spell-checker: word bili bilibili upname
 
 import obtainHTMLElement from "./utils/obtainHTMLElement";
 import toggleArrayItem from "./utils/toggleArrayItem";
@@ -47,21 +47,28 @@ function renderBlockButton(userID: string) {
   parent.prepend(el);
 }
 
+function parseUserURL(rawURL: string | undefined): string | undefined {
+  if (!rawURL) {
+    return;
+  }
+  const match = /^\/(\d+)\/?$/.exec(
+    new URL(rawURL, window.location.href).pathname
+  );
+  if (!match) {
+    return;
+  }
+  return match[1];
+}
+
 function renderVideoCard() {
   document.querySelectorAll(".bili-video-card").forEach((i) => {
     const rawURL = i
       .querySelector("a.bili-video-card__info--owner")
       ?.getAttribute("href");
-    if (!rawURL) {
+    const userID = parseUserURL(rawURL);
+    if (!userID) {
       return;
     }
-    const match = /^\/(\d+)\/?$/.exec(
-      new URL(rawURL, window.location.href).pathname
-    );
-    if (!match) {
-      return;
-    }
-    const userID = match[1];
     const isBlocked = blockedUserIDs.value.includes(userID);
     const container = i.parentElement.classList.contains("video-list-item")
       ? i.parentElement
@@ -72,15 +79,32 @@ function renderVideoCard() {
       container.removeAttribute("hidden");
     }
   });
+
+  document.querySelectorAll(".video-page-card-small").forEach((i) => {
+    const rawURL = i.querySelector(".upname a")?.getAttribute("href");
+    if (!rawURL) {
+      return;
+    }
+    const userID = parseUserURL(rawURL);
+    if (!userID) {
+      return;
+    }
+    const isBlocked = blockedUserIDs.value.includes(userID);
+    const container = i;
+    if (isBlocked) {
+      container.setAttribute("hidden", "");
+    } else {
+      container.removeAttribute("hidden");
+    }
+  });
 }
 
 function main() {
   if (window.location.host === "space.bilibili.com") {
-    const match = /^\/(\d+)\/?$/.exec(window.location.pathname);
-    if (!match) {
+    const userID = parseUserURL(window.location.href);
+    if (!userID) {
       return;
     }
-    const userID = match[1];
     usePolling({
       update: () => renderBlockButton(userID),
     });
