@@ -8,7 +8,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version  3+753a485d
+// @version  4+3a1c2c0a
 // ==/UserScript==
 
 (() => {
@@ -151,11 +151,8 @@
   var blockedUserIDs = useGMValue("blockedUserIDs@7ced1613-89d7-4754-8989-2ad0d7cfa9db", []);
   function renderBlockButton(userID) {
     const isBlocked = blockedUserIDs.value.includes(userID);
-    const el = obtainHTMLElement("button", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
-    el.setAttribute("type", "button");
+    const el = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
     el.classList.add("h-f-btn");
-    el.style.width = "auto";
-    el.style.minWidth = "76px";
     el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
     el.onclick = () => __async(this, null, function* () {
       const arr = blockedUserIDs.value.slice();
@@ -170,7 +167,11 @@
     if (!rawURL) {
       return;
     }
-    const match = /^\/(\d+)\/?$/.exec(new URL(rawURL, window.location.href).pathname);
+    const url = new URL(rawURL, window.location.href);
+    if (url.host !== "space.bilibili.com") {
+      return;
+    }
+    const match = /^\/(\d+)\/?/.exec(url.pathname);
     if (!match) {
       return;
     }
