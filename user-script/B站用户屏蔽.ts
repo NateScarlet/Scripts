@@ -55,7 +55,7 @@ function renderVideoCard() {
     if (!rawURL) {
       return;
     }
-    const match = /^\/(\d+)$/.exec(
+    const match = /^\/(\d+)\/?$/.exec(
       new URL(rawURL, window.location.href).pathname
     );
     if (!match) {
@@ -76,7 +76,7 @@ function renderVideoCard() {
 
 function main() {
   if (window.location.host === "space.bilibili.com") {
-    const match = /^\/(\d+)$/.exec(window.location.pathname);
+    const match = /^\/(\d+)\/?$/.exec(window.location.pathname);
     if (!match) {
       return;
     }
