@@ -2,7 +2,7 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     B站用户屏蔽
 // @description 避免看到指定用户上传的视频，在用户个人主页会多出一个屏蔽按钮。
-// @version  1
+// @version  2
 // @grant    GM.getValue
 // @grant    GM.setValue
 // @include	 https://search.bilibili.com/*
@@ -71,10 +71,13 @@ function renderVideoCard() {
     }
     const userID = match[1];
     const isBlocked = blockedUserIDs.value.includes(userID);
+    const container = i.parentElement.classList.contains("video-list-item")
+      ? i.parentElement
+      : i;
     if (isBlocked) {
-      i.setAttribute("hidden", "");
+      container.setAttribute("hidden", "");
     } else {
-      i.removeAttribute("hidden");
+      container.removeAttribute("hidden");
     }
   });
 }
