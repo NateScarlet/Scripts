@@ -8,7 +8,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version  3+145ae911
+// @version  3+753a485d
 // ==/UserScript==
 
 (() => {
@@ -166,20 +166,44 @@
     const parent = document.querySelector(".h-action") || document.body;
     parent.prepend(el);
   }
+  function parseUserURL(rawURL) {
+    if (!rawURL) {
+      return;
+    }
+    const match = /^\/(\d+)\/?$/.exec(new URL(rawURL, window.location.href).pathname);
+    if (!match) {
+      return;
+    }
+    return match[1];
+  }
   function renderVideoCard() {
     document.querySelectorAll(".bili-video-card").forEach((i) => {
       var _a;
       const rawURL = (_a = i.querySelector("a.bili-video-card__info--owner")) == null ? void 0 : _a.getAttribute("href");
+      const userID = parseUserURL(rawURL);
+      if (!userID) {
+        return;
+      }
+      const isBlocked = blockedUserIDs.value.includes(userID);
+      const container = i.parentElement.classList.contains("video-list-item") ? i.parentElement : i;
+      if (isBlocked) {
+        container.setAttribute("hidden", "");
+      } else {
+        container.removeAttribute("hidden");
+      }
+    });
+    document.querySelectorAll(".video-page-card-small").forEach((i) => {
+      var _a;
+      const rawURL = (_a = i.querySelector(".upname a")) == null ? void 0 : _a.getAttribute("href");
       if (!rawURL) {
         return;
       }
-      const match = /^\/(\d+)$/.exec(new URL(rawURL, window.location.href).pathname);
-      if (!match) {
+      const userID = parseUserURL(rawURL);
+      if (!userID) {
         return;
       }
-      const userID = match[1];
       const isBlocked = blockedUserIDs.value.includes(userID);
-      const container = i.parentElement.classList.contains("video-list-item") ? i.parentElement : i;
+      const container = i;
       if (isBlocked) {
         container.setAttribute("hidden", "");
       } else {
@@ -189,11 +213,10 @@
   }
   function main() {
     if (window.location.host === "space.bilibili.com") {
-      const match = /^\/(\d+)$/.exec(window.location.pathname);
-      if (!match) {
+      const userID = parseUserURL(window.location.href);
+      if (!userID) {
         return;
       }
-      const userID = match[1];
       usePolling({
         update: () => renderBlockButton(userID)
       });
