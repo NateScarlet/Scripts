@@ -8,7 +8,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version  2+1a789d8d
+// @version  3+145ae911
 // ==/UserScript==
 
 (() => {
@@ -63,6 +63,30 @@
     }
   }
 
+  // utils/usePolling.ts
+  function usePolling({
+    update,
+    scheduleNext = requestAnimationFrame
+  }) {
+    let isCancelled = false;
+    function run() {
+      return __async(this, null, function* () {
+        if (isCancelled) {
+          return;
+        }
+        yield update();
+        scheduleNext(run);
+      });
+    }
+    function dispose() {
+      isCancelled = true;
+    }
+    run();
+    return {
+      dispose
+    };
+  }
+
   // utils/useGMValue.ts
   function useGMValue(key, defaultValue) {
     const state = {
@@ -71,6 +95,9 @@
     };
     function read() {
       return __async(this, null, function* () {
+        if (state.loadingCount > 0) {
+          return;
+        }
         state.loadingCount += 1;
         try {
           const value = yield GM.getValue(key);
@@ -101,6 +128,10 @@
       });
     }
     read();
+    const polling = usePolling({
+      update: () => read(),
+      scheduleNext: (update) => setTimeout(update, 500)
+    });
     return {
       get value() {
         return state.value;
@@ -111,14 +142,14 @@
       },
       get isLoading() {
         return state.loadingCount > 0;
-      }
+      },
+      dispose: polling.dispose
     };
   }
 
   // B站用户屏蔽.ts
   var blockedUserIDs = useGMValue("blockedUserIDs@7ced1613-89d7-4754-8989-2ad0d7cfa9db", []);
   function renderBlockButton(userID) {
-    const { isLoading } = blockedUserIDs;
     const isBlocked = blockedUserIDs.value.includes(userID);
     const el = obtainHTMLElement("button", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
     el.setAttribute("type", "button");
@@ -126,18 +157,12 @@
     el.style.width = "auto";
     el.style.minWidth = "76px";
     el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-    if (isLoading) {
-      el.textContent = "加载屏蔽列表...";
-    }
-    el.onclick = () => {
-      if (isLoading) {
-        return;
-      }
+    el.onclick = () => __async(this, null, function* () {
       const arr = blockedUserIDs.value.slice();
       toggleArrayItem(arr, userID);
       blockedUserIDs.value = arr;
       renderBlockButton(userID);
-    };
+    });
     const parent = document.querySelector(".h-action") || document.body;
     parent.prepend(el);
   }
@@ -169,10 +194,13 @@
         return;
       }
       const userID = match[1];
-      renderBlockButton(userID);
-      setInterval(() => renderBlockButton(userID), 200);
+      usePolling({
+        update: () => renderBlockButton(userID)
+      });
     } else {
-      setInterval(() => renderVideoCard(), 200);
+      usePolling({
+        update: () => renderVideoCard()
+      });
     }
   }
   main();
