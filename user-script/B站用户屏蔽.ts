@@ -2,9 +2,9 @@
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     B站用户屏蔽
 // @description 避免看到指定用户上传的视频，在用户个人主页会多出一个屏蔽按钮。
-// @version  4
 // @grant    GM.getValue
 // @grant    GM.setValue
+// @grant    GM.deleteValue
 // @include	 https://search.bilibili.com/*
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
@@ -14,26 +14,40 @@
 // spell-checker: word bili bilibili upname
 
 import obtainHTMLElement from "./utils/obtainHTMLElement";
-import toggleArrayItem from "./utils/toggleArrayItem";
 import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
 
 export {};
 
-const blockedUserIDs = useGMValue(
-  "blockedUserIDs@7ced1613-89d7-4754-8989-2ad0d7cfa9db",
-  [] as string[]
+const blockedUsers = useGMValue(
+  "blockedUsers@206ceed9-b514-4902-ad70-aa621fed5cd4",
+  {} as Record<string, boolean | undefined>
 );
 
+async function migrateV1() {
+  const key = "blockedUserIDs@7ced1613-89d7-4754-8989-2ad0d7cfa9db";
+  const oldValue = await GM.getValue(key);
+  if (!oldValue) {
+    return;
+  }
+  const newValue = { ...blockedUsers.value };
+  (JSON.parse(String(oldValue)) as string[]).forEach((i) => {
+    newValue[i] = true;
+  });
+  blockedUsers.value = newValue;
+  await GM.deleteValue(key);
+}
+
 function renderBlockButton(userID: string) {
-  const isBlocked = blockedUserIDs.value.includes(userID);
+  const isBlocked = blockedUsers.value[userID];
   const el = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
   el.classList.add("h-f-btn");
   el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
   el.onclick = async () => {
-    const arr = blockedUserIDs.value.slice();
-    toggleArrayItem(arr, userID);
-    blockedUserIDs.value = arr;
+    blockedUsers.value = {
+      ...blockedUsers.value,
+      [userID]: !isBlocked || undefined,
+    };
     renderBlockButton(userID);
   };
 
@@ -65,7 +79,7 @@ function renderVideoCard() {
     if (!userID) {
       return;
     }
-    const isBlocked = blockedUserIDs.value.includes(userID);
+    const isBlocked = blockedUsers.value[userID];
     const container = i.parentElement.classList.contains("video-list-item")
       ? i.parentElement
       : i;
@@ -85,7 +99,7 @@ function renderVideoCard() {
     if (!userID) {
       return;
     }
-    const isBlocked = blockedUserIDs.value.includes(userID);
+    const isBlocked = blockedUsers.value[userID];
     const container = i;
     if (isBlocked) {
       container.setAttribute("hidden", "");
@@ -95,7 +109,8 @@ function renderVideoCard() {
   });
 }
 
-function main() {
+async function main() {
+  await migrateV1();
   if (window.location.host === "space.bilibili.com") {
     const userID = parseUserURL(window.location.href);
     if (!userID) {
