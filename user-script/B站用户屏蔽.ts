@@ -17,8 +17,8 @@ import compare from "./utils/compare";
 import obtainHTMLElement from "./utils/obtainHTMLElement";
 import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
-import { render, html, nothing } from "lit-html";
-
+import { render, html } from "lit-html";
+import { mdiAccountCancel } from "@mdi/js";
 export {};
 
 const blockedUsers = useGMValue(
@@ -65,22 +65,9 @@ function renderActions(userID: string) {
     }
   );
   const isBlocked = !!blockedUsers.value[userID];
-  const count = Object.keys(blockedUsers.value).length;
 
   render(
     html`
-      ${count > 0
-        ? html`<a
-            class="h-f-btn"
-            target="_blank"
-            style="width: auto; min-width: 76px; padding-left: 20px; padding-right: 20px;"
-            @click=${(e: Event) => {
-              e.stopPropagation();
-              const el = e.target as HTMLAnchorElement;
-              el.href = blockedUsersURL();
-            }}
-          >屏蔽列表(${count})</a>`
-        : nothing}
       <span
         class="h-f-btn"
         @click=${(e: MouseEvent) => {
@@ -100,6 +87,52 @@ function renderActions(userID: string) {
         ${isBlocked ? "取消屏蔽" : "屏蔽"}
       </span>
     `,
+    container
+  );
+}
+
+function renderNav() {
+  const parent = document.querySelector(".right-entry");
+  if (!parent) {
+    return;
+  }
+  const container = obtainHTMLElement(
+    "li",
+    "db7a644d-1c6c-4078-a9dc-991b15b68014",
+    {
+      onCreate: (el) => {
+        el.classList.add("right-entry-item");
+        el.style.display = "inline";
+        parent.prepend(parent.firstChild, el);
+      },
+    }
+  );
+  const count = Object.keys(blockedUsers.value).length;
+  const hidden = count === 0;
+  if (container.hidden !== hidden) {
+    container.hidden = hidden;
+  }
+
+  render(
+    html`
+<button
+  type="button"
+  class="right-entry__outside" 
+  @click=${(e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(blockedUsersURL(), "_blank");
+  }}
+>
+  <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="right-entry-icon">
+    <path fill-rule="evenodd" clip-rule="evenodd" d=${mdiAccountCancel} fill="currentColor">
+  </svg>
+  <span class="right-entry-text">
+    <span>屏蔽</span>
+    <span>(${count})</span>
+  </span>
+</button>
+`,
     container
   );
 }
@@ -230,11 +263,17 @@ async function main() {
       return;
     }
     usePolling({
-      update: () => renderActions(userID),
+      update: () => {
+        renderNav();
+        renderActions(userID);
+      },
     });
   } else {
     usePolling({
-      update: () => renderVideoCard(),
+      update: () => {
+        renderNav();
+        renderVideoCard();
+      },
     });
   }
 }

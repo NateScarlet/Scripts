@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+ce43a2a2
+// @version   2023.05.07+989cd81a
 // ==/UserScript==
 
 (() => {
@@ -445,6 +445,9 @@
     return l2._$AI(t2), l2;
   };
 
+  // node_modules/.pnpm/@mdi+js@7.2.96/node_modules/@mdi/js/mdi.js
+  var mdiAccountCancel = "M10 4A4 4 0 0 0 6 8A4 4 0 0 0 10 12A4 4 0 0 0 14 8A4 4 0 0 0 10 4M17.5 13C15 13 13 15 13 17.5C13 20 15 22 17.5 22C20 22 22 20 22 17.5C22 15 20 13 17.5 13M10 14C5.58 14 2 15.79 2 18V20H11.5A6.5 6.5 0 0 1 11 17.5A6.5 6.5 0 0 1 11.95 14.14C11.32 14.06 10.68 14 10 14M17.5 14.5C19.16 14.5 20.5 15.84 20.5 17.5C20.5 18.06 20.35 18.58 20.08 19L16 14.92C16.42 14.65 16.94 14.5 17.5 14.5M14.92 16L19 20.08C18.58 20.35 18.06 20.5 17.5 20.5C15.84 20.5 14.5 19.16 14.5 17.5C14.5 16.94 14.65 16.42 14.92 16Z";
+
   // B站用户屏蔽.ts
   var blockedUsers = useGMValue("blockedUsers@206ceed9-b514-4902-ad70-aa621fed5cd4", {});
   function migrateV1() {
@@ -474,18 +477,7 @@
       }
     });
     const isBlocked = !!blockedUsers.value[userID];
-    const count = Object.keys(blockedUsers.value).length;
     B(x`
-      ${count > 0 ? x`<a
-            class="h-f-btn"
-            target="_blank"
-            style="width: auto; min-width: 76px; padding-left: 20px; padding-right: 20px;"
-            @click=${(e2) => {
-      e2.stopPropagation();
-      const el = e2.target;
-      el.href = blockedUsersURL();
-    }}
-          >屏蔽列表(${count})</a>` : A}
       <span
         class="h-f-btn"
         @click=${(e2) => {
@@ -503,6 +495,43 @@
         ${isBlocked ? "取消屏蔽" : "屏蔽"}
       </span>
     `, container);
+  }
+  function renderNav() {
+    const parent = document.querySelector(".right-entry");
+    if (!parent) {
+      return;
+    }
+    const container = obtainHTMLElement("li", "db7a644d-1c6c-4078-a9dc-991b15b68014", {
+      onCreate: (el) => {
+        el.classList.add("right-entry-item");
+        el.style.display = "inline";
+        parent.prepend(parent.firstChild, el);
+      }
+    });
+    const count = Object.keys(blockedUsers.value).length;
+    const hidden = count === 0;
+    if (container.hidden !== hidden) {
+      container.hidden = hidden;
+    }
+    B(x`
+<button
+  type="button"
+  class="right-entry__outside" 
+  @click=${(e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+      window.open(blockedUsersURL(), "_blank");
+    }}
+>
+  <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="right-entry-icon">
+    <path fill-rule="evenodd" clip-rule="evenodd" d=${mdiAccountCancel} fill="currentColor">
+  </svg>
+  <span class="right-entry-text">
+    <span>屏蔽</span>
+    <span>(${count})</span>
+  </span>
+</button>
+`, container);
   }
   function parseUserURL(rawURL) {
     if (!rawURL) {
@@ -618,11 +647,17 @@
           return;
         }
         usePolling({
-          update: () => renderActions(userID)
+          update: () => {
+            renderNav();
+            renderActions(userID);
+          }
         });
       } else {
         usePolling({
-          update: () => renderVideoCard()
+          update: () => {
+            renderNav();
+            renderVideoCard();
+          }
         });
       }
     });
