@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+61c083d6
+// @version   2023.05.07+cae2df27
 // ==/UserScript==
 
 (() => {
@@ -66,10 +66,16 @@
 
   // utils/obtainHTMLElement.ts
   function obtainHTMLElement(tag, id) {
-    var _a;
-    const el = (_a = document.getElementById(id)) != null ? _a : document.createElement(tag);
+    const match = document.getElementById(id);
+    if (match) {
+      return { el: match, isCreated: false };
+    }
+    const el = document.createElement(tag);
     el.id = id;
-    return el;
+    return {
+      el,
+      isCreated: true
+    };
   }
 
   // utils/usePolling.ts
@@ -173,34 +179,47 @@
       yield GM.deleteValue(key);
     });
   }
-  function renderButtons(userID) {
-    const isBlocked = blockedUsers.value[userID];
-    const blockButton = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
-    blockButton.classList.add("h-f-btn");
-    blockButton.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-    blockButton.onclick = (e) => __async(this, null, function* () {
-      var _a, _b;
-      e.stopPropagation();
-      blockedUsers.value = __spreadProps(__spreadValues({}, blockedUsers.value), {
-        [userID]: !isBlocked ? {
-          name: (_b = (_a = document.getElementById("h-name")) == null ? void 0 : _a.innerText) != null ? _b : "",
-          blockedAt: Date.now()
-        } : void 0
-      });
-      renderButtons(userID);
-    });
-    const blockedCount = Object.keys(blockedUsers.value).length;
-    const listAnchor = obtainHTMLElement("a", "effcad96-74c4-489e-8730-3fbc895e0df4");
-    listAnchor.classList.add("h-f-btn");
-    listAnchor.textContent = `已屏蔽 ${blockedCount}`;
-    listAnchor.hidden = blockedCount === 0;
-    listAnchor.target = "_blank";
-    listAnchor.onclick = (e) => __async(this, null, function* () {
-      e.stopPropagation();
-      listAnchor.href = blockedUsersURL();
-    });
-    const parent = document.querySelector(".h-action") || document.body;
-    parent.prepend(listAnchor, blockButton);
+  function renderActions(userID) {
+    const parent = document.querySelector(".h-action");
+    if (!parent) {
+      return;
+    }
+    {
+      const isBlocked = !!blockedUsers.value[userID];
+      const { el, isCreated } = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
+      el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
+      if (isCreated) {
+        el.classList.add("h-f-btn");
+        el.addEventListener("click", (e) => {
+          var _a, _b;
+          e.stopPropagation();
+          const isBlocked2 = !!blockedUsers.value[userID];
+          blockedUsers.value = __spreadProps(__spreadValues({}, blockedUsers.value), {
+            [userID]: !isBlocked2 ? {
+              name: (_b = (_a = document.getElementById("h-name")) == null ? void 0 : _a.innerText) != null ? _b : "",
+              blockedAt: Date.now()
+            } : void 0
+          });
+          renderActions(userID);
+        });
+        parent.prepend(el);
+      }
+    }
+    {
+      const count = Object.keys(blockedUsers.value).length;
+      const { el, isCreated } = obtainHTMLElement("a", "effcad96-74c4-489e-8730-3fbc895e0df4");
+      el.textContent = `已屏蔽 ${count}`;
+      el.hidden = count === 0;
+      if (isCreated) {
+        el.classList.add("h-f-btn");
+        el.target = "_blank";
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          el.href = blockedUsersURL();
+        });
+        parent.prepend(el);
+      }
+    }
   }
   function parseUserURL(rawURL) {
     if (!rawURL) {
@@ -316,7 +335,7 @@
           return;
         }
         usePolling({
-          update: () => renderButtons(userID)
+          update: () => renderActions(userID)
         });
       } else {
         usePolling({
