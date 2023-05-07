@@ -17,6 +17,7 @@ import compare from "./utils/compare";
 import obtainHTMLElement from "./utils/obtainHTMLElement";
 import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
+import { render, html } from "lit-html";
 
 export {};
 
@@ -53,53 +54,51 @@ function renderActions(userID: string) {
     return;
   }
 
-  // block/unblock
-  {
-    const isBlocked = !!blockedUsers.value[userID];
-    const { el, isCreated } = obtainHTMLElement(
-      "span",
-      "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
-    );
-    el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-    if (isCreated) {
-      el.classList.add("h-f-btn");
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isBlocked = !!blockedUsers.value[userID];
-        blockedUsers.value = {
-          ...blockedUsers.value,
-          [userID]: !isBlocked
-            ? {
-                name: document.getElementById("h-name")?.innerText ?? "",
-                blockedAt: Date.now(),
-              }
-            : undefined,
-        };
-        renderActions(userID);
-      });
-      parent.prepend(el);
-    }
+  const { el: container, isCreated } = obtainHTMLElement(
+    "div",
+    "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
+  );
+  if (isCreated) {
+    container.style.display = "inline";
+    parent.prepend(container);
   }
+  const isBlocked = !!blockedUsers.value[userID];
+  const count = Object.keys(blockedUsers.value).length;
 
-  // view list
-  {
-    const count = Object.keys(blockedUsers.value).length;
-    const { el, isCreated } = obtainHTMLElement(
-      "a",
-      "effcad96-74c4-489e-8730-3fbc895e0df4"
-    );
-    el.textContent = `已屏蔽 ${count}`;
-    el.hidden = count === 0;
-    if (isCreated) {
-      el.classList.add("h-f-btn");
-      el.target = "_blank";
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        el.href = blockedUsersURL();
-      });
-      parent.prepend(el);
-    }
-  }
+  render(
+    html`
+      <a
+        class="h-f-btn"
+        target="_blank"
+        @click="${(e: Event) => {
+          e.stopPropagation();
+          const el = e.target as HTMLAnchorElement;
+          el.href = blockedUsersURL();
+        }}"
+      >
+        已屏蔽 ${count}
+      </a>
+      <span
+        class="h-f-btn"
+        @click="${(e: MouseEvent) => {
+          e.stopPropagation();
+          const isBlocked = !!blockedUsers.value[userID];
+          blockedUsers.value = {
+            ...blockedUsers.value,
+            [userID]: !isBlocked
+              ? {
+                  name: document.getElementById("h-name")?.innerText ?? "",
+                  blockedAt: Date.now(),
+                }
+              : undefined,
+          };
+        }}"
+      >
+        ${isBlocked ? "取消屏蔽" : "屏蔽"}
+      </span>
+    `,
+    container
+  );
 }
 
 function parseUserURL(rawURL: string | undefined): string | undefined {
