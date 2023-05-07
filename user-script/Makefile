@@ -8,7 +8,9 @@ scripts/.sentinel: *.ts
 	cd scripts && pnpm exec tsc
 	touch $@
 
-build:
+assets/style.css: *.ts
 	NODE_ENV=production pnpm exec tailwindcss --minify -o ./assets/style.css
+
+build:
 	pnpm exec ts-node-script ./scripts/build.ts
 
