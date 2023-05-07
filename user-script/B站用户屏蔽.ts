@@ -73,18 +73,17 @@ function renderActions(userID: string) {
         ? html`<a
             class="h-f-btn"
             target="_blank"
-            @click="${(e: Event) => {
+            style="width: auto; min-width: 76px; padding-left: 20px; padding-right: 20px;"
+            @click=${(e: Event) => {
               e.stopPropagation();
               const el = e.target as HTMLAnchorElement;
               el.href = blockedUsersURL();
-            }}"
-          >
-            已屏蔽 ${count}
-          </a>`
+            }}
+          >屏蔽列表(${count})</a>`
         : nothing}
       <span
         class="h-f-btn"
-        @click="${(e: MouseEvent) => {
+        @click=${(e: MouseEvent) => {
           e.stopPropagation();
           const isBlocked = !!blockedUsers.value[userID];
           blockedUsers.value = {
@@ -96,7 +95,7 @@ function renderActions(userID: string) {
                 }
               : undefined,
           };
-        }}"
+        }}
       >
         ${isBlocked ? "取消屏蔽" : "屏蔽"}
       </span>

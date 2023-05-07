@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+8b4fd884
+// @version   2023.05.07+ce43a2a2
 // ==/UserScript==
 
 (() => {
@@ -479,17 +479,16 @@
       ${count > 0 ? x`<a
             class="h-f-btn"
             target="_blank"
-            @click="${(e2) => {
+            style="width: auto; min-width: 76px; padding-left: 20px; padding-right: 20px;"
+            @click=${(e2) => {
       e2.stopPropagation();
       const el = e2.target;
       el.href = blockedUsersURL();
-    }}"
-          >
-            已屏蔽 ${count}
-          </a>` : A}
+    }}
+          >屏蔽列表(${count})</a>` : A}
       <span
         class="h-f-btn"
-        @click="${(e2) => {
+        @click=${(e2) => {
       var _a, _b;
       e2.stopPropagation();
       const isBlocked2 = !!blockedUsers.value[userID];
@@ -499,7 +498,7 @@
           blockedAt: Date.now()
         } : void 0
       });
-    }}"
+    }}
       >
         ${isBlocked ? "取消屏蔽" : "屏蔽"}
       </span>
