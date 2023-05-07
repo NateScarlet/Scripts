@@ -5,7 +5,8 @@
     "alwaysStrict": true,
     "outDir": "dist",
     "lib": ["es2017", "dom", "dom.iterable"],
-    "types": ["@types/greasemonkey"]
+    "types": ["@types/greasemonkey"],
+    "allowSyntheticDefaultImports": true,
   },
   "include": ["**/*.ts"]
 }
