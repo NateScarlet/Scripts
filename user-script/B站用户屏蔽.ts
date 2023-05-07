@@ -18,7 +18,7 @@ import obtainHTMLElement from "./utils/obtainHTMLElement";
 import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
 import { render, html } from "lit-html";
-import { mdiAccountCancel } from "@mdi/js";
+import { mdiAccountCancelOutline } from "@mdi/js";
 export {};
 
 const blockedUsers = useGMValue(
@@ -125,7 +125,7 @@ function renderNav() {
   }}
 >
   <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="right-entry-icon">
-    <path fill-rule="evenodd" clip-rule="evenodd" d=${mdiAccountCancel} fill="currentColor">
+    <path fill-rule="evenodd" clip-rule="evenodd" d=${mdiAccountCancelOutline} fill="currentColor">
   </svg>
   <span class="right-entry-text">
     <span>屏蔽</span>
