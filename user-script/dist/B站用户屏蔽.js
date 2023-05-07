@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+72e64c99
+// @version   2023.05.07+8b4fd884
 // ==/UserScript==
 
 (() => {
@@ -476,17 +476,17 @@
     const isBlocked = !!blockedUsers.value[userID];
     const count = Object.keys(blockedUsers.value).length;
     B(x`
-      <a
-        class="h-f-btn"
-        target="_blank"
-        @click="${(e2) => {
+      ${count > 0 ? x`<a
+            class="h-f-btn"
+            target="_blank"
+            @click="${(e2) => {
       e2.stopPropagation();
       const el = e2.target;
       el.href = blockedUsersURL();
     }}"
-      >
-        已屏蔽 ${count}
-      </a>
+          >
+            已屏蔽 ${count}
+          </a>` : A}
       <span
         class="h-f-btn"
         @click="${(e2) => {

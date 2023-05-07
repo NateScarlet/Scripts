@@ -17,7 +17,7 @@ import compare from "./utils/compare";
 import obtainHTMLElement from "./utils/obtainHTMLElement";
 import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
-import { render, html } from "lit-html";
+import { render, html, nothing } from "lit-html";
 
 export {};
 
@@ -69,17 +69,19 @@ function renderActions(userID: string) {
 
   render(
     html`
-      <a
-        class="h-f-btn"
-        target="_blank"
-        @click="${(e: Event) => {
-          e.stopPropagation();
-          const el = e.target as HTMLAnchorElement;
-          el.href = blockedUsersURL();
-        }}"
-      >
-        已屏蔽 ${count}
-      </a>
+      ${count > 0
+        ? html`<a
+            class="h-f-btn"
+            target="_blank"
+            @click="${(e: Event) => {
+              e.stopPropagation();
+              const el = e.target as HTMLAnchorElement;
+              el.href = blockedUsersURL();
+            }}"
+          >
+            已屏蔽 ${count}
+          </a>`
+        : nothing}
       <span
         class="h-f-btn"
         @click="${(e: MouseEvent) => {
