@@ -1,7 +1,7 @@
 // ==UserScript==
 // @namespace https://github.com/NateScarlet/Scripts/tree/master/user-script
 // @name     B站用户屏蔽
-// @description 避免看到指定用户上传的视频，在用户个人主页会多出一个屏蔽按钮。
+// @description 避免看到指定用户上传的视频，在用户个人主页会多出屏蔽按钮。
 // @grant    GM.getValue
 // @grant    GM.setValue
 // @grant    GM.deleteValue
@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+beab61e9
+// @version   2023.05.07+61c083d6
 // ==/UserScript==
 
 (() => {
@@ -52,6 +52,17 @@
       step((generator = generator.apply(__this, __arguments)).next());
     });
   };
+
+  // utils/compare.ts
+  function compare(a, b) {
+    if (a > b) {
+      return 1;
+    }
+    if (a < b) {
+      return -1;
+    }
+    return 0;
+  }
 
   // utils/obtainHTMLElement.ts
   function obtainHTMLElement(tag, id) {
@@ -162,19 +173,34 @@
       yield GM.deleteValue(key);
     });
   }
-  function renderBlockButton(userID) {
+  function renderButtons(userID) {
     const isBlocked = blockedUsers.value[userID];
-    const el = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
-    el.classList.add("h-f-btn");
-    el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-    el.onclick = () => __async(this, null, function* () {
+    const blockButton = obtainHTMLElement("span", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
+    blockButton.classList.add("h-f-btn");
+    blockButton.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
+    blockButton.onclick = (e) => __async(this, null, function* () {
+      var _a, _b;
+      e.stopPropagation();
       blockedUsers.value = __spreadProps(__spreadValues({}, blockedUsers.value), {
-        [userID]: !isBlocked || void 0
+        [userID]: !isBlocked ? {
+          name: (_b = (_a = document.getElementById("h-name")) == null ? void 0 : _a.innerText) != null ? _b : "",
+          blockedAt: Date.now()
+        } : void 0
       });
-      renderBlockButton(userID);
+      renderButtons(userID);
+    });
+    const blockedCount = Object.keys(blockedUsers.value).length;
+    const listAnchor = obtainHTMLElement("a", "effcad96-74c4-489e-8730-3fbc895e0df4");
+    listAnchor.classList.add("h-f-btn");
+    listAnchor.textContent = `已屏蔽 ${blockedCount}`;
+    listAnchor.hidden = blockedCount === 0;
+    listAnchor.target = "_blank";
+    listAnchor.onclick = (e) => __async(this, null, function* () {
+      e.stopPropagation();
+      listAnchor.href = blockedUsersURL();
     });
     const parent = document.querySelector(".h-action") || document.body;
-    parent.prepend(el);
+    parent.prepend(listAnchor, blockButton);
   }
   function parseUserURL(rawURL) {
     if (!rawURL) {
@@ -225,6 +251,62 @@
       }
     });
   }
+  function blockedUsersHTML() {
+    const userIDs = Object.keys(blockedUsers.value);
+    const now = new Date();
+    function getData(id) {
+      const value = blockedUsers.value[id];
+      const { blockedAt: rawBlockedAt = 0, name = id } = typeof value === "boolean" ? {} : value;
+      const blockedAt = new Date(rawBlockedAt);
+      return {
+        id,
+        blockedAt,
+        name,
+        idAsNumber: Number.parseInt(id),
+        isFallback: rawBlockedAt === 0
+      };
+    }
+    return [
+      "<html>",
+      "<head>",
+      "<title>已屏蔽的用户</title>",
+      `<script id="data" lang="application/json">
+    ${JSON.stringify(blockedUsers.value, void 0, 2)}
+    <\/script>`,
+      "</head>",
+      "<body>",
+      "<div>",
+      `  <h1>已屏蔽 ${userIDs.length} 用户</h1>`,
+      `  <time datetime="${now.toISOString()}">${now.toLocaleString()}</time>`,
+      "  <ul>",
+      ...userIDs.map(getData).sort((a, b) => {
+        const dateCompare = compare(a.blockedAt, b.blockedAt);
+        if (dateCompare !== 0) {
+          return -dateCompare;
+        }
+        return compare(a.idAsNumber, b.idAsNumber);
+      }).map(({ id, name, blockedAt, isFallback }) => {
+        return [
+          "<li>",
+          `<a href="https://space.bilibili.com/${id}" target="_blank">${name}</a>`,
+          ...!isFallback ? [
+            `<span>屏蔽于<time datetime="${blockedAt.toISOString()}">${blockedAt.toLocaleString()}</time></span>`
+          ] : [],
+          "</li>"
+        ].join("\n");
+      }),
+      "  </ul>",
+      "</div>",
+      "</body>",
+      "</html>"
+    ].join("\n");
+  }
+  function blockedUsersURL() {
+    const b = new Blob([blockedUsersHTML()], {
+      type: "text/html;charset=UTF-8"
+    });
+    return URL.createObjectURL(b);
+  }
   function main() {
     return __async(this, null, function* () {
       yield migrateV1();
@@ -234,7 +316,7 @@
           return;
         }
         usePolling({
-          update: () => renderBlockButton(userID)
+          update: () => renderButtons(userID)
         });
       } else {
         usePolling({
