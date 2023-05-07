@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+bbd4308d
+// @version   2023.05.07+5510b23b
 // ==/UserScript==
 
 (() => {
@@ -473,7 +473,7 @@
     const container = obtainHTMLElement("div", "7ced1613-89d7-4754-8989-2ad0d7cfa9db", {
       onCreate: (el) => {
         el.style.display = "inline";
-        parent.prepend(el);
+        parent.append(el, parent.lastChild);
       }
     });
     const isBlocked = !!blockedUsers.value[userID];

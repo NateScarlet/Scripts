@@ -60,7 +60,7 @@ function renderActions(userID: string) {
     {
       onCreate: (el) => {
         el.style.display = "inline";
-        parent.prepend(el);
+        parent.append(el, parent.lastChild);
       },
     }
   );
