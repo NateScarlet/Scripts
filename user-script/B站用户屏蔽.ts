@@ -54,14 +54,16 @@ function renderActions(userID: string) {
     return;
   }
 
-  const { el: container, isCreated } = obtainHTMLElement(
+  const container = obtainHTMLElement(
     "div",
-    "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
+    "7ced1613-89d7-4754-8989-2ad0d7cfa9db",
+    {
+      onCreate: (el) => {
+        el.style.display = "inline";
+        parent.prepend(el);
+      },
+    }
   );
-  if (isCreated) {
-    container.style.display = "inline";
-    parent.prepend(container);
-  }
   const isBlocked = !!blockedUsers.value[userID];
   const count = Object.keys(blockedUsers.value).length;
 

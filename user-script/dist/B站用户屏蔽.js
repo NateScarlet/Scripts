@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+4717b6fe
+// @version   2023.05.07+72e64c99
 // ==/UserScript==
 
 (() => {
@@ -65,17 +65,15 @@
   }
 
   // utils/obtainHTMLElement.ts
-  function obtainHTMLElement(tag, id) {
+  function obtainHTMLElement(tag, id, { onCreate } = {}) {
     const match = document.getElementById(id);
     if (match) {
-      return { el: match, isCreated: false };
+      return match;
     }
     const el = document.createElement(tag);
     el.id = id;
-    return {
-      el,
-      isCreated: true
-    };
+    onCreate(el);
+    return el;
   }
 
   // utils/usePolling.ts
@@ -469,11 +467,12 @@
     if (!parent) {
       return;
     }
-    const { el: container, isCreated } = obtainHTMLElement("div", "7ced1613-89d7-4754-8989-2ad0d7cfa9db");
-    if (isCreated) {
-      container.style.display = "inline";
-      parent.prepend(container);
-    }
+    const container = obtainHTMLElement("div", "7ced1613-89d7-4754-8989-2ad0d7cfa9db", {
+      onCreate: (el) => {
+        el.style.display = "inline";
+        parent.prepend(el);
+      }
+    });
     const isBlocked = !!blockedUsers.value[userID];
     const count = Object.keys(blockedUsers.value).length;
     B(x`
