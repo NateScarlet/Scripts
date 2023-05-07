@@ -47,44 +47,59 @@ async function migrateV1() {
   await GM.deleteValue(key);
 }
 
-function renderButtons(userID: string) {
-  const isBlocked = blockedUsers.value[userID];
-  const blockButton = obtainHTMLElement(
-    "span",
-    "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
-  );
-  blockButton.classList.add("h-f-btn");
-  blockButton.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
-  blockButton.onclick = async (e) => {
-    e.stopPropagation();
-    blockedUsers.value = {
-      ...blockedUsers.value,
-      [userID]: !isBlocked
-        ? {
-            name: document.getElementById("h-name")?.innerText ?? "",
-            blockedAt: Date.now(),
-          }
-        : undefined,
-    };
-    renderButtons(userID);
-  };
+function renderActions(userID: string) {
+  const parent = document.querySelector(".h-action");
+  if (!parent) {
+    return;
+  }
 
-  const blockedCount = Object.keys(blockedUsers.value).length;
-  const listAnchor = obtainHTMLElement(
-    "a",
-    "effcad96-74c4-489e-8730-3fbc895e0df4"
-  );
-  listAnchor.classList.add("h-f-btn");
-  listAnchor.textContent = `已屏蔽 ${blockedCount}`;
-  listAnchor.hidden = blockedCount === 0;
-  listAnchor.target = "_blank";
-  listAnchor.onclick = async (e) => {
-    e.stopPropagation();
-    listAnchor.href = blockedUsersURL();
-  };
+  // block/unblock
+  {
+    const isBlocked = !!blockedUsers.value[userID];
+    const { el, isCreated } = obtainHTMLElement(
+      "span",
+      "7ced1613-89d7-4754-8989-2ad0d7cfa9db"
+    );
+    el.textContent = isBlocked ? "取消屏蔽" : "屏蔽";
+    if (isCreated) {
+      el.classList.add("h-f-btn");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isBlocked = !!blockedUsers.value[userID];
+        blockedUsers.value = {
+          ...blockedUsers.value,
+          [userID]: !isBlocked
+            ? {
+                name: document.getElementById("h-name")?.innerText ?? "",
+                blockedAt: Date.now(),
+              }
+            : undefined,
+        };
+        renderActions(userID);
+      });
+      parent.prepend(el);
+    }
+  }
 
-  const parent = document.querySelector(".h-action") || document.body;
-  parent.prepend(listAnchor, blockButton);
+  // view list
+  {
+    const count = Object.keys(blockedUsers.value).length;
+    const { el, isCreated } = obtainHTMLElement(
+      "a",
+      "effcad96-74c4-489e-8730-3fbc895e0df4"
+    );
+    el.textContent = `已屏蔽 ${count}`;
+    el.hidden = count === 0;
+    if (isCreated) {
+      el.classList.add("h-f-btn");
+      el.target = "_blank";
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        el.href = blockedUsersURL();
+      });
+      parent.prepend(el);
+    }
+  }
 }
 
 function parseUserURL(rawURL: string | undefined): string | undefined {
@@ -213,7 +228,7 @@ async function main() {
       return;
     }
     usePolling({
-      update: () => renderButtons(userID),
+      update: () => renderActions(userID),
     });
   } else {
     usePolling({
