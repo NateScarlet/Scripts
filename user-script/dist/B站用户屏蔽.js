@@ -9,7 +9,7 @@
 // @include	 https://space.bilibili.com/*
 // @include	 https://www.bilibili.com/*
 // @run-at   document-idle
-// @version   2023.05.07+5510b23b
+// @version   2023.05.08+4b0e670b
 // ==/UserScript==
 
 (() => {
@@ -448,6 +448,19 @@
   // node_modules/.pnpm/@mdi+js@7.2.96/node_modules/@mdi/js/mdi.js
   var mdiAccountCancelOutline = "M10 4A4 4 0 0 0 6 8A4 4 0 0 0 10 12A4 4 0 0 0 14 8A4 4 0 0 0 10 4M10 6A2 2 0 0 1 12 8A2 2 0 0 1 10 10A2 2 0 0 1 8 8A2 2 0 0 1 10 6M10 13C7.33 13 2 14.33 2 17V20H11.5A6.5 6.5 0 0 1 11.03 18.1H3.9V17C3.9 16.36 7.03 14.9 10 14.9C10.5 14.9 11 14.95 11.5 15.03A6.5 6.5 0 0 1 12.55 13.29C11.61 13.1 10.71 13 10 13M17.5 13C15 13 13 15 13 17.5C13 20 15 22 17.5 22C20 22 22 20 22 17.5C22 15 20 13 17.5 13M17.5 14.5C19.16 14.5 20.5 15.84 20.5 17.5C20.5 18.06 20.35 18.58 20.08 19L16 14.92C16.42 14.65 16.94 14.5 17.5 14.5M14.92 16L19 20.08C18.58 20.35 18.06 20.5 17.5 20.5C15.84 20.5 14.5 19.16 14.5 17.5C14.5 16.94 14.65 16.42 14.92 16Z";
 
+  // utils/setHTMLElementDisplayHidden.ts
+  function setHTMLElementDisplayHidden(el, want) {
+    const actual = el.style.display == "none";
+    if (actual === want) {
+      return;
+    }
+    if (want) {
+      el.style.display = "none";
+    } else {
+      el.style.display = "";
+    }
+  }
+
   // B站用户屏蔽.ts
   var blockedUsers = useGMValue("blockedUsers@206ceed9-b514-4902-ad70-aa621fed5cd4", {});
   function migrateV1() {
@@ -504,15 +517,11 @@
     const container = obtainHTMLElement("li", "db7a644d-1c6c-4078-a9dc-991b15b68014", {
       onCreate: (el) => {
         el.classList.add("right-entry-item");
-        el.style.display = "inline";
         parent.prepend(parent.firstChild, el);
       }
     });
     const count = Object.keys(blockedUsers.value).length;
-    const hidden = count === 0;
-    if (container.hidden !== hidden) {
-      container.hidden = hidden;
-    }
+    setHTMLElementDisplayHidden(container, count == 0);
     B(x`
 <button
   type="button"
@@ -555,13 +564,9 @@
       if (!userID) {
         return;
       }
-      const isBlocked = blockedUsers.value[userID];
+      const isBlocked = !!blockedUsers.value[userID];
       const container = i2.parentElement.classList.contains("video-list-item") ? i2.parentElement : i2;
-      if (isBlocked) {
-        container.setAttribute("hidden", "");
-      } else {
-        container.removeAttribute("hidden");
-      }
+      setHTMLElementDisplayHidden(container, isBlocked);
     });
     document.querySelectorAll(".video-page-card-small").forEach((i2) => {
       var _a;
@@ -573,13 +578,8 @@
       if (!userID) {
         return;
       }
-      const isBlocked = blockedUsers.value[userID];
-      const container = i2;
-      if (isBlocked) {
-        container.setAttribute("hidden", "");
-      } else {
-        container.removeAttribute("hidden");
-      }
+      const isBlocked = !!blockedUsers.value[userID];
+      setHTMLElementDisplayHidden(i2, isBlocked);
     });
   }
   function blockedUsersHTML() {

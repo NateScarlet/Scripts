@@ -19,6 +19,7 @@ import useGMValue from "./utils/useGMValue";
 import usePolling from "./utils/usePolling";
 import { render, html } from "lit-html";
 import { mdiAccountCancelOutline } from "@mdi/js";
+import setHTMLElementDisplayHidden from "./utils/setHTMLElementDisplayHidden";
 export {};
 
 const blockedUsers = useGMValue(
@@ -102,16 +103,12 @@ function renderNav() {
     {
       onCreate: (el) => {
         el.classList.add("right-entry-item");
-        el.style.display = "inline";
         parent.prepend(parent.firstChild, el);
       },
     }
   );
   const count = Object.keys(blockedUsers.value).length;
-  const hidden = count === 0;
-  if (container.hidden !== hidden) {
-    container.hidden = hidden;
-  }
+  setHTMLElementDisplayHidden(container, count == 0);
 
   render(
     html`
@@ -153,7 +150,7 @@ function parseUserURL(rawURL: string | undefined): string | undefined {
 }
 
 function renderVideoCard() {
-  document.querySelectorAll(".bili-video-card").forEach((i) => {
+  document.querySelectorAll<HTMLElement>(".bili-video-card").forEach((i) => {
     const rawURL = i
       .querySelector("a.bili-video-card__info--owner")
       ?.getAttribute("href");
@@ -161,34 +158,27 @@ function renderVideoCard() {
     if (!userID) {
       return;
     }
-    const isBlocked = blockedUsers.value[userID];
+    const isBlocked = !!blockedUsers.value[userID];
     const container = i.parentElement.classList.contains("video-list-item")
       ? i.parentElement
       : i;
-    if (isBlocked) {
-      container.setAttribute("hidden", "");
-    } else {
-      container.removeAttribute("hidden");
-    }
+    setHTMLElementDisplayHidden(container, isBlocked);
   });
 
-  document.querySelectorAll(".video-page-card-small").forEach((i) => {
-    const rawURL = i.querySelector(".upname a")?.getAttribute("href");
-    if (!rawURL) {
-      return;
-    }
-    const userID = parseUserURL(rawURL);
-    if (!userID) {
-      return;
-    }
-    const isBlocked = blockedUsers.value[userID];
-    const container = i;
-    if (isBlocked) {
-      container.setAttribute("hidden", "");
-    } else {
-      container.removeAttribute("hidden");
-    }
-  });
+  document
+    .querySelectorAll<HTMLElement>(".video-page-card-small")
+    .forEach((i) => {
+      const rawURL = i.querySelector(".upname a")?.getAttribute("href");
+      if (!rawURL) {
+        return;
+      }
+      const userID = parseUserURL(rawURL);
+      if (!userID) {
+        return;
+      }
+      const isBlocked = !!blockedUsers.value[userID];
+      setHTMLElementDisplayHidden(i, isBlocked);
+    });
 }
 
 function blockedUsersHTML() {
