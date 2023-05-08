@@ -27,10 +27,6 @@
 
 运维脚本
 
-## [user-script](user-script)
-
-浏览器用户脚本(GreaseMonkey, TamperMonkey)
-
 ## [vscode-tasks](vscode-tasks)
 
 vscode 任务配置
