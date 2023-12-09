@@ -57,10 +57,10 @@ else
 return
 
 $!^t::
-IfWinExist, ahk_exe ConEmu64.exe
+IfWinExist, ahk_exe WindowsTerminal.exe
 	WinActivate
 else
-	Run, ConEmu64 -Dir %UserProfile%
+	Run, wt
 return
 
 ~F2::
