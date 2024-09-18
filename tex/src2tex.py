@@ -94,6 +94,7 @@ def convert(files: Iterator[Text]) -> Iterator[Text]:
 
     def _write_file(filename):
         path_ = abspath(filename).replace("\\", "/")
+        _LOGGER.debug(path_)
         if not is_utf8(path_):
             _LOGGER.info(f"# skip: {path_}")
             return
@@ -114,6 +115,7 @@ def convert(files: Iterator[Text]) -> Iterator[Text]:
 
 def main():
     logging.basicConfig(level="DEBUG")
+    _LOGGER.debug(sys.executable)
 
     for line in convert(
         (i for i in (i.strip("\n") for i in fileinput.FileInput()) if i),
