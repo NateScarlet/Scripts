@@ -64,12 +64,14 @@ def main():
     )
     args.add_argument("-d", "--directory")
     args.add_argument("-o", "--out")
-    args.add_argument("-p", "--pattern", nargs="*", help="unix style file match pattern")
+    args.add_argument(
+        "-p", "--pattern", nargs="*", help="unix style file match pattern"
+    )
     ns = args.parse_args()
     repl = _Replacer(ns.pairs)
     _LOGGER.debug("rules %s", repl.rules)
     top = ns.directory or "."
-    patterns = list(ns.pattern or repl.rules.keys())
+    patterns = list(ns.pattern or ("*%s*" % i for i in repl.rules.keys()))
     _LOGGER.debug("patterns %s", patterns)
     for dirpath, _, filenames in os.walk(top):
         _LOGGER.debug("directory %s", dirpath)
