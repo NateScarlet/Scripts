@@ -35,16 +35,21 @@ def _expand_cases(k: str, v: str):
     yield k, v
 
 
+def _unpack_pairs(pairs: list[str]):
+    for index in range(0, len(pairs), 2):
+        yield pairs[index], pairs[index + 1]
+
+
 class _Replacer:
     def __init__(self, pairs: list[str]) -> None:
         assert (
             len(pairs) % 2 == 0
         ), "search replaces paris must has a even length, got %d" % (len(pairs),)
         self.rules = {
-            k: v
-            for index in range(0, len(pairs), 2)
-            for k, v in _expand_cases(pairs[index], pairs[index + 1])
+            k: v for i in _unpack_pairs(pairs) for k, v in _expand_cases(i[0], i[1])
         }
+        for k, v in _unpack_pairs(pairs):
+            self.rules[k] = v
 
     def replace(self, s: str):
         for k, v in self.rules.items():
