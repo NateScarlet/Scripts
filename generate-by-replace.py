@@ -84,9 +84,7 @@ def main():
             src = os.path.join(dirpath, i)
             if not any(fnmatch.fnmatch(src, pattern) for pattern in patterns):
                 continue
-            dst = repl.replace(os.path.join(dirpath, i))
-            if ns.out:
-                dst = os.path.join(ns.out, os.path.relpath(dst, top))
+            dst = os.path.join(ns.out or '.', os.path.relpath(repl.replace(os.path.join(dirpath, i)), top))
             if os.path.exists(dst):
                 _LOGGER.debug("skip existing file %s", dst)
                 continue
