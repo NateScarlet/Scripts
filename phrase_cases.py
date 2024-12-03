@@ -39,7 +39,7 @@ def snake(v: str, separator: str = "_"):
             ret += separator
         else:
             ret += char
-    if ret[0] in _SEPARATORS:
+    if ret and ret[0] in _SEPARATORS:
         ret = ret[1:]
     return ret
 
