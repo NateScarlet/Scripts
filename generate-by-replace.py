@@ -70,7 +70,7 @@ def main():
     args.add_argument("-d", "--directory")
     args.add_argument("-o", "--out")
     args.add_argument(
-        "-p", "--pattern", nargs="*", help="unix style file match pattern"
+        "-p", "--pattern", nargs="*", help="unix style file match pattern against relative path"
     )
     ns = args.parse_args()
     repl = _Replacer(ns.pairs)
@@ -82,9 +82,13 @@ def main():
         _LOGGER.debug("directory %s", dirpath)
         for i in filenames:
             src = os.path.join(dirpath, i)
-            if not any(fnmatch.fnmatch(src, pattern) for pattern in patterns):
+            relpath = os.path.relpath(src, top)
+            if not any(fnmatch.fnmatch(relpath, pattern) for pattern in patterns):
                 continue
-            dst = os.path.join(ns.out or '.', os.path.relpath(repl.replace(os.path.join(dirpath, i)), top))
+            dst = os.path.join(
+                ns.out or ".",
+                os.path.relpath(repl.replace(os.path.join(dirpath, i)), top),
+            )
             if os.path.exists(dst):
                 _LOGGER.debug("skip existing file %s", dst)
                 continue
