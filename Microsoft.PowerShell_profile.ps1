@@ -4,6 +4,9 @@ if ((Get-Module -Name PSReadLine).Version.Major -eq 2) {
     Import-Module -Name PSReadLine
 }
 
+# Config
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Refresh env
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
@@ -19,3 +22,9 @@ function prompt {
     $p = ($p -replace [regex]::Escape(($env:USERPROFILE -replace '^.+:', ':')), ":\~")
     "PS $p> "
 }
+
+function New-FileByReplace {
+    py $PSScriptRoot/generate-by-replace.py $args
+}
+
+Set-Alias "generate:replace" New-FileByReplace
