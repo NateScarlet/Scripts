@@ -13,8 +13,8 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";
 # https://bugs.python.org/issue42627
 $proxy = (get-itemproperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings').ProxyServer
 if ($proxy) {
-    $env:HTTP_PROXY = "http://$proxy"
-    $env:HTTPS_PROXY = "http://$proxy"
+    $env:HTTP_PROXY = $proxy
+    $env:HTTPS_PROXY = $proxy
 }
 
 function prompt {
