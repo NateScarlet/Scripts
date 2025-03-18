@@ -11,10 +11,13 @@ if ((Get-Module -Name PSReadLine).Version.Major -eq 2) {
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 
 # https://bugs.python.org/issue42627
-$proxy = (get-itemproperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings').ProxyServer
-if ($proxy) {
-    $env:HTTP_PROXY = $proxy
-    $env:HTTPS_PROXY = $proxy
+# 获取 Internet 设置的注册表项
+$proxySettings = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+# 检查是否启用了代理
+if ($proxySettings.ProxyEnable -eq 1) {
+    $env:HTTP_PROXY = $proxySettings.ProxyServer
+    $env:HTTPS_PROXY = $proxySettings.ProxyServer
+    $env:NO_PROXY = "localhost,127.0.0.1,0.0.0.0,$($proxySettings.ProxyOverride -replace ';',',')"
 }
 
 function prompt {
