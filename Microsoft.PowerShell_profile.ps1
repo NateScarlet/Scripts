@@ -1,11 +1,7 @@
 # https://github.com/PowerShell/PSReadLine/issues/779
-if ((Get-Module -Name PSReadLine).Version.Major -eq 2) {
-    Install-Module -Name PSReadLine -RequiredVersion 1.2 -SkipPublisherCheck
-    Import-Module -Name PSReadLine
-}
-
-# Config
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[System.Console]::InputEncoding = [System.Text.Encoding]::UTF8
 
 # Refresh env
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
