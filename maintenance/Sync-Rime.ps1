@@ -28,8 +28,16 @@
         # 切换到同步目录
         Push-Location $syncDir
         
+        $env:GIT_AUTHOR_NAME = "Rime Sync Bot"
+        $env:GIT_AUTHOR_EMAIL = "rime-sync-bot@invalid"
+        $env:GIT_COMMITTER_NAME = "Rime Sync Bot"
+        $env:GIT_COMMITTER_EMAIL = "rime-sync-bot@invalid"
+        $env:GIT_CONFIG_COUNT = 1
+        $env:GIT_CONFIG_KEY_0 = "commit.gpgSign"
+        $env:GIT_CONFIG_VALUE_0 = "false"
+
         Write-Host "Pulling latest changes from remote..."
-        git pull
+        git pull --rebase
         
         Write-Host "Running WeaselDeployer..."
         WeaselDeployer.exe /sync
@@ -38,11 +46,7 @@
         git add -A
         
         Write-Host "Committing changes..."
-        $env:GIT_AUTHOR_NAME = "Rime Sync Bot"
-        $env:GIT_AUTHOR_EMAIL = "rime-sync-bot@invalid"
-        $env:GIT_COMMITTER_NAME = "Rime Sync Bot"
-        $env:GIT_COMMITTER_EMAIL = "rime-sync-bot@invalid"
-        git commit -m "Automatic sync at $timestamp" --no-gpg-sign
+        git commit -m "Automatic sync at $timestamp"
         
         Write-Host "Pushing changes..."
         git push
