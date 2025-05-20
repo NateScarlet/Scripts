@@ -50,7 +50,22 @@ openssl genrsa -out "$outputDir\$CertName.key" 2048
 
 # 2. 准备CSR配置
 $primaryDomain = ($Domains -split ",")[0]
-$sanList = $Domains -split "," | ForEach-Object { "DNS.$(([array]::IndexOf($Domains -split ",", $_))+1) = $_" }
+
+$sanEntries = @()
+$dnsCount = 1
+$ipCount = 1
+
+foreach ($item in $Domains -split ",") {
+    if ($item -match '^\d+\.\d+\.\d+\.\d+$') {
+        $sanEntries += "IP.$ipCount = $item"
+        $ipCount++
+    }
+    else {
+        $sanEntries += "DNS.$dnsCount = $item"
+        $dnsCount++
+    }
+}
+
 
 $csrConfig = @"
 [req]
@@ -72,12 +87,13 @@ openssl req -new -key "$outputDir\$CertName.key" -out "$outputDir\$CertName.csr"
 # 4. 准备证书扩展配置
 $certExtConfig = @"
 authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
+basicConstraints=critical,CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-subjectAltName = @alt_names
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName=critical,@alt_names
 
 [alt_names]
-$($sanList -join "`n")
+$($sanEntries -replace "^","" -join "`n")
 "@
 
 $certExtConfig | Out-File -FilePath "$outputDir\$CertName.ext.conf" -Encoding ascii
@@ -88,9 +104,9 @@ openssl x509 -req -in "$outputDir\$CertName.csr" -CA $CaCertPath -CAkey $CaKeyPa
     -out "$outputDir\$CertName.crt" -days $ValidityDays -sha256 -extfile "$outputDir\$CertName.ext.conf"
 
 # 6. 清理临时文件
-Remove-Item "$outputDir\$CertName.csr"
-Remove-Item "$outputDir\$CertName.csr.conf"
-Remove-Item "$outputDir\$CertName.ext.conf"
+# Remove-Item "$outputDir\$CertName.csr"
+# Remove-Item "$outputDir\$CertName.csr.conf"
+# Remove-Item "$outputDir\$CertName.ext.conf"
 
 # 7. 显示结果
 Write-Host "`n证书签发完成！" -ForegroundColor Green
