@@ -23,10 +23,43 @@ if ($proxySettings.ProxyEnable -eq 1) {
         )"
 }
 
-function prompt {
-    $p = (Get-Location)
-    $p = ($p -replace [regex]::Escape(($env:USERPROFILE -replace '^.+:', ':')), ":\~")
-    "PS $p> "
+try {
+    Import-Module PSReadLine -ErrorAction Stop
+}
+catch {
+    Write-Host "[提示] 命令行增强功能未启用: $_" -ForegroundColor DarkGray
+    Write-Host "      运行: Install-Module PSReadLine -Scope CurrentUser" -ForegroundColor Cyan
+}
+
+
+$poshGitAvailable = $false
+try {
+    Import-Module posh-git -ErrorAction Stop
+    $poshGitAvailable = $true
+}
+catch {
+    Write-Host "[提示] Git 状态支持未启用: $_" -ForegroundColor DarkGray
+    Write-Host "      运行: Install-Module posh-git -Scope CurrentUser" -ForegroundColor Cyan
+}
+
+function global:prompt {
+    # 获取当前路径并简化显示 
+    # 每个盘符可能都建了个人文件夹　所以要保留盘符显示
+    $currentPath = (Get-Location).Path -replace [regex]::Escape(($env:USERPROFILE -replace '^.+:', ':')), ":\~" 
+    
+    # 添加 Git 状态信息（如果 posh-git 已加载）
+    $gitStatus = if ($poshGitAvailable) {
+        try {
+            # 直接调用 Write-VcsStatus，不依赖 $global:GitStatus
+            Write-VcsStatus
+        }
+        catch {
+            "" # 调用失败时返回空字符串
+        }
+    }
+    
+    # 组合最终提示
+    "PS ${currentPath}${gitStatus}> "
 }
 
 function New-FileByReplace {
