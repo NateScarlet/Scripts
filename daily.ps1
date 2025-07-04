@@ -5,3 +5,4 @@ if (Test-Path -Path "$env:APPDATA\Stretchly") {
 }
 
 & "$PSScriptRoot\maintenance\Sync-Rime.ps1"
+& "$PSScriptRoot\maintenance\Invoke-AutoGitCommit.ps1"
