@@ -9,6 +9,7 @@ ComfyUI PNG文件重命名工具
 3. 自动处理配套文件（与主文件关联的元数据文件）
 4. 生成格式为`{清理后的提示词}_%05d_{扩展名}`的新文件名
 5. 自动递增数字避免文件覆盖
+6. 可选择为每个标题创建单独目录
 
 特性：
 - 支持多个文件路径作为输入
@@ -17,6 +18,7 @@ ComfyUI PNG文件重命名工具
 - 文件名合法化处理（移除非法字符）
 - 配套文件自动关联重命名
 - 安全重命名（不覆盖已有文件）
+- 可选择平面文件结构或目录结构
 - 不考虑竞态，用户应保证运行时没有其他进程干扰
 
 使用示例：
@@ -32,12 +34,17 @@ ComfyUI PNG文件重命名工具
 4. 区分大小写排除关键词：
    python rename-comfyui-png.py output.png -e "SAMPLE" -c
 
+5. 使用目录结构（每个标题创建单独目录）：
+   python rename-comfyui-png.py result.png --with-dir
+
 参数说明：
   files           要处理的ComfyUI PNG文件路径（可多个）
   -n, --node-ids  指定优先使用的节点ID（多个节点按顺序尝试）
   -e, --exclude-keywords 排除包含这些关键词的行（逗号分隔）
   -c, --case-sensitive  关键词区分大小写
+  --with-dir 为每个标题创建单独的目录
 """
+
 
 import os
 import re
@@ -224,7 +231,9 @@ def find_companion_files(main_file: str) -> Iterator[tuple[str, str]]:
                 )
 
 
-def next_filename(title: str, directory: str, original_ext: str) -> Tuple[str, int]:
+def next_filename_flat(
+    title: str, directory: str, original_ext: str
+) -> Tuple[str, int]:
     """生成新的文件名，包含递增数字"""
     # 查找当前已存在的最大序号
     max_num = 0
@@ -253,14 +262,50 @@ def next_filename(title: str, directory: str, original_ext: str) -> Tuple[str, i
     return f"{title}_{new_num:05d}_{original_ext}", new_num
 
 
+def next_filename_with_dir(
+    title: str, directory: str, original_ext: str
+) -> Tuple[str, int]:
+    """生成新的文件名，包含递增数字"""
+    # 查找当前已存在的最大序号
+    max_num = 0
+    seq_dir = os.path.join(directory, title)
+    os.makedirs(seq_dir, 0o777, exist_ok=True)
+
+    # ComfyUI 输出文件会在数字前后都有下划线（如 ComfyUI_00001_.png), 我们不得不和它一致
+    pattern = re.compile(
+        rf"^image_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
+    )
+    with os.scandir(seq_dir) as it:
+        for entry in it:
+            if not entry.is_file():
+                continue
+            match = pattern.match(os.path.normcase(entry.name))
+            if not match:
+                continue
+
+            try:
+                num = int(match.group(1))
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                continue
+
+    new_num = max_num + 1
+    if new_num > 99999:
+        raise ValueError(f"no available filename for {title}_%05d_{original_ext}")
+    return f"{title}/image_{new_num:05d}_{original_ext}", new_num
+
+
 def rename_files(
     file_paths: Iterable[str],
     node_ids: Optional[List[str]] = None,
     exclude_keywords: Optional[List[str]] = None,
     case_sensitive: bool = False,
+    with_dir: bool = False,
 ):
     """重命名主文件和配套文件"""
     exclude_keywords = exclude_keywords or []
+    next_filename = next_filename_with_dir if with_dir else next_filename_flat
 
     for file_path in file_paths:
         if not os.path.exists(file_path):
@@ -287,9 +332,9 @@ def rename_files(
                 _LOGGER.warning(f"提取到的文本为空: {file_path}")
                 continue
 
-            if os.path.normcase(os.path.basename(file_path)).startswith(
-                os.path.normcase(title)
-            ):
+            if not with_dir and os.path.normcase(
+                os.path.basename(file_path)
+            ).startswith(os.path.normcase(title)):
                 _LOGGER.debug(f"跳过已经使用 prompt 命名的文件: {file_path}")
                 continue
 
@@ -345,6 +390,9 @@ def main():
     parser.add_argument(
         "-c", "--case-sensitive", action="store_true", help="关键词区分大小写"
     )
+    parser.add_argument(
+        "--with-dir", action="store_true", help="为每个标题创建单独的目录"
+    )
 
     args = parser.parse_args()
 
@@ -359,6 +407,7 @@ def main():
         node_ids=node_ids,
         exclude_keywords=exclude_keywords,
         case_sensitive=args.case_sensitive,
+        with_dir=args.with_dir,
     )
 
 
