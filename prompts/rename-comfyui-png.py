@@ -286,7 +286,7 @@ def rename_files(
                 _LOGGER.warning(f"提取到的文本为空: {file_path}")
                 continue
 
-            if os.path.normcase(os.path.dirname(file_path)).startswith(
+            if os.path.normcase(os.path.basename(file_path)).startswith(
                 os.path.normcase(title)
             ):
                 _LOGGER.debug(f"跳过已经使用 prompt 命名的文件: {file_path}")
