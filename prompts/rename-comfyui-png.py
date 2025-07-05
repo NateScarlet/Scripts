@@ -330,7 +330,7 @@ def rename_files(
             # 重命名主文件
             if not os.path.exists(new_main_file):
                 os.rename(file_path, new_main_file)
-                _LOGGER.info(f"重命名: {file_path} -> {new_basename} (主文件)")
+                _LOGGER.info(f"重命名: {file_path} -> {new_basename}")
             else:
                 _LOGGER.warning(f"目标文件已存在，跳过: {new_main_file}")
                 continue
