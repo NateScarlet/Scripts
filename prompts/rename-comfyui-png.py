@@ -7,7 +7,7 @@ ComfyUI PNG文件重命名工具
 1. 从PNG元数据中提取提示词文本
 2. 使用提示词的第一行作为新文件名的基础（排除包含指定关键词的行）
 3. 自动处理配套文件（与主文件关联的元数据文件）
-4. 生成格式为`{清理后的提示词}_%05d_{扩展名}`的新文件名
+4. 生成包含文件修改日期和随机字符串的新文件名
 5. 自动递增数字避免文件覆盖
 6. 可选择为每个标题创建单独目录
 
@@ -50,7 +50,10 @@ import os
 import re
 import json
 import argparse
+import hashlib
 import logging
+import datetime as dt
+import random
 from PIL import Image
 from typing import (
     Dict,
@@ -126,7 +129,7 @@ MAX_FILENAME_BYTES = 255
 FILENAME_TRUNCATE_SUFFIX = "...(%d more)"
 
 
-def sanitize_filename(filename: str, revered_bytes: int = 20) -> str:
+def sanitize_filename(filename: str, revered_bytes: int = 64) -> str:
     # 替换无效字符为 U+FFFD (�)
     sanitized = invalid_filename_char_pattern.sub("\ufffd", filename)
 
@@ -230,69 +233,33 @@ def find_companion_files(main_file: str) -> Iterator[tuple[str, str]]:
                 )
 
 
-def next_filename_flat(
-    title: str, directory: str, original_ext: str
-) -> Tuple[str, int]:
-    """生成新的文件名，包含递增数字"""
-    # 查找当前已存在的最大序号
-    max_num = 0
-    # ComfyUI 输出文件会在数字前后都有下划线（如 ComfyUI_00001_.png), 我们不得不和它一致
-    pattern = re.compile(
-        rf"^{re.escape(os.path.normcase(title))}_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
-    )
-    with os.scandir(directory) as it:
-        for entry in it:
-            if not entry.is_file():
-                continue
-            match = pattern.match(os.path.normcase(entry.name))
-            if not match:
-                continue
+def generate_filename(
+    title: str,
+    directory: str,
+    stat: os.stat_result,
+    original_ext: str,
+    with_dir: bool,
+) -> str:
+    # 文件名尽量幂等，方便在多个仓库之间合并，所以不使用数字序号
 
-            try:
-                num = int(match.group(1))
-                if num > max_num:
-                    max_num = num
-            except ValueError:
-                continue
-
-    new_num = max_num + 1
-    if new_num > 99999:
-        raise ValueError(f"no available filename for {title}_%05d_{original_ext}")
-    return f"{title}_{new_num:05d}_{original_ext}", new_num
-
-
-def next_filename_with_dir(
-    title: str, directory: str, original_ext: str
-) -> Tuple[str, int]:
-    """生成新的文件名，包含递增数字"""
-    # 查找当前已存在的最大序号
-    max_num = 0
-    seq_dir = os.path.join(directory, title)
-    os.makedirs(seq_dir, 0o777, exist_ok=True)
-
-    # ComfyUI 输出文件会在数字前后都有下划线（如 ComfyUI_00001_.png), 我们不得不和它一致
-    pattern = re.compile(
-        rf"^image_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
-    )
-    with os.scandir(seq_dir) as it:
-        for entry in it:
-            if not entry.is_file():
-                continue
-            match = pattern.match(os.path.normcase(entry.name))
-            if not match:
-                continue
-
-            try:
-                num = int(match.group(1))
-                if num > max_num:
-                    max_num = num
-            except ValueError:
-                continue
-
-    new_num = max_num + 1
-    if new_num > 99999:
-        raise ValueError(f"no available filename for {title}_%05d_{original_ext}")
-    return f"{title}/image_{new_num:05d}_{original_ext}", new_num
+    try:
+        min_time = min(stat.st_birthtime, stat.st_mtime)
+    except:
+        min_time = stat.st_mtime
+    date_str = dt.datetime.fromtimestamp(min_time).strftime("%Y%m%d_%H%M%S")
+    size_str = hex(stat.st_size)[2:]
+    random_str = ""
+    if with_dir:
+        os.makedirs(os.path.join(directory, title), exist_ok=True)
+    while True:
+        name: str
+        if with_dir:
+            name = f"{title}/{date_str}_{size_str}{random_str}{original_ext}"
+        else:
+            name = f"{title}_{date_str}_{size_str}{random_str}{original_ext}"
+        if not os.path.exists(os.path.join(directory, name)):
+            return name
+        random_str = "_" + random.randbytes(4).hex()
 
 
 def rename_files(
@@ -304,7 +271,6 @@ def rename_files(
 ):
     """重命名主文件和配套文件"""
     exclude_keywords = exclude_keywords or []
-    next_filename = next_filename_with_dir if with_dir else next_filename_flat
 
     for file_path in file_paths:
         if not os.path.exists(file_path):
@@ -342,7 +308,10 @@ def rename_files(
             original_ext = os.path.splitext(file_path)[-1]
 
             # 生成新文件名
-            new_basename, num = next_filename(title, directory, original_ext)
+            stat = os.stat(file_path)
+            new_basename = generate_filename(
+                title, directory, stat, original_ext, with_dir
+            )
             new_main_file = os.path.join(directory, new_basename)
 
             # 先查找并重命名配套文件，这样如果中途中断，只要再运行一次就能恢复成正常状态
