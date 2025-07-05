@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""
+ComfyUI PNG文件重命名工具
+
+该脚本根据ComfyUI生成的PNG文件中嵌入的提示词(prompt)元数据，重命名图像文件及其配套文件。
+主要功能：
+1. 从PNG元数据中提取提示词文本
+2. 使用提示词的第一行作为新文件名的基础（排除包含指定关键词的行）
+3. 自动处理配套文件（与主文件关联的元数据文件）
+4. 生成格式为`{清理后的提示词}_%05d_{扩展名}`的新文件名
+5. 自动递增数字避免文件覆盖
+
+特性：
+- 支持多个文件路径作为输入
+- 可选指定节点ID（按顺序尝试匹配）
+- 可选排除包含特定关键词的行
+- 文件名合法化处理（移除非法字符）
+- 配套文件自动关联重命名
+- 安全重命名（不覆盖已有文件）
+- 不考虑竞态，用户应保证运行时没有其他进程干扰
+
+使用示例：
+1. 基本使用：重命名单个文件
+   python rename-comfyui-png.py image.png
+
+2. 批量重命名多个文件：
+   python rename-comfyui-png.py *.png
+
+3. 指定节点ID和排除关键词：
+   python rename-comfyui-png.py workflow.png -n 12,7,3 -e "placeholder,test"
+
+4. 区分大小写排除关键词：
+   python rename-comfyui-png.py output.png -e "SAMPLE" -c
+
+参数说明：
+  files           要处理的ComfyUI PNG文件路径（可多个）
+  -n, --node-ids  指定优先使用的节点ID（多个节点按顺序尝试）
+  -e, --exclude-keywords 排除包含这些关键词的行（逗号分隔）
+  -c, --case-sensitive  关键词区分大小写
+"""
+
+import os
+import re
+import json
+import argparse
+import logging
+from PIL import Image
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypedDict,
+    Iterator,
+    Sequence,
+    Iterable,
+)
+import glob
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class PromptValueInputs(TypedDict):
+    text: str
+    clip: List[str]
+    ckpt_name: str
+    width: int
+    height: int
+    batch_size: int
+    samples: List[str]
+    vae: List[str]
+    filename_prefix: str
+    images: List[str]
+    seed: int
+    steps: int
+    cfg: float
+    sampler_name: str
+    scheduler: str
+    denoise: float
+    basic_pipe: List[str]
+    latent_image: List[str]
+    image: str
+    conditioning_to: List[str]
+    conditioning_from: List[str]
+
+
+class PromptValue(TypedDict):
+    inputs: PromptValueInputs
+    class_type: str
+    _meta: Dict[str, str]
+
+
+Prompt = Dict[str, PromptValue]
+
+
+def extract_prompt_from_png(file_path: str) -> Optional[Prompt]:
+    """从PNG文件中提取ComfyUI元数据"""
+    try:
+        with Image.open(file_path) as img:
+            if "prompt" in img.info:
+                return json.loads(img.info["prompt"])
+    except Exception as e:
+        _LOGGER.error(f"Error reading {file_path}: {e}")
+    return None
+
+
+# 预编译正则表达式，用于匹配无效文件名字符
+# reference https://github.com/parshap/node-sanitize-filename/blob/master/index.js
+invalid_filename_char_pattern = re.compile(
+    r'[/?<>\\:*|"\x00-\x1f\x80-\x9f]'  # 非法特殊字符
+    r"|^\.+$"  # 全点号文件名
+    r"|[. ]+$"  # 结尾的点号或空格
+    r"|^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$",  # 保留名称
+    flags=re.I,
+)
+
+MAX_FILENAME_BYTES = 255
+FILENAME_TRUNCATE_SUFFIX = "...(%d more)"
+
+
+def sanitize_filename(filename: str) -> str:
+    # 替换无效字符为 U+FFFD (�)
+    sanitized = invalid_filename_char_pattern.sub("\ufffd", filename)
+
+    max_chars = MAX_FILENAME_BYTES
+    while len(sanitized[:max_chars].encode("utf-8")) > MAX_FILENAME_BYTES:
+        max_chars -= 1
+    # 如果长度超过限制则截断
+    if len(sanitized) > max_chars:
+        # 计算最大可能的截断后缀的长度，实际删除数量比这个少所以肯定更短
+        # 后缀是常量，没包含多字节字符所以不会导致超过上限
+        max_suffix = FILENAME_TRUNCATE_SUFFIX % (len(sanitized) - 1)
+        max_suffix_length = len(max_suffix)
+
+        # 计算保留字符数量
+        keep_length = max_chars - max_suffix_length  # 为最长的后缀保留空间
+        actual_remove_count = (
+            len(sanitized) - keep_length
+        )  # 一定小于 len(sanitized)-1, 所以实际后缀一定更短或相同长度
+
+        # 生成最终带后缀的字符串
+        truncated = sanitized[:keep_length]
+        suffix = FILENAME_TRUNCATE_SUFFIX % actual_remove_count
+        # ∵ keep_length + max_suffix_length == max_char
+        # ∵ len(suffix) ≤ max_suffix_length
+        # ∴ keep_length + len(suffix) ≤ max_char
+        return truncated + suffix
+
+    return sanitized
+
+
+def filename_from_prompt(
+    prompt: Prompt,
+    node_ids: Optional[List[str]] = None,
+    exclude_keywords: Sequence[str] = (),
+    case_sensitive: bool = False,
+) -> Optional[Tuple[str, str]]:
+    # 搜索所有包含text的节点
+    # 没有指定节点ID时，按 ID 顺序，ID必定是数字，如果改了接口此脚本应根据具体更改做变更而不是提前猜会怎么改
+    for node_id in node_ids or sorted(prompt.keys(), key=lambda id: int(id)):
+        text = prompt[node_id]["inputs"].get("text")
+        if text:
+            return extract_title(text, exclude_keywords, case_sensitive), node_id
+
+    return None
+
+
+def extract_title(
+    text: str,
+    exclude_keywords: Sequence[str] = (),
+    case_sensitive: bool = False,
+) -> str:
+    """处理文本，排除含关键词的行并返回第一行"""
+    lines = text.splitlines()
+
+    # 准备排除关键词
+    exclude_set = set(
+        exclude_keywords if case_sensitive else [k.lower() for k in exclude_keywords]
+    )
+
+    # 过滤行
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+
+        # 检查是否包含排除关键词
+        if any(
+            keyword in (s if case_sensitive else s.lower()) for keyword in exclude_set
+        ):
+            continue
+
+        s = s.removeprefix("//")  # 去掉注释符号，注释本身是可以用来当文件名的
+        s = s.replace(r"\(", "(").replace(r"\)", ")")  # 去除提示词中的转义
+        s = s.replace(" ", "_")  # 避免空格
+        s = sanitize_filename(s).strip(" _,")
+        if s:
+            return s
+
+    raise ValueError("所有行都被排除")
+
+
+def find_companion_files(main_file: str) -> Iterator[tuple[str, str]]:
+    """
+    查找所有配套文件
+    配套文件为相同目录下所有文件名符合`{包含扩展名的主文件名}.{任意后缀}`的文件，
+    必须包含主文件的原始扩展名。例如主文件是`example.png`，
+    则`example.png.xmp`是配套文件，而`example.png2`,`example.jpg`不是配套文件
+    """
+    main_basename = os.path.basename(main_file)
+    directory = os.path.dirname(main_file) or "."
+
+    # 简单前缀匹配：以原文件全名后跟一个点的文件
+    prefix = main_basename + "."
+    with os.scandir(directory) as it:
+        for entry in it:
+            if entry.is_file() and entry.name.startswith(prefix):
+                yield (
+                    os.path.join(directory, entry.name),
+                    entry.name[len(main_basename) :],
+                )
+
+
+def next_filename(base_name: str, directory: str, original_ext: str) -> Tuple[str, int]:
+    """生成新的文件名，包含递增数字"""
+    # 查找当前已存在的最大序号
+    max_num = 0
+    # ComfyUI 输出文件会在数字前后都有下划线（如 ComfyUI_00001_.png), 我们不得不和它一致
+    pattern = re.compile(
+        rf"^{re.escape(os.path.normcase(base_name))}_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
+    )
+    with os.scandir(directory) as it:
+        for entry in it:
+            if not entry.is_file():
+                continue
+            match = pattern.match(os.path.normcase(entry.name))
+            if not match:
+                continue
+
+            try:
+                num = int(match.group(1))
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                continue
+
+    new_num = max_num + 1
+    if new_num > 99999:
+        raise ValueError(f"no available filename for {base_name}_%05d_{original_ext}")
+    return f"{base_name}_{new_num:05d}_{original_ext}", new_num
+
+
+def rename_files(
+    file_paths: Iterable[str],
+    node_ids: Optional[List[str]] = None,
+    exclude_keywords: Optional[List[str]] = None,
+    case_sensitive: bool = False,
+):
+    """重命名主文件和配套文件"""
+    exclude_keywords = exclude_keywords or []
+
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            _LOGGER.error(f"文件不存在: {file_path}")
+            continue
+
+        # 提取提示词
+        prompt = extract_prompt_from_png(file_path)
+        if not prompt:
+            _LOGGER.warning(f"无法提取提示词: {file_path}")
+            continue
+
+        try:
+            # 获取第一行文本
+            result = filename_from_prompt(
+                prompt, node_ids, exclude_keywords, case_sensitive
+            )
+            if not result:
+                _LOGGER.warning(f"未找到有效文本节点: {file_path}")
+                continue
+
+            base_name, _ = result
+            if not base_name:
+                _LOGGER.warning(f"提取到的文本为空: {file_path}")
+                continue
+
+            # 准备重命名
+            directory = os.path.dirname(file_path) or "."
+            original_ext = os.path.splitext(file_path)[-1]
+
+            # 生成新文件名
+            new_basename, num = next_filename(base_name, directory, original_ext)
+            new_main_file = os.path.join(directory, new_basename)
+
+            # 先查找并重命名配套文件，这样如果中途中断，只要再运行一次就能恢复成正常状态
+            # 配套文件基于主文件名创建，但​​不影响主文件名生成​​
+            # 所以下次无外部编辑的情况下再运行相当于从中断的地方继续，和直接成功没有区别(而先重命名主文件就会导致配套文件孤立了无法继续)
+            for comp_file, suffix in find_companion_files(file_path):
+                new_comp_file = new_main_file + suffix
+                if not os.path.exists(new_comp_file):
+                    os.rename(comp_file, new_comp_file)
+                    _LOGGER.info(f"重命名: {comp_file} -> {new_basename+suffix} (配套文件)")
+                else:
+                    _LOGGER.warning(f"配套文件已存在，跳过: {new_comp_file}")
+
+            # 重命名主文件
+            if not os.path.exists(new_main_file):
+                os.rename(file_path, new_main_file)
+                _LOGGER.info(f"重命名: {file_path} -> {new_basename} (主文件)")
+            else:
+                _LOGGER.warning(f"目标文件已存在，跳过: {new_main_file}")
+                continue
+
+        except Exception as e:
+            _LOGGER.error(f"处理文件 {file_path} 时出错: {str(e)}")
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    parser = argparse.ArgumentParser(
+        description="根据ComfyUI PNG提示词重命名文件",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "files", nargs="+", help="要处理的ComfyUI PNG文件路径，支持通配符"
+    )
+    parser.add_argument(
+        "-n", "--node-ids", help="指定要使用的节点ID（多个节点按顺序尝试，逗号分隔）"
+    )
+    parser.add_argument(
+        "-e", "--exclude-keywords", help="要从文本中排除的关键词（逗号分隔）"
+    )
+    parser.add_argument(
+        "-c", "--case-sensitive", action="store_true", help="关键词区分大小写"
+    )
+
+    args = parser.parse_args()
+
+    # 处理参数
+    node_ids = args.node_ids.split(",") if args.node_ids else None
+    exclude_keywords = (
+        args.exclude_keywords.split(",") if args.exclude_keywords else None
+    )
+
+    rename_files(
+        file_paths=(j for i in args.files for j in (glob.glob(i) or (i,))),
+        node_ids=node_ids,
+        exclude_keywords=exclude_keywords,
+        case_sensitive=args.case_sensitive,
+    )
+
+
+if __name__ == "__main__":
+    main()
