@@ -249,6 +249,7 @@ def main() -> None:
         help="尾部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 4096)",
     )
     parser.add_argument(
+        "-e",
         "--exclude",
         action="append",
         default=[],
