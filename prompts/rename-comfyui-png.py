@@ -119,12 +119,13 @@ MAX_FILENAME_BYTES = 255
 FILENAME_TRUNCATE_SUFFIX = "...(%d more)"
 
 
-def sanitize_filename(filename: str) -> str:
+def sanitize_filename(filename: str, revered_bytes: int = 20) -> str:
     # 替换无效字符为 U+FFFD (�)
     sanitized = invalid_filename_char_pattern.sub("\ufffd", filename)
 
-    max_chars = MAX_FILENAME_BYTES
-    while len(sanitized[:max_chars].encode("utf-8")) > MAX_FILENAME_BYTES:
+    max_bytes = MAX_FILENAME_BYTES - revered_bytes
+    max_chars = max_bytes
+    while len(sanitized[:max_chars].encode("utf-8")) > max_bytes:
         max_chars -= 1
     # 如果长度超过限制则截断
     if len(sanitized) > max_chars:
