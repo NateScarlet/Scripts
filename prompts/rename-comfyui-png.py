@@ -199,12 +199,16 @@ def extract_title(
 
         # 检查是否包含排除关键词
         check_line = s if case_sensitive else s.lower()
-        if any(keyword in check_line for keyword in exclude_set):
+        try:
+            keyword = next(keyword for keyword in exclude_set if keyword in check_line)
+            _LOGGER.debug("根据关键词 '%s' 排除行 '%s'", keyword, check_line)
             continue
+        except StopIteration:
+            pass
 
-        s = s.removeprefix("//")  # 去掉注释符号，注释本身是可以用来当文件名的
         s = s.replace(r"\(", "(").replace(r"\)", ")")  # 去除提示词中的转义
         s = s.replace(" ", "_")  # 避免空格
+        s = s.replace("　", "_")  # 避免中文空格
         s = sanitize_filename(s).strip(" _,")
         if s:
             return s
@@ -271,6 +275,7 @@ def rename_files(
 ):
     """重命名主文件和配套文件"""
     exclude_keywords = exclude_keywords or []
+    _LOGGER.debug("排除关键词: %s", exclude_keywords)
 
     for file_path in file_paths:
         if not os.path.exists(file_path):
@@ -364,8 +369,11 @@ def main():
     parser.add_argument(
         "--with-dir", action="store_true", help="为每个标题创建单独的目录"
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="详细输出")
 
     args = parser.parse_args()
+    if args.verbose:
+        _LOGGER.setLevel(logging.DEBUG)
 
     # 处理参数
     node_ids = args.node_ids.split(",") if args.node_ids else None
