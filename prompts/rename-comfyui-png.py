@@ -150,7 +150,7 @@ def sanitize_filename(filename: str) -> str:
     return sanitized
 
 
-def filename_from_prompt(
+def title_from_prompt(
     prompt: Prompt,
     node_ids: Optional[List[str]] = None,
     exclude_keywords: Sequence[str] = (),
@@ -171,7 +171,6 @@ def extract_title(
     exclude_keywords: Sequence[str] = (),
     case_sensitive: bool = False,
 ) -> str:
-    """处理文本，排除含关键词的行并返回第一行"""
     lines = text.splitlines()
 
     # 准备排除关键词
@@ -222,13 +221,13 @@ def find_companion_files(main_file: str) -> Iterator[tuple[str, str]]:
                 )
 
 
-def next_filename(base_name: str, directory: str, original_ext: str) -> Tuple[str, int]:
+def next_filename(title: str, directory: str, original_ext: str) -> Tuple[str, int]:
     """生成新的文件名，包含递增数字"""
     # 查找当前已存在的最大序号
     max_num = 0
     # ComfyUI 输出文件会在数字前后都有下划线（如 ComfyUI_00001_.png), 我们不得不和它一致
     pattern = re.compile(
-        rf"^{re.escape(os.path.normcase(base_name))}_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
+        rf"^{re.escape(os.path.normcase(title))}_(\d{{5}})_{re.escape(os.path.normcase(original_ext))}$",
     )
     with os.scandir(directory) as it:
         for entry in it:
@@ -247,8 +246,8 @@ def next_filename(base_name: str, directory: str, original_ext: str) -> Tuple[st
 
     new_num = max_num + 1
     if new_num > 99999:
-        raise ValueError(f"no available filename for {base_name}_%05d_{original_ext}")
-    return f"{base_name}_{new_num:05d}_{original_ext}", new_num
+        raise ValueError(f"no available filename for {title}_%05d_{original_ext}")
+    return f"{title}_{new_num:05d}_{original_ext}", new_num
 
 
 def rename_files(
@@ -273,16 +272,22 @@ def rename_files(
 
         try:
             # 获取第一行文本
-            result = filename_from_prompt(
+            result = title_from_prompt(
                 prompt, node_ids, exclude_keywords, case_sensitive
             )
             if not result:
                 _LOGGER.warning(f"未找到有效文本节点: {file_path}")
                 continue
 
-            base_name, _ = result
-            if not base_name:
+            title, _ = result
+            if not title:
                 _LOGGER.warning(f"提取到的文本为空: {file_path}")
+                continue
+
+            if os.path.normcase(os.path.dirname(file_path)).startswith(
+                os.path.normcase(title)
+            ):
+                _LOGGER.debug(f"跳过已经使用 prompt 命名的文件: {file_path}")
                 continue
 
             # 准备重命名
@@ -290,7 +295,7 @@ def rename_files(
             original_ext = os.path.splitext(file_path)[-1]
 
             # 生成新文件名
-            new_basename, num = next_filename(base_name, directory, original_ext)
+            new_basename, num = next_filename(title, directory, original_ext)
             new_main_file = os.path.join(directory, new_basename)
 
             # 先查找并重命名配套文件，这样如果中途中断，只要再运行一次就能恢复成正常状态
@@ -300,7 +305,9 @@ def rename_files(
                 new_comp_file = new_main_file + suffix
                 if not os.path.exists(new_comp_file):
                     os.rename(comp_file, new_comp_file)
-                    _LOGGER.info(f"重命名: {comp_file} -> {new_basename+suffix} (配套文件)")
+                    _LOGGER.info(
+                        f"重命名: {comp_file} -> {new_basename+suffix} (配套文件)"
+                    )
                 else:
                     _LOGGER.warning(f"配套文件已存在，跳过: {new_comp_file}")
 
