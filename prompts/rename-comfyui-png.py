@@ -29,7 +29,7 @@ ComfyUI PNG文件重命名工具
    python rename-comfyui-png.py *.png
 
 3. 指定节点ID和排除关键词：
-   python rename-comfyui-png.py workflow.png -n 12,7,3 -e "placeholder,test"
+   python rename-comfyui-png.py workflow.png -n 12,7,3 -e placeholder -e test
 
 4. 区分大小写排除关键词：
    python rename-comfyui-png.py output.png -e "SAMPLE" -c
@@ -40,7 +40,7 @@ ComfyUI PNG文件重命名工具
 参数说明：
   files           要处理的ComfyUI PNG文件路径（可多个）
   -n, --node-ids  指定优先使用的节点ID（多个节点按顺序尝试）
-  -e, --exclude-keywords 排除包含这些关键词的行（逗号分隔）
+  -e, --exclude-keywords 排除包含这些关键词的行（可多次指定）
   -c, --case-sensitive  关键词区分大小写
   --with-dir 为每个标题创建单独的目录
 """
@@ -195,9 +195,8 @@ def extract_title(
             continue
 
         # 检查是否包含排除关键词
-        if any(
-            keyword in (s if case_sensitive else s.lower()) for keyword in exclude_set
-        ):
+        check_line = s if case_sensitive else s.lower()
+        if any(keyword in check_line for keyword in exclude_set):
             continue
 
         s = s.removeprefix("//")  # 去掉注释符号，注释本身是可以用来当文件名的
@@ -385,7 +384,10 @@ def main():
         "-n", "--node-ids", help="指定要使用的节点ID（多个节点按顺序尝试，逗号分隔）"
     )
     parser.add_argument(
-        "-e", "--exclude-keywords", help="要从文本中排除的关键词（逗号分隔）"
+        "-e",
+        "--exclude-keywords",
+        action="append",
+        help="要从文本中排除的关键词（可多次指定）",
     )
     parser.add_argument(
         "-c", "--case-sensitive", action="store_true", help="关键词区分大小写"
@@ -398,14 +400,11 @@ def main():
 
     # 处理参数
     node_ids = args.node_ids.split(",") if args.node_ids else None
-    exclude_keywords = (
-        args.exclude_keywords.split(",") if args.exclude_keywords else None
-    )
 
     rename_files(
         file_paths=(j for i in args.files for j in (glob.glob(i) or (i,))),
         node_ids=node_ids,
-        exclude_keywords=exclude_keywords,
+        exclude_keywords=args.exclude_keywords,
         case_sensitive=args.case_sensitive,
         with_dir=args.with_dir,
     )
