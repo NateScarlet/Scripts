@@ -159,9 +159,11 @@ def title_from_prompt(
     # 搜索所有包含text的节点
     # 没有指定节点ID时，按 ID 顺序，ID必定是数字，如果改了接口此脚本应根据具体更改做变更而不是提前猜会怎么改
     for node_id in node_ids or sorted(prompt.keys(), key=lambda id: int(id)):
-        text = prompt[node_id]["inputs"].get("text")
-        if text:
-            return extract_title(text, exclude_keywords, case_sensitive), node_id
+        node = prompt.get(node_id)
+        if node:
+            text = node["inputs"].get("text")
+            if text:
+                return extract_title(text, exclude_keywords, case_sensitive), node_id
 
     return None
 
