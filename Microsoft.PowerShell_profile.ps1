@@ -67,3 +67,9 @@ function New-FileByReplace {
 }
 
 Set-Alias "generate:replace" New-FileByReplace
+
+function Start-WaitIdle {
+    py $PSScriptRoot/wait-idle.py $args
+}
+
+Set-Alias "wait-idle" Start-WaitIdle
