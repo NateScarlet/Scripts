@@ -73,3 +73,21 @@ function Start-WaitIdle {
 }
 
 Set-Alias "wait-idle" Start-WaitIdle
+
+
+
+function Start-ComfyRename {
+    py $PSScriptRoot/prompts/comfy-rename.py $args
+}
+
+Set-Alias "comfy-rename" Start-ComfyRename
+
+
+function Start-ComfySearch {
+    py $PSScriptRoot/prompts/comfy-search.py $args
+}
+
+Set-Alias "comfy-search" Start-ComfySearch
+
+
+

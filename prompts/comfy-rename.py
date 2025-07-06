@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
 """
-ComfyUI PNG文件重命名工具
+ComfyUI 输出文件重命名工具
 
-该脚本根据ComfyUI生成的PNG文件中嵌入的提示词(prompt)元数据，重命名图像文件及其配套文件。
+该脚本根据ComfyUI生成的文件中嵌入的提示词(prompt)元数据，重命名图像文件及其配套文件。
 主要功能：
 1. 从PNG元数据中提取提示词文本
 2. 使用提示词的第一行作为新文件名的基础（排除包含指定关键词的行）
@@ -23,19 +22,19 @@ ComfyUI PNG文件重命名工具
 
 使用示例：
 1. 基本使用：重命名单个文件
-   python rename-comfyui-png.py image.png
+   python comfy-rename.py image.png
 
 2. 批量重命名多个文件：
-   python rename-comfyui-png.py *.png
+   python comfy-rename.py *.png
 
 3. 指定节点ID和排除关键词：
-   python rename-comfyui-png.py workflow.png -n 12,7,3 -e placeholder -e test
+   python comfy-rename.py workflow.png -n 12,7,3 -e placeholder -e test
 
 4. 区分大小写排除关键词：
-   python rename-comfyui-png.py output.png -e "SAMPLE" -c
+   python comfy-rename.py output.png -e "SAMPLE" -c
 
 5. 使用目录结构（每个标题创建单独目录）：
-   python rename-comfyui-png.py result.png --with-dir
+   python comfy-rename.py result.png --with-dir
 
 参数说明：
   files           要处理的ComfyUI PNG文件路径（可多个）

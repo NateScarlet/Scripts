@@ -39,7 +39,7 @@ class PromptValue(TypedDict):
     _meta: Dict[str, str]
 
 
-# ComfyUI PNG文件的元数据结构
+# ComfyUI 输出文件的元数据结构
 # key 为 node id，value 为 PromptValue
 Prompt = Dict[str, PromptValue]
 
