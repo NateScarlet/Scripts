@@ -1,7 +1,7 @@
 """
-wait-idle.py - 等待系统空闲的监控脚本
+wait-idle.py - 等待系统空闲的等待脚本
 
-该脚本持续监控系统资源使用情况，直到CPU和GPU占用率持续低于阈值达到指定时间后才退出。
+该脚本持续等待系统资源使用情况，直到CPU和GPU占用率持续低于阈值达到指定时间后才退出。
 适用于挂机渲染任务完成后的等待场景。
 
 使用示例:
@@ -13,7 +13,7 @@ wait-idle.py - 等待系统空闲的监控脚本
 
 退出代码:
   0 - 成功达到目标空闲时间
-  1 - 监控过程中出现错误
+  1 - 等待过程中出现错误
   2 - 参数错误
 """
 
@@ -138,9 +138,9 @@ def main():
         _LOGGER.error("参数错误: %s", e)
         sys.exit(2)
 
-    # 初始化监控
+    # 初始化等待
 
-    _LOGGER.info(f"⌛ 开始监控，需要持续空闲 {target_duration_ns/1e9} 秒")
+    _LOGGER.info(f"⌛ 开始等待，需要持续空闲 {target_duration_ns/1e9} 秒")
     _LOGGER.info(f"监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
     _get_gpu_usage = get_gpu_usage
     if get_gpu_usage() is None:
@@ -152,7 +152,7 @@ def main():
     idle_start = None
     start_at = time.time_ns()
     try:
-        psutil.cpu_percent()  # 记录 CPU 监控起始点
+        psutil.cpu_percent()  # 记录 CPU 等待起始点
         last_tick = start_at
         for now in precise_ticker(interval_ns):
             cpu = get_cpu_usage()
@@ -178,7 +178,7 @@ def main():
             if cpu_ok and gpu_ok and input_ok:
                 if idle_start is None:
                     if target_duration_ns == 0:
-                        _LOGGER.info(f"🎉 系统空闲，退出监控")
+                        _LOGGER.info(f"🎉 系统空闲，退出等待")
                         sys.exit(0)
                     idle_start = now
                     _LOGGER.info("✅ 系统空闲，开始计时")
@@ -187,9 +187,9 @@ def main():
                     if elapsed >= target_duration_ns:
                         total_time_ns = now - start_at
                         _LOGGER.info(
-                            f"🎉 达到目标空闲时间 {target_duration_ns/1e9} 秒，退出监控"
+                            f"🎉 达到目标空闲时间 {target_duration_ns/1e9} 秒，退出等待"
                         )
-                        _LOGGER.info(f"⏱️ 总监控时间: {total_time_ns/1e9:.1f} 秒")
+                        _LOGGER.info(f"⏱️ 总等待时间: {total_time_ns/1e9:.1f} 秒")
                         sys.exit(0)
             else:
                 if idle_start is not None:
@@ -207,10 +207,10 @@ def main():
             last_tick = now
 
     except KeyboardInterrupt:
-        _LOGGER.info("用户中断监控")
+        _LOGGER.info("用户中断等待")
         sys.exit(1)
     except Exception as e:
-        _LOGGER.exception(f"监控过程中发生错误: {str(e)}")
+        _LOGGER.exception(f"等待过程中发生错误: {str(e)}")
         sys.exit(1)
 
 
