@@ -90,4 +90,9 @@ function Start-ComfySearch {
 Set-Alias "comfy-search" Start-ComfySearch
 
 
+function Remove-Duplicated-File {
+    py $PSScriptRoot/remove-duplicated-file.py $args
+}
+
+
 
