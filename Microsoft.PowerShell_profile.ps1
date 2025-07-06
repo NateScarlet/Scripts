@@ -95,4 +95,6 @@ function Remove-Duplicated-File {
 }
 
 
-
+function Remove-Empty-Dir {
+    Get-ChildItem -Directory $args | Where-Object { $_.GetFiles().Count -eq 0 -and $_.GetDirectories().Count -eq 0 } | ForEach-Object { $_; Remove-Item $_ }
+}
