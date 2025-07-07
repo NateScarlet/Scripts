@@ -3,6 +3,7 @@ wait-idle.py - 等待系统空闲的等待脚本
 
 该脚本持续等待系统资源使用情况，直到CPU和GPU占用率持续低于阈值达到指定时间后才退出。
 适用于挂机渲染任务完成后的等待场景。
+空闲持续时间从第一次获取有效监控数据后开始计算，最少运行一个周期。
 
 使用示例:
   # 基本用法
@@ -23,6 +24,7 @@ import logging
 import argparse
 import psutil
 from typing import Iterator, Optional
+from tqdm import tqdm
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,10 +63,10 @@ def get_gpu_usage():
     return max(gpu.load * 100 for gpu in gpus)
 
 
-def precise_ticker(interval_ns: int) -> Iterator[int]:
-    next_time = time.time_ns() + interval_ns
+def precise_ticker(interval_ns: int, immediate: bool) -> Iterator[int]:
+    next_time = time.monotonic_ns() + (0 if immediate else interval_ns)
     while True:
-        current_time = time.time_ns()
+        current_time = time.monotonic_ns()
 
         if current_time >= next_time:
             # 已经超时，立即 yield
@@ -76,7 +78,7 @@ def precise_ticker(interval_ns: int) -> Iterator[int]:
             sleep_time = next_time - current_time
             time.sleep(sleep_time / 1e9)
             # sleep 结束后再 yield
-            yield time.time_ns()
+            yield time.monotonic_ns()
             next_time += interval_ns
 
 
@@ -116,12 +118,8 @@ def main():
     target_duration_ns = int(args.duration_secs * 1e9)
     cpu_threshold = args.cpu
     gpu_threshold = args.gpu
-    detect_user_input = not args.ignore_user_input
+    ignore_user_input = args.ignore_user_input
     interval_ns = int(args.interval_secs * 1e9)
-    if detect_user_input:
-        if get_since_last_input_ns() is None:
-            _LOGGER.warning("未检测到用户输入检测支持，将忽略用户输入 (需 win32api)")
-            detect_user_input = False
     try:
         if target_duration_ns < 0:
             raise ValueError("等待时间不能为负数")
@@ -140,72 +138,109 @@ def main():
 
     # 初始化等待
 
-    _LOGGER.info(f"⌛ 开始等待，需要持续空闲 {target_duration_ns/1e9} 秒")
-    _LOGGER.info(f"监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
+    _LOGGER.info(f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
+
     _get_gpu_usage = get_gpu_usage
-    if get_gpu_usage() is None:
+    if gpu_threshold == 100:
+        _get_gpu_usage = lambda: None
+    elif get_gpu_usage() is None:
         _LOGGER.warning(
             "未检测到GPU监控支持，将忽略 GPU 阈值 (需安装 GPUtil 并且支持 nvidia-smi)"
         )
         _get_gpu_usage = lambda: None
 
+    _get_cpu_usage = get_cpu_usage
+    if cpu_threshold == 100:
+        _get_cpu_usage = lambda: None
+
+    _get_since_last_input_ns = get_since_last_input_ns
+    if ignore_user_input:
+        _get_since_last_input_ns = lambda: None
+    elif get_since_last_input_ns() is None:
+        _LOGGER.warning("未检测到用户输入检测支持，将忽略用户输入 (需 win32api)")
+        _get_since_last_input_ns = lambda: None
+
     idle_start = None
-    start_at = time.time_ns()
+    start_at = time.monotonic_ns()
+
     try:
-        psutil.cpu_percent()  # 记录 CPU 等待起始点
-        last_tick = start_at
-        for now in precise_ticker(interval_ns):
-            cpu = get_cpu_usage()
-            gpu = _get_gpu_usage()
+        with tqdm(
+            total=target_duration_ns / 1e9,
+            bar_format="{n:.0f}/{total:.0f}s |{bar}|",
+            disable=True if target_duration_ns == 0 else None,
+        ) as progress:
+            _get_cpu_usage()  # 初始化 CPU 监控
+            last_tick = start_at
+            for now in precise_ticker(interval_ns, immediate=False):
+                cpu = _get_cpu_usage()
+                gpu = _get_gpu_usage()
+                since_last_input_ns = _get_since_last_input_ns()
 
-            # 检查资源使用情况
-            cpu_ok = cpu <= cpu_threshold
-            gpu_ok = (gpu is None) or (gpu <= gpu_threshold)
-            input_ok = True
-            since_last_input_ns: int | None
-            if detect_user_input:
-                since_last_input_ns = get_since_last_input_ns()
-                assert (
-                    since_last_input_ns is not None
-                ), "不支持时 detect_user_input 应该为 False"
-                _LOGGER.debug("距离上次用户操作: %.3f 秒", since_last_input_ns / 1e9)
-                # 只检查本周期是否有有输入，避免等双倍时间
-                input_ok = since_last_input_ns >= (now - last_tick)
+                # 检查资源使用情况
+                cpu_ok = (cpu is None) or (cpu <= cpu_threshold)
+                gpu_ok = (gpu is None) or (gpu <= gpu_threshold)
+                input_ok = (since_last_input_ns is None) or (
+                    since_last_input_ns >= (now - last_tick)
+                )
 
-            gpu_status = f"{gpu:.1f}%" if gpu is not None else "N/A"
-            _LOGGER.debug(f"CPU: {cpu:.1f}% | GPU: {gpu_status}")
+                cpu_status: str
+                gpu_status: str
+                input_status: str
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    cpu_status = f"{cpu:.1f}%" if cpu is not None else "N/A"
+                    gpu_status = f"{gpu:.1f}%" if gpu is not None else "N/A"
+                    input_status = (
+                        f"{since_last_input_ns/1e9:.3f}秒"
+                        if since_last_input_ns
+                        else "N/A"
+                    )
+                    _LOGGER.debug(
+                        f"CPU: {cpu_status} | GPU: {gpu_status} | 距用户上次操作: {input_status}"
+                    )
 
-            if cpu_ok and gpu_ok and input_ok:
-                if idle_start is None:
-                    if target_duration_ns == 0:
-                        _LOGGER.info(f"🎉 系统空闲，退出等待")
-                        sys.exit(0)
-                    idle_start = now
-                    _LOGGER.info("✅ 系统空闲，开始计时")
+                if cpu_ok and gpu_ok and input_ok:
+                    if idle_start is None:
+                        if target_duration_ns == 0:
+                            # 不进行下个循环直接终止
+                            last_tick = now
+                            break
+                        idle_start = now
+                        _LOGGER.debug("✅ 系统空闲，开始计时")
+                        progress.reset()
+                    else:
+                        elapsed = now - idle_start
+                        if elapsed >= target_duration_ns:
+                            # 终止
+                            last_tick = now
+                            progress.leave = (
+                                False  # 正常结束不残留进度条，异常保留中断时间
+                            )
+                            break
+                        else:
+                            progress.n = (
+                                elapsed / 1e9
+                            )  # 避免 update 使用浮点数加法进行计算
+                            progress.update(0)  # 让进度条内部决定是否要刷新
                 else:
-                    elapsed = now - idle_start
-                    if elapsed >= target_duration_ns:
-                        total_time_ns = now - start_at
-                        _LOGGER.info(
-                            f"🎉 达到目标空闲时间 {target_duration_ns/1e9} 秒，退出等待"
-                        )
-                        _LOGGER.info(f"⏱️ 总等待时间: {total_time_ns/1e9:.1f} 秒")
-                        sys.exit(0)
-            else:
-                if idle_start is not None:
-                    reason = ""
-                    if not cpu_ok:
-                        reason += f"CPU {cpu:.1f}%;"
-                    if not gpu_ok:
-                        reason += f"GPU {gpu_status};"
-                    if not input_ok:
-                        reason += (
-                            f"用户于 {since_last_input_ns/1e9:.3f} 秒前进行了操作;"
-                        )
-                    _LOGGER.info("❌ 重置计时器，原因：%s", reason)
-                idle_start = None
-            last_tick = now
-
+                    if idle_start is not None:
+                        if _LOGGER.isEnabledFor(logging.DEBUG):
+                            reason = ""
+                            if not cpu_ok:
+                                reason += f"CPU {cpu_status}%;"
+                            if not gpu_ok:
+                                reason += f"GPU {gpu_status};"
+                            if not input_ok:
+                                reason += f"用户于 {input_status} 前进行了操作;"
+                            _LOGGER.debug("❌ 重置计时器，原因：%s", reason)
+                        progress.reset()
+                    idle_start = None
+                last_tick = now
+        if target_duration_ns == 0:
+            _LOGGER.info(f"🎉系统空闲，退出等待")
+        else:
+            _LOGGER.info(f"🎉达到目标空闲时间 {target_duration_ns/1e9} 秒，退出等待")
+        _LOGGER.info(f"⏱️ 总等待时间: {(last_tick - start_at)/1e9:.1f} 秒")
+        sys.exit(0)
     except KeyboardInterrupt:
         _LOGGER.info("用户中断等待")
         sys.exit(1)
