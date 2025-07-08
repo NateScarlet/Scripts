@@ -7,14 +7,10 @@
     $ErrorActionPreference = "Stop"
 
     function Invoke-NativeCommand {
-        param(
-            [Parameter(Mandatory, Position = 0)] [string]$Command,
-            [Parameter(Position = 1, ValueFromRemainingArguments)] [string[]]$Arguments
-        )
-    
-        & $Command $Arguments
+        $command, $arguments = $args
+        & $command @arguments
         if ($LASTEXITCODE -ne 0) {
-            Throw "命令 '$Command $Arguments' 失败 (退出码 $LASTEXITCODE)"
+            Throw "命令 '$args' 失败 (退出码 $LASTEXITCODE)"
         }
     }
 
@@ -155,6 +151,9 @@
             $env:GIT_AUTHOR_EMAIL = $repoSettings.gitEmail
             $env:GIT_COMMITTER_NAME = $repoSettings.gitName
             $env:GIT_COMMITTER_EMAIL = $repoSettings.gitEmail
+            $env:GIT_CONFIG_COUNT = 1
+            $env:GIT_CONFIG_KEY_0 = "commit.gpgsign"
+            $env:GIT_CONFIG_VALUE_0 = "false"
 
             # 执行拉取操作（如果启用）
             if ($result.PullEnabled) {
@@ -191,7 +190,7 @@
                 
                 # 执行 Git 操作
                 Write-Host "添加所有变更..."
-                Invoke-NativeCommand git add -A --quiet
+                Invoke-NativeCommand git add -A
                 
                 Write-Host "创建提交: $commitMsg"
                 Invoke-NativeCommand git commit -m $commitMsg --quiet
