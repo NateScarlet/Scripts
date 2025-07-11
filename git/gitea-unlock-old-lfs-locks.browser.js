@@ -112,14 +112,15 @@
   // 获取所有符合条件的锁并解锁
   async function unlockOldLocks(maxAgeMs) {
     try {
-      const now = new Date();
-      const until = new Date(now.getTime() - maxAgeMs);
+      const until = Date.now() - maxAgeMs;
 
       const locksToUnlock = [];
       for (let page = 1; ; page += 1) {
         const { locks, lastPage } = await listLocks(page);
 
-        locksToUnlock.push(...locks.filter((i) => i.lockedAt <= until));
+        locksToUnlock.push(
+          ...locks.filter((i) => i.lockedAt.getTime() <= until)
+        );
         console.log(`共${lastPage}页，待处理: ${locksToUnlock.length}`);
         if (page >= lastPage) {
           break;
