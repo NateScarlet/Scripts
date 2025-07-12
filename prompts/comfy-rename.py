@@ -44,7 +44,6 @@ ComfyUI 输出文件重命名工具
   --with-dir 为每个标题创建单独的目录
 """
 
-
 import os
 import re
 import json
@@ -204,6 +203,9 @@ def extract_title(
             continue
         except StopIteration:
             pass
+
+        # 特殊处理: 去除 0 权重中的文本，用于显式设置标题
+        s = re.sub(r"\((.*?):0\)", r"\1", s)
 
         s = s.replace(r"\(", "(").replace(r"\)", ")")  # 去除提示词中的转义
         s = s.replace(" ", "_")  # 避免空格
