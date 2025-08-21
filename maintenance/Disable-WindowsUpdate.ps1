@@ -16,6 +16,8 @@ try {
     Write-Host "`n成功设置更新暂停 Windows 更新（设置中可手动恢复更新）：" -ForegroundColor Green
     Write-Host "开始时间: $CurrentTime"
     Write-Host "结束时间: $EndTime"
+
+    Start-Process ms-settings:windowsupdate
 }
 
 catch [System.UnauthorizedAccessException] {
