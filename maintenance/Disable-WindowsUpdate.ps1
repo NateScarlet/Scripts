@@ -1,5 +1,3 @@
-#Requires -RunAsAdministrator
-
 $RegPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
 $CurrentTime = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
 $EndTime = [DateTime]::UtcNow.AddYears(100).ToString("yyyy-MM-ddTHH:mm:ssZ")
