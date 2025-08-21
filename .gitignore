@@ -1,3 +1,5 @@
+*.ps1.cmd
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
