@@ -21,6 +21,19 @@ if ($proxySettings.ProxyEnable -eq 1) {
             -replace '^(\d+)\.(\d+)\.(\d+)\.\*$','$1.$2.$3.0/8' `
         }) -join ',' 
         )"
+} 
+
+if ($env:HTTPS_PROXY) {
+    git config --global http.proxy $env:HTTP_PROXY
+    git config --global http.noProxy $env:NO_PROXY
+    git config --global https.proxy $env:HTTPS_PROXY
+    git config --global https.noProxy $env:NO_PROXY
+}
+else {
+    git config --global --unset http.proxy
+    git config --global --unset http.noProxy
+    git config --global --unset https.proxy
+    git config --global --unset https.noProxy
 }
 
 try {
