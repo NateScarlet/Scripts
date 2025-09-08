@@ -155,20 +155,7 @@
             $env:GIT_CONFIG_KEY_0 = "commit.gpgsign"
             $env:GIT_CONFIG_VALUE_0 = "false"
 
-            # 执行拉取操作（如果启用）
-            if ($result.PullEnabled) {
-                try {
-                    Write-Host "正在拉取最新变更..."
-                    Invoke-NativeCommand git pull --rebase --quiet
-                }
-                catch {
-                    throw "拉取失败: $_"
-                }
-            }
-            else {
-                Write-Host "跳过拉取变更 (已配置禁用)" -ForegroundColor Cyan
-            }
-            
+      
             # 检查是否有变更
             $statusOutput = ""
             try {
@@ -195,23 +182,38 @@
                 Write-Host "创建提交: $commitMsg"
                 Invoke-NativeCommand git commit -m $commitMsg --quiet
                 
-                # 推送变更（如果启用）
-                if ($result.PushEnabled) {
-                    try {
-                        Write-Host "推送变更..."
-                        Invoke-NativeCommand git push --quiet
-                    }
-                    catch {
-                        throw "推送失败: $_"
-                    }
-                }
-                else {
-                    Write-Host "跳过推送变更 (已配置禁用)" -ForegroundColor Cyan
-                }
-                
                 $result.Success = $true
                 $result.Message = "提交成功"
             }
+
+            # 执行拉取操作（如果启用）
+            if ($result.PullEnabled) {
+                try {
+                    Write-Host "正在拉取最新变更..."
+                    Invoke-NativeCommand git pull --rebase --quiet
+                }
+                catch {
+                    throw "拉取失败: $_"
+                }
+            }
+            else {
+                Write-Host "跳过拉取变更 (已配置禁用)" -ForegroundColor Cyan
+            }
+            
+            # 推送变更（如果启用）
+            if ($result.PushEnabled) {
+                try {
+                    Write-Host "推送变更..."
+                    Invoke-NativeCommand git push --quiet
+                }
+                catch {
+                    throw "推送失败: $_"
+                }
+            }
+            else {
+                Write-Host "跳过推送变更 (已配置禁用)" -ForegroundColor Cyan
+            }
+
             
             Write-Host "仓库 $repoPath 处理成功" -ForegroundColor Green
         }
