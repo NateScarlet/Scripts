@@ -42,21 +42,26 @@ $#1:: {
     if WinExist("ahk_exe firefox.exe") {
         WinActivate
     } else {
-        Run "firefox"
+        Run A_Programs "\Firefox.lnk"
     }
 }
 
-; 2. 启动 Krita
-$#2:: Run "krita"
+; 2. 启动 Obsidian
+$#2:: {
+    create() {
+        Run A_Programs "\Obsidian.lnk"
+    }
+
+    CycleWindows("ahk_exe Obsidian.exe", create)
+}
 
 ; 3. VS Code 窗口循环切换
 $#3:: {
-    ; 定义创建操作：启动一个 VS Code 实例
-    createVSCode() {
+    create() {
         Run "code"
     }
 
-    CycleWindows("ahk_exe Code.exe", createVSCode)
+    CycleWindows("ahk_exe Code.exe", create)
 }
 
 ; 4. 启动 Everything
@@ -64,13 +69,12 @@ $#f:: Run A_ProgramFiles "\Everything\Everything.exe"
 
 ; 5. 资源管理器窗口循环切换
 $#e:: {
-    ; 定义创建操作：启动两个资源管理器实例
-    createExplorers() {
+    create() {
         Run A_WinDir "\explorer.exe"
         Run A_WinDir "\explorer.exe"
     }
 
-    CycleWindows("ahk_class CabinetWClass ahk_exe explorer.exe", createExplorers)
+    CycleWindows("ahk_class CabinetWClass ahk_exe explorer.exe", create)
 }
 
 ; 6. Windows 终端切换
