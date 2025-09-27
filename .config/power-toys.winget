@@ -19,11 +19,10 @@ properties:
           Enabled: true
           OpenPowerLauncher: "Win+`"
           UsePinyin: true
-          # https://github.com/microsoft/PowerToys/blob/main/src/dsc/Microsoft.PowerToys.Configure/examples/configureLauncherPlugins.winget
           Plugins:
-            - Name: "Windows Search"
+            - Name: "Windows 搜索"
               Disabled: true
             - Name: "OneNote"
               Disabled: true
-            - Name: "Visual Studio Code Workspaces"
+            - Name: "Visual Studio Code 工作区"
               Disabled: false

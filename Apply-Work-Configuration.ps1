@@ -6,5 +6,6 @@ $(
     "power-toys.winget",
     "work.winget"
 ) | ForEach-Object {
-    winget configure $PSScriptRoot/.config/$_ --accept-configuration-agreements
+    $_
+    winget configure $PSScriptRoot/.config/$_ --accept-configuration-agreements --proxy=$env:HTTPS_PROXY
 }
