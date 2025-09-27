@@ -8,13 +8,22 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: Microsoft.PowerToys
-
     - resource: PowerToysConfigure
       directives:
         description: Configure PowerToys
       dependsOn:
         - power-toys
       settings:
+        # https://learn.microsoft.com/zh-cn/windows/powertoys/dsc-configure#powerlauncher
         PowerLauncher:
           Enabled: true
           OpenPowerLauncher: "Win+`"
+          UsePinyin: true
+          # https://github.com/microsoft/PowerToys/blob/main/src/dsc/Microsoft.PowerToys.Configure/examples/configureLauncherPlugins.winget
+          Plugins:
+            - Name: "Windows Search"
+              Disabled: true
+            - Name: "OneNote"
+              Disabled: true
+            - Name: "Visual Studio Code Workspaces"
+              Disabled: false
