@@ -1,0 +1,304 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  assertions:
+    - resource: Microsoft.Windows.Developer/OsVersion
+      directives:
+        description: Verify min OS version requirement
+        allowPrerelease: true
+      settings:
+        MinVersion: "10.0.22000"
+  resources:
+    - directives:
+        description: ConfigureWindowsSettings
+      resource: Microsoft.Windows.Settings/WindowsSettings
+      settings:
+        AppColorMode: Dark
+        SystemColorMode: Dark
+        TaskbarAlignment: Top
+
+    - directives:
+        description: Install 7zip
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: 7zip.7zip
+
+    - id: auto-hotkey-v1
+      directives:
+        description: Install AutoHotkeyV1
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: AutoHotkey.AutoHotkey
+        version: 1.1.37.02
+        noUpgrade: true
+
+    - directives:
+        description: Install AutoHotkeyV2
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      dependsOn:
+        - auto-hotkey-v1 # 先装 v1 再升级，这样 v2 就能执行 v1 脚本
+      settings:
+        id: AutoHotkey.AutoHotkey
+
+    - directives:
+        description: Install FFmpeg
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: BtbN.FFmpeg.GPL.Shared.6.1 # 更新了FFmpeg版本
+
+    - directives:
+        description: Install Ubuntu
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Canonical.Ubuntu
+
+    - directives:
+        description: Install DockerDesktop
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Docker.DockerDesktop
+
+    - directives:
+        description: Install Git
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Git.Git
+
+    - directives:
+        description: Install GithubCLI
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Github.cli
+
+    - directives:
+        description: Install GnuPG
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: GnuPG.GnuPG
+
+    - directives:
+        description: Install Gpg4win
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: GnuPG.Gpg4win
+
+    - directives:
+        description: Install Go
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: GoLang.Go
+
+    - directives:
+        description: Install ImageMagick
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ImageMagick.ImageMagick
+
+    - directives:
+        description: Install BulkCrapUninstaller
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Klocman.BulkCrapUninstaller
+
+    - directives:
+        description: Install PowerShell
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Microsoft.PowerShell
+
+    - id: power-toys
+      directives:
+        description: Install PowerToys
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Microsoft.PowerToys
+
+    - resource: PowerToysConfigure
+      directives:
+        description: Configure PowerToys
+      dependsOn:
+        - power-toys
+      settings:
+        PowerLauncher:
+          Enabled: true
+          OpenPowerLauncher: "Win+`"
+
+    - directives:
+        description: Install VS2022BuildTools
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Microsoft.VisualStudio.2022.BuildTools
+
+    - directives:
+        description: Install VSCode
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Microsoft.VisualStudioCode
+
+    - directives:
+        description: Install WindowsTerminal
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Microsoft.WindowsTerminal
+
+    - directives:
+        description: Install MpvNet
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: mpv.net
+
+    - directives:
+        description: Install MSYS2
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: MSYS2.MSYS2
+
+    - directives:
+        description: Install Mutool
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ArtifexSoftware.mutool
+
+    - directives:
+        description: Install Obsidian
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Obsidian.Obsidian
+
+    - directives:
+        description: Install Ollama
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Ollama.Ollama
+
+    - directives:
+        description: Install NodeJS
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: OpenJS.NodeJS.LTS
+
+    - directives:
+        description: Install Pnpm
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: pnpm.pnpm
+
+    - directives:
+        description: Install PythonLauncher
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Python.Launcher
+
+    - directives:
+        description: Install Python313
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Python.Python.3.13
+
+    - directives:
+        description: Install RimeWeasel
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Rime.Weasel
+
+    - directives:
+        description: Install ShareX
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ShareX.ShareX
+
+    - directives:
+        description: Install FreeDownloadManager
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: SoftDeluxe.FreeDownloadManager
+
+    - directives:
+        description: Install Stretchly
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Stretchly.Stretchly
+
+    - directives:
+        description: Install WeCom
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Tencent.WeCom
+
+    - directives:
+        description: Install XnViewMP
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: XnSoft.XnViewMP
+
+    - directives:
+        description: Install ZeroTierOne
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ZeroTier.ZeroTierOne
+
+    - directives:
+        description: Install KensingtonWorks
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Kensington.KensingtonWorks
+
+    - directives:
+        description: Install WPSOffice
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Kingsoft.WPSOffice.CN
+
+    - directives:
+        description: Install Graphviz
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Graphviz.Graphviz
+
+    - directives:
+        description: Install Pandoc
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: JohnMacFarlane.Pandoc
+
+    - directives:
+        description: Install MiKTeX
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: MiKTeX.MiKTeX
+
+    - directives:
+        description: Install Inkscape
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Inkscape.Inkscape
+
+    - directives:
+        description: Install SpaceSniffer
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: UderzoSoftware.SpaceSniffer
+
+    - directives:
+        description: Install HWMonitor
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: CPUID.HWMonitor
+
+    - directives:
+        description: Install CrystalDiskMark
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: CrystalDewWorld.CrystalDiskMark
+
+    - directives:
+        description: Install CrystalDiskInfo
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: CrystalDewWorld.CrystalDiskInfo
+
+    - directives:
+        description: jq
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: jqlang.jq
