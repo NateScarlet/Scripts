@@ -9,7 +9,6 @@ properties:
       settings:
         MinVersion: "10.0.22000"
   resources:
-    # 修改系统设置部分
     - directives:
         description: ConfigureWindowsSettings
       resource: Microsoft.Windows.Settings/WindowsSettings
@@ -17,17 +16,7 @@ properties:
         AppColorMode: Dark
         SystemColorMode: Dark
         TaskbarAlignment: Top
-    
-    - resource: PSDscResources/Service
-      directives:
-        description: Install Syncthing service
-      settings:
-        Name: syncthing
-        Ensure: Presence
-        State: Running
-        StartupType: Automatic
 
-    # 软件安装部分
     - directives:
         description: Install 7zip
       resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -36,17 +25,20 @@ properties:
         source: winget
 
     - directives:
-        description: Install AutoHotkeyV2
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: AutoHotkey.AutoHotkey
-
-    - directives:
         description: Install AutoHotkeyV1
+      id: auto-hotkey-v1
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: AutoHotkey.AutoHotkey
         version: 1.1.37.02
+
+    - directives:
+        description: Install AutoHotkeyV2
+      dependsOn:
+        - auto-hotkey-v1 # 从 v1 升级，这样可以兼容运行 v1
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: AutoHotkey.AutoHotkey
 
     - directives:
         description: Install BilibiliLivehime
@@ -62,9 +54,54 @@ properties:
 
     - directives:
         description: Install Caddy
+      id: caddy
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: CaddyServer.Caddy
+
+    - resource: PSDscResources/Script
+      dependsOn:
+        - caddy
+      directives:
+        description: Ensure Caddy service is installed and configured
+        allowPrerelease: false
+        securityContext: elevated
+      settings:
+        GetScript: |
+          $service = Get-Service -Name "Caddy" -ErrorAction SilentlyContinue
+          $state = @{
+              Name = "Caddy"
+              Ensure = if ($service) { "Present" } else { "Absent" }
+              Status = if ($service) { $service.Status.ToString() } else { "Absent" }
+          }
+          return $state
+        TestScript: |
+          $currentState = [scriptblock]::Create($GetScript).Invoke()[0]
+          return $currentState.Ensure -eq "Present"
+        SetScript: |
+          # 查找caddy.exe
+          $caddyPath = (Get-Command "caddy.exe" -ErrorAction SilentlyContinue).Source
+          if (-not $caddyPath) {
+              throw "Caddy executable not found in PATH"
+          }
+
+          # 构建服务参数
+          $configPath = "$env:USERPROFILE\caddy\Caddyfile"
+          $binPath = "`"$caddyPath`" run --config `"$configPath`""
+
+          # 检查并创建/更新服务
+          $service = Get-Service -Name "Caddy" -ErrorAction SilentlyContinue
+          if ($service) {
+              if ($service.Status -ne "Stopped") {
+                  Stop-Service -Name "Caddy" -Force
+              }
+              sc.exe config "Caddy" binPath= "$binPath" start= auto
+          } else {
+              sc.exe create "Caddy" binPath= "$binPath" start= auto displayName= "Caddy Web Server"
+          }
+
+          # 启动服务
+          Start-Service -Name "Caddy"
 
     - directives:
         description: jq
@@ -275,11 +312,86 @@ properties:
       settings:
         id: Stretchly.Stretchly
 
-    - directives:
+    - id: syncthing
+      directives:
         description: Install Syncthing
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: Syncthing.Syncthing
+
+    - resource: PSDscResources/Script
+      dependsOn:
+        - syncthing
+      directives:
+        description: Create/Update Syncthing autostart task
+        securityContext: elevated
+      settings:
+        GetScript: |
+          $taskName = "Syncthing Startup"
+          $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+
+          # 从任务描述中提取版本号
+          $version = if ($task) { 
+              if ($task.Description -match "Version: (\d+)") {
+                  [int]$matches[1]
+              } else {
+                  0
+              }
+          } else {
+              0
+          }
+
+          return @{ Version = $version }
+        TestScript: |
+          $currentVersion = [scriptblock]::Create($GetScript).Invoke()[0].Version
+          $expectedVersion = 4  # 每次更新配置时递增此版本号
+          return $currentVersion -eq $expectedVersion
+        SetScript: |
+          # 查找 syncthing
+          $syncthingPath = (Get-Command "syncthing.exe" -ErrorAction Stop).Source
+          if (-not $caddyPath) {
+              throw "Syncthing executable not found in PATH"
+          }
+
+          # 创建计划任务
+          $taskName = "Syncthing Startup"
+
+          $action = New-ScheduledTaskAction `
+            -Execute $syncthingPath `
+            -Argument "--no-console --no-browser --no-upgrade"
+
+          $trigger = New-ScheduledTaskTrigger `
+            -AtStartup `
+            -RandomDelay "00:01:00"
+
+          $principal = New-ScheduledTaskPrincipal `
+            -UserId "$env:USERDOMAIN\$env:USERNAME" `
+            -LogonType S4U `
+            -RunLevel Limited
+
+          $settings = New-ScheduledTaskSettingsSet `
+            -AllowStartIfOnBatteries `
+            -DontStopIfGoingOnBatteries `
+            -StartWhenAvailable `
+            -ExecutionTimeLimit ([System.TimeSpan]::Zero) `
+            -RestartCount 10 `
+            -RestartInterval (New-TimeSpan -Minutes 5)
+
+          # 在描述中包含版本号
+          $description = "Auto start Syncthing at system startup. Version: 4"
+
+          # 总是删除并重新创建任务
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+
+          # 关键：使用正确的参数创建任务，不需要额外设置密码
+          Register-ScheduledTask `
+            -TaskName $taskName `
+            -Action $action `
+            -Trigger $trigger `
+            -Principal $principal `
+            -Settings $settings `
+            -Description $description `
+            -Force
 
     - directives:
         description: Install TIM
