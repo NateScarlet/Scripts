@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  resources:
+    - resource: PSDscResources/Script
+      dependsOn:
+        - syncthing
+      directives:
+        description: Create/Update Syncthing autostart task
+        securityContext: elevated
+      settings:
+        GetScript: |
+          $taskName = "Syncthing Startup"
+          $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+
+          # 从任务描述中提取版本号
+          $version = if ($task) { 
+              if ($task.Description -match "Version: (\d+)") {
+                  [int]$matches[1]
+              } else {
+                  0
+              }
+          } else {
+              0
+          }
+
+          return @{ Version = $version }
+        TestScript: |
+          $currentVersion = [scriptblock]::Create($GetScript).Invoke()[0].Version
+          $expectedVersion = 4  # 每次更新配置时递增此版本号
+          return $currentVersion -eq $expectedVersion
+        SetScript: |
+          # 查找 syncthing
+          $syncthingPath = (Get-Command "syncthing.exe" -ErrorAction Stop).Source
+          if (-not $caddyPath) {
+              throw "Syncthing executable not found in PATH"
+          }
+
+          # 创建计划任务
+          $taskName = "Syncthing Startup"
+
+          $action = New-ScheduledTaskAction `
+            -Execute $syncthingPath `
+            -Argument "--no-console --no-browser --no-upgrade"
+
+          $trigger = New-ScheduledTaskTrigger `
+            -AtStartup `
+            -RandomDelay "00:01:00"
+
+          $principal = New-ScheduledTaskPrincipal `
+            -UserId "$env:USERDOMAIN\$env:USERNAME" `
+            -LogonType S4U `
+            -RunLevel Limited
+
+          $settings = New-ScheduledTaskSettingsSet `
+            -AllowStartIfOnBatteries `
+            -DontStopIfGoingOnBatteries `
+            -StartWhenAvailable `
+            -ExecutionTimeLimit ([System.TimeSpan]::Zero) `
+            -RestartCount 10 `
+            -RestartInterval (New-TimeSpan -Minutes 5)
+
+          # 在描述中包含版本号
+          $description = "Auto start Syncthing at system startup. Version: 4"
+
+          # 总是删除并重新创建任务
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+
+          # 关键：使用正确的参数创建任务，不需要额外设置密码
+          Register-ScheduledTask `
+            -TaskName $taskName `
+            -Action $action `
+            -Trigger $trigger `
+            -Principal $principal `
+            -Settings $settings `
+            -Description $description `
+            -Force

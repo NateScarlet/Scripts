@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  resources:
+    - directives:
+        description: Install BilibiliLivehime
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Bilibili.Livehime
+
+    - directives:
+        description: Install FFmpeg
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: BtbN.FFmpeg.GPL.Shared
+
+    - directives:
+        description: Install ClashVergeRev
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ClashVergeRev.ClashVergeRev
+
+    - directives:
+        description: Install Dandanplay
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Kaedei.Dandanplay
+
+    - directives:
+        description: Install Krita
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: KDE.Krita
+
+    - directives:
+        description: Install FirefoxCN
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Mozilla.Firefox.zh-CN
+
+    - directives:
+        description: Install OBSStudio
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: OBSProject.OBSStudio
+
+    - directives:
+        description: Install TIM
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Tencent.TIM
+
+    - directives:
+        description: Install WeChat
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Tencent.WeChat
+
+    - directives:
+        description: Install Bluetooth Audio Receiver
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: 9N9WCLWDQS5J
+        source: msstore
+
+    - directives:
+        description: Install Microsoft To Do
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: 9NBLGGH5R558
+        source: msstore

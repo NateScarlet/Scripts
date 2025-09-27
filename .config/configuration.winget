@@ -1,13 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
 properties:
   configurationVersion: "0.2.0"
-  assertions:
-    - resource: Microsoft.Windows.Developer/OsVersion
-      directives:
-        description: Verify min OS version requirement
-        allowPrerelease: true
-      settings:
-        MinVersion: "10.0.22000"
   resources:
     - directives:
         description: ConfigureWindowsSettings
@@ -22,29 +15,13 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: 7zip.7zip
-
-    - id: auto-hotkey-v1
-      directives:
-        description: Install AutoHotkeyV1
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: AutoHotkey.AutoHotkey
-        version: 1.1.37.02
-        noUpgrade: true
+        source: winget
 
     - directives:
-        description: Install AutoHotkeyV2
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      dependsOn:
-        - auto-hotkey-v1 # 先装 v1 再升级，这样 v2 就能执行 v1 脚本
-      settings:
-        id: AutoHotkey.AutoHotkey
-
-    - directives:
-        description: Install FFmpeg
+        description: jq
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
-        id: BtbN.FFmpeg.GPL.Shared.6.1 # 更新了FFmpeg版本
+        id: jqlang.jq
 
     - directives:
         description: Install Ubuntu
@@ -106,23 +83,6 @@ properties:
       settings:
         id: Microsoft.PowerShell
 
-    - id: power-toys
-      directives:
-        description: Install PowerToys
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: Microsoft.PowerToys
-
-    - resource: PowerToysConfigure
-      directives:
-        description: Configure PowerToys
-      dependsOn:
-        - power-toys
-      settings:
-        PowerLauncher:
-          Enabled: true
-          OpenPowerLauncher: "Win+`"
-
     - directives:
         description: Install VS2022BuildTools
       resource: Microsoft.WinGet.DSC/WinGetPackage
@@ -152,12 +112,6 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: MSYS2.MSYS2
-
-    - directives:
-        description: Install Mutool
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: ArtifexSoftware.mutool
 
     - directives:
         description: Install Obsidian
@@ -220,12 +174,6 @@ properties:
         id: Stretchly.Stretchly
 
     - directives:
-        description: Install WeCom
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: Tencent.WeCom
-
-    - directives:
         description: Install XnViewMP
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
@@ -238,40 +186,10 @@ properties:
         id: ZeroTier.ZeroTierOne
 
     - directives:
-        description: Install KensingtonWorks
+        description: Install Everything
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
-        id: Kensington.KensingtonWorks
-
-    - directives:
-        description: Install WPSOffice
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: Kingsoft.WPSOffice.CN
-
-    - directives:
-        description: Install Graphviz
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: Graphviz.Graphviz
-
-    - directives:
-        description: Install Pandoc
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: JohnMacFarlane.Pandoc
-
-    - directives:
-        description: Install MiKTeX
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: MiKTeX.MiKTeX
-
-    - directives:
-        description: Install Inkscape
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: Inkscape.Inkscape
+        id: voidtools.Everything
 
     - directives:
         description: Install SpaceSniffer
@@ -296,9 +214,3 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: CrystalDewWorld.CrystalDiskInfo
-
-    - directives:
-        description: jq
-      resource: Microsoft.WinGet.DSC/WinGetPackage
-      settings:
-        id: jqlang.jq

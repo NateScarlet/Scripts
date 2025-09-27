@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  resources:
+    - id: caddy
+      directives:
+        description: Install Caddy
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: CaddyServer.Caddy
+
+    - resource: PSDscResources/Script
+      dependsOn:
+        - caddy
+      directives:
+        description: Ensure Caddy service is installed and configured
+        allowPrerelease: false
+        securityContext: elevated
+      settings:
+        GetScript: |
+          $service = Get-Service -Name "Caddy" -ErrorAction SilentlyContinue
+          $state = @{
+              Name = "Caddy"
+              Ensure = if ($service) { "Present" } else { "Absent" }
+              Status = if ($service) { $service.Status.ToString() } else { "Absent" }
+          }
+          return $state
+        TestScript: |
+          $currentState = [scriptblock]::Create($GetScript).Invoke()[0]
+          return $currentState.Ensure -eq "Present"
+        SetScript: |
+          # 查找caddy.exe
+          $caddyPath = (Get-Command "caddy.exe" -ErrorAction SilentlyContinue).Source
+          if (-not $caddyPath) {
+              throw "Caddy executable not found in PATH"
+          }
+
+          # 构建服务参数
+          $configPath = "$env:USERPROFILE\caddy\Caddyfile"
+          $binPath = "`"$caddyPath`" run --config `"$configPath`""
+
+          # 检查并创建/更新服务
+          $service = Get-Service -Name "Caddy" -ErrorAction SilentlyContinue
+          if ($service) {
+              if ($service.Status -ne "Stopped") {
+                  Stop-Service -Name "Caddy" -Force
+              }
+              sc.exe config "Caddy" binPath= "$binPath" start= auto
+          } else {
+              sc.exe create "Caddy" binPath= "$binPath" start= auto displayName= "Caddy Web Server"
+          }
+
+          # 启动服务
+          Start-Service -Name "Caddy"

@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  assertions:
+    - resource: Microsoft.Windows.Developer/OsVersion
+      directives:
+        description: Verify min OS version requirement
+        allowPrerelease: true
+      settings:
+        MinVersion: "10.0.22000"
+  resources:
+    - directives:
+        description: Install FFmpeg
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: BtbN.FFmpeg.GPL.Shared.6.1 # 和线上内使用相同版本
+
+    - directives:
+        description: Install Mutool
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: ArtifexSoftware.mutool
+
+    - directives:
+        description: Install WeCom
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Tencent.WeCom
+
+    - directives:
+        description: Install KensingtonWorks
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Kensington.KensingtonWorks
+
+    - directives:
+        description: Install WPSOffice
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Kingsoft.WPSOffice.CN
+
+    - directives:
+        description: Install Graphviz
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Graphviz.Graphviz
+
+    - directives:
+        description: Install Pandoc
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: JohnMacFarlane.Pandoc
+
+    - directives:
+        description: Install MiKTeX
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: MiKTeX.MiKTeX
+
+    - directives:
+        description: Install Inkscape
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Inkscape.Inkscape

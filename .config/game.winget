@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  configurationVersion: "0.2.0"
+  resources:
+    - directives:
+        description: Install EpicGamesLauncher
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: EpicGames.EpicGamesLauncher
+    - directives:
+        description: Install Steam
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: Valve.Steam
