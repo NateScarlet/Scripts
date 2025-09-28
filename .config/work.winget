@@ -55,3 +55,10 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: Inkscape.Inkscape
+
+    - directives:
+        description: Install DB Browser for SQLite
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: DBBrowserForSQLite.DBBrowserForSQLite
+

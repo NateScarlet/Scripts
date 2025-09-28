@@ -17,7 +17,7 @@ properties:
         # https://learn.microsoft.com/zh-cn/windows/powertoys/dsc-configure#powerlauncher
         PowerLauncher:
           Enabled: true
-          OpenPowerLauncher: "Alt+Space"
+          OpenPowerLauncher: "Alt+K"
           UsePinyin: true
           Plugins:
             - Name: "Windows 搜索"
@@ -26,3 +26,5 @@ properties:
               Disabled: true
             - Name: "Visual Studio Code 工作区"
               Disabled: false
+        Hosts:
+          ShowStartupWarning: false
