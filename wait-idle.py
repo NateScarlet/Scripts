@@ -35,8 +35,20 @@ except ImportError:
 
 try:
     import win32api
+    import win32con
 except ImportError:
     win32api = None
+    win32con = None
+
+
+def prevent_sleep():
+    """
+    阻止系统进入睡眠状态
+    """
+    if win32api:
+        win32api.SetThreadExecutionState(
+            win32con.ES_CONTINUOUS | win32con.ES_SYSTEM_REQUIRED
+        )
 
 
 def get_since_last_input_ns() -> Optional[int]:
@@ -164,6 +176,7 @@ def main():
     start_at = time.monotonic_ns()
 
     try:
+        prevent_sleep()
         with tqdm(
             total=target_duration_ns / 1e9,
             bar_format="{n:.0f}/{total:.0f}s |{bar}|",
