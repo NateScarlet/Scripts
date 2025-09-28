@@ -28,3 +28,5 @@ properties:
               Disabled: false
         Hosts:
           ShowStartupWarning: false
+        FindMyMouse:
+          Disabled: true
