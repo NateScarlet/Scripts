@@ -25,6 +25,7 @@ import argparse
 import psutil
 from typing import Iterator, Optional
 from tqdm import tqdm
+import ctypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,19 +36,19 @@ except ImportError:
 
 try:
     import win32api
-    import win32con
 except ImportError:
     win32api = None
-    win32con = None
 
 
 def prevent_sleep():
     """
     阻止系统进入睡眠状态
     """
-    if win32api:
-        win32api.SetThreadExecutionState(
-            win32con.ES_CONTINUOUS | win32con.ES_SYSTEM_REQUIRED
+    if ctypes:
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED
         )
 
 
