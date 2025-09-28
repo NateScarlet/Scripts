@@ -29,4 +29,4 @@ properties:
         Hosts:
           ShowStartupWarning: false
         FindMyMouse:
-          Disabled: true
+          Enabled: false
