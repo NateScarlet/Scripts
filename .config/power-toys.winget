@@ -17,7 +17,7 @@ properties:
         # https://learn.microsoft.com/zh-cn/windows/powertoys/dsc-configure#powerlauncher
         PowerLauncher:
           Enabled: true
-          OpenPowerLauncher: "Win+`"
+          OpenPowerLauncher: "Alt+Space"
           UsePinyin: true
           Plugins:
             - Name: "Windows 搜索"

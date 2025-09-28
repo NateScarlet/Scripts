@@ -9,6 +9,7 @@ properties:
         AppColorMode: Dark
         SystemColorMode: Dark
         TaskbarAlignment: Top
+        DeveloperMode: true
 
     - directives:
         description: Install 7zip
