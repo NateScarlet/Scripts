@@ -1,6 +1,7 @@
 git config --global user.email "NateScarlet@Gmail.com"
 git config --global user.name "NateScarlet"
-git config --global core.editor "code.cmd --wait"
+git config --global core.editor "code --wait"
+git config --global core.quotepath false
 git config --global core.autocrlf input
 git config --global commit.gpgsign true
 git config --global tag.gpgsign true
