@@ -64,12 +64,18 @@ function global:prompt {
 
 function New-FileByReplace {
     py $PSScriptRoot/generate-by-replace.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
 }
 
 Set-Alias "generate:replace" New-FileByReplace
 
 function Start-WaitIdle {
     py $PSScriptRoot/wait-idle.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
 }
 
 Set-Alias "wait-idle" Start-WaitIdle
@@ -78,6 +84,9 @@ Set-Alias "wait-idle" Start-WaitIdle
 
 function Start-ComfyRename {
     py $PSScriptRoot/prompts/comfy-rename.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
 }
 
 Set-Alias "comfy-rename" Start-ComfyRename
@@ -85,6 +94,9 @@ Set-Alias "comfy-rename" Start-ComfyRename
 
 function Start-ComfySearch {
     py $PSScriptRoot/prompts/comfy-search.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
 }
 
 Set-Alias "comfy-search" Start-ComfySearch
@@ -92,6 +104,9 @@ Set-Alias "comfy-search" Start-ComfySearch
 
 function Remove-Duplicated-File {
     py $PSScriptRoot/remove-duplicated-file.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
 }
 
 
