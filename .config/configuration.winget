@@ -157,10 +157,10 @@ properties:
         id: Rime.Weasel
 
     - directives:
-        description: Install ShareX
+        description: Install PixPin
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
-        id: ShareX.ShareX
+        id: PixPin.PixPin
 
     - directives:
         description: Install FreeDownloadManager
