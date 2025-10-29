@@ -157,14 +157,7 @@
 
       
             # 检查是否有变更
-            $statusOutput = ""
-            try {
-                $statusOutput = Invoke-NativeCommand git status --porcelain
-            }
-            catch {
-                throw "状态检查失败: $_"
-            }
-            
+            $statusOutput = Invoke-NativeCommand git status --porcelain
             if ([string]::IsNullOrWhiteSpace($statusOutput)) {
                 Write-Host "无变更需要提交" -ForegroundColor Yellow
                 $result.Success = $true
