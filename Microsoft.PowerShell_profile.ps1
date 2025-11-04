@@ -109,6 +109,12 @@ function Remove-Duplicated-File {
     }
 }
 
+function Update-File-Number {
+    py $PSScriptRoot/renumber-files.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
+}
 
 function Remove-Empty-Dir {
     Get-ChildItem -Directory $args | Where-Object { $_.GetFiles().Count -eq 0 -and $_.GetDirectories().Count -eq 0 } | ForEach-Object { $_; Remove-Item $_ }
