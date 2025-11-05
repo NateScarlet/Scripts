@@ -27,7 +27,7 @@ class _Context:
         self.prefix_length = 1
         self.delimiter = "-"
         self.finale_file_pattern = re.compile(
-            r"^(\d+)([_- ]*)(.*)$",
+            r"^(\d+)([-_ ]*)(.*)$",
         )
         self.prepare()
 
@@ -128,7 +128,9 @@ def renumber_files(dir: str):
         next_index += 1
         expected_number = (index + 1) * 10
         if start_index < 0:
-            if number == expected_number:
+            if number == expected_number and src.name == ctx.format_final_name(
+                number, suffix
+            ):
                 continue
             else:
                 # 之后的所有文件都需要重命名
