@@ -25,12 +25,18 @@ if (-not (Test-Path $targetDir -PathType Container)) {
 }
 else {
     # 直接更新现有工作树到当前HEAD
-    git -C $targetDir checkout --detach $currentHead
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ 目标目录更新失败，请检查以上Git错误信息" -ForegroundColor Red
-        exit 2
+    $previousHead = git -C $targetDir rev-parse HEAD
+    if ($previousHead -eq $currentHead) {
+        Write-Host "⏩ 工作树已经位于 $($currentHead.Substring(0,7))，无需更新"
     }
-    Write-Host "🔄 更新工作树到当前HEAD ($($currentHead.Substring(0,7)))"
+    else {
+        git -C $targetDir checkout --detach $currentHead
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "❌ 目标目录更新失败，请检查以上Git错误信息" -ForegroundColor Red
+            exit 2
+        }
+        Write-Host "🔄 更新工作树到当前HEAD ($($previousHead.Substring(0,7)) -> $($currentHead.Substring(0,7)))"
+    }
 }
 
 # 检查每日任务是否存在
