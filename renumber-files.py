@@ -14,6 +14,7 @@ import sys
 import math
 import logging
 from pathlib import Path
+from collections import Counter
 from typing import Tuple, Optional, Iterator
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,10 +23,31 @@ _LOGGER = logging.getLogger(__name__)
 class _Context:
     def __init__(self, directory: str = ".") -> None:
         self.directory: Path = Path(directory)
-        self.temp_prefix: str = "RENAME_93b94d73b9ab_"
-        self.prefix_length = self.determine_prefix_length()
-        self.renamed_count = 0
-        self.number_pattern = re.compile(r"^(\d+)_(.+)")
+        self.temp_prefix: str = "RENAME_93b94d73b9ab-"
+        self.prefix_length = 1
+        self.delimiter = "-"
+        self.finale_file_pattern = re.compile(
+            r"^(\d+)([_- ]*)(.*)$",
+        )
+        self.prepare()
+
+    def prepare(self):
+        count = 0
+        delimiter_counter = Counter[str]()
+        for file_path in self.all_files():
+            if file_path.name.startswith(self.temp_prefix):
+                count += 1
+            else:
+                match = self.finale_file_pattern.match(file_path.name)
+                if match:
+                    count += 1
+                    delimiter = match.group(2)
+                    delimiter_counter[delimiter] += 1
+        for i, _ in delimiter_counter.most_common(1):
+            self.delimiter = i
+        if count > 0:
+            max_number = count * 10
+            self.prefix_length = math.floor(math.log10(max_number)) + 1
 
     def all_files(self) -> Iterator[Path]:
         """获取目录中所有文件"""
@@ -39,7 +61,7 @@ class _Context:
         suffix: str,
     ) -> str:
         """生成最终文件名"""
-        return f"{number:0{self.prefix_length}d}_{suffix}"
+        return f"{number:0{self.prefix_length}d}{self.delimiter}{suffix}"
 
     def parse_final_name(
         self,
@@ -47,9 +69,9 @@ class _Context:
     ) -> Optional[Tuple[int, str]]:
         """提取文件信息：数字前缀和剩余部分"""
         filename = file_path.name
-        match = re.match(r"^(\d+)_(.+)", filename)
+        match = self.finale_file_pattern.match(filename)
         if match:
-            return int(match.group(1)), match.group(2)
+            return int(match.group(1)), match.group(3)
         _LOGGER.debug("parse_final_name: 忽略：%s", filename)
         return None
 
@@ -60,7 +82,7 @@ class _Context:
         suffix: str,
     ) -> str:
         """生成临时文件名"""
-        return f"{self.temp_prefix}{number}_{version}_{suffix}"
+        return f"{self.temp_prefix}{number}-{version}-{suffix}"
 
     def parse_temp_name(
         self,
@@ -70,25 +92,11 @@ class _Context:
         if not file_path.name.startswith(self.temp_prefix):
             return None
         filename = file_path.name
-        match = re.match(r"^(\d+)_(\d+)_(.+)", filename[len(self.temp_prefix) :])
+        match = re.match(r"^(\d+)-(\d+)-(.+)", filename[len(self.temp_prefix) :])
         if match:
             return int(match.group(1)), int(match.group(2)), match.group(3)
         _LOGGER.debug("parse_temp_name: 忽略：%s", filename)
         return None
-
-    def determine_prefix_length(self) -> int:
-        """确定前缀长度"""
-        count = 0
-        for file_path in self.all_files():
-            if file_path.name.startswith(self.temp_prefix) or re.match(
-                r"^(\d+)_(.+)", file_path.name
-            ):
-                count += 1
-
-        if count == 0:
-            return 1
-        max_number = (count + 1) * 10
-        return math.floor(math.log10(max_number)) + 1
 
     def final_files(self) -> Iterator[Tuple[int, str, Path]]:
         """获取所有符合命名模式的文件"""
@@ -104,71 +112,57 @@ class _Context:
             if info:
                 yield info[0], info[1], info[2], file_path
 
-    def first_pass(self) -> int:
-        """第一遍：将所有需要重命名的文件重命名为临时文件，并返回起始索引"""
 
-        # 计算起始索引
-        next_index = 0
-        start_index = -1
-        for number, suffix, src in sorted(self.final_files()):
-            _LOGGER.debug("first_pass: %s", src.name)
-            index = next_index
-            next_index += 1
-            expected_number = (index + 1) * 10
-            if start_index < 0:
-                if number == expected_number:
-                    continue
-                else:
-                    start_index = index
+def renumber_files(dir: str):
+    """幂等的重命名函数 - 无条件执行两遍操作"""
+    ctx = _Context(dir)
+    _LOGGER.debug("处理目录: %s", ctx.directory.absolute())
+    _LOGGER.debug("前缀长度: %s", ctx.prefix_length)
 
-            ok = False
-            version = 0
-            while not ok:
-                try:
-                    dst = src.parent / self.format_temp_name(number, version, suffix)
-                    if dst.exists():
-                        version += 1
-                        continue
-                    src.rename(dst)
-                    self.renamed_count += 1
-                    ok = True
-                    _LOGGER.info("临时: %s -> %s", src.name, dst.name)
-                except FileExistsError:
-                    version += 1
-
+    # 第一遍，将所有需重命名的文件放到临时命名空间下，以支持中断
+    next_index = 0
+    start_index = -1
+    for number, suffix, src in sorted(ctx.final_files()):
+        _LOGGER.debug("first_pass: %s", src.name)
+        index = next_index
+        next_index += 1
+        expected_number = (index + 1) * 10
         if start_index < 0:
-            return next_index
-        return start_index
+            if number == expected_number:
+                continue
+            else:
+                # 之后的所有文件都需要重命名
+                start_index = index
 
-    def second_pass(self, start_index: int) -> None:
-        """第二遍：将临时文件重命名为最终文件名"""
+        version = 0
+        while True:  # 文件数量有限，不可能无限循环
+            try:
+                dst = src.parent / ctx.format_temp_name(number, version, suffix)
+                if dst.exists():
+                    version += 1
+                    continue
+                src.rename(dst)
+                _LOGGER.debug("重命名为临时文件: %s -> %s", src.name, dst.name)
+                break
+            except FileExistsError:
+                version += 1
 
-        # 处理所有临时文件
-        next_index = start_index
+    # 第二遍：将所有临时文件重命名
+    # 因为总是从小到大进行重命名，残留的临时文件肯定是在最终文件后面
+    next_index = next_index if start_index < 0 else start_index
+    for _, _, suffix, src in sorted(ctx.temp_files()):
+        _LOGGER.debug("second_pass: %s", src.name)
+        index = next_index
+        next_index += 1
 
-        for _, _, suffix, src in sorted(self.temp_files()):
-            _LOGGER.debug("second_pass: %s", src.name)
-            index = next_index
-            next_index += 1
-
-            dst = src.parent / self.format_final_name((index + 1) * 10, suffix)
-            # 冲突说明有并发修改，报错属于预期行为
-            src.rename(dst)
-            self.renamed_count += 1
-            _LOGGER.info("最终: %s -> %s", src.name, dst.name)
-
-    def rename_files(self) -> None:
-        """幂等的重命名函数 - 无条件执行两遍操作"""
-        _LOGGER.info("处理目录: %s", self.directory.absolute())
-        _LOGGER.info("前缀长度: %s", self.prefix_length)
-
-        self.second_pass(self.first_pass())
-        _LOGGER.info("重命名完成！共处理 %s 个文件", self.renamed_count)
+        dst = src.parent / ctx.format_final_name((index + 1) * 10, suffix)
+        # 这是第二遍，不应有冲突。冲突只可能是并发修改，而脚本不支持并发
+        src.rename(dst)
+        _LOGGER.info("%s -> %s", src.name, dst.name)
 
 
 def main() -> None:
     directory = sys.argv[1] if len(sys.argv) > 1 else "."
-
     if not os.path.exists(directory):
         _LOGGER.error("错误: 目录 '%s' 不存在", directory)
         sys.exit(1)
@@ -176,16 +170,7 @@ def main() -> None:
     if not os.path.isdir(directory):
         _LOGGER.error("错误: '%s' 不是目录", directory)
         sys.exit(1)
-
-    try:
-        ctx = _Context(directory)
-        ctx.rename_files()
-    except KeyboardInterrupt:
-        _LOGGER.info("操作被用户中断")
-        sys.exit(0)
-    except Exception:
-        _LOGGER.exception("出错")
-        sys.exit(1)
+    renumber_files(directory)
 
 
 if __name__ == "__main__":
