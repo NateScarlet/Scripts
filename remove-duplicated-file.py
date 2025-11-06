@@ -7,8 +7,8 @@
 
 参数:
     directory (str): 要扫描的目录路径
-    --head-size (int): 文件头部块大小（字节），默认为4096
-    --tail-size (int): 文件尾部块大小（字节），默认为4096
+    --head-size (int): 文件头部块大小（字节），默认为16384
+    --tail-size (int): 文件尾部块大小（字节），默认为16384
     --exclude (str): 要排除的文件模式（可多次使用）
     --dry-run: 仅列出要删除的文件而不实际删除
     -y/--yes: 跳过删除确认步骤，直接删除
@@ -46,53 +46,100 @@
 5. 所有错误消息输出到stderr
 6. 排除模式支持fnmatch语法
 """
-
+from __future__ import annotations
 import os
 import sys
 import argparse
 import hashlib
 import fnmatch
-from typing import Dict, Tuple, Any, List
+from typing import List, Optional, Any
 import logging
+from collections import defaultdict
+
 
 _LOGGER = logging.getLogger(__name__)
 
+BUFFER_SIZE = 64 << 10  # 64KB 缓冲区
 
-BUFFER_SIZE = 16 * 4096  # 64KB 缓冲区
+
+class _Context:
+
+    def __init__(self, head_size: int, tail_size: int) -> None:
+        self.head_size = head_size
+        self.tail_size = tail_size
+        self.files = list[_File]()
+        self.index_by_size = defaultdict[int, List[int]](lambda: [])
+        # 优化：避免用哈希作为分组键，因为文件大小唯一的概率很高，哈希计算开销较高
+
+    def new_file(self, entry: os.DirEntry[str]) -> _File:
+        return _File(self, entry)
+
+    def add_file(self, f: _File):
+        index = len(self.files)
+        self.files.append(f)
+        self.index_by_size[f.size()].append(index)
+
+    def find_duplicated_index(self, f: _File) -> int:
+        for index in self.index_by_size[f.size()]:
+            candidate = self.files[index]
+            if f is candidate:
+                # 忽略自身
+                continue
+            if candidate.is_duplicated_with(f):
+                return index
+        return -1
 
 
-def compute_file_key(file_path: str, head_size: int, tail_size: int) -> Tuple[int, Any]:
-    """
-    计算文件的标识符和大小
+class _File:
 
-    返回值: (size, identifier)
-    - 当两个区块大小都为0时，返回修改时间(mtime)
-    - 当任一区块大小为负时，返回整个文件的哈希
-    - 否则返回首尾块内容的哈希
-    """
-    try:
-        size = os.path.getsize(file_path)
+    def __init__(self, ctx: _Context, entry: os.DirEntry[str]) -> None:
+        self.ctx = ctx
+        self.entry = entry
+        self._cached_stat: Optional[os.stat_result] = None
+        self._cached_key: Optional[Any] = None
 
-        # 当两个区块大小都为0时，使用修改时间
+    def stat(self):
+        if not self._cached_stat:
+            self._cached_stat = self.entry.stat()
+        return self._cached_stat
+
+    def key(self):
+        if not self._cached_key:
+            self._cached_key = self._compute_key()
+        return self._cached_key
+
+    def size(self):
+        return self.stat().st_size
+
+    def path(self):
+        return self.entry.path
+
+    def is_duplicated_with(self, other: _File) -> bool:
+        return self.size() == other.size() and self.key() == other.key()
+
+    def _compute_key(self):
+        head_size = self.ctx.head_size
+        tail_size = self.ctx.tail_size
         if head_size == 0 and tail_size == 0:
-            return size, os.path.getmtime(file_path)
+            # 当两个区块大小都为0，不使用内容key
+            return self.stat().st_mtime
 
         # 当任一区块大小为负或两者覆盖整个文件大小时，计算整个文件的哈希
-        if head_size < 0 or tail_size < 0 or (head_size + tail_size) >= size:
+        if head_size < 0 or tail_size < 0 or (head_size + tail_size) >= self.size():
             hasher = hashlib.sha256()
-            with open(file_path, "rb") as f:
+            with open(self.entry.path, "rb") as f:
                 while True:
                     data = f.read(BUFFER_SIZE)
                     if not data:
                         break
                     hasher.update(data)
-            return size, hasher.hexdigest()
+            return hasher.hexdigest()
 
         # 计算首尾块哈希
         hasher = hashlib.sha256()
 
         # 读取头部块
-        with open(file_path, "rb") as f:
+        with open(self.entry.path, "rb") as f:
             if head_size > 0:
                 head_read = 0
                 while head_read < head_size:
@@ -105,12 +152,12 @@ def compute_file_key(file_path: str, head_size: int, tail_size: int) -> Tuple[in
 
             # 读取尾部块
             if tail_size > 0:
-                tail_start = max(0, size - tail_size)
+                tail_start = max(0, self.size() - tail_size)
                 if tail_start > 0:
                     f.seek(tail_start)
 
                 tail_read = 0
-                to_read = min(tail_size, size)
+                to_read = min(tail_size, self.size())
                 while tail_read < to_read:
                     chunk_size = min(BUFFER_SIZE, to_read - tail_read)
                     data = f.read(chunk_size)
@@ -119,10 +166,7 @@ def compute_file_key(file_path: str, head_size: int, tail_size: int) -> Tuple[in
                     hasher.update(data)
                     tail_read += len(data)
 
-        return size, hasher.hexdigest()
-
-    except Exception as e:
-        raise RuntimeError(f"处理文件 '{file_path}' 失败: {e}")
+        return hasher.hexdigest()
 
 
 def should_exclude_file(filename: str, exclude_patterns: List[str]) -> bool:
@@ -135,14 +179,10 @@ def should_exclude_file(filename: str, exclude_patterns: List[str]) -> bool:
 
 def confirm_deletion(file_path: str) -> bool:
     """确认文件删除操作"""
-    try:
-        response = (
-            input(f"删除文件 '{os.path.basename(file_path)}'? [y/N] ").strip().lower()
-        )
-        return response == "y"
-    except KeyboardInterrupt:
-        _LOGGER.info("操作已取消")
-        sys.exit(1)
+    response = (
+        input(f"删除文件 '{os.path.basename(file_path)}'? [y/N] ").strip().lower()
+    )
+    return response == "y"
 
 
 def delete_file(file_path: str, is_dry_run: bool, is_yes: bool) -> None:
@@ -156,11 +196,8 @@ def delete_file(file_path: str, is_dry_run: bool, is_yes: bool) -> None:
             _LOGGER.info(f"跳过: {file_path}")
             return
 
-    try:
-        os.remove(file_path)
-        print(file_path)
-    except Exception as e:
-        raise RuntimeError(f"删除文件 '{file_path}' 失败: {e}")
+    os.remove(file_path)
+    print(file_path)
 
 
 def process_directory(
@@ -178,59 +215,37 @@ def process_directory(
         key: (文件大小, 标识符)
         value: 要保留的文件路径（字典序最小的）
     """
-    # 存储保留文件的信息: {(size, identifier): retained_file}
-    retain_files: Dict[Tuple[int, Any], str] = {}
+    ctx = _Context(head_size, tail_size)
 
-    try:
-        # 使用scandir流式处理目录
-        with os.scandir(directory) as entries:
-            for entry in entries:
-                if not entry.is_file(follow_symlinks=False):
-                    continue
+    # 使用scandir流式处理目录
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if not entry.is_file(follow_symlinks=False):
+                continue
 
-                file_path = entry.path
-                file_name = entry.name
+            file_path = entry.path
+            file_name = entry.name
 
-                # 检查是否应该排除该文件
-                if should_exclude_file(file_name, exclude_patterns):
-                    _LOGGER.debug("排除文件: %s", file_path)
-                    continue
+            # 检查是否应该排除该文件
+            if should_exclude_file(file_name, exclude_patterns):
+                _LOGGER.debug("排除文件: %s", file_path)
+                continue
 
-                try:
-                    key = compute_file_key(file_path, head_size, tail_size)
-                except Exception as e:
-                    _LOGGER.error("错误: %s", e)
-                    sys.exit(1)
+            f = ctx.new_file(entry)
 
-                # 检查是否已有相同标识符的文件
-                if key in retain_files:
-                    retained_file = retain_files[key]
-
-                    # 确定哪个文件应该保留（字典序最小的）
-                    if file_path < retained_file:
-                        # 当前文件更小，删除原来保留的文件
-                        try:
-                            delete_file(retained_file, is_dry_run, is_yes)
-                        except Exception as e:
-                            _LOGGER.error("错误: %s", e)
-                            sys.exit(1)
-
-                        # 更新保留文件为当前文件
-                        retain_files[key] = file_path
-                    else:
-                        # 删除当前文件（保留原来的文件）
-                        try:
-                            delete_file(file_path, is_dry_run, is_yes)
-                        except Exception as e:
-                            _LOGGER.error("错误: %s", e)
-                            sys.exit(1)
-                else:
-                    # 首次遇到该标识符，保留当前文件
-                    retain_files[key] = file_path
-
-    except Exception as e:
-        _LOGGER.error("扫描目录错误: %s", e)
-        sys.exit(1)
+            # 检查是否已有重复文件
+            duplicated_index = ctx.find_duplicated_index(f)
+            if duplicated_index < 0:
+                ctx.add_file(f)
+            else:
+                existing = ctx.files[duplicated_index]
+                # 确定哪个文件应该删除（保留字典序最小的）
+                duplicated = f
+                if f.path() < existing.path():
+                    # 当前文件更小，替换原来保留的文件
+                    duplicated = existing
+                    ctx.files[duplicated_index] = f
+                delete_file(duplicated.path(), is_dry_run, is_yes)
 
 
 def main() -> None:
@@ -239,14 +254,14 @@ def main() -> None:
     parser.add_argument(
         "--head-size",
         type=int,
-        default=4096,
-        help="头部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 4096)",
+        default=16384,
+        help="头部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 16384)",
     )
     parser.add_argument(
         "--tail-size",
         type=int,
-        default=4096,
-        help="尾部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 4096)",
+        default=16384,
+        help="尾部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 16384)",
     )
     parser.add_argument(
         "-e",
