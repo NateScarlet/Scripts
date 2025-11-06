@@ -2,28 +2,16 @@
 """
 在指定目录中查找并删除重复文件，保留字典序最小的文件，并支持排除特定文件模式。
 
-该脚本通过比较文件标识符来识别重复文件，使用流式处理避免加载所有文件内容到内存。
+该脚本通过比较文件指纹和完整内容识别重复文件，使用流式处理避免加载所有文件内容到内存。
 保留文件名按字典序最小的文件，删除其他重复文件，并将删除的文件名输出到stdout。
 
-参数:
-    directory (str): 要扫描的目录路径
-    --head-size (int): 文件头部块大小（字节），默认为16384
-    --tail-size (int): 文件尾部块大小（字节），默认为16384
-    --exclude (str): 要排除的文件模式（可多次使用）
-    --dry-run: 仅列出要删除的文件而不实际删除
-    -y/--yes: 跳过删除确认步骤，直接删除
-
 功能特点:
-1. 使用文件大小和标识符识别重复
+1. 高效识别重复
 2. 支持文件排除模式（支持多个--exclude参数）
-3. head-size或tail-size任一为负数时检查整个文件
-4. 两个区块大小都设为0时使用修改时间作为标识
-5. 流式处理避免大文件内存占用
-6. 保留字典序最小的文件名
-7. 支持模拟运行(--dry-run)模式
-8. 错误处理与详细错误输出
-9. 使用scandir高效目录扫描
-10. 实时处理避免收集所有文件
+3. 流式处理避免大文件内存占用
+4. 保留字典序最小的文件名
+5. 支持模拟运行(--dry-run)模式
+6. 使用scandir高效目录扫描
 
 使用示例:
     # 排除所有.log和.tmp文件
@@ -64,30 +52,53 @@ BUFFER_SIZE = 64 << 10  # 64KB 缓冲区
 
 class _Context:
 
-    def __init__(self, head_size: int, tail_size: int) -> None:
-        self.head_size = head_size
-        self.tail_size = tail_size
+    def __init__(self, /, is_dry_run: bool, is_yes: bool) -> None:
+        self.is_dry_run = is_dry_run
+        self.is_yes = is_yes
         self.files = list[_File]()
+        self.fingerprint_size = (64 << 10, 64 << 10)
+        # 优化：使用大小作为分组键，避免指纹计算开销
+        # 通常大小就足够唯一，大部分情况应该是一个元素的列表，迭代列表比计算所有文件的指纹开销小很多
         self.index_by_size = defaultdict[int, List[int]](lambda: [])
-        # 优化：避免用哈希作为分组键，因为文件大小唯一的概率很高，哈希计算开销较高
 
-    def new_file(self, entry: os.DirEntry[str]) -> _File:
-        return _File(self, entry)
+        self.new_hasher = lambda: hashlib.md5()
+        try:
+            import xxhash
+
+            self.new_hasher = lambda: xxhash.xxh64()
+        except ImportError:
+            _LOGGER.info("xxhash 不可用，使用回退算法")
 
     def add_file(self, f: _File):
         index = len(self.files)
         self.files.append(f)
         self.index_by_size[f.size()].append(index)
 
-    def find_duplicated_index(self, f: _File) -> int:
+    def find_duplicate_index(self, f: _File) -> int:
         for index in self.index_by_size[f.size()]:
             candidate = self.files[index]
             if f is candidate:
                 # 忽略自身
                 continue
-            if candidate.is_duplicated_with(f):
+            if candidate.is_duplicate_of(f):
                 return index
         return -1
+
+    def deduplicate(self, entry: os.DirEntry[str]):
+        f = _File(self, entry)
+        duplicated_index = self.find_duplicate_index(f)
+        if duplicated_index < 0:
+            self.add_file(f)
+        else:
+            existing = self.files[duplicated_index]
+            # 确定哪个文件应该删除（保留字典序最小的）
+            duplicated = f
+            if f.name() < existing.name():
+                # 当前文件更小，替换原来保留的文件
+                duplicated = existing
+                self.files[duplicated_index] = f
+            _LOGGER.info("重复文件: \n\t%s\n\t%s", *sorted((f.name(), existing.name())))
+            delete_file(duplicated.path(), self.is_dry_run, self.is_yes)
 
 
 class _File:
@@ -96,17 +107,17 @@ class _File:
         self.ctx = ctx
         self.entry = entry
         self._cached_stat: Optional[os.stat_result] = None
-        self._cached_key: Optional[Any] = None
+        self._cached_fingerprint: Optional[Any] = None
 
     def stat(self):
         if not self._cached_stat:
             self._cached_stat = self.entry.stat()
         return self._cached_stat
 
-    def key(self):
-        if not self._cached_key:
-            self._cached_key = self._compute_key()
-        return self._cached_key
+    def fingerprint(self):
+        if not self._cached_fingerprint:
+            self._cached_fingerprint = self._calculate_fingerprint()
+        return self._cached_fingerprint
 
     def size(self):
         return self.stat().st_size
@@ -114,19 +125,43 @@ class _File:
     def path(self):
         return self.entry.path
 
-    def is_duplicated_with(self, other: _File) -> bool:
-        return self.size() == other.size() and self.key() == other.key()
+    def name(self):
+        return self.entry.name
 
-    def _compute_key(self):
-        head_size = self.ctx.head_size
-        tail_size = self.ctx.tail_size
-        if head_size == 0 and tail_size == 0:
-            # 当两个区块大小都为0，不使用内容key
-            return self.stat().st_mtime
+    def is_duplicate_of(self, other: _File) -> bool:
+        if self.size() == 0 and other.size() == 0:
+            # 优化：两个空文件肯定相同
+            return True
+    
+        return (
+            self.size() == other.size()
+            and self.fingerprint() == other.fingerprint()
+            and self.has_same_content(other)
+        )
 
-        # 当任一区块大小为负或两者覆盖整个文件大小时，计算整个文件的哈希
+    def has_same_content(self, other: _File) -> bool:
+        with open(self.entry.path, "rb") as file1, open(
+            other.entry.path, "rb"
+        ) as file2:
+            while True:
+                # 逐块读取文件内容
+                chunk1 = file1.read(BUFFER_SIZE)
+                chunk2 = file2.read(BUFFER_SIZE)
+
+                # 如果读取到的内容不同，立即返回False
+                if chunk1 != chunk2:
+                    return False
+
+                # 如果都读取到空字节（文件结束），则比较完成
+                if not chunk1:
+                    return True
+
+    def _calculate_fingerprint(self):
+        head_size, tail_size = self.ctx.fingerprint_size
+
+        # 优化：当任一区块大小为负或两者覆盖整个文件大小时，计算整个文件的哈希
         if head_size < 0 or tail_size < 0 or (head_size + tail_size) >= self.size():
-            hasher = hashlib.sha256()
+            hasher = self.ctx.new_hasher()
             with open(self.entry.path, "rb") as f:
                 while True:
                     data = f.read(BUFFER_SIZE)
@@ -136,7 +171,7 @@ class _File:
             return hasher.hexdigest()
 
         # 计算首尾块哈希
-        hasher = hashlib.sha256()
+        hasher = self.ctx.new_hasher()
 
         # 读取头部块
         with open(self.entry.path, "rb") as f:
@@ -202,8 +237,6 @@ def delete_file(file_path: str, is_dry_run: bool, is_yes: bool) -> None:
 
 def process_directory(
     directory: str,
-    head_size: int,
-    tail_size: int,
     exclude_patterns: List[str],
     is_dry_run: bool,
     is_yes: bool,
@@ -215,7 +248,7 @@ def process_directory(
         key: (文件大小, 标识符)
         value: 要保留的文件路径（字典序最小的）
     """
-    ctx = _Context(head_size, tail_size)
+    ctx = _Context(is_dry_run=is_dry_run, is_yes=is_yes)
 
     # 使用scandir流式处理目录
     with os.scandir(directory) as entries:
@@ -231,37 +264,17 @@ def process_directory(
                 _LOGGER.debug("排除文件: %s", file_path)
                 continue
 
-            f = ctx.new_file(entry)
-
-            # 检查是否已有重复文件
-            duplicated_index = ctx.find_duplicated_index(f)
-            if duplicated_index < 0:
-                ctx.add_file(f)
-            else:
-                existing = ctx.files[duplicated_index]
-                # 确定哪个文件应该删除（保留字典序最小的）
-                duplicated = f
-                if f.path() < existing.path():
-                    # 当前文件更小，替换原来保留的文件
-                    duplicated = existing
-                    ctx.files[duplicated_index] = f
-                delete_file(duplicated.path(), is_dry_run, is_yes)
+            ctx.deduplicate(entry)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="在目录中查找并删除重复文件")
     parser.add_argument("directory", help="要扫描的目录路径")
     parser.add_argument(
-        "--head-size",
-        type=int,
-        default=16384,
-        help="头部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 16384)",
-    )
-    parser.add_argument(
-        "--tail-size",
-        type=int,
-        default=16384,
-        help="尾部块大小字节数（负数表示整个文件，0表示使用修改时间，默认: 16384)",
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="详细输出日志",
     )
     parser.add_argument(
         "-e",
@@ -278,6 +291,8 @@ def main() -> None:
     parser.add_argument("-y", "--yes", action="store_true", help="无需确认直接删除")
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+
     # 检查目录是否存在
     if not os.path.isdir(args.directory):
         _LOGGER.error("'%s' 不是有效目录", args.directory)
@@ -286,8 +301,6 @@ def main() -> None:
     # 处理目录
     process_directory(
         args.directory,
-        args.head_size,
-        args.tail_size,
         args.exclude,
         args.dry_run,
         args.yes,
