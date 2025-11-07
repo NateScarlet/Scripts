@@ -40,12 +40,14 @@ function New-GitWorkspace {
     
     # 检查必要的环境变量
     if (-not $env:LOCAL_GIT_ROOT) {
-        throw "环境变量 LOCAL_GIT_ROOT 未定义，请先设置该环境变量"
+        Write-Error "环境变量 LOCAL_GIT_ROOT 未定义"
+        return 
     }
     
     # 验证 URL 格式
     if ($Url -notmatch '^https?://') {
-        throw "URL 格式不正确，必须以 http:// 或 https:// 开头"
+        Write-Error "URL 格式不正确，必须以 http:// 或 https:// 开头"
+        return
     }
     
     # 解析 URL
@@ -54,7 +56,8 @@ function New-GitWorkspace {
     # 检查路径部分是否为空
     $pathPart = $uri.AbsolutePath.Trim('/')
     if ([string]::IsNullOrEmpty($pathPart)) {
-        throw "URL 路径部分不能为空，必须指定具体的仓库路径"
+        Write-Error "URL 路径部分不能为空，必须指定具体的仓库路径"
+        return
     }
     
     # 构建 git dir 路径（去掉协议头和端口号）
@@ -95,11 +98,13 @@ function New-GitWorkspace {
     
     # 检查目标目录是否已存在
     if (Test-Path $workspaceDir) {
-        throw "工作区目录已存在: $workspaceDir"
+        Write-Error "工作区目录已存在: $workspaceDir"
+        return
     }
     
     if (Test-Path $gitDir) {
-        throw "Git 目录已存在: $gitDir"
+        Write-Error "Git 目录已存在: $gitDir"
+        return
     }
     
     # 执行 git clone
@@ -113,7 +118,7 @@ function New-GitWorkspace {
     }
     
     # 直接在当前目录执行 git clone，指定完整的目标路径
-    git clone --separate-git-dir=$gitDir $Url $workspaceDir
+    git clone --separate-git-dir="$gitDir" "$Url" "$workspaceDir"
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "克隆成功！" -ForegroundColor Green
@@ -125,10 +130,10 @@ function New-GitWorkspace {
             Workspace = $workspaceDir
             GitDir    = $gitDir
             RepoName  = $repoName
-            Success   = $true
         }
     }
     else {
-        throw "git clone 执行失败，退出码: $LASTEXITCODE"
+        Write-Error "git clone 执行失败，退出码: $LASTEXITCODE"
+        return
     }
 }
