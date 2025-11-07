@@ -42,6 +42,8 @@ catch {
     Write-Host "      运行: Install-Module posh-git -Scope CurrentUser" -ForegroundColor Cyan
 }
 
+$ScriptLib = Resolve-Path "$PSScriptRoot/../lib"
+
 function global:prompt {
     # 获取当前路径并简化显示 
     # 每个盘符可能都建了个人文件夹　所以要保留盘符显示
@@ -63,7 +65,7 @@ function global:prompt {
 }
 
 function New-FileByReplace {
-    py $PSScriptRoot/generate-by-replace.py $args
+    py $ScriptLib/generate-by-replace.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -72,7 +74,7 @@ function New-FileByReplace {
 Set-Alias "generate:replace" New-FileByReplace
 
 function Start-WaitIdle {
-    py $PSScriptRoot/wait-idle.py $args
+    py $ScriptLib/wait-idle.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -83,7 +85,7 @@ Set-Alias "wait-idle" Start-WaitIdle
 
 
 function Start-ComfyRename {
-    py $PSScriptRoot/prompts/comfy-rename.py $args
+    py $ScriptLib/prompts/comfy-rename.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -93,7 +95,7 @@ Set-Alias "comfy-rename" Start-ComfyRename
 
 
 function Start-ComfySearch {
-    py $PSScriptRoot/prompts/comfy-search.py $args
+    py $ScriptLib/prompts/comfy-search.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -103,14 +105,14 @@ Set-Alias "comfy-search" Start-ComfySearch
 
 
 function Remove-Duplicated-File {
-    py $PSScriptRoot/remove-duplicated-file.py $args
+    py $ScriptLib/remove-duplicated-file.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
 }
 
 function Update-File-Number {
-    py $PSScriptRoot/renumber-files.py $args
+    py $ScriptLib/renumber-files.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -120,4 +122,4 @@ function Remove-Empty-Dir {
     Get-ChildItem -Directory $args | Where-Object { $_.GetFiles().Count -eq 0 -and $_.GetDirectories().Count -eq 0 } | ForEach-Object { $_; Remove-Item $_ }
 }
 
-. "$PSScriptRoot/../lib/New-GitWorkspace.ps1"
+. "$ScriptLib/New-GitWorkspace.ps1"
