@@ -16,6 +16,8 @@ def gradio_pixel_sort_corruption(
     use_mask: bool = False,
     min_consecutive_rows: int = 1,
     chunk_size: int = 1,
+    angle: float = 0,
+    upscale_factor: float = 1,
 ) -> Tuple[Optional[PILImage.Image], int]:
     """
     Gradio包装函数，处理图像输入输出
@@ -30,6 +32,7 @@ def gradio_pixel_sort_corruption(
         use_mask: 是否使用蒙版
         min_consecutive_rows: 最小连续行数
         chunk_size: 一次处理的行数
+        angle: 角度
 
     返回:
         元组: (处理后的PIL图像, 实际使用的种子)
@@ -62,6 +65,8 @@ def gradio_pixel_sort_corruption(
             seed=actual_seed,
             min_consecutive_rows=min_consecutive_rows,
             chunk_size=chunk_size,
+            angle=angle,
+            upscale_factor=upscale_factor,
         )
 
         return result_img, actual_seed
@@ -224,6 +229,22 @@ def create_demo() -> gr.Blocks:
                         info="一次处理的行数，将多行视为一个块处理",
                     )
 
+                    angle: gr.Slider = gr.Slider(
+                        minimum=-180,
+                        maximum=180,
+                        value=0,
+                        label="方向",
+                        info="损坏方向",
+                    )
+
+                    upscale_factor: gr.Slider = gr.Slider(
+                        minimum=1,
+                        maximum=8,
+                        value=1,
+                        label="放大系数",
+                        info="放大处理后再缩小输出，用于提高效果精度",
+                    )
+
                 # 处理按钮
                 process_btn: gr.Button = gr.Button(
                     "🚀 应用像素排序效果", variant="primary", size="lg"
@@ -272,6 +293,8 @@ def create_demo() -> gr.Blocks:
                 use_mask_checkbox,
                 min_consecutive_rows,
                 chunk_size,
+                angle,
+                upscale_factor,
             ],
             outputs=[output_image, seed_display],
         )
