@@ -2,7 +2,7 @@ function Send-To-RecycleBin {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string[]]$Path
+        [object[]]$InputObject
     )
     
     begin {
@@ -10,23 +10,30 @@ function Send-To-RecycleBin {
     }
     
     process {
-        foreach ($p in $Path) {
-            $item = Get-Item -LiteralPath $p -ErrorAction SilentlyContinue
-            if (!$item) {
+        foreach ($obj in $InputObject) {
+            $item = $null
+            if ($obj -is [System.IO.FileSystemInfo]) {
+                $item = $obj
+            }
+            else {
+                $item = Get-Item -LiteralPath $obj -ErrorAction SilentlyContinue
+            }
+            
+            if (!$item -or !$item.Exists) {
                 continue
             }
+            
+            
             if ($item.PSIsContainer) {
-                # 处理目录
                 [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(
-                    $item, 
+                    $item.FullName, 
                     'OnlyErrorDialogs', 
                     'SendToRecycleBin'
                 )
             }
             else {
-                # 处理文件
                 [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(
-                    $item, 
+                    $item.FullName, 
                     'OnlyErrorDialogs', 
                     'SendToRecycleBin'
                 )
