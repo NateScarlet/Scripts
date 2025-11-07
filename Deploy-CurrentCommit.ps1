@@ -105,9 +105,9 @@ if (Test-Path $targetScript) {
     $newAction = New-ScheduledTaskAction -Execute "$PSHOME\pwsh.exe" `
         -Argument "-File `"$targetScript`""
     
-    $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+    $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
     
-    if (-not $existingTask) {
+    if (-not $task) {
         # 创建新任务
         $trigger = New-ScheduledTaskTrigger -Daily -At 00:00
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
@@ -123,16 +123,14 @@ if (Test-Path $targetScript) {
         
         Write-Host "✅ 计划任务已创建: $taskName"
     }
-    elseif ($existingTask.Description -ne $currentDescription) {
-        # 获取当前任务设置
-        $taskDefinition = $existingTask | Get-ScheduledTask
-            
+    elseif ($task.Description -ne $currentDescription) {
         # 更新动作和描述
-        $taskDefinition.Actions = $newAction
-        $taskDefinition.Description = $currentDescription
-            
+        $task.Actions = $newAction
+        $task.Description = $currentDescription
+        # 不更新触发器，允许用户自定义
+
         # 保存更新
-        $taskDefinition | Set-ScheduledTask
+        $null = Set-ScheduledTask $task
             
         Write-Host "🔄 更新计划任务: $taskName"
     }
