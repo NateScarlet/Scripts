@@ -1,8 +1,0 @@
-运行regedit，找到以下两个键
-
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles
-
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Signatures\Unmanaged
-
-
-删除键下不需要的目录，然后改名就可以了，修改注册表有一定风险。请耐心仔细点。

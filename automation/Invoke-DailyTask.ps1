@@ -4,5 +4,6 @@ if (Test-Path -Path "$env:APPDATA\Stretchly") {
     "did update stretchly stamp"
 }
 
-& "$PSScriptRoot\maintenance\Sync-Rime.ps1"
-& "$PSScriptRoot\maintenance\Invoke-AutoGitCommit.ps1"
+& "$PSScriptRoot\automation\Sync-Rime.ps1"
+& "$PSScriptRoot\automation\Invoke-AutoGitCommit.ps1"
+& "$PSScriptRoot\automation\Delete-Old-Download.ps1"
