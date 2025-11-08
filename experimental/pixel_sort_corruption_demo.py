@@ -72,7 +72,7 @@ def gradio_pixel_sort_corruption(
         return result_img, actual_seed
 
     except Exception as e:
-        raise gr.Error(str(e))
+        raise gr.Error(str(e)) from e
 
 
 def update_parameters_based_on_image(

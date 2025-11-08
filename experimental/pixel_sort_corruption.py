@@ -159,93 +159,86 @@ class _Context:
         选择需要损坏的行，考虑最小连续行数要求
         返回损坏行的迭代器
         """
-        if self.img_array is None:
-            raise ValueError("必须先设置img_array")
+        assert self.img_array is not None
 
         height = self.img_array.shape[0]
 
-        # 确定候选行
-        candidate_rows = list(range(height))
+        corruption_probability = self.corruption_ratio / self.min_consecutive_rows
+        if self.corruption_ratio >= 1:
+            # 强制所有行损坏
+            corruption_probability = 1
+        elif self.mask_array:
+            # 蒙版可能排除行，所以剩余行需要使用更高的比例
+            exclude_row_count = sum(
+                1 for row in range(height) if np.all(self.mask_array[row, :] == 0)
+            )
+            if exclude_row_count > 0:
+                corruption_probability *= height / exclude_row_count
 
-        # 如果有蒙版，排除蒙版中全黑的行
-        if self.mask_array is not None:
-            candidate_rows = [
-                row for row in candidate_rows if np.any(self.mask_array[row, :] > 0)
-            ]
+        index = 0
+        last_corruption_start = -1
+        while index < height:
 
-        if not candidate_rows:
-            return
+            corrupted = corruption_probability >= 1 or (
+                last_corruption_start >= 0
+                and index < last_corruption_start + self.min_consecutive_rows
+            )
+            if (
+                corrupted
+                and self.mask_array is not None
+                and not np.any(self.mask_array[index, :] > 0)
+            ):
+                # 蒙版中断损坏
+                corrupted = False
+                last_corruption_start = -1
+            elif not corrupted:
+                corrupted = self.rng.random() < corruption_probability
+                if corrupted:
+                    # 开始损坏
+                    last_corruption_start = index
 
-        # 计算目标损坏行数
-        target_total_rows = int(len(candidate_rows) * self.corruption_ratio)
-        target_total_rows = max(1, min(len(candidate_rows), target_total_rows))
+            if corrupted:
+                yield index
+            index += 1
 
-        _LOGGER.debug(
-            f"候选行数: {len(candidate_rows)}, 目标损坏行数: {target_total_rows}"
-        )
-
-        # 逐行选择，考虑连续行要求
-        corrupted_count = 0  # 已损坏行数
-        current_index = 0  # 当前处理的候选行索引
-
-        while (
-            current_index < len(candidate_rows) and corrupted_count < target_total_rows
-        ):
-            remaining_rows = len(candidate_rows) - current_index
-            remaining_target = target_total_rows - corrupted_count
-
-            # 如果必须选择所有剩余行才能达到目标
-            if remaining_target == remaining_rows:
-                # 选择当前行及其后续的连续行
-                chunk_size_actual = min(self.min_consecutive_rows, remaining_target)
-                for i in range(chunk_size_actual):
-                    if current_index + i < len(candidate_rows):
-                        yield candidate_rows[current_index + i]
-                        corrupted_count += 1
-                current_index += chunk_size_actual
-                continue
-
-            # 计算当前行的选择概率
-            selection_probability = remaining_target / remaining_rows
-
-            # 决定是否选择当前行
-            if self.rng.random() < selection_probability:
-                # 选择当前行及其后续的连续行
-                chunk_size_actual = min(self.min_consecutive_rows, remaining_target)
-                for i in range(chunk_size_actual):
-                    if current_index + i < len(candidate_rows):
-                        yield candidate_rows[current_index + i]
-                        corrupted_count += 1
-                current_index += chunk_size_actual
-            else:
-                # 跳过当前行
-                current_index += 1
-
-        _LOGGER.debug(f"实际损坏行数: {corrupted_count}")
-
-    def group_rows_into_chunks(
-        self, corrupted_rows: Iterator[int]
-    ) -> Iterator[List[int]]:
+    def chunk_rows(self, rows: Iterator[int]) -> Iterator[List[int]]:
         """
-        将损坏的行分组为连续块，每个块大小不超过chunk_size
+        将行分组为连续块，每个块大小不超过chunk_size
         """
-        current_chunk: List[int] = []
+        chunk: List[int] = []
 
-        for row in corrupted_rows:
-            if not current_chunk:
+        for row in rows:
+            if not chunk:
                 # 开始新块
-                current_chunk.append(row)
-            elif row == current_chunk[-1] + 1 and len(current_chunk) < self.chunk_size:
+                chunk.append(row)
+            elif row == chunk[-1] + 1 and len(chunk) < self.chunk_size:
                 # 行连续且块未满，添加到当前块
-                current_chunk.append(row)
+                chunk.append(row)
             else:
                 # 行不连续或块已满，返回当前块并开始新块
-                yield current_chunk
-                current_chunk = [row]
+                yield chunk
+                chunk = [row]
 
         # 返回最后一个块
-        if current_chunk:
-            yield current_chunk
+        if chunk:
+            yield chunk
+
+    def corrupted_chunks(self) -> Iterator[Tuple[List[int], int]]:
+        """
+        统一的行和chunk选择逻辑
+        结合行选择和分组功能
+        """
+        # 选择需要损坏的行
+        corrupted_rows = self.corrupted_rows()
+
+        # 将行分组为块
+        chunks = self.chunk_rows(corrupted_rows)
+
+        # 为每个块计算起始位置
+        for chunk_rows in chunks:
+            start_x = self.calculate_start_x(chunk_rows)
+            if start_x is not None:
+                yield (chunk_rows, start_x)
 
     def calculate_start_x(self, chunk_rows: List[int]) -> Optional[int]:
         """计算chunk的起始x坐标"""
@@ -285,23 +278,6 @@ class _Context:
         # 没有原始像素标记蒙版，随机选择起始点
         max_start = max(0, width - 10)
         return self.rng.randint(0, max_start) if max_start >= 0 else 0
-
-    def corrupted_chunks(self) -> Iterator[Tuple[List[int], int]]:
-        """
-        统一的行和chunk选择逻辑
-        结合行选择和分组功能
-        """
-        # 选择需要损坏的行
-        corrupted_rows = self.corrupted_rows()
-
-        # 将行分组为块
-        chunks = self.group_rows_into_chunks(corrupted_rows)
-
-        # 为每个块计算起始位置
-        for chunk_rows in chunks:
-            start_x = self.calculate_start_x(chunk_rows)
-            if start_x is not None:
-                yield (chunk_rows, start_x)
 
     def similarity(
         self, pixels: np.ndarray, pixel_mask: np.ndarray, ref_pixel: np.ndarray
