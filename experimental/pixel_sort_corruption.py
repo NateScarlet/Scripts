@@ -19,138 +19,89 @@ class _Context:
     def __init__(
         self,
         image: Image.Image,
-        mask: Optional[Image.Image] = None,
-        corruption_ratio: float = 0.3,
-        max_jitter: int = 15,
-        similarity_method: str = "euclidean",
+        edge_guide: Optional[Image.Image] = None,
+        intensity: float = 0.3,
+        x_jitter: int = 15,
+        sort_method: str = "euclidean",
         seed: int = -1,
-        min_consecutive_rows: int = 1,
-        chunk_size: int = 1,
+        y_span: int = 1,
+        block_size: int = 1,
         angle: float = 0.0,
-        upscale_factor: float = 1,
+        quality_scale: float = 1,
     ):
 
-        self.image = image
-        self.mask = mask
-        self.corruption_ratio = min(1, max(0, corruption_ratio))
-        self.max_jitter = max_jitter
-        self.similarity_method = similarity_method
+        self.raw_image = image
+        self.raw_edge_guide = edge_guide
+        self.intensity = min(1, max(0, intensity))
+        self.x_jitter = x_jitter
+        self.sort_method = sort_method
         self.seed = seed
-        self.min_consecutive_rows = max(1, int(min_consecutive_rows * upscale_factor))
-        self.chunk_size = max(1, int(chunk_size * upscale_factor))
+        self.y_span = max(1, int(y_span * quality_scale))
+        self.block_size = max(1, int(block_size * quality_scale))
         self.angle = angle
-        self.upscale_factor = max(1, upscale_factor)
+        self.quality_scale = max(1, quality_scale)
 
         # 创建局部随机状态
         self.rng = random.Random(seed if seed >= 0 else None)
 
         # 处理后的图像和状态
-        self.processed_image: Optional[Image.Image] = None
-        self.rotated_image: Optional[Image.Image] = None
-        self.rotated_mask: Optional[Image.Image] = None
-        self.rotated_original_mask: Optional[Image.Image] = None
-        self.original_size: Optional[Tuple[int, int]] = None
+        self.image: Optional[Tuple[Image.Image, np.ndarray]] = None
+        self.edge_guide: Optional[Tuple[Image.Image, np.ndarray]] = None
+        self.mask: Optional[Tuple[Image.Image, np.ndarray]] = None
 
-        # 数组缓存
-        self.img_array: Optional[np.ndarray] = None
-        self.mask_array: Optional[np.ndarray] = None
-        self.original_mask_array: Optional[np.ndarray] = None
-
-    def create_original_pixel_mask(self) -> Image.Image:
-        """
-        创建标记原始图像像素的蒙版
-        原始图像区域标记为255，旋转填充区域标记为0
-        """
-        if self.upscale_factor > 1:
-            new_size = (
-                int(self.image.width * self.upscale_factor),
-                int(self.image.height * self.upscale_factor),
-            )
-            mask = Image.new("L", new_size, 255)  # 全白表示原始图像区域
-        else:
-            mask = Image.new("L", self.image.size, 255)
-
-        return mask
-
-    def rotate_image_and_mask(self) -> None:
-        """
-        旋转图像和蒙版，支持放大处理，并设置相关状态
-        """
-        # 创建原始像素标记蒙版
-        original_pixel_mask = self.create_original_pixel_mask()
-
-        if self.upscale_factor > 1:
+    def pre_process(self) -> None:
+        image = self.raw_image
+        if self.quality_scale > 1:
             # 放大图像
             new_size = (
-                int(self.image.width * self.upscale_factor),
-                int(self.image.height * self.upscale_factor),
+                int(self.raw_image.width * self.quality_scale),
+                int(self.raw_image.height * self.quality_scale),
             )
-            image_large = self.image.resize(new_size, Image.Resampling.LANCZOS)
-            if self.mask is not None:
-                mask_large = self.mask.resize(new_size, Image.Resampling.NEAREST)
-            else:
-                mask_large = None
-        else:
-            image_large = self.image
-            mask_large = self.mask
+            image = self.raw_image.resize(new_size, Image.Resampling.LANCZOS)
 
-        # 旋转图像（扩大画布以避免裁剪）
-        self.rotated_image = image_large.rotate(
+        mask = Image.new("L", image.size, 255)
+        edge_guide = self.raw_edge_guide
+        if edge_guide:
+            edge_guide = edge_guide.convert("L").resize(image.size)
+
+        # 旋转图像（扩大画布）
+        image = image.rotate(
             self.angle, expand=True, resample=Image.Resampling.BICUBIC, fillcolor=0
         )
-
-        if mask_large is not None:
-            self.rotated_mask = mask_large.rotate(
-                self.angle, expand=True, resample=Image.Resampling.NEAREST, fillcolor=0
-            )
-        else:
-            self.rotated_mask = None
-
-        # 旋转原始像素标记蒙版
-        self.rotated_original_mask = original_pixel_mask.rotate(
+        self.image = (image, np.array(image))
+        mask = mask.rotate(
             self.angle,
             expand=True,
-            resample=Image.Resampling.NEAREST,  # 使用最近邻保持清晰的边界
-            fillcolor=0,  # 填充区域标记为0
+            resample=Image.Resampling.NEAREST,
+            fillcolor=0,
         )
-
-        self.original_size = image_large.size
-
-    def unrotate_image(self, image: Image.Image) -> Image.Image:
-        """
-        将图像旋转回原始方向并裁剪
-        """
-        if self.original_size is None:
-            raise ValueError("必须先调用 rotate_image_and_mask()")
-
-        # 旋转回原始方向
-        unrotated = image.rotate(
-            -self.angle, expand=False, resample=Image.Resampling.BICUBIC
-        )
-
-        # 计算裁剪区域（居中裁剪）
-        center_x, center_y = unrotated.width // 2, unrotated.height // 2
-        orig_width, orig_height = self.original_size
-        left = center_x - orig_width // 2
-        top = center_y - orig_height // 2
-        right = left + orig_width
-        bottom = top + orig_height
-
-        # 确保裁剪区域在图像范围内
-        left = max(0, left)
-        top = max(0, top)
-        right = min(unrotated.width, right)
-        bottom = min(unrotated.height, bottom)
-
-        cropped = unrotated.crop((left, top, right, bottom))
-
-        if self.upscale_factor > 1:
-            # 缩小回原始尺寸
-            original_actual_size = (
-                int(orig_width / self.upscale_factor),
-                int(orig_height / self.upscale_factor),
+        self.mask = (mask, np.array(mask))
+        if edge_guide:
+            edge_guide = edge_guide.rotate(
+                self.angle, expand=True, resample=Image.Resampling.NEAREST, fillcolor=0
             )
-            cropped = cropped.resize(original_actual_size, Image.Resampling.LANCZOS)
+            self.edge_guide = (edge_guide, np.array(edge_guide))
+
+    def post_process(self, image: Image.Image) -> Image.Image:
+        large_image = image.rotate(
+            -self.angle, expand=True, resample=Image.Resampling.BICUBIC
+        )
+
+        large_image_width, large_image_height = (
+            self.raw_image.width * self.quality_scale,
+            self.raw_image.height * self.quality_scale,
+        )
+        left = (large_image.width - large_image_width) // 2
+        top = (large_image.height - large_image_height) // 2
+        right = left + large_image_width
+        bottom = top + large_image_height
+
+        # 裁剪
+        cropped = large_image.crop((left, top, right, bottom))
+
+        # 如果之前放大了，现在缩小回原始尺寸
+        if self.quality_scale > 1:
+            cropped = cropped.resize(self.raw_image.size, Image.Resampling.LANCZOS)
 
         return cropped
 
@@ -159,18 +110,18 @@ class _Context:
         选择需要损坏的行，考虑最小连续行数要求
         返回损坏行的迭代器
         """
-        assert self.img_array is not None
+        assert self.image
 
-        height = self.img_array.shape[0]
+        height = self.image[1].shape[0]
 
-        corruption_probability = self.corruption_ratio / self.min_consecutive_rows
-        if self.corruption_ratio >= 1:
+        corruption_probability = self.intensity / self.y_span
+        if self.intensity >= 1:
             # 强制所有行损坏
             corruption_probability = 1
-        elif self.mask_array:
-            # 蒙版可能排除行，所以剩余行需要使用更高的比例
+        elif self.edge_guide:
+            # 引导可能排除行，所以剩余行需要使用更高的比例
             exclude_row_count = sum(
-                1 for row in range(height) if np.all(self.mask_array[row, :] == 0)
+                1 for row in range(height) if np.all(self.edge_guide[1][row, :] == 0)
             )
             if exclude_row_count > 0:
                 corruption_probability *= height / exclude_row_count
@@ -181,14 +132,14 @@ class _Context:
 
             corrupted = corruption_probability >= 1 or (
                 last_corruption_start >= 0
-                and index < last_corruption_start + self.min_consecutive_rows
+                and index < last_corruption_start + self.y_span
             )
             if (
                 corrupted
-                and self.mask_array is not None
-                and not np.any(self.mask_array[index, :] > 0)
+                and self.edge_guide
+                and not np.any(self.edge_guide[1][index, :] > 0)
             ):
-                # 蒙版中断损坏
+                # 引导中断损坏
                 corrupted = False
                 last_corruption_start = -1
             elif not corrupted:
@@ -201,95 +152,109 @@ class _Context:
                 yield index
             index += 1
 
-    def chunk_rows(self, rows: Iterator[int]) -> Iterator[List[int]]:
+    def group_rows_into_blocks(
+        self, corrupted_rows: Iterator[int]
+    ) -> Iterator[List[int]]:
         """
-        将行分组为连续块，每个块大小不超过chunk_size
+        将损坏的行分组为连续块，每个块大小不超过block_size
         """
-        chunk: List[int] = []
+        current_block: List[int] = []
 
-        for row in rows:
-            if not chunk:
+        for row in corrupted_rows:
+            if not current_block:
                 # 开始新块
-                chunk.append(row)
-            elif row == chunk[-1] + 1 and len(chunk) < self.chunk_size:
+                current_block.append(row)
+            elif row == current_block[-1] + 1 and len(current_block) < self.block_size:
                 # 行连续且块未满，添加到当前块
-                chunk.append(row)
+                current_block.append(row)
             else:
                 # 行不连续或块已满，返回当前块并开始新块
-                yield chunk
-                chunk = [row]
+                yield current_block
+                current_block = [row]
 
         # 返回最后一个块
-        if chunk:
-            yield chunk
+        if current_block:
+            yield current_block
 
-    def corrupted_chunks(self) -> Iterator[Tuple[List[int], int]]:
+    def calculate_left(
+        self, block_rows: List[int], previous_left: Optional[int]
+    ) -> Optional[int]:
+        """计算block的起始x坐标"""
+
+        assert self.image
+        assert self.mask
+
+        width = self.image[0].width
+
+        if self.edge_guide:
+            # 边缘引导图模式：基于引导图非黑色区域的最左侧位置
+            non_black_indices = np.where(self.edge_guide[1][block_rows[0], :] > 0)[0]
+            if len(non_black_indices) > 0:
+                base_x = non_black_indices[0]
+                jitter = self.rng.randint(-self.x_jitter, self.x_jitter)
+                left = max(0, min(width - 10, base_x + jitter))
+                return left
+            return 0
+
+        # 无边缘引导图模式：
+        row_mask = self.mask[1][block_rows[0], :]
+        original_pixel_indices = np.where(row_mask > 0)[0]
+        if len(original_pixel_indices) == 0:
+            return None
+
+        min_x = original_pixel_indices[0]
+        max_x = original_pixel_indices[-1]
+        if previous_left is not None:
+            # 基于上次位置限制范围
+            min_x = max(min_x, previous_left - self.x_jitter)
+            max_x = min(max_x, previous_left + self.x_jitter)
+            if min_x > max_x:
+                # 无法满足限制，不抖动
+                return previous_left
+        return self.rng.randint(min_x, max_x)
+
+    def corrupted_blocks(self) -> Iterator[Tuple[List[int], int]]:
         """
-        统一的行和chunk选择逻辑
+        统一的行和block选择逻辑
         结合行选择和分组功能
         """
         # 选择需要损坏的行
         corrupted_rows = self.corrupted_rows()
 
         # 将行分组为块
-        chunks = self.chunk_rows(corrupted_rows)
+        blocks = self.group_rows_into_blocks(corrupted_rows)
 
         # 为每个块计算起始位置
-        for chunk_rows in chunks:
-            start_x = self.calculate_start_x(chunk_rows)
-            if start_x is not None:
-                yield (chunk_rows, start_x)
+        previous_left = None
+        for block_rows in blocks:
+            left = self.calculate_left(block_rows, previous_left)
+            if left is not None:
+                yield (block_rows, left)
+            previous_left = left
 
-    def calculate_start_x(self, chunk_rows: List[int]) -> Optional[int]:
-        """计算chunk的起始x坐标"""
-        if not chunk_rows or self.img_array is None:
-            return None
+    def calculate_brightness(self, pixels: np.ndarray) -> np.ndarray:
+        """
+        计算像素的亮度值
+        对于彩色图像使用标准亮度公式，对于灰度图像直接使用像素值
+        """
+        if pixels.ndim > 1 and pixels.shape[-1] >= 3:  # 彩色图像
+            # 标准亮度公式: 0.299*R + 0.587*G + 0.114*B
+            brightness = (
+                0.299 * pixels[..., 0] + 0.587 * pixels[..., 1] + 0.114 * pixels[..., 2]
+            )
+        else:  # 灰度图像
+            brightness = pixels
 
-        width = self.img_array.shape[1]
+        return brightness
 
-        if self.mask_array is not None:
-            # 蒙版模式：基于蒙版非黑色区域的最左侧位置
-            non_black_indices = np.where(self.mask_array[chunk_rows[0], :] > 0)[0]
-            if len(non_black_indices) > 0:
-                base_x = non_black_indices[0]
-                jitter = self.rng.randint(-self.max_jitter, self.max_jitter)
-                start_x = max(0, min(width - 10, base_x + jitter))
-                return start_x
-            return 0
-
-        # 无蒙版模式：基于原始像素区域选择起始点
-        if self.original_mask_array is not None:
-            # 如果有原始像素标记蒙版，确保起始点在原始像素区域内
-            row_mask = self.original_mask_array[chunk_rows[0], :]
-            original_pixel_indices = np.where(row_mask > 0)[0]
-
-            if len(original_pixel_indices) > 0:
-                # 在原始像素区域内选择起始点
-                min_x = original_pixel_indices[0]
-                max_x = original_pixel_indices[-1]
-
-                # 随机选择起始点，但限制在原始像素区域内
-                safe_max = min(max_x, width - 10)
-                if safe_max > min_x:
-                    return self.rng.randint(min_x, safe_max)
-                return min_x
-            return None
-
-        # 没有原始像素标记蒙版，随机选择起始点
-        max_start = max(0, width - 10)
-        return self.rng.randint(0, max_start) if max_start >= 0 else 0
-
-    def similarity(
-        self, pixels: np.ndarray, pixel_mask: np.ndarray, ref_pixel: np.ndarray
+    def measure_distances(
+        self,
+        pixels: np.ndarray,
+        pixel_mask: np.ndarray,
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        计算像素相似度，只考虑原始图像像素（标记为1的像素）
-        """
-        if self.img_array is None:
-            return np.array([]), np.array([])
+        assert self.image
 
-        # 确定通道数
-        channels = self.img_array.shape[2] if self.img_array.ndim == 3 else 1
+        ref_pixel = pixels[0]
 
         # 只处理标记为原始图像的像素
         valid_indices = np.where(pixel_mask > 0)[0]
@@ -298,6 +263,23 @@ class _Context:
             return np.array([]), np.array([])
 
         valid_pixels = pixels[valid_indices]
+
+        # 新增的基于像素本身的排序方法（在原有方法之前拦截）
+        if self.sort_method in ["dark-to-light", "light-to-dark"]:
+            # 计算亮度值
+            brightness = self.calculate_brightness(valid_pixels)
+
+            if self.sort_method == "dark-to-light":
+                # 从暗到亮：直接使用亮度值
+                distances = brightness
+            else:  # light-to-dark
+                # 从亮到暗：使用亮度值的负数
+                distances = -brightness
+
+            return distances, valid_indices
+
+        # 确定通道数
+        channels = self.image[1].shape[2] if self.image[1].ndim == 3 else 1
 
         # 处理不同通道数的图片
         if channels >= 3:  # 彩色图片（RGB或RGBA等）
@@ -311,13 +293,13 @@ class _Context:
 
             ref_pixel_rgb = ref_pixel[:3]
 
-            if self.similarity_method == "euclidean":
+            if self.sort_method == "euclidean":
                 distances = np.sqrt(
                     np.sum((valid_pixels_rgb - ref_pixel_rgb) ** 2, axis=1)
                 )
-            elif self.similarity_method == "manhattan":
+            elif self.sort_method == "manhattan":
                 distances = np.sum(np.abs(valid_pixels_rgb - ref_pixel_rgb), axis=1)
-            elif self.similarity_method == "brightness":
+            elif self.sort_method == "brightness":
                 if valid_pixels_rgb.ndim > 1:
                     pixel_brightness: np.ndarray = (
                         0.299 * valid_pixels_rgb[:, 0]
@@ -333,198 +315,113 @@ class _Context:
                 else:
                     distances = np.abs(valid_pixels_rgb - ref_pixel_rgb)
             else:
-                raise ValueError("不支持的比较方法 %s", self.similarity_method)
+                raise ValueError("不支持的比较方法 %s", self.sort_method)
         else:
             # 灰度图
             distances = np.abs(valid_pixels - ref_pixel).flatten()
 
         return distances, valid_indices
 
-    def process_with_mask(self) -> Image.Image:
-        """
-        像素排序损坏的核心实现（水平方向），支持原始像素标记蒙版
-        """
-        # 确定要处理的图像
-        if self.rotated_image is not None:
-            image_to_process = self.rotated_image
-            mask_to_process = self.rotated_mask
-            original_mask_to_process = self.rotated_original_mask
-        else:
-            image_to_process = self.image
-            mask_to_process = self.mask
-            original_mask_to_process = None
+    def process(self) -> Image.Image:
+        self.pre_process()
 
-        # 将图像转换为numpy数组
-        self.img_array = np.array(image_to_process)
-
-        # 处理图片维度问题
-        height: int
-        width: int
-        channels: int
-        if self.img_array.ndim == 2:  # 灰度图片
-            height, width = self.img_array.shape
-            channels = 1
-            # 转换为三维数组以便统一处理
-            self.img_array = self.img_array[:, :, np.newaxis]
-        else:  # 彩色图片
-            height, width, channels = self.img_array.shape
-
-        if self.max_jitter < 0:
-            self.max_jitter = width
-        else:
-            self.max_jitter = min(width, self.max_jitter)
-
-        # 处理蒙版图像
-        self.mask_array = None
-        if mask_to_process is not None:
-            mask_gray: Image.Image = mask_to_process.convert("L")  # 转换为灰度
-            self.mask_array = np.array(mask_gray)
-            # 确保蒙版尺寸与主图一致
-            if self.mask_array.shape[:2] != (height, width):
-                mask_resized: Image.Image = mask_gray.resize((width, height))
-                self.mask_array = np.array(mask_resized)
-
-        # 处理原始像素标记蒙版
-        self.original_mask_array = None
-        if original_mask_to_process is not None:
-            original_mask_gray: Image.Image = original_mask_to_process.convert("L")
-            self.original_mask_array = np.array(original_mask_gray)
-            if self.original_mask_array.shape[:2] != (height, width):
-                original_mask_resized: Image.Image = original_mask_gray.resize(
-                    (width, height)
-                )
-                self.original_mask_array = np.array(original_mask_resized)
+        assert self.image
+        assert self.mask
 
         # 创建副本进行操作
-        corrupted_array: np.ndarray = self.img_array.copy()
 
-        # 处理每个chunk
-        for chunk_rows, start_x in self.corrupted_chunks():
-            if start_x >= width - 1:
+        width = self.image[0].width
+
+        # 处理每个block
+        for block_rows, left in self.corrupted_blocks():
+            if left >= width - 1:
                 continue
 
-            # 使用chunk的第一行作为参考行
-            ref_row = chunk_rows[0]
+            ref_row = block_rows[0]
 
-            # 提取参考像素和右侧像素
-            reference_pixel: np.ndarray
-            right_pixels: np.ndarray
-            right_pixel_mask: np.ndarray
+            if (
+                self.angle != 0
+                and len(block_rows) > 1
+                and np.count_nonzero(self.mask[1][ref_row, left:])
+                < np.count_nonzero(self.mask[1][block_rows[-1], left:])
+            ):
+                # 如果块的最后一行比第一行长，则使用最后一行数据
+                ref_row = block_rows[-1]
 
-            if channels == 1:
-                reference_pixel = corrupted_array[ref_row, start_x]
-                # 获取chunk中所有行的右侧像素并平均
-                chunk_right_pixels = np.array(
-                    [corrupted_array[r, start_x:] for r in chunk_rows]
-                )
-                right_pixels = chunk_right_pixels.mean(axis=0)
-
-                # 获取右侧像素的标记蒙版
-                if self.original_mask_array is not None:
-                    chunk_mask_pixels = np.array(
-                        [self.original_mask_array[r, start_x:] for r in chunk_rows]
-                    )
-                    right_pixel_mask = chunk_mask_pixels.max(
-                        axis=0
-                    )  # 如果任何一行标记为原始像素，就认为是原始像素
-                else:
-                    right_pixel_mask = np.ones_like(
-                        right_pixels
-                    )  # 如果没有标记蒙版，全部视为原始像素
-            else:
-                reference_pixel = corrupted_array[ref_row, start_x, :]
-                chunk_right_pixels = np.array(
-                    [corrupted_array[r, start_x:, :] for r in chunk_rows]
-                )
-                right_pixels = chunk_right_pixels.mean(axis=0)
-
-                if self.original_mask_array is not None:
-                    chunk_mask_pixels = np.array(
-                        [self.original_mask_array[r, start_x:] for r in chunk_rows]
-                    )
-                    right_pixel_mask = chunk_mask_pixels.max(axis=0)
-                else:
-                    right_pixel_mask = np.ones(right_pixels.shape[0])  # type: ignore
-
+            right_pixels = self.image[1][ref_row, left:]
             if len(right_pixels) > 1:
-                # 计算相似度（只考虑原始图像像素）
-                distances, valid_indices = self.similarity(
+                right_pixel_mask = self.mask[1][ref_row, left:]
+                # 计算距离（只考虑原始图像像素）
+                distances, valid_indices = self.measure_distances(
                     right_pixels,
-                    right_pixel_mask,  # type: ignore
-                    reference_pixel,
+                    right_pixel_mask,
                 )
 
                 if len(distances) > 0:
-                    # 按相似度排序（最相似的排在左边）
+                    # 按相似度排序
                     sorted_valid_indices = valid_indices[np.argsort(distances)]
 
                     # 创建排序后的像素数组（保持原始顺序，只重新排列有效像素）
                     sorted_pixels = right_pixels.copy()
                     sorted_pixels[valid_indices] = right_pixels[sorted_valid_indices]
 
-                    # 将排序后的像素应用到chunk中的所有行
-                    for row in chunk_rows:
-                        if channels == 1:
-                            corrupted_array[row, start_x:] = sorted_pixels
-                        else:
-                            corrupted_array[row, start_x:, :] = sorted_pixels
-
-        # 恢复二维数组格式（如果是灰度图）
-        if channels == 1:
-            corrupted_array = corrupted_array[:, :, 0]
+                    # 将排序后的像素应用到block中的所有行
+                    for row in block_rows:
+                        self.image[1][row, left:] = sorted_pixels
 
         # 创建结果图像
-        result_img: Image.Image = Image.fromarray(corrupted_array.astype(np.uint8))
-        return result_img
+        result_img = Image.fromarray(self.image[1])
 
-    def process(self) -> Image.Image:
-        """
-        主处理函数
-        """
-        # 如果角度为0且不需要放大，直接处理
-        if self.angle == 0 and self.upscale_factor == 1:
-            self.processed_image = self.process_with_mask()
-            return self.processed_image
-
-        # 旋转处理
-        self.rotate_image_and_mask()
-
-        # 在旋转后的图像上应用像素排序
-        processed_rotated = self.process_with_mask()
-
-        # 旋转回原始方向并裁剪
-        self.processed_image = self.unrotate_image(processed_rotated)
-
-        return self.processed_image
+        return self.post_process(image=result_img)
 
 
 def pixel_sort_corruption(
     image: Image.Image,
-    mask: Optional[Image.Image] = None,
-    corruption_ratio: float = 0.3,
-    max_jitter: int = 15,
-    similarity_method: str = "euclidean",
+    edge_guide: Optional[Image.Image] = None,
+    intensity: float = 0.3,
+    x_jitter: int = 15,
+    sort_method: str = "euclidean",
     seed: int = -1,
-    min_consecutive_rows: int = 1,
-    chunk_size: int = 1,
+    y_span: int = 1,
+    block_size: int = 1,
     angle: float = 0.0,
-    upscale_factor: float = 1,
+    quality_scale: float = 1,
 ) -> Image.Image:
     """
-    高级相似度损坏效果，支持蒙版、损坏比例控制和任意角度
+    高级相似度损坏效果，支持边缘引导图、强度控制和任意角度
+
+    参数:
+        image: 输入图像
+        edge_guide: 边缘引导图（可选）
+        intensity: 损坏强度（0-1）
+        x_jitter: 水平抖动范围
+        sort_method: 排序方法，包括:
+            - "euclidean": 欧几里得距离
+            - "manhattan": 曼哈顿距离
+            - "brightness": 亮度相似度
+            - "dark-to-light": 从暗到亮排序
+            - "light-to-dark": 从亮到暗排序
+        seed: 随机种子
+        y_span: 垂直跨度
+        block_size: 块大小
+        angle: 旋转角度
+        quality_scale: 质量缩放因子
+
+    返回:
+        处理后的图像
     """
     # 创建上下文并处理
     context = _Context(
         image=image,
-        mask=mask,
-        corruption_ratio=corruption_ratio,
-        max_jitter=max_jitter,
-        similarity_method=similarity_method,
+        edge_guide=edge_guide,
+        intensity=intensity,
+        x_jitter=x_jitter,
+        sort_method=sort_method,
         seed=seed,
-        min_consecutive_rows=min_consecutive_rows,
-        chunk_size=chunk_size,
+        y_span=y_span,
+        block_size=block_size,
         angle=angle,
-        upscale_factor=upscale_factor,
+        quality_scale=quality_scale,
     )
 
     return context.process()
@@ -537,31 +434,37 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 使用示例:
-  # 无蒙版模式，损坏30%的行
-  %(prog)s input.jpg output.jpg --ratio 0.3
+  # 无边缘引导图模式，损坏30%的行
+  %(prog)s input.jpg output.jpg --intensity 0.3
   
-  # 使用蒙版模式，指定抖动范围
-  %(prog)s input.jpg output.jpg --mask mask.png --jitter 20
+  # 使用边缘引导图模式，指定抖动范围
+  %(prog)s input.jpg output.jpg --edge-guide guide.png --x-jitter 20
   
   # 使用曼哈顿距离作为相似度度量
-  %(prog)s input.jpg output.jpg --ratio 0.5 --similarity manhattan
+  %(prog)s input.jpg output.jpg --intensity 0.5 --sort manhattan
   
-  # 高损坏比例，使用亮度相似度
-  %(prog)s input.jpg output.jpg --ratio 0.8 --similarity brightness
+  # 使用从暗到亮排序
+  %(prog)s input.jpg output.jpg --intensity 0.5 --sort dark-to-light
+  
+  # 使用从亮到暗排序
+  %(prog)s input.jpg output.jpg --intensity 0.5 --sort light-to-dark
+  
+  # 高强度，使用亮度相似度
+  %(prog)s input.jpg output.jpg --intensity 0.8 --sort brightness
   
   # 固定随机种子以获得可重现的结果
   %(prog)s input.jpg output.jpg --seed 42
   
-  # 最小连续行3行，每次处理2行
-  %(prog)s input.jpg output.jpg --min-consecutive 3 --chunk-size 2
+  # 垂直跨度3行，块大小2行
+  %(prog)s input.jpg output.jpg --y-span 3 --block-size 2
   
-  # 45度角损坏，使用2倍放大提高精度
-  %(prog)s input.jpg output.jpg --angle 45 --upscale-factor 2
+  # 45度角损坏，使用2倍质量缩放提高精度
+  %(prog)s input.jpg output.jpg --angle 45 --quality-scale 2
   
   # 垂直向下损坏（90度）
   %(prog)s input.jpg output.jpg --angle 90
   
-  # 任意角度损坏，不放大（默认）
+  # 任意角度损坏，不缩放（默认）
   %(prog)s input.jpg output.jpg --angle 30
         """,
     )
@@ -572,37 +475,43 @@ def main() -> None:
 
     # 可选参数
     parser.add_argument(
-        "-m",
-        "--mask",
-        dest="mask_path",
-        help="蒙版文件路径（可选）。如果提供，效果将应用于蒙版非黑色区域",
+        "-e",
+        "--edge-guide",
+        dest="edge_guide_path",
+        help="边缘引导图文件路径（可选）。如果提供，效果将应用于引导图非黑色区域",
     )
 
     parser.add_argument(
-        "-r",
-        "--ratio",
-        dest="corruption_ratio",
+        "-i",
+        "--intensity",
+        dest="intensity",
         type=float,
         default=0.3,
-        help="损坏比例（0-1之间的浮点数）。在无蒙版模式下，指定要处理的行的比例。默认: 0.3",
+        help="效果强度（0-1之间的浮点数）。在无引导图模式下，指定要处理的行的比例。默认: 0.3",
     )
 
     parser.add_argument(
         "-j",
-        "--jitter",
-        dest="max_jitter",
+        "--x-jitter",
+        dest="x_jitter",
         type=int,
         default=15,
-        help="最大抖动范围（像素）。控制起始点水平抖动的最大范围。默认: 15",
+        help="最大水平抖动范围（像素）。控制起始点水平抖动的最大范围。默认: 15",
     )
 
     parser.add_argument(
         "-s",
-        "--similarity",
-        dest="similarity_method",
-        choices=["euclidean", "manhattan", "brightness"],
+        "--sort",
+        dest="sort_method",
+        choices=[
+            "euclidean",
+            "manhattan",
+            "brightness",
+            "dark-to-light",
+            "light-to-dark",
+        ],
         default="euclidean",
-        help="相似度计算方法。可选: euclidean(欧几里得距离), manhattan(曼哈顿距离), brightness(亮度相似度)。默认: euclidean",
+        help="排序方法。可选: euclidean(欧几里得距离), manhattan(曼哈顿距离), brightness(亮度相似度), dark-to-light(从暗到亮), light-to-dark(从亮到暗)。默认: euclidean",
     )
 
     parser.add_argument(
@@ -613,19 +522,19 @@ def main() -> None:
     )
 
     parser.add_argument(
-        "--min-consecutive",
-        dest="min_consecutive_rows",
+        "--y-span",
+        dest="y_span",
         type=int,
         default=1,
-        help="最小连续行数。一旦某行被损坏，下面n-1行也跟着被损坏。默认: 1",
+        help="垂直跨度。一旦某行被损坏，下面n-1行也跟着被损坏。默认: 1",
     )
 
     parser.add_argument(
-        "--chunk-size",
-        dest="chunk_size",
+        "--block-size",
+        dest="block_size",
         type=int,
         default=1,
-        help="最多一次处理的行数。将连续的多行视为一个块处理，使用第一行的像素数据。默认: 1",
+        help="块大小。将连续的多行视为一个块处理，使用第一行的像素数据。默认: 1",
     )
 
     parser.add_argument(
@@ -637,11 +546,11 @@ def main() -> None:
     )
 
     parser.add_argument(
-        "-u",
-        "--upscale-factor",
+        "-q",
+        "--quality-scale",
         type=int,
         default=1,
-        help="放大因子。在旋转前放大图像以提高精度，处理后再缩小。值越大精度越高但速度越慢。默认: 1（不放大）",
+        help="质量缩放因子。在旋转前放大图像以提高精度，处理后再缩小。值越大精度越高但速度越慢。默认: 1（不缩放）",
     )
 
     parser.add_argument(
@@ -659,28 +568,30 @@ def main() -> None:
     logging.basicConfig(level=log_level)
 
     # 参数验证
-    if args.upscale_factor < 1:
-        parser.error("放大因子必须大于等于1")
+    if args.quality_scale < 1:
+        parser.error("质量缩放因子必须大于等于1")
 
     # 执行
     with Image.open(args.input) as input_image, (
-        Image.open(args.mask_path) if args.mask_path else contextlib.nullcontext()
-    ) as mask_image:
+        Image.open(args.edge_guide_path)
+        if args.edge_guide_path
+        else contextlib.nullcontext()
+    ) as edge_guide_image:
         result_image: Image.Image = pixel_sort_corruption(
             image=input_image,
-            mask=mask_image if args.mask_path else None,
-            corruption_ratio=args.corruption_ratio,
-            max_jitter=args.max_jitter,
-            similarity_method=args.similarity_method,
+            edge_guide=edge_guide_image if args.edge_guide_path else None,
+            intensity=args.intensity,
+            x_jitter=args.x_jitter,
+            sort_method=args.sort_method,
             seed=args.seed,
-            min_consecutive_rows=args.min_consecutive_rows,
-            chunk_size=args.chunk_size,
+            y_span=args.y_span,
+            block_size=args.block_size,
             angle=args.angle,
-            upscale_factor=args.upscale_factor,
+            quality_scale=args.quality_scale,
         )
 
     # 保存结果
-    result_image.save(args.output, quality=95)
+    result_image.save(args.output)
     _LOGGER.info(f"处理成功完成! 结果保存至: {args.output}")
 
 

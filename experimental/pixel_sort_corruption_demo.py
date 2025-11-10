@@ -8,31 +8,32 @@ import random
 
 def gradio_pixel_sort_corruption(
     input_image: Optional[PILImage.Image],
-    mask_image: Optional[PILImage.Image] = None,
-    corruption_ratio: float = 0.3,
-    max_jitter: int = 15,
-    similarity_method: str = "euclidean",
+    edge_guide_image: Optional[PILImage.Image] = None,
+    intensity: float = 0.3,
+    x_jitter: int = 15,
+    sort_method: str = "euclidean",
     seed: int = -1,
-    use_mask: bool = False,
-    min_consecutive_rows: int = 1,
-    chunk_size: int = 1,
+    use_edge_guide: bool = False,
+    y_span: int = 1,
+    block_size: int = 1,
     angle: float = 0,
-    upscale_factor: float = 1,
+    quality_scale: float = 1,
 ) -> Tuple[Optional[PILImage.Image], int]:
     """
     Gradio包装函数，处理图像输入输出
 
     参数:
         input_image: 输入PIL图像
-        mask_image: 蒙版图像
-        corruption_ratio: 损坏比例
-        max_jitter: 最大抖动范围
-        similarity_method: 相似度计算方法
+        edge_guide_image: 边缘引导图像
+        intensity: 效果强度
+        x_jitter: 水平抖动范围
+        sort_method: 相似度计算方法
         seed: 随机种子
-        use_mask: 是否使用蒙版
-        min_consecutive_rows: 最小连续行数
-        chunk_size: 一次处理的行数
+        use_edge_guide: 是否使用边缘引导
+        y_span: 垂直跨度
+        block_size: 块大小
         angle: 角度
+        quality_scale: 质量缩放因子
 
     返回:
         元组: (处理后的PIL图像, 实际使用的种子)
@@ -48,25 +49,29 @@ def gradio_pixel_sort_corruption(
         # 处理随机种子
         actual_seed = seed if seed != -1 else random.randint(0, 2**31 - 1)
 
-        # 处理蒙版图像 - 检查mask_image是否是字典（Gradio隐藏组件的默认值）
-        mask: Optional[PILImage.Image] = None
-        if use_mask and mask_image is not None and not isinstance(mask_image, dict):
-            if hasattr(mask_image, "mode") and mask_image.mode != "L":
-                mask_image = mask_image.convert("L")
-            mask = mask_image
+        # 处理边缘引导图像 - 检查edge_guide_image是否是字典（Gradio隐藏组件的默认值）
+        edge_guide: Optional[PILImage.Image] = None
+        if (
+            use_edge_guide
+            and edge_guide_image is not None
+            and not isinstance(edge_guide_image, dict)
+        ):
+            if hasattr(edge_guide_image, "mode") and edge_guide_image.mode != "L":
+                edge_guide_image = edge_guide_image.convert("L")
+            edge_guide = edge_guide_image
 
         # 调用处理函数
         result_img: PILImage.Image = pixel_sort_corruption(
             image=input_image,
-            mask=mask,
-            corruption_ratio=corruption_ratio,
-            max_jitter=max_jitter,
-            similarity_method=similarity_method,
+            edge_guide=edge_guide,
+            intensity=intensity,
+            x_jitter=x_jitter,
+            sort_method=sort_method,
             seed=actual_seed,
-            min_consecutive_rows=min_consecutive_rows,
-            chunk_size=chunk_size,
+            y_span=y_span,
+            block_size=block_size,
             angle=angle,
-            upscale_factor=upscale_factor,
+            quality_scale=quality_scale,
         )
 
         return result_img, actual_seed
@@ -107,17 +112,17 @@ def update_parameters_based_on_image(
     ]
 
 
-def toggle_mask_visibility(use_mask: bool) -> Dict[str, Any]:
+def toggle_edge_guide_visibility(use_edge_guide: bool) -> Dict[str, Any]:
     """
-    切换蒙版可见性
+    切换边缘引导图可见性
 
     参数:
-        use_mask: 是否使用蒙版
+        use_edge_guide: 是否使用边缘引导图
 
     返回:
         更新后的组件属性字典
     """
-    return gr.update(visible=use_mask)
+    return gr.update(visible=use_edge_guide)
 
 
 def copy_seed_to_input(seed_value: str) -> int:
@@ -155,7 +160,7 @@ def create_demo() -> gr.Blocks:
             """
         # 🎨 高级像素排序损坏效果演示
         
-        基于相似度的像素排序损坏效果，支持蒙版控制和多种相似度计算方法。
+        基于相似度的像素排序损坏效果，支持边缘引导控制和多种相似度计算方法。
         """
         )
 
@@ -168,42 +173,55 @@ def create_demo() -> gr.Blocks:
                     height=300,
                 )
 
-                # 蒙版控制
-                use_mask_checkbox: gr.Checkbox = gr.Checkbox(
-                    label="使用蒙版", value=False, info="启用后使用蒙版确定处理区域"
+                # 边缘引导图控制
+                use_edge_guide_checkbox: gr.Checkbox = gr.Checkbox(
+                    label="使用边缘引导图",
+                    value=False,
+                    info="启用后使用边缘引导图确定处理区域",
                 )
 
-                mask_image: gr.Image = gr.Image(
-                    label="蒙版图片（可选）",
+                edge_guide_image: gr.Image = gr.Image(
+                    label="边缘引导图（可选）",
                     type="pil",
                     height=200,
                     visible=False,
                     value=None,
                 )
 
+                # 处理按钮
+                process_btn: gr.Button = gr.Button(
+                    "🚀 应用像素排序效果", variant="primary", size="lg"
+                )
+
                 # 参数设置
                 with gr.Accordion("参数设置", open=True):
-                    corruption_ratio: gr.Slider = gr.Slider(
+                    intensity: gr.Slider = gr.Slider(
                         minimum=0.0,
                         maximum=1.0,
                         value=0.5,
-                        label="损坏比例",
+                        label="效果强度",
                         info="0-1之间，表示要处理的行比例",
                     )
 
-                    max_jitter: gr.Slider = gr.Slider(
+                    x_jitter: gr.Slider = gr.Slider(
                         minimum=0,
                         value=15,
                         step=1,
-                        label="最大抖动范围",
+                        label="水平抖动范围",
                         info="起始点水平抖动的最大像素范围",
                     )
 
-                    similarity_method: gr.Dropdown = gr.Dropdown(
-                        choices=["euclidean", "manhattan", "brightness"],
+                    sort_method: gr.Dropdown = gr.Dropdown(
+                        choices=[
+                            "euclidean",
+                            "manhattan",
+                            "brightness",
+                            "dark-to-light",
+                            "light-to-dark",
+                        ],
                         value="euclidean",
-                        label="相似度计算方法",
-                        info="选择像素相似度的计算方式",
+                        label="像素排序方法",
+                        info="选择像素排序方式",
                     )
 
                     seed: gr.Number = gr.Number(
@@ -213,15 +231,15 @@ def create_demo() -> gr.Blocks:
                         precision=0,
                     )
 
-                    min_consecutive_rows: gr.Slider = gr.Slider(
+                    y_span: gr.Slider = gr.Slider(
                         minimum=1,
                         value=1,
                         step=1,
-                        label="最小连续行数",
-                        info="一旦选中某行，必须连续处理下面n-1行",
+                        label="垂直跨度",
+                        info="一旦损坏某行，自动同时损坏下面n-1行",
                     )
 
-                    chunk_size: gr.Slider = gr.Slider(
+                    block_size: gr.Slider = gr.Slider(
                         minimum=1,
                         value=1,
                         step=1,
@@ -237,18 +255,13 @@ def create_demo() -> gr.Blocks:
                         info="损坏方向",
                     )
 
-                    upscale_factor: gr.Slider = gr.Slider(
+                    quality_scale: gr.Slider = gr.Slider(
                         minimum=1,
                         maximum=8,
                         value=1,
-                        label="放大系数",
+                        label="质量缩放因子",
                         info="放大处理后再缩小输出，用于提高效果精度",
                     )
-
-                # 处理按钮
-                process_btn: gr.Button = gr.Button(
-                    "🚀 应用像素排序效果", variant="primary", size="lg"
-                )
 
             with gr.Column():
                 # 输出图像和种子信息
@@ -272,12 +285,14 @@ def create_demo() -> gr.Blocks:
         input_image.upload(
             fn=update_parameters_based_on_image,
             inputs=input_image,
-            outputs=[max_jitter, min_consecutive_rows, chunk_size],
+            outputs=[x_jitter, y_span, block_size],
         )
 
-        # 蒙版可见性控制
-        use_mask_checkbox.change(
-            fn=toggle_mask_visibility, inputs=use_mask_checkbox, outputs=mask_image
+        # 边缘引导图可见性控制
+        use_edge_guide_checkbox.change(
+            fn=toggle_edge_guide_visibility,
+            inputs=use_edge_guide_checkbox,
+            outputs=edge_guide_image,
         )
 
         # 处理按钮点击事件 - 现在返回两个输出
@@ -285,16 +300,16 @@ def create_demo() -> gr.Blocks:
             fn=gradio_pixel_sort_corruption,
             inputs=[
                 input_image,
-                mask_image,
-                corruption_ratio,
-                max_jitter,
-                similarity_method,
+                edge_guide_image,
+                intensity,
+                x_jitter,
+                sort_method,
                 seed,
-                use_mask_checkbox,
-                min_consecutive_rows,
-                chunk_size,
+                use_edge_guide_checkbox,
+                y_span,
+                block_size,
                 angle,
-                upscale_factor,
+                quality_scale,
             ],
             outputs=[output_image, seed_display],
         )
@@ -312,26 +327,26 @@ def create_demo() -> gr.Blocks:
                 """\
 ### 基本用法
 1. 上传输入图片（参数范围会自动根据图片尺寸调整）
-2. 选择是否使用蒙版模式
+2. 选择是否使用边缘引导图模式
 3. 调整参数设置
 4. 点击"应用像素排序效果"按钮
 5. 查看处理结果和使用的随机种子
 
 ### 智能参数调整
-- **最大抖动范围**：会根据图片宽度自动调整上限，避免超出图片边界
-- **块大小**：会根据图片高度自动调整上限，确保处理效果合理
+- **水平抖动范围**：会根据图片宽度自动调整上限，避免超出图片边界
+- **垂直跨度**：会根据图片高度自动调整上限，确保处理效果合理
 - 上传不同尺寸的图片时，参数范围会自动优化
 
-### 蒙版模式
-- 启用"使用蒙版"后上传蒙版图片
-- 蒙版用于确定每行的起始位置
-- 每行的起始位置由蒙版中该行最左侧非黑色像素的位置决定
-- 蒙版图片会自动调整到与输入图片相同尺寸
+### 边缘引导图模式
+- 启用"使用边缘引导图"后上传引导图
+- 边缘引导图用于确定每行的起始位置
+- 每行的起始位置由引导图中该行最左侧非黑色像素的位置决定
+- 边缘引导图会自动调整到与输入图片相同尺寸
 
-### 无蒙版模式
+### 无边缘引导图模式
 - 随机选择一定比例的行进行处理
 - 起始位置基于上一行的位置加上随机抖动
-- 损坏比例参数控制被处理的行数
+- 效果强度参数控制被处理的行数
 
 ### 种子功能
 - 固定随机种子可以获得可重现的效果
