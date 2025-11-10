@@ -134,6 +134,13 @@ class _Context:
                 last_corruption_start >= 0
                 and index < last_corruption_start + self.y_span
             )
+
+            if not corrupted:
+                corrupted = self.rng.random() < corruption_probability
+                if corrupted:
+                    # 开始损坏
+                    last_corruption_start = index
+
             if (
                 corrupted
                 and self.edge_guide
@@ -142,11 +149,6 @@ class _Context:
                 # 引导中断损坏
                 corrupted = False
                 last_corruption_start = -1
-            elif not corrupted:
-                corrupted = self.rng.random() < corruption_probability
-                if corrupted:
-                    # 开始损坏
-                    last_corruption_start = index
 
             if corrupted:
                 yield index
@@ -301,16 +303,8 @@ class _Context:
                 distances = np.sum(np.abs(valid_pixels_rgb - ref_pixel_rgb), axis=1)
             elif self.sort_method == "brightness":
                 if valid_pixels_rgb.ndim > 1:
-                    pixel_brightness: np.ndarray = (
-                        0.299 * valid_pixels_rgb[:, 0]
-                        + 0.587 * valid_pixels_rgb[:, 1]
-                        + 0.114 * valid_pixels_rgb[:, 2]
-                    )
-                    ref_brightness: float = (
-                        0.299 * ref_pixel_rgb[0]
-                        + 0.587 * ref_pixel_rgb[1]
-                        + 0.114 * ref_pixel_rgb[2]
-                    )
+                    pixel_brightness = self.calculate_brightness(valid_pixels_rgb)
+                    ref_brightness = self.calculate_brightness(ref_pixel_rgb)
                     distances = np.abs(pixel_brightness - ref_brightness)
                 else:
                     distances = np.abs(valid_pixels_rgb - ref_pixel_rgb)
@@ -431,42 +425,6 @@ def main() -> None:
     """主函数"""
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description="应用像素排序损坏效果到图片",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-使用示例:
-  # 无边缘引导图模式，损坏30%的行
-  %(prog)s input.jpg output.jpg --intensity 0.3
-  
-  # 使用边缘引导图模式，指定抖动范围
-  %(prog)s input.jpg output.jpg --edge-guide guide.png --x-jitter 20
-  
-  # 使用曼哈顿距离作为相似度度量
-  %(prog)s input.jpg output.jpg --intensity 0.5 --sort manhattan
-  
-  # 使用从暗到亮排序
-  %(prog)s input.jpg output.jpg --intensity 0.5 --sort dark-to-light
-  
-  # 使用从亮到暗排序
-  %(prog)s input.jpg output.jpg --intensity 0.5 --sort light-to-dark
-  
-  # 高强度，使用亮度相似度
-  %(prog)s input.jpg output.jpg --intensity 0.8 --sort brightness
-  
-  # 固定随机种子以获得可重现的结果
-  %(prog)s input.jpg output.jpg --seed 42
-  
-  # 垂直跨度3行，块大小2行
-  %(prog)s input.jpg output.jpg --y-span 3 --block-size 2
-  
-  # 45度角损坏，使用2倍质量缩放提高精度
-  %(prog)s input.jpg output.jpg --angle 45 --quality-scale 2
-  
-  # 垂直向下损坏（90度）
-  %(prog)s input.jpg output.jpg --angle 90
-  
-  # 任意角度损坏，不缩放（默认）
-  %(prog)s input.jpg output.jpg --angle 30
-        """,
     )
 
     # 必需参数
