@@ -3,7 +3,7 @@
 renumber-files.py
 
 文件名数字前缀重命名
-将目录中所有数字前缀改为排序后序号乘以10
+将目录中所有数字前缀改为排序后序号，支持小数前缀。
 支持幂等操作，可安全中断和恢复
 不支持并发执行
 """
@@ -26,8 +26,8 @@ class _Context:
         self.temp_prefix: str = "RENAME_93b94d73b9ab-"
         self.prefix_length = 1
         self.delimiter = "-"
-        self.finale_file_pattern = re.compile(
-            r"^(\d+)([-_ ]*)(.*)$",
+        self.final_file_pattern = re.compile(
+            r"^((?:\d*\.)?\d+)([-_ ]*)(.*)$",
         )
         self.prepare()
 
@@ -38,16 +38,15 @@ class _Context:
             if file_path.name.startswith(self.temp_prefix):
                 count += 1
             else:
-                match = self.finale_file_pattern.match(file_path.name)
+                match = self.final_file_pattern.match(file_path.name)
                 if match:
                     count += 1
                     delimiter = match.group(2)
                     delimiter_counter[delimiter] += 1
         for i, _ in delimiter_counter.most_common(1):
             self.delimiter = i
-        if count > 0:
-            max_number = count * 10
-            self.prefix_length = math.floor(math.log10(max_number)) + 1
+        if count > 0: # 避免 math.log10(0)
+            self.prefix_length = 1 + math.floor(math.log10(count))
 
     def all_files(self) -> Iterator[Path]:
         """获取目录中所有文件"""
@@ -66,18 +65,18 @@ class _Context:
     def parse_final_name(
         self,
         file_path: Path,
-    ) -> Optional[Tuple[int, str]]:
+    ) -> Optional[Tuple[float, str]]:
         """提取文件信息：数字前缀和剩余部分"""
         filename = file_path.name
-        match = self.finale_file_pattern.match(filename)
+        match = self.final_file_pattern.match(filename)
         if match:
-            return int(match.group(1)), match.group(3)
+            return float(match.group(1)), match.group(3)
         _LOGGER.debug("parse_final_name: 忽略：%s", filename)
         return None
 
     def format_temp_name(
         self,
-        number: int,
+        number: float,
         version: int,
         suffix: str,
     ) -> str:
@@ -87,25 +86,27 @@ class _Context:
     def parse_temp_name(
         self,
         file_path: Path,
-    ) -> Optional[Tuple[int, int, str]]:
+    ) -> Optional[Tuple[float, int, str]]:
         """提取文件信息：数字前缀和剩余部分"""
         if not file_path.name.startswith(self.temp_prefix):
             return None
         filename = file_path.name
-        match = re.match(r"^(\d+)-(\d+)-(.+)", filename[len(self.temp_prefix) :])
+        match = re.match(
+            r"^((?:\d*\.)?\d+)-(\d+)-(.+)", filename[len(self.temp_prefix) :]
+        )
         if match:
-            return int(match.group(1)), int(match.group(2)), match.group(3)
+            return float(match.group(1)), int(match.group(2)), match.group(3)
         _LOGGER.debug("parse_temp_name: 忽略：%s", filename)
         return None
 
-    def final_files(self) -> Iterator[Tuple[int, str, Path]]:
+    def final_files(self) -> Iterator[Tuple[float, str, Path]]:
         """获取所有符合命名模式的文件"""
         for file_path in self.all_files():
             info = self.parse_final_name(file_path)
             if info:
                 yield info[0], info[1], file_path
 
-    def temp_files(self) -> Iterator[Tuple[int, int, str, Path]]:
+    def temp_files(self) -> Iterator[Tuple[float, int, str, Path]]:
         """临时文件的迭代器"""
         for file_path in self.all_files():
             info = self.parse_temp_name(file_path)
@@ -126,10 +127,10 @@ def renumber_files(dir: str):
         _LOGGER.debug("first_pass: %s", src.name)
         index = next_index
         next_index += 1
-        expected_number = (index + 1) * 10
+        expected_number = index + 1
         if start_index < 0:
             if number == expected_number and src.name == ctx.format_final_name(
-                number, suffix
+                expected_number, suffix
             ):
                 continue
             else:
@@ -157,8 +158,11 @@ def renumber_files(dir: str):
         index = next_index
         next_index += 1
 
-        dst = src.parent / ctx.format_final_name((index + 1) * 10, suffix)
-        # 这是第二遍，不应有冲突。冲突只可能是并发修改，而脚本不支持并发
+        dst = src.parent / ctx.format_final_name(index + 1, suffix)
+        # 不应处理冲突，因为非临时文件只可能是：
+        # a. 没有数字前缀
+        # b. 数字更小
+        # c. 并发创建，而脚本不支持并发
         src.rename(dst)
         _LOGGER.info("%s -> %s", src.name, dst.name)
 
