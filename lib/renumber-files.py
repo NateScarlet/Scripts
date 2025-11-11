@@ -92,7 +92,7 @@ class _Context:
             return None
         filename = file_path.name
         match = re.match(
-            r"^((?:\d*\.)?\d+)-(\d+)-(.+)", filename[len(self.temp_prefix) :]
+            r"^((?:\d*\.)?\d+)-(\d+)-(.*)", filename[len(self.temp_prefix) :]
         )
         if match:
             return float(match.group(1)), int(match.group(2)), match.group(3)
