@@ -146,6 +146,12 @@ def copy_seed_to_input(seed_value: str) -> int:
 
 
 def create_demo() -> gr.Blocks:
+    """
+    创建Gradio演示界面
+
+    返回:
+        配置好的Gradio Blocks实例
+    """
     with gr.Blocks(
         title="高级像素排序损坏效果演示",
         theme=gradio.themes.Soft(),
@@ -180,6 +186,11 @@ def create_demo() -> gr.Blocks:
                     height=200,
                     visible=False,
                     value=None,
+                )
+
+                # 处理按钮
+                process_btn: gr.Button = gr.Button(
+                    "🚀 应用像素排序效果", variant="primary", size="lg"
                 )
 
                 # 参数设置
@@ -284,6 +295,25 @@ def create_demo() -> gr.Blocks:
             outputs=edge_guide_image,
         )
 
+        # 处理按钮点击事件 - 现在返回两个输出
+        process_btn.click(
+            fn=gradio_pixel_sort_corruption,
+            inputs=[
+                input_image,
+                edge_guide_image,
+                intensity,
+                x_jitter,
+                sort_method,
+                seed,
+                use_edge_guide_checkbox,
+                y_span,
+                block_size,
+                angle,
+                quality_scale,
+            ],
+            outputs=[output_image, seed_display],
+        )
+
         # 添加种子复制功能
         copy_seed_btn.click(
             fn=copy_seed_to_input,
@@ -291,45 +321,48 @@ def create_demo() -> gr.Blocks:
             outputs=seed,
         )
 
-        # 自动更新：为所有参数组件添加change事件
-        auto_update_components: list[gr.Component] = [
-            input_image,
-            edge_guide_image,
-            intensity,
-            x_jitter,
-            sort_method,
-            seed,
-            use_edge_guide_checkbox,
-            y_span,
-            block_size,
-            angle,
-            quality_scale,
-        ]
+        # 添加使用说明
+        with gr.Accordion("使用说明", open=False):
+            gr.Markdown(
+                """\
+### 基本用法
+1. 上传输入图片（参数范围会自动根据图片尺寸调整）
+2. 选择是否使用边缘引导图模式
+3. 调整参数设置
+4. 点击"应用像素排序效果"按钮
+5. 查看处理结果和使用的随机种子
 
-        # 为每个参数组件添加change事件，自动触发处理
-        for component in auto_update_components:
-            component.change(  # type: ignore
-                fn=gradio_pixel_sort_corruption,
-                inputs=[
-                    input_image,
-                    edge_guide_image,
-                    intensity,
-                    x_jitter,
-                    sort_method,
-                    seed,
-                    use_edge_guide_checkbox,
-                    y_span,
-                    block_size,
-                    angle,
-                    quality_scale,
-                ],
-                outputs=[output_image, seed_display],
+### 智能参数调整
+- **水平抖动范围**：会根据图片宽度自动调整上限，避免超出图片边界
+- **垂直跨度**：会根据图片高度自动调整上限，确保处理效果合理
+- 上传不同尺寸的图片时，参数范围会自动优化
+
+### 边缘引导图模式
+- 启用"使用边缘引导图"后上传引导图
+- 边缘引导图用于确定每行的起始位置
+- 每行的起始位置由引导图中该行最左侧非黑色像素的位置决定
+- 边缘引导图会自动调整到与输入图片相同尺寸
+
+### 无边缘引导图模式
+- 随机选择一定比例的行进行处理
+- 起始位置基于上一行的位置加上随机抖动
+- 效果强度参数控制被处理的行数
+
+### 种子功能
+- 固定随机种子可以获得可重现的效果
+- 每次处理后会显示实际使用的种子值
+- 种子值为-1时使用随机种子
+"""
             )
 
     return demo
 
 
 def main() -> None:
+    """
+    主函数：启动Gradio演示界面
+    """
+    # 启动Gradio界面
     demo: gr.Blocks = create_demo()
     demo.launch(
         server_port=7860,
@@ -338,5 +371,6 @@ def main() -> None:
     )
 
 
+# 启动演示
 if __name__ == "__main__":
     main()
