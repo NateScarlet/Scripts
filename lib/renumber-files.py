@@ -21,6 +21,25 @@ import argparse
 _LOGGER = logging.getLogger(__name__)
 
 
+class _FinalFileInfo(NamedTuple):
+    # 注意：字段顺序影响排序
+    number: float
+    suffix: str
+
+    name: str
+    delimiter: str
+
+
+class _TempFileInfo(NamedTuple):
+    # 注意：字段顺序影响排序
+    number: float
+    version: int
+    suffix: str
+
+    name: str
+    raw_name: str
+
+
 class _Context:
     def __init__(self, directory: str = ".") -> None:
         self.directory: Path = Path(directory)
@@ -68,11 +87,16 @@ class _Context:
     def parse_final_name(
         self,
         name: str,
-    ) -> Optional[Tuple[float, str]]:
+    ) -> Optional[_FinalFileInfo]:
         """提取文件信息：数字前缀和剩余部分"""
         match = self.final_file_pattern.match(name)
         if match:
-            return float(match.group(1)), match.group(3)
+            return _FinalFileInfo(
+                name=name,
+                number=float(match.group(1)),
+                delimiter=match.group(2),
+                suffix=match.group(3),
+            )
         _LOGGER.debug("parse_final_name: 忽略：%s", name)
         return None
 
@@ -87,7 +111,7 @@ class _Context:
     def parse_temp_name(
         self,
         name: str,
-    ) -> Optional[Tuple[float, int, str]]:
+    ) -> Optional[_TempFileInfo]:
         if not name.startswith(self.temp_prefix):
             return None
         # 既然有前缀，就必须符合格式。
@@ -96,25 +120,31 @@ class _Context:
         if not info:
             raise ValueError("无法识别临时文件 %s", name)
         version = int(info.group(1))
-        raw_path = info.group(2)
-        info = self.parse_final_name(raw_path)
+        raw_name = info.group(2)
+        info = self.parse_final_name(raw_name)
         if not info:
             raise ValueError("无法识别临时文件 %s", name)
-        return info[0], version, info[1]
+        return _TempFileInfo(
+            name=name,
+            raw_name=raw_name,
+            version=version,
+            number=info.number,
+            suffix=info.suffix,
+        )
 
-    def final_files(self) -> Iterator[Tuple[float, str, Path]]:
+    def final_files(self) -> Iterator[Tuple[_FinalFileInfo, Path]]:
         """获取所有符合命名模式的文件"""
         for file_path in self.all_files():
             info = self.parse_final_name(file_path.name)
             if info:
-                yield info[0], info[1], file_path
+                yield info, file_path
 
-    def temp_files(self) -> Iterator[Tuple[float, int, str, Path]]:
+    def temp_files(self) -> Iterator[Tuple[_TempFileInfo, Path]]:
         """临时文件的迭代器"""
         for file_path in self.all_files():
             info = self.parse_temp_name(file_path.name)
             if info:
-                yield info[0], info[1], info[2], file_path
+                yield info, file_path
 
 
 class RenumberItem(NamedTuple):
@@ -138,17 +168,17 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
     # 第一遍，将所有需重命名的文件放到临时命名空间下，以支持中断
     next_index = 0
     start_index = -1
-    for number, suffix, src in sorted(ctx.final_files()):
+    for info, src in sorted(ctx.final_files()):
         _LOGGER.debug("first_pass: %s", src.name)
         index = next_index
         next_index += 1
         expected_number = index + 1
         if start_index < 0:
-            if number == expected_number and src.name == ctx.format_final_name(
-                expected_number, suffix
+            if info.number == expected_number and src.name == ctx.format_final_name(
+                expected_number, info.suffix
             ):
                 yield RenumberItem(
-                    src, src, number, expected_number, ctx.delimiter, suffix
+                    src, src, info.number, expected_number, ctx.delimiter, info.suffix
                 )
                 continue
             else:
@@ -173,19 +203,26 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
     if start_index >= 0:
         # 从已经移走的索引开始重新分配序号
         next_index = start_index
-    for raw_number, _, suffix, src in sorted(ctx.temp_files()):
+    for info, src in sorted(ctx.temp_files()):
         _LOGGER.debug("second_pass: %s", src.name)
         index = next_index
         next_index += 1
 
-        dst = src.parent / ctx.format_final_name(index + 1, suffix)
+        dst = src.parent / ctx.format_final_name(index + 1, info.suffix)
         # 序号唯一，不可能有冲突，因为非临时文件只可能是：
         # a. 没有数字前缀
         # b. 数字更小
         # c. 并发创建，而脚本不支持并发
         src.rename(dst)
         _LOGGER.debug("%s -> %s", src.name, dst.name)
-        yield RenumberItem(src, dst, raw_number, index + 1, ctx.delimiter, suffix)
+        yield RenumberItem(
+            src.parent / info.raw_name,
+            dst,
+            info.number,
+            index + 1,
+            ctx.delimiter,
+            info.suffix,
+        )
 
 
 def format_rename(src: str, dst: str) -> str:
@@ -223,7 +260,7 @@ def format_rename(src: str, dst: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("directory", help="输入目录")
+    parser.add_argument("directory", nargs="?", default=".", help="输入目录")
     parser.add_argument(
         "-v",
         "--verbose",
