@@ -55,11 +55,11 @@ $markerStart
 `$ScriptsRoot = "$targetDir"
 . "`$ScriptsRoot\profiles\Microsoft.PowerShell_profile.ps1"
 $markerEnd
-"@
+"@ 
     
     # 读取当前 profile 内容
     $profileContent = if (Test-Path $PROFILE) { 
-        Get-Content $PROFILE -Raw 
+        (Get-Content $PROFILE -Raw) -replace "`r`n", "`n" # 忽略换行符差异
     }
     else { 
         "" 
@@ -81,12 +81,12 @@ $markerEnd
     else {
         # 添加新块到文件末尾
         $newContent = if ($profileContent.Trim().Length -gt 0) {
-            $profileContent.Trim() + "`r`n`r`n" + $profileBlock
+            $profileContent.Trim() + "`n`n" + $profileBlock
         }
         else {
             $profileBlock
         }
-        $newContent | Set-Content $PROFILE
+        $newContent | Set-Content -NoNewline $PROFILE
         Write-Host "✅ 添加 PowerShell Profile 引用"
     }
 }
