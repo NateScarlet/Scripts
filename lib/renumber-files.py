@@ -193,7 +193,7 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
                     version += 1
                     continue
                 src.rename(dst)
-                _LOGGER.debug("重命名为临时文件: %s -> %s", src.name, dst.name)
+                _LOGGER.debug("重命名为临时文件: %s => %s", src.name, dst.name)
                 break
             except FileExistsError:
                 version += 1
@@ -214,7 +214,7 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
         # b. 数字更小
         # c. 并发创建，而脚本不支持并发
         src.rename(dst)
-        _LOGGER.debug("%s -> %s", src.name, dst.name)
+        _LOGGER.debug("%s => %s", src.name, dst.name)
         yield RenumberItem(
             src.parent / info.raw_name,
             dst,
@@ -223,39 +223,6 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
             ctx.delimiter,
             info.suffix,
         )
-
-
-def format_rename(src: str, dst: str) -> str:
-    # 如果两个字符串完全相同，直接返回该字符串
-    if src == dst:
-        return src
-
-    # 计算最长公共前缀
-    i = 0
-    while i < len(src) and i < len(dst) and src[i] == dst[i]:
-        i += 1
-    prefix = src[:i]
-
-    # 提取前缀之后的部分
-    src_remaining = src[i:]
-    dst_remaining = dst[i:]
-
-    # 计算最长公共后缀
-    j = 0
-    while j < len(src_remaining) and j < len(dst_remaining):
-        # 比较倒数第j+1个字符
-        if src_remaining[-(j + 1)] == dst_remaining[-(j + 1)]:
-            j += 1
-        else:
-            break
-    suffix = src_remaining[-j:] if j > 0 else ""
-
-    # 提取差异部分
-    src_diff = src_remaining[: len(src_remaining) - j]
-    dst_diff = dst_remaining[: len(dst_remaining) - j]
-
-    # 组合结果
-    return f"{prefix}{{{src_diff} -> {dst_diff}}}{suffix}"
 
 
 def main() -> None:
@@ -282,7 +249,7 @@ def main() -> None:
         sys.exit(1)
     for i in renumber_files(args.directory):
         if i.src.name != i.dst.name:
-            print(format_rename(i.src.name, i.dst.name))
+            print("%s\t=>\t%s" % (i.src.name, i.dst.name))
 
 
 if __name__ == "__main__":
