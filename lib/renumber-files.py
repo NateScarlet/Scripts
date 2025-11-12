@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 from collections import Counter
 from typing import Tuple, Optional, Iterator, NamedTuple
+import json
 import argparse
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,27 +52,18 @@ class _Context:
         self.final_file_pattern = re.compile(
             r"^((?:\d*\.)?\d+)([-_ ]*)(.*)$",
         )
-        self.max_raw_name_length = 0
         self.prepare()
 
     def prepare(self):
         count = 0
         delimiter_counter = Counter[str]()
         for file_path in self.all_files():
-            info = self.parse_temp_name(file_path.name)
-            if info:
-                self.max_raw_name_length = max(
-                    self.max_raw_name_length,
-                    len(info.raw_name),
-                )
+            if file_path.name.startswith(self.temp_prefix):
+                count += 1
                 continue
 
             info = self.parse_final_name(file_path.name)
             if info:
-                self.max_raw_name_length = max(
-                    self.max_raw_name_length,
-                    len(info.name),
-                )
                 count += 1
                 delimiter_counter[info.delimiter] += 1
         for i, _ in delimiter_counter.most_common(1):
@@ -163,8 +155,6 @@ class RenumberItem(NamedTuple):
     new_number: int
     suffix: str
 
-    ctx: _Context
-
 
 def renumber_files(dir: str) -> Iterator[RenumberItem]:
     """
@@ -188,12 +178,11 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
                 expected_number, info.suffix
             ):
                 yield RenumberItem(
-                    src,
-                    src,
-                    info.number,
-                    expected_number,
-                    ctx.delimiter,
-                    ctx,
+                    src=src,
+                    dst=src,
+                    old_number=info.number,
+                    new_number=expected_number,
+                    suffix=info.suffix,
                 )
                 continue
             else:
@@ -231,12 +220,11 @@ def renumber_files(dir: str) -> Iterator[RenumberItem]:
         src.rename(dst)
         _LOGGER.debug("%s => %s", src.name, dst.name)
         yield RenumberItem(
-            src.parent / info.raw_name,
-            dst,
-            info.number,
-            index + 1,
-            info.suffix,
-            ctx,
+            src=src.parent / info.raw_name,
+            dst=dst,
+            old_number=info.number,
+            new_number=index + 1,
+            suffix=info.suffix,
         )
 
 
@@ -264,9 +252,18 @@ def main() -> None:
         sys.exit(1)
     for i in renumber_files(args.directory):
         if i.src.name != i.dst.name:
-            print(
-                f"{i.src.name}\t{' ' * (i.ctx.max_raw_name_length - len(i.src.name))}=>\t{i.dst.name}"
+            json.dump(
+                dict(
+                    oldNumber=i.old_number,
+                    newNumber=i.new_number,
+                    suffix=i.suffix,
+                    src=i.src.name,
+                    dst=i.dst.name,
+                ),
+                sys.stdout,
+                ensure_ascii=False,
             )
+            sys.stdout.write("\n")
 
 
 if __name__ == "__main__":
