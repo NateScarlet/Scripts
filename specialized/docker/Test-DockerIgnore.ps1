@@ -1,5 +1,7 @@
 function Invoke-NativeCommand {
-    $command, $arguments = $args
+    $command = $args[0]
+    $arguments = $args[1..($args.Length - 1)]
+        
     & $command @arguments
     if (!$?) {
         Throw "exit code ${LastExitCode}: ${args}"

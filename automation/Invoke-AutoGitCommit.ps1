@@ -7,7 +7,9 @@
     $ErrorActionPreference = "Stop"
 
     function Invoke-NativeCommand {
-        $command, $arguments = $args
+        $command = $args[0]
+        $arguments = $args[1..($args.Length - 1)]
+        
         & $command @arguments
         if ($LASTEXITCODE -ne 0) {
             Throw "命令 '$args' 失败 (退出码 $LASTEXITCODE)"
