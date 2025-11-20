@@ -2,6 +2,15 @@
 & {
     # 使用严格的错误处理
     $ErrorActionPreference = "Stop"
+    function Invoke-NativeCommand {
+        $command = $args[0]
+        $arguments = $args[1..($args.Length-1)]
+        
+        & $command @arguments
+        if ($LASTEXITCODE -ne 0) {
+            Throw "命令 '$args' 失败 (退出码 $LASTEXITCODE)"
+        }
+    }
     
     # 查找 Weasel 安装路径
     $regPath = "HKLM:\SOFTWARE\WOW6432Node\Rime\Weasel"
@@ -36,26 +45,25 @@
         $env:GIT_CONFIG_KEY_0 = "commit.gpgSign"
         $env:GIT_CONFIG_VALUE_0 = "false"
 
+        $statusOutput = Invoke-NativeCommand git status --porcelain
+        if ([string]::IsNullOrWhiteSpace($statusOutput)) {
+            Write-Host "无变更需要提交" -ForegroundColor Yellow
+        }
+        else {        
+            Write-Host "Committing changes..."
+            Invoke-NativeCommand git commit -a -m "Automatic sync at $timestamp"            
+        }
+
         Write-Host "Pulling latest changes from remote..."
-        git pull --rebase
-        
+        Invoke-NativeCommand git pull --rebase
+                
         Write-Host "Running WeaselDeployer..."
         WeaselDeployer.exe /sync
-        
-        Write-Host "Adding changes to git..."
-        git add -A
-        
-        Write-Host "Committing changes..."
-        git commit -m "Automatic sync at $timestamp"
-        
+
         Write-Host "Pushing changes..."
-        git push
-        
+        Invoke-NativeCommand git push   
+
         Write-Host "Rime sync completed successfully." -ForegroundColor Green
-    }
-    catch {
-        Write-Host "Error during sync: $_" -ForegroundColor Red
-        exit 1
     }
     finally {
         # 确保切换回原目录
