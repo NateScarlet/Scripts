@@ -42,6 +42,7 @@ catch {
     Write-Host "      运行: Install-Module posh-git -Scope CurrentUser" -ForegroundColor Cyan
 }
 
+$ScriptsRoot = Resolve-Path "$PSScriptRoot/.."
 $ScriptLib = Resolve-Path "$PSScriptRoot/../lib"
 
 function global:prompt {
@@ -85,7 +86,7 @@ Set-Alias "wait-idle" Start-WaitIdle
 
 
 function Start-ComfyRename {
-    py $ScriptLib/prompts/comfy-rename.py $args
+    py $ScriptsRoot/specialized/comfy_ui/rename.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
@@ -95,7 +96,7 @@ Set-Alias "comfy-rename" Start-ComfyRename
 
 
 function Start-ComfySearch {
-    py $ScriptLib/prompts/comfy-search.py $args
+    py $ScriptsRoot/specialized/comfy_ui/search.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
