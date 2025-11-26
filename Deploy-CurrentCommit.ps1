@@ -109,7 +109,7 @@ if (Test-Path $targetScript) {
     
     if (-not $task) {
         # 创建新任务
-        $trigger = New-ScheduledTaskTrigger -Daily -At 00:00
+        $trigger = New-ScheduledTaskTrigger -Daily -At 04:00
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
         $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive
         
