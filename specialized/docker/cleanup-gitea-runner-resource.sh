@@ -12,14 +12,14 @@ remove_dangling_containers() {
         exit 1
     fi
     # 处理容器
-    docker ps --filter "$filter" --format '{{.ID}}\t{{.CreatedAt}}' | while IFS='\t' read -r id timestamp; do
-        # 转换时间戳为Unix时间
-        container_timestamp=$(date -d "$timestamp" +%s 2>/dev/null)
+    docker ps --filter "$filter" --format '{{.ID}}' | while read -r id; do
+        # 使用docker inspect获取创建时间戳
+        container_timestamp=$(docker inspect --format='{{.Created}}' "$id" 2>/dev/null | xargs -I {} date -d "{}" +%s 2>/dev/null)
         
         # 计算时间差并判断是否超时
         if [ -n "$container_timestamp" ] && \
            [ $((CURRENT_TIMESTAMP - container_timestamp)) -ge $timeout_secs ]; then
-            echo "删除容器 $id (创建时间: $timestamp)"
+            echo "删除容器 $id"
             docker rm -f "$id"
         fi
     done
