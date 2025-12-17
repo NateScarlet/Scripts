@@ -139,7 +139,7 @@ foreach ($inputFile in $oldFiles) {
                 # 移动原文件到回收站
                 try {
                     Write-Host "  移动原文件到回收站..."
-                    Send-ToRecycleBin $inputFile
+                    Send-To-RecycleBin $inputFile
                     Write-Host "  [完成] 原文件已移至回收站"
                 }
                 catch {
