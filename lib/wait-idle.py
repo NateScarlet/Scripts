@@ -185,7 +185,7 @@ class GPUMonitor:
                     counter_handle, win32pdh.PDH_FMT_DOUBLE
                 )
 
-            if data and any(data.values()):
+            if data and any(i is not None for i in data.values()):
                 self._query_handle = query_handle
                 self._counter_handle = counter_handle
                 return True
