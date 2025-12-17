@@ -18,26 +18,230 @@ wait-idle.py - 等待系统空闲的等待脚本
   2 - 参数错误
 """
 
+# pyright: standard
+
 import sys
 import time
 import logging
 import argparse
 import psutil
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Callable
 from tqdm import tqdm
 import ctypes
+from contextlib import ExitStack
 
 _LOGGER = logging.getLogger(__name__)
 
-try:
-    import GPUtil
-except ImportError:
-    GPUtil = None
-
+# Windows API 相关导入
 try:
     import win32api
+    import win32pdh
+    import pythoncom
 except ImportError:
     win32api = None
+    win32pdh = None
+    pythoncom = None
+
+
+class GPUMonitor:
+    """GPU 监控类，使用 Windows Performance Counter API"""
+
+    def __init__(self):
+        assert pythoncom
+
+        self._query_handle = None
+        self._counter_handle = None
+        self._com_initialized = False
+        self._method = None
+        self._last_running_times = {}  # 用于 running_time 方法
+        self._last_collect_time_ns = None
+
+        # 初始化 COM
+        pythoncom.CoInitialize()
+        self._com_initialized = True
+
+        # 尝试不同的计数器路径
+        counter_methods = [
+            (r"\GPU Engine(*)\Utilization Percentage", "percentage"),
+            (r"\GPU Engine(*engtype_3D)\Utilization Percentage", "percentage_3d"),
+            (r"\GPU Engine(*)\Running Time", "running_time"),
+        ]
+
+        for counter_path, method_type in counter_methods:
+            if self._try_counter(counter_path, method_type):
+                self._method = method_type
+                _LOGGER.debug(
+                    f"使用 GPU 监控方法: {counter_path} (方法: {method_type})"
+                )
+                break
+        else:
+            self.cleanup()
+            raise RuntimeError("没有可用 GPU 监控方法")
+
+    def _try_counter(self, counter_path: str, method_type: str) -> bool:
+        """尝试使用指定的计数器路径"""
+        assert win32pdh
+        query_handle = None
+        try:
+            query_handle = win32pdh.OpenQuery()
+            counter_handle = win32pdh.AddCounter(query_handle, counter_path)
+
+            # 测试计数器是否可用
+            win32pdh.CollectQueryData(query_handle)
+            time.sleep(0.1)
+            win32pdh.CollectQueryData(query_handle)
+
+            # 尝试获取数据
+            if method_type == "running_time":
+                data: dict = win32pdh.GetFormattedCounterArray(
+                    counter_handle, win32pdh.PDH_FMT_LARGE
+                )
+            else:
+                data: dict = win32pdh.GetFormattedCounterArray(
+                    counter_handle, win32pdh.PDH_FMT_DOUBLE
+                )
+
+            if data and any(data.values()):
+                self._query_handle = query_handle
+                self._counter_handle = counter_handle
+                return True
+
+            win32pdh.CloseQuery(query_handle)
+            return False
+
+        except Exception as e:
+            if query_handle:
+                try:
+                    win32pdh.CloseQuery(query_handle)
+                except:
+                    pass
+            _LOGGER.debug(f"GPU 计数器 {counter_path} 不可用: {e}")
+            return False
+
+    def get_usage(self) -> Optional[float]:
+        """获取 GPU 使用率（百分比）"""
+        if not self._query_handle or not self._method:
+            return None
+
+        if self._method == "running_time":
+            return self._get_usage_by_running_time()
+        else:
+            return self._get_usage_by_percentage()
+
+    def _get_usage_by_percentage(self) -> Optional[float]:
+        """通过百分比计数器获取 GPU 使用率"""
+        if not self._query_handle or not self._counter_handle:
+            return None
+
+        assert win32pdh
+        win32pdh.CollectQueryData(self._query_handle)
+        time.sleep(0.1)  # 等待数据更新
+        win32pdh.CollectQueryData(self._query_handle)
+
+        items: dict = win32pdh.GetFormattedCounterArray(
+            self._counter_handle, win32pdh.PDH_FMT_DOUBLE
+        )
+        max_usage = 0.0
+        for _, usage in items.items():
+            if usage is not None and isinstance(usage, (int, float)):
+                usage_float = float(usage)
+                if usage_float > max_usage:
+                    max_usage = usage_float
+
+        return max_usage
+
+    def _get_usage_by_running_time(self) -> Optional[float]:
+        """通过运行时间计数器获取 GPU 使用率"""
+        if not self._query_handle or not self._counter_handle:
+            return None
+
+        assert win32pdh
+        current_time_ns = time.monotonic_ns()
+        win32pdh.CollectQueryData(self._query_handle)
+
+        items: dict = win32pdh.GetFormattedCounterArray(
+            self._counter_handle, win32pdh.PDH_FMT_LARGE
+        )
+        current_running_times = {}
+
+        # 收集当前运行时间
+        for name, running_time in items.items():
+            if running_time is not None and name:
+                current_running_times[name] = running_time
+
+        # 如果是第一次收集，保存数据并返回 0
+        if self._last_collect_time_ns is None or not self._last_running_times:
+            self._last_collect_time_ns = current_time_ns
+            self._last_running_times = current_running_times
+            return 0.0
+
+        # 计算时间差
+        time_diff_ns = current_time_ns - self._last_collect_time_ns
+        if time_diff_ns <= 0:
+            return 0.0
+
+        # 计算每个 GPU 引擎的使用率
+        max_usage = 0.0
+        for name, current_time_val in current_running_times.items():
+            if name in self._last_running_times:
+                last_time_val = self._last_running_times[name]
+                if current_time_val > last_time_val:
+                    # 运行时间增量（100纳秒单位）转换为纳秒
+                    running_time_diff_ns = (current_time_val - last_time_val) / 100
+                    usage_percent = running_time_diff_ns / time_diff_ns * 100
+                    if usage_percent > max_usage:
+                        max_usage = usage_percent
+
+        # 更新最后的数据
+        self._last_collect_time_ns = current_time_ns
+        self._last_running_times = current_running_times
+
+        return max_usage
+
+    def cleanup(self):
+        """清理资源"""
+        if self._query_handle:
+            try:
+                assert win32pdh
+                win32pdh.CloseQuery(self._query_handle)
+            except:
+                pass
+            self._query_handle = None
+            self._counter_handle = None
+
+        if self._com_initialized:
+            try:
+                assert pythoncom
+                pythoncom.CoUninitialize()
+            except:
+                pass
+            self._com_initialized = False
+
+
+def get_gpu_monitor_func(
+    stack: ExitStack,
+    gpu_threshold: float,
+) -> Callable[[], Optional[float]]:
+    """
+    返回 GPU 监控获取使用率的函数
+    """
+    # 如果阈值为 100，表示忽略 GPU
+    if gpu_threshold == 100:
+        return lambda: None
+
+    # 检查 Windows API 是否可用
+    if not all([win32pdh, pythoncom]):
+        _LOGGER.warning("GPU 监控不可用: 需要 pywin32 库，将忽略 GPU 阈值")
+        return lambda: None
+
+    # 尝试创建 GPU 监控器
+    try:
+        monitor = GPUMonitor()
+        stack.callback(monitor.cleanup)
+        return monitor.get_usage
+    except RuntimeError:
+        _LOGGER.warning("未找到可用的 GPU 计数器，将忽略 GPU 阈值")
+        return lambda: None
 
 
 def prevent_sleep():
@@ -63,17 +267,6 @@ def get_since_last_input_ns() -> Optional[int]:
 def get_cpu_usage():
     """获取当前CPU总使用率（百分比）"""
     return psutil.cpu_percent()
-
-
-def get_gpu_usage():
-    """获取当前GPU最高使用率（百分比）"""
-    if GPUtil is None:
-        return None
-
-    gpus = GPUtil.getGPUs()
-    if not gpus:
-        return None
-    return max(gpu.load * 100 for gpu in gpus)
 
 
 def precise_ticker(interval_ns: int, immediate: bool) -> Iterator[int]:
@@ -150,17 +343,11 @@ def main():
         sys.exit(2)
 
     # 初始化等待
-
     _LOGGER.info(f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
 
-    _get_gpu_usage = get_gpu_usage
-    if gpu_threshold == 100:
-        _get_gpu_usage = lambda: None
-    elif get_gpu_usage() is None:
-        _LOGGER.warning(
-            "未检测到GPU监控支持，将忽略 GPU 阈值 (需安装 GPUtil 并且支持 nvidia-smi)"
-        )
-        _get_gpu_usage = lambda: None
+    # 获取 GPU 监控上下文和函数
+    stack = ExitStack()
+    _get_gpu_usage = get_gpu_monitor_func(stack, gpu_threshold)
 
     _get_cpu_usage = get_cpu_usage
     if cpu_threshold == 100:
@@ -182,9 +369,10 @@ def main():
             total=target_duration_ns / 1e9,
             bar_format="{n:.0f}/{total:.0f}s |{bar}|",
             disable=True if target_duration_ns == 0 else None,
-        ) as progress:
+        ) as progress, stack:
             _get_cpu_usage()  # 初始化 CPU 监控
             last_tick = start_at
+
             for now in precise_ticker(interval_ns, immediate=False):
                 cpu = _get_cpu_usage()
                 gpu = _get_gpu_usage()
@@ -197,15 +385,15 @@ def main():
                     since_last_input_ns >= (now - last_tick)
                 )
 
-                cpu_status: str
-                gpu_status: str
-                input_status: str
+                cpu_status = None
+                gpu_status = None
+                input_status = None
                 if _LOGGER.isEnabledFor(logging.DEBUG):
                     cpu_status = f"{cpu:.1f}%" if cpu is not None else "N/A"
                     gpu_status = f"{gpu:.1f}%" if gpu is not None else "N/A"
                     input_status = (
                         f"{since_last_input_ns/1e9:.3f}秒"
-                        if since_last_input_ns
+                        if since_last_input_ns is not None
                         else "N/A"
                     )
                     _LOGGER.debug(
