@@ -156,12 +156,14 @@ class RenumberItem(NamedTuple):
     suffix: str
 
 
-def renumber_files(dir: str) -> Iterator[RenumberItem]:
+def renumber_files(dir: str, delimiter: str) -> Iterator[RenumberItem]:
     """
     幂等的重命名函数 - 无条件执行两遍操作
     返回（原始文件路径, 新文件路径，原始数字前缀，新数字前缀，）。
     """
     ctx = _Context(dir)
+    if delimiter:
+        ctx.delimiter = delimiter
     _LOGGER.debug("处理目录: %s", ctx.directory.absolute())
     _LOGGER.debug("前缀长度: %s", ctx.prefix_length)
 
@@ -237,6 +239,13 @@ def main() -> None:
         action="store_true",
         help="详细日志输出",
     )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        nargs="?",
+        default="",
+        help="输出文件名中使用的分隔符，默认基于输入文件",
+    )
 
     args = parser.parse_args()
 
@@ -250,7 +259,7 @@ def main() -> None:
     if not os.path.isdir(args.directory):
         _LOGGER.error("错误: '%s' 不是目录", args.directory)
         sys.exit(1)
-    for i in renumber_files(args.directory):
+    for i in renumber_files(args.directory, delimiter=args.delimiter):
         if i.src.name != i.dst.name:
             json.dump(
                 dict(
