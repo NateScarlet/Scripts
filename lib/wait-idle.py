@@ -127,6 +127,9 @@ class CPUMonitor:
             self._com_initialized = False
 
 
+PDH_CSTATUS_INVALID_DATA = -1073738822
+
+
 class GPUMonitor:
     """GPU 监控类，使用 Windows Performance Counter API"""
 
@@ -220,9 +223,15 @@ class GPUMonitor:
         assert win32pdh
         win32pdh.CollectQueryData(self._query_handle)
 
-        items: dict = win32pdh.GetFormattedCounterArray(
-            self._counter_handle, win32pdh.PDH_FMT_DOUBLE
-        )
+        try:
+            items: dict = win32pdh.GetFormattedCounterArray(
+                self._counter_handle, win32pdh.PDH_FMT_DOUBLE
+            )
+        except win32pdh.error as e:
+            if e.winerror == PDH_CSTATUS_INVALID_DATA:
+                return None
+            raise
+
         max_usage = 0.0
         for _, usage in items.items():
             if usage is not None and isinstance(usage, (int, float)):
