@@ -24,7 +24,6 @@ import sys
 import time
 import logging
 import argparse
-import psutil
 from typing import Iterator, Optional, Callable
 from tqdm import tqdm
 import ctypes
@@ -41,6 +40,91 @@ except ImportError:
     win32api = None
     win32pdh = None
     pythoncom = None
+
+
+class CPUMonitor:
+    """CPU 监控类，使用 Windows Performance Counter API"""
+
+    def __init__(self):
+        assert pythoncom
+        assert win32pdh
+
+        self._query_handle = None
+        self._counter_handle = None
+        self._com_initialized = False
+        self._last_value = None
+
+        # 初始化 COM
+        pythoncom.CoInitialize()
+        self._com_initialized = True
+
+        # 创建 PDH 查询
+        self._query_handle = win32pdh.OpenQuery()
+        counter_path = r"\Processor(_Total)\% Processor Time"
+        self._counter_handle = win32pdh.AddCounter(self._query_handle, counter_path)
+
+        # 收集初始数据
+        win32pdh.CollectQueryData(self._query_handle)
+        time.sleep(0.1)  # 等待一段时间以获取有效数据
+        win32pdh.CollectQueryData(self._query_handle)
+        self._last_collect_time_ns = time.monotonic_ns()
+        data = win32pdh.GetFormattedCounterValue(
+            self._counter_handle, win32pdh.PDH_FMT_DOUBLE
+        )
+        self._last_value = data[1] if data[1] is not None else 0.0
+
+        _LOGGER.debug("CPU 监控初始化完成")
+
+    def get_usage(self) -> Optional[float]:
+        """获取 CPU 总使用率（百分比）"""
+        if not self._query_handle or not self._counter_handle:
+            return None
+
+        assert win32pdh
+        current_time_ns = time.monotonic_ns()
+        win32pdh.CollectQueryData(self._query_handle)
+
+        data = win32pdh.GetFormattedCounterValue(
+            self._counter_handle, win32pdh.PDH_FMT_DOUBLE
+        )
+        current_value = data[1] if data[1] is not None else 0.0
+
+        # 计算两次采集的时间间隔
+        time_diff_ns = current_time_ns - self._last_collect_time_ns
+        if time_diff_ns <= 0:
+            return self._last_value
+
+        # 更新最后的数据
+        self._last_collect_time_ns = current_time_ns
+        self._last_value = current_value
+
+        return current_value
+
+    def cleanup(self):
+        """清理资源"""
+        if self._counter_handle:
+            try:
+                assert win32pdh
+                win32pdh.RemoveCounter(self._counter_handle)
+            except:
+                pass
+            self._counter_handle = None
+
+        if self._query_handle:
+            try:
+                assert win32pdh
+                win32pdh.CloseQuery(self._query_handle)
+            except:
+                pass
+            self._query_handle = None
+
+        if self._com_initialized:
+            try:
+                assert pythoncom
+                pythoncom.CoUninitialize()
+            except:
+                pass
+            self._com_initialized = False
 
 
 class GPUMonitor:
@@ -135,8 +219,6 @@ class GPUMonitor:
 
         assert win32pdh
         win32pdh.CollectQueryData(self._query_handle)
-        time.sleep(0.1)  # 等待数据更新
-        win32pdh.CollectQueryData(self._query_handle)
 
         items: dict = win32pdh.GetFormattedCounterArray(
             self._counter_handle, win32pdh.PDH_FMT_DOUBLE
@@ -218,12 +300,38 @@ class GPUMonitor:
             self._com_initialized = False
 
 
+def get_cpu_monitor_func(
+    stack: ExitStack,
+    cpu_threshold: float,
+) -> Callable[[], Optional[float]]:
+    """
+    返回获取 CPU 使用率的函数
+    """
+    # 如果阈值为 100，表示忽略 CPU
+    if cpu_threshold == 100:
+        return lambda: None
+
+    # 检查 Windows API 是否可用
+    if not all([win32pdh, pythoncom]):
+        _LOGGER.warning("CPU 监控不可用: 需要 pywin32 库，将忽略 CPU 阈值")
+        return lambda: None
+
+    # 尝试创建 CPU 监控器
+    try:
+        monitor = CPUMonitor()
+        stack.callback(monitor.cleanup)
+        return monitor.get_usage
+    except Exception as e:
+        _LOGGER.warning(f"CPU 监控初始化失败: {e}，将忽略 CPU 阈值")
+        return lambda: None
+
+
 def get_gpu_monitor_func(
     stack: ExitStack,
     gpu_threshold: float,
 ) -> Callable[[], Optional[float]]:
     """
-    返回 GPU 监控获取使用率的函数
+    返回获取 CPU 使用率的函数
     """
     # 如果阈值为 100，表示忽略 GPU
     if gpu_threshold == 100:
@@ -262,11 +370,6 @@ def get_since_last_input_ns() -> Optional[int]:
         current_uptime = win32api.GetTickCount()  # 当前系统运行时间（会溢出）
         idle_ms = (current_uptime - last_input) % 0x100000000  # 处理回绕
         return idle_ms * 1_000_000
-
-
-def get_cpu_usage():
-    """获取当前CPU总使用率（百分比）"""
-    return psutil.cpu_percent()
 
 
 def precise_ticker(interval_ns: int, immediate: bool) -> Iterator[int]:
@@ -345,13 +448,10 @@ def main():
     # 初始化等待
     _LOGGER.info(f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
 
-    # 获取 GPU 监控上下文和函数
+    # 获取 CPU 和 GPU 监控上下文和函数
     stack = ExitStack()
+    _get_cpu_usage = get_cpu_monitor_func(stack, cpu_threshold)
     _get_gpu_usage = get_gpu_monitor_func(stack, gpu_threshold)
-
-    _get_cpu_usage = get_cpu_usage
-    if cpu_threshold == 100:
-        _get_cpu_usage = lambda: None
 
     _get_since_last_input_ns = get_since_last_input_ns
     if ignore_user_input:
@@ -370,7 +470,6 @@ def main():
             bar_format="{n:.0f}/{total:.0f}s |{bar}|",
             disable=True if target_duration_ns == 0 else None,
         ) as progress, stack:
-            _get_cpu_usage()  # 初始化 CPU 监控
             last_tick = start_at
 
             for now in precise_ticker(interval_ns, immediate=False):
