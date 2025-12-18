@@ -84,9 +84,13 @@ class CPUMonitor:
         current_time_ns = time.monotonic_ns()
         win32pdh.CollectQueryData(self._query_handle)
 
-        data = win32pdh.GetFormattedCounterValue(
-            self._counter_handle, win32pdh.PDH_FMT_DOUBLE
-        )
+        try:
+            data = win32pdh.GetFormattedCounterValue(
+                self._counter_handle, win32pdh.PDH_FMT_DOUBLE
+            )
+        except win32pdh.error:
+            _LOGGER.exception("获取 CPU 使用率出错，视为不可用")
+            return None
         current_value = data[1] if data[1] is not None else 0.0
 
         # 计算两次采集的时间间隔
@@ -227,10 +231,9 @@ class GPUMonitor:
             items: dict = win32pdh.GetFormattedCounterArray(
                 self._counter_handle, win32pdh.PDH_FMT_DOUBLE
             )
-        except win32pdh.error as e:
-            if e.winerror == PDH_CSTATUS_INVALID_DATA:
-                return None
-            raise
+        except win32pdh.error:
+            _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
+            return None
 
         max_usage = 0.0
         for _, usage in items.items():
@@ -250,9 +253,14 @@ class GPUMonitor:
         current_time_ns = time.monotonic_ns()
         win32pdh.CollectQueryData(self._query_handle)
 
-        items: dict = win32pdh.GetFormattedCounterArray(
-            self._counter_handle, win32pdh.PDH_FMT_LARGE
-        )
+        try:
+            items: dict = win32pdh.GetFormattedCounterArray(
+                self._counter_handle, win32pdh.PDH_FMT_LARGE
+            )
+        except win32pdh.error:
+            _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
+            return None
+
         current_running_times = {}
 
         # 收集当前运行时间
