@@ -39,12 +39,13 @@ if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
     }
 }
 
-# 检查ffmpeg是否可用
+# 检查ffmpeg和ffprobe是否可用
 try {
     $null = Get-Command ffmpeg -ErrorAction Stop
+    $null = Get-Command ffprobe -ErrorAction Stop
 }
 catch {
-    Write-Error "未找到ffmpeg，请确保已安装并添加到PATH"
+    Write-Error "未找到ffmpeg/ffprobe，请确保已安装并添加到PATH"
     exit 1
 }
 
@@ -76,7 +77,31 @@ if ($oldFiles.Count -eq 0) {
 $processedCount = 0
 $skippedCount = 0
 $failedCount = 0
+$movedCount = 0
+$convertedCount = 0
 $startTime = Get-Date
+
+# 函数：检查视频编码是否为H.265
+function Test-H265Video {
+    param(
+        [string]$FilePath
+    )
+    
+    try {
+        # 使用ffprobe检测视频编码格式
+        $ffprobeOutput = & ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$FilePath"
+        
+        # 检查编码是否为H.265（包括hevc和libx265）
+        if ($ffprobeOutput.Trim() -match '^(hevc|libx265)$') {
+            return $true
+        }
+        return $false
+    }
+    catch {
+        Write-Warning "无法检测文件编码: $FilePath ($_)"
+        return $false
+    }
+}
 
 foreach ($inputFile in $oldFiles) {
     $processedCount++
@@ -107,17 +132,60 @@ foreach ($inputFile in $oldFiles) {
         continue
     }
     
+    # 检查输入文件是否为H.265编码
+    $isH265 = Test-H265Video -FilePath $inputFile.FullName
+    
     # 检查是否存在临时文件（可能是上次中断留下的）
     if (Test-Path -Path $outputTempFile -PathType Leaf) {
-        Write-Host "  [警告] 发现未完成的临时文件，将重新转换"
+        Write-Host "  [警告] 发现未完成的临时文件，将删除"
         Remove-Item -Path $outputTempFile -Force
     }
     
     # 转换视频
+    # 如果已经是H.265编码
+    if ($isH265) {
+        Write-Host "  [信息] 文件已经是H.265编码，将不重新编码"
+        $isMkv = $inputFile.Extension -eq '.mkv'
 
-    try {
+        # 如果已经是MKV格式，直接移动
+        if ($isMkv) {
+            Write-Host "  [信息] 文件已经是MKV格式，直接移动"
+            try {
+                Move-Item -LiteralPath $inputFile.FullName -Destination $outputFile
+                Write-Host "  [成功] 文件已直接移动"
+                $movedCount++
+            }
+            catch {
+                Write-Host "  [错误] 文件移动失败: $_"
+                $failedCount++
+            }
+        
+            # 更新进度并继续下一个文件
+            $elapsed = (Get-Date) - $startTime
+            $estimatedTotal = if ($processedCount -gt 0) {
+                $elapsed.TotalSeconds * $oldFiles.Count / $processedCount
+            }
+            else { 0 }
+            $remaining = [timespan]::FromSeconds($estimatedTotal - $elapsed.TotalSeconds)
+        
+            Write-Host "  进度: $processedCount/$($oldFiles.Count) | 已用时: $($elapsed.ToString('hh\:mm\:ss')) | 预计剩余: $($remaining.ToString('hh\:mm\:ss'))"
+            continue
+        }
+    
+        # 如果不是MKV格式，重新封装为MKV而不重新编码
+        Write-Host "  [信息] 文件将重新封装为MKV格式（不重新编码）"
+        $ffmpegArgs = @(
+            "-i", "`"$($inputFile.FullName)`"",
+            "-map", "0",
+            "-c", "copy",  # 复制所有流，不重新编码
+            "-f", "matroska",
+            "`"$outputTempFile`""
+        )
+    }
+    # 如果不是H.265编码，需要重新编码
+    else {
         Write-Host "  开始转换..."
-        $process = Start-Process -PassThru -FilePath ffmpeg -ArgumentList  @(
+        $ffmpegArgs = @(
             "-i", "`"$($inputFile.FullName)`"",
             "-map", "0",
             "-c:v", "libx265",
@@ -126,16 +194,21 @@ foreach ($inputFile in $oldFiles) {
             "-c:a", "copy",
             "-f", "matroska",
             "`"$outputTempFile`""
-        ) -NoNewWindow
+        )
+    }
+
+    # 执行转换或重新封装
+    try {
+        $process = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $ffmpegArgs -NoNewWindow
         $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
         $process.WaitForExit()
 
         if ($process.ExitCode -eq 0) {
-            # 转换成功，重命名临时文件
             if (Test-Path -Path $outputTempFile -PathType Leaf) {
                 Rename-Item -Path $outputTempFile -NewName $outputFile -Force
-                Write-Host "  [成功] 转换完成"
-                
+                Write-Host "  [成功] 处理完成"
+                $convertedCount++
+            
                 # 移动原文件到回收站
                 try {
                     Write-Host "  移动原文件到回收站..."
@@ -147,14 +220,14 @@ foreach ($inputFile in $oldFiles) {
                 }
             }
             else {
-                Write-Host "  [错误] 未找到转换后的文件"
+                Write-Host "  [错误] 未找到处理后的文件"
                 $failedCount++
             }
         }
         else {
             Write-Host "  [失败] ffmpeg错误，退出码: $($process.ExitCode)"
             $failedCount++
-            
+        
             # 清理临时文件
             if (Test-Path -LiteralPath $outputTempFile -PathType Leaf) {
                 Remove-Item -LiteralPath $outputTempFile -Force
@@ -162,9 +235,9 @@ foreach ($inputFile in $oldFiles) {
         }
     }
     catch {
-        Write-Host "  [错误] 转换过程中发生异常: $_"
+        Write-Host "  [错误] 处理过程中发生异常: $_"
         $failedCount++
-        
+    
         # 清理临时文件
         if (Test-Path -LiteralPath $outputTempFile -PathType Leaf) {
             Remove-Item -LiteralPath $outputTempFile -Force
@@ -173,7 +246,7 @@ foreach ($inputFile in $oldFiles) {
         if ($process -and (-not $process.HasExited)) {
             $process.Kill()
         }
-    } 
+    }
     
     # 显示进度
     $elapsed = (Get-Date) - $startTime
@@ -194,7 +267,8 @@ Write-Host ""
 Write-Host "=" * 50
 Write-Host "转换完成！"
 Write-Host "总文件数: $($oldFiles.Count)"
-Write-Host "成功: $($oldFiles.Count - $skippedCount - $failedCount)"
+Write-Host "已转换: $convertedCount"
+Write-Host "已移动: $movedCount"
 Write-Host "跳过: $skippedCount"
 Write-Host "失败: $failedCount"
 Write-Host "总用时: $($totalTime.ToString('hh\:mm\:ss'))"
