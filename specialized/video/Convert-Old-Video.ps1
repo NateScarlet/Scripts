@@ -22,8 +22,8 @@ $ErrorActionPreference = "Stop"
 
 $baseOutputArgs = @(
     "-c:v", "libsvtav1",
-    "-crf", "30" # AV1的CRF范围通常为0-63，30是良好的平衡点
-    "-preset", "6"  # AV1 preset: 0-13, 0=最慢/最好质量，13=最快/最差质量
+    "-crf", "35" # 0-63，0 为无损
+    "-preset", "6" # 0-8，越高越快
 )
 
 # 检查输入输出目录
@@ -93,7 +93,7 @@ function Get-VideoInfo {
     
     try {
         # 获取视频的基本信息
-        $ffprobeOutput = & ffprobe -v error -select_streams v:0 -show_entries stream=codec_name, width, height, bit_rate -show_entries format=bit_rate, duration -of json "$FilePath" | ConvertFrom-Json
+        $ffprobeOutput = & ffprobe -v error -select_streams v:0 -show_entries "stream=codec_name,width,height,bit_rate" -show_entries "format=bit_rate,duration" -of json "$FilePath" | ConvertFrom-Json
         
         $videoStream = $ffprobeOutput.streams[0]
         $format = $ffprobeOutput.format
@@ -149,6 +149,97 @@ function Get-ResolutionThreshold {
     }
 }
 
+# 函数：执行两遍编码
+function Start-TwoPassEncoding {
+    param(
+        [string]$InputFile,
+        [string]$OutputFile,
+        [array]$Pass1OutputArgs,
+        [array]$Pass2OutputArgs
+    )
+    
+    $passLogFile = "$OutputFile.passlog"
+    $outputTempFile = "$OutputFile.tmp"
+    
+    # 清理之前的临时文件
+    if (Test-Path $outputTempFile) {
+        Remove-Item -LiteralPath $outputTempFile -Force
+    }
+    
+    try {
+        # 第一遍：分析视频，不输出视频流
+        Write-Host "  [第一遍] 开始分析视频..."
+        $firstPassArgs = @(
+            "-i", "`"$InputFile`""
+            @($Pass1OutputArgs)
+            "-pass", "1"
+            "-passlogfile", "`"$passLogFile`""
+            "-f", "null"
+            "NUL"
+        )
+        
+        $firstPassProcess = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $firstPassArgs -NoNewWindow
+        $firstPassProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
+        $firstPassProcess.WaitForExit()
+        
+        if ($firstPassProcess.ExitCode -ne 0) {
+            Write-Host "  [第一遍] 分析失败，退出码: $($firstPassProcess.ExitCode)"
+            return $false
+        }
+        
+        # 等待确保日志文件写入完成
+        Start-Sleep -Milliseconds 100
+        
+        if (-not (Test-Path -Path "$passLogFile-*.log" -PathType Leaf)) {
+            Write-Host "  [错误] 未生成passlog文件: $passLogFile"
+            return $false
+        }
+        
+        # 第二遍：使用第一遍的统计信息进行编码
+        Write-Host "  [第二遍] 开始编码视频..."
+        $secondPassArgs = @(
+            "-hide_banner"
+            "-i", "`"$InputFile`""
+            @($Pass2OutputArgs)
+            "-pass", "2"
+            "-passlogfile", "`"$passLogFile`""
+            "`"$outputTempFile`""
+        )
+
+        $secondPassProcess = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $secondPassArgs -NoNewWindow
+        $secondPassProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
+        $secondPassProcess.WaitForExit()
+        
+        if ($secondPassProcess.ExitCode -ne 0) {
+            Write-Host "  [第二遍] 编码失败，退出码: $($secondPassProcess.ExitCode)"
+            return $false
+        }
+        
+        if (Test-Path -Path $outputTempFile -PathType Leaf) {
+            Move-Item -LiteralPath $outputTempFile -Destination $OutputFile -Force
+            return $true
+        }
+        else {
+            Write-Host "  [错误] 未生成输出文件"
+            return $false
+        }
+        
+    }
+    catch {
+        Write-Host "  [错误] 两遍编码过程中发生异常: $_"
+        return $false
+    }
+    finally {
+        # 清理临时文件
+        if (Test-Path -Path $outputTempFile -PathType Leaf) {
+            Remove-Item -Path $outputTempFile -Force
+        }
+        if (Test-Path -Path "$passLogFile-*.log" -PathType Leaf) {
+            Remove-Item -Path "$passLogFile-*.log" -Force
+        }
+    }
+}
+
 # 函数：测试压缩比（比较比特率）
 function Test-CompressionRatio {
     param(
@@ -179,22 +270,26 @@ function Test-CompressionRatio {
     $compressionRatio = -1
     $actualTestDuration = [Math]::Min($testDuration, $originalDuration)
     
-    # 创建测试编码，使用AV1编码器
-    $testArgs = @(
-        "-i", "`"$InputFilePath`""
+    # 构建测试编码的两遍参数
+    $testPass1Args = @(
+        @($baseOutputArgs)
         "-t", $actualTestDuration.ToString()
-        @($baseOutputArgs) 
-        "-an"
+        "-an"  # 测试时忽略音频
+    )
+    
+    $testPass2Args = @(
+        @($baseOutputArgs)
+        "-t", $actualTestDuration.ToString()
+        "-an"  # 测试时忽略音频
         "-f", "matroska"
-        "`"$TempFilePath`""
     )
     
     try {
-        $process = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $testArgs -NoNewWindow
-        $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
-        $process.WaitForExit()
+        Write-Host "  [测试编码] 使用两遍编码测试${actualTestDuration}秒片段..."
+        $success = Start-TwoPassEncoding -InputFile $InputFilePath -OutputFile $TempFilePath `
+            -Pass1OutputArgs $testPass1Args -Pass2OutputArgs $testPass2Args
         
-        if ($process.ExitCode -ne 0) {
+        if (-not $success) {
             Write-Warning "测试编码失败: $InputFilePath"
             return -1
         }
@@ -205,13 +300,13 @@ function Test-CompressionRatio {
         }
         
         # 获取测试文件的比特率
-        $testInfo = & ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of json "$TempFilePath" | ConvertFrom-Json
-        if (-not $testInfo -or -not $testInfo.streams[0]) {
+        $testInfo = Get-VideoInfo "$TempFilePath"
+        if (-not $testInfo) {
             Write-Warning "无法解析测试文件信息: $TempFilePath"
             return -1
         }
         
-        $testBitrate = [double]$testInfo.streams[0].bit_rate
+        $testBitrate = [double]$testInfo.Bitrate
         if (-not $testBitrate -or $testBitrate -le 0) {
             Write-Warning "无法获取测试文件的视频比特率: $TempFilePath"
             return -1
@@ -229,17 +324,12 @@ function Test-CompressionRatio {
         return -1
     }
     finally {
-        # 中止进程
-        if ($process -and (-not $process.HasExited)) {
-            $process.Kill()
-        }
         # 清理测试文件
         if (Test-Path -Path $TempFilePath -PathType Leaf) {
             Remove-Item -Path $TempFilePath -Force
         }
     }
 }
-
 
 # 函数：评估是否值得转码
 function Test-WorthTranscoding {
@@ -318,24 +408,53 @@ foreach ($inputFile in $oldFiles) {
         Remove-Item -Path $outputTempFile -Force
     }
     
-    # 转换视频
-
     Write-Host "  [信息] 评估是否值得转码..."
     $worthTranscoding = Test-WorthTranscoding -FilePath $inputFile.FullName
         
     if ($worthTranscoding) {
-        Write-Host "  [信息] 文件值得转码，开始转换为AV1..."
-        # 使用AV1编码器，保留所有音轨和字幕
-        $ffmpegArgs = @(
-            "-i", "`"$($inputFile.FullName)`"",
+        Write-Host "  [信息] 文件值得转码，开始两遍编码转换为AV1..."
+        
+        # 构建两遍编码的参数
+        $pass1Args = @(
             @($baseOutputArgs)
-            "-map", "0",  # 映射所有流
-            "-c:a", "copy",  # 复制所有音频流
-            "-c:s", "copy",  # 复制所有字幕流
-            "-c:d", "copy",  # 复制所有数据流
-            "-f", "matroska"
-            "`"$outputTempFile`""
         )
+        
+        $pass2Args = @(
+            @($baseOutputArgs)
+            "-map", "0"  # 映射所有流
+            "-c:a", "copy"  # 复制音频流
+            "-c:s", "copy"  # 复制字幕流
+            "-c:d", "copy"  # 复制数据流
+            "-f", "matroska"
+        )
+        
+        # 使用两遍编码
+        $success = Start-TwoPassEncoding -InputFile $inputFile.FullName -OutputFile $outputFile `
+            -Pass1OutputArgs $pass1Args -Pass2OutputArgs $pass2Args
+        
+        if ($success) {
+            Write-Host "  [成功] 两遍编码完成"
+            $convertedCount++
+            
+            # 移动原文件到回收站
+            try {
+                Write-Host "  移动原文件到回收站..."
+                Send-To-RecycleBin $inputFile
+                Write-Host "  [完成] 原文件已移至回收站"
+            }
+            catch {
+                Write-Warning "  无法移动文件到回收站: $_"
+            }
+        }
+        else {
+            Write-Host "  [失败] 两遍编码失败"
+            $failedCount++
+            
+            # 清理失败的文件
+            if (Test-Path -Path $outputFile -PathType Leaf) {
+                Remove-Item -Path $outputFile -Force
+            }
+        }
     }
     elseif ($inputFile.Extension -eq '.mkv') {
         Write-Host "  [信息] 文件不值得转码，已经是MKV格式，直接移动"
@@ -362,27 +481,28 @@ foreach ($inputFile in $oldFiles) {
     }
     else {
         Write-Host "  [信息] 文件不值得转码，重新封装为MKV（不重新编码）"
-        $ffmpegArgs = @(
+        
+        $outputTempFile = "$outputFile.tmp"
+        # 使用重新封装（不重新编码）
+        $remuxArgs = @(
+            "-y",
             "-i", "`"$($inputFile.FullName)`"",
             "-map", "0",  # 映射所有流
             "-c", "copy",  # 复制所有流，不重新编码
             "-f", "matroska",
             "`"$outputTempFile`""
         )
-    }
+        
+        try {
+            $process = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $remuxArgs -NoNewWindow
+            $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
+            $process.WaitForExit()
 
-    # 执行转换或重新封装
-    try {
-        $process = Start-Process -PassThru -FilePath ffmpeg -ArgumentList $ffmpegArgs -NoNewWindow
-        $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal
-        $process.WaitForExit()
-
-        if ($process.ExitCode -eq 0) {
-            if (Test-Path -Path $outputTempFile -PathType Leaf) {
-                Rename-Item -Path $outputTempFile -NewName $outputFile -Force
-                Write-Host "  [成功] 处理完成"
+            if ($process.ExitCode -eq 0) {
+                Write-Host "  [成功] 重新封装完成"
                 $convertedCount++
-            
+                Move-Item -LiteralPath $outputTempFile -Destination $outputFile -Force:$Force
+                
                 # 移动原文件到回收站
                 try {
                     Write-Host "  移动原文件到回收站..."
@@ -394,31 +514,20 @@ foreach ($inputFile in $oldFiles) {
                 }
             }
             else {
-                Write-Host "  [错误] 未找到处理后的文件"
+          
+                Write-Host "  [失败] ffmpeg错误，退出码: $($process.ExitCode)"
                 $failedCount++
             }
         }
-        else {
-            Write-Host "  [失败] ffmpeg错误，退出码: $($process.ExitCode)"
+        catch {
+            Write-Host "  [错误] 重新封装过程中发生异常: $_"
             $failedCount++
-        
-            # 清理临时文件
-            if (Test-Path -LiteralPath $outputTempFile -PathType Leaf) {
-                Remove-Item -LiteralPath $outputTempFile -Force
+            if ($process -and -not ($process.HasExited)) {
+                $process.Kill()
             }
-        }
-    }
-    catch {
-        Write-Host "  [错误] 处理过程中发生异常: $_"
-        $failedCount++
-    
-        # 中止进程
-        if ($process -and (-not $process.HasExited)) {
-            $process.Kill()
-        }
-        # 清理临时文件
-        if (Test-Path -LiteralPath $outputTempFile -PathType Leaf) {
-            Remove-Item -LiteralPath $outputTempFile -Force
+            if (Test-Path -LiteralPath $outputTempFile) {
+                Remove-Item -Force $outputTempFile
+            }
         }
     }
     
