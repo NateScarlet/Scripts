@@ -167,7 +167,7 @@ function Start-TwoPassEncoding {
     finally {
         # 清理临时文件
         if (Test-Path -Path $outputTempFile -PathType Leaf) {
-            Remove-Item -Path $outputTempFile -Force
+            Remove-Item -LiteralPath $outputTempFile -Force
         }
         if (Test-Path -Path "$passLogFile-*.log" -PathType Leaf) {
             Remove-Item -Path "$passLogFile-*.log" -Force
@@ -259,8 +259,8 @@ function Test-CompressionRatio {
     }
     finally {
         # 清理测试文件
-        if (Test-Path -Path $TempFilePath -PathType Leaf) {
-            Remove-Item -Path $TempFilePath -Force
+        if (Test-Path -LiteralPath $TempFilePath -PathType Leaf) {
+            Remove-Item -LiteralPath $TempFilePath -Force
         }
     }
 }
@@ -401,9 +401,9 @@ foreach ($inputFile in $allFiles) {
     }
     
     # 检查是否存在临时文件（可能是上次中断留下的）
-    if (Test-Path -Path $outputTempFile -PathType Leaf) {
+    if (Test-Path -LiteralPath $outputTempFile -PathType Leaf) {
         Write-Host "  [警告] 发现未完成的临时文件，将删除"
-        Remove-Item -Path $outputTempFile -Force
+        Remove-Item -LiteralPath $outputTempFile -Force
     }
     
     Write-Host "  [信息] 评估是否值得转码..."
@@ -449,8 +449,8 @@ foreach ($inputFile in $allFiles) {
             $failedCount++
             
             # 清理失败的文件
-            if (Test-Path -Path $outputFile -PathType Leaf) {
-                Remove-Item -Path $outputFile -Force
+            if (Test-Path -LiteralPath $outputFile -PathType Leaf) {
+                Remove-Item -LiteralPath $outputFile -Force
             }
         }
     }
@@ -524,7 +524,7 @@ foreach ($inputFile in $allFiles) {
                 $process.Kill()
             }
             if (Test-Path -LiteralPath $outputTempFile) {
-                Remove-Item -Force $outputTempFile
+                Remove-Item -Force -LiteralPath $outputTempFile
             }
         }
     }
