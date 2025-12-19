@@ -20,6 +20,11 @@ $ErrorActionPreference = "Stop"
 # 导入回收站函数
 . "$PSScriptRoot/../../lib/Send-To-RecycleBin.ps1"
 
+$baseOutputArgs = @(
+    "-c:v", "libsvtav1",
+    "-crf", "30" # AV1的CRF范围通常为0-63，30是良好的平衡点
+    "-preset", "6"  # AV1 preset: 0-13, 0=最慢/最好质量，13=最快/最差质量
+)
 
 # 检查输入输出目录
 if (-not (Test-Path -LiteralPath $InputDirectory -PathType Container)) {
@@ -176,13 +181,11 @@ function Test-CompressionRatio {
     
     # 创建测试编码，使用AV1编码器
     $testArgs = @(
-        "-i", "`"$InputFilePath`"",
-        "-t", $actualTestDuration.ToString(),
-        "-c:v", "libsvtav1",
-        "-crf", "30",
-        "-preset", "8",  # AV1 preset: 0-13, 0=最慢/最好质量，13=最快/最差质量
-        "-an",  # 不编码音频
-        "-f", "matroska",
+        "-i", "`"$InputFilePath`""
+        "-t", $actualTestDuration.ToString()
+        @($baseOutputArgs) 
+        "-an"
+        "-f", "matroska"
         "`"$TempFilePath`""
     )
     
@@ -232,7 +235,7 @@ function Test-CompressionRatio {
         }
         # 清理测试文件
         if (Test-Path -Path $TempFilePath -PathType Leaf) {
-            Remove-Item -Path $TempFilePath -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $TempFilePath -Force
         }
     }
 }
@@ -325,14 +328,12 @@ foreach ($inputFile in $oldFiles) {
         # 使用AV1编码器，保留所有音轨和字幕
         $ffmpegArgs = @(
             "-i", "`"$($inputFile.FullName)`"",
+            @($baseOutputArgs)
             "-map", "0",  # 映射所有流
-            "-c:v", "libsvtav1",  # AV1编码器
-            "-crf", "30",  # AV1的CRF范围通常为0-63，30是良好的平衡点
-            "-preset", "6",  # AV1 preset: 0-13, 6是速度与质量的良好平衡
             "-c:a", "copy",  # 复制所有音频流
             "-c:s", "copy",  # 复制所有字幕流
             "-c:d", "copy",  # 复制所有数据流
-            "-f", "matroska",
+            "-f", "matroska"
             "`"$outputTempFile`""
         )
     }
