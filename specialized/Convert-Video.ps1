@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-# 视频压缩脚本，处理一年前的视频文件
+# 视频压缩脚本
 
 param(
     [Parameter(Mandatory = $true, HelpMessage = "输入目录路径")]
@@ -17,75 +17,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+#region 函数
+
 # 导入回收站函数
-. "$PSScriptRoot/../../lib/Send-To-RecycleBin.ps1"
+. "$PSScriptRoot/../lib/Send-To-RecycleBin.ps1"
 
-$baseOutputArgs = @(
-    "-c:v", "libsvtav1",
-    "-crf", "35" # 0-63，0 为无损
-    "-preset", "6" # 0-8，越高越快
-)
 
-# 检查输入输出目录
-if (-not (Test-Path -LiteralPath $InputDirectory -PathType Container)) {
-    Write-Error "输入目录不存在: $InputDirectory"
-    exit 1
-}
-
-if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
-    try {
-        New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
-        Write-Host "已创建输出目录: $OutputDirectory"
-    }
-    catch {
-        Write-Error "无法创建输出目录: $_"
-        exit 1
-    }
-}
-
-# 检查ffmpeg和ffprobe是否可用
-try {
-    $null = Get-Command ffmpeg -ErrorAction Stop
-    $null = Get-Command ffprobe -ErrorAction Stop
-}
-catch {
-    Write-Error "未找到ffmpeg/ffprobe，请确保已安装并添加到PATH"
-    exit 1
-}
-
-# 定义视频文件扩展名
-$videoExtensions = @('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg')
-
-# 计算一年前的日期
-$oneYearAgo = (Get-Date).AddYears(-1)
-
-# 获取要处理的文件
-$allFiles = Get-ChildItem -LiteralPath $InputDirectory -File -Recurse:$Recursive | Where-Object {
-    $_.Extension -in $videoExtensions
-}
-
-# 筛选一年前的文件
-$oldFiles = $allFiles | Where-Object {
-    $_.LastWriteTime -lt $oneYearAgo
-}
-
-Write-Host "找到 $($allFiles.Count) 个视频文件，其中 $($oldFiles.Count) 个最后修改于一年前"
-
-# 如果没有找到符合条件的文件，退出
-if ($oldFiles.Count -eq 0) {
-    Write-Host "没有找到需要处理的文件"
-    exit 0
-}
-
-# 处理状态跟踪
-$processedCount = 0
-$skippedCount = 0
-$failedCount = 0
-$movedCount = 0
-$convertedCount = 0
-$startTime = Get-Date
-
-# 函数：获取视频信息
 function Get-VideoInfo {
     param(
         [string]$FilePath
@@ -115,7 +52,6 @@ function Get-VideoInfo {
     }
 }
 
-# 函数：获取分辨率阈值
 function Get-ResolutionThreshold {
     param(
         [int]$Width,
@@ -149,7 +85,6 @@ function Get-ResolutionThreshold {
     }
 }
 
-# 函数：执行两遍编码
 function Start-TwoPassEncoding {
     param(
         [string]$InputFile,
@@ -240,7 +175,6 @@ function Start-TwoPassEncoding {
     }
 }
 
-# 函数：测试压缩比（比较比特率）
 function Test-CompressionRatio {
     param(
         [hashtable]$OriginalVideoInfo,
@@ -331,7 +265,6 @@ function Test-CompressionRatio {
     }
 }
 
-# 函数：评估是否值得转码
 function Test-WorthTranscoding {
     param(
         [string]$FilePath
@@ -373,7 +306,72 @@ function Test-WorthTranscoding {
     return $true
 }
 
-foreach ($inputFile in $oldFiles) {
+#endregion
+
+#region 脚本
+
+$baseOutputArgs = @(
+    "-c:v", "libsvtav1",
+    "-crf", "35" # 0-63，0 为无损
+    "-preset", "6" # 0-8，越高越快
+)
+
+# 检查输入输出目录
+if (-not (Test-Path -LiteralPath $InputDirectory -PathType Container)) {
+    Write-Error "输入目录不存在: $InputDirectory"
+    exit 1
+}
+
+if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
+    try {
+        New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
+        Write-Host "已创建输出目录: $OutputDirectory"
+    }
+    catch {
+        Write-Error "无法创建输出目录: $_"
+        exit 1
+    }
+}
+
+# 检查ffmpeg和ffprobe是否可用
+try {
+    $null = Get-Command ffmpeg -ErrorAction Stop
+    $null = Get-Command ffprobe -ErrorAction Stop
+}
+catch {
+    Write-Error "未找到ffmpeg/ffprobe，请确保已安装并添加到PATH"
+    exit 1
+}
+
+# 定义视频文件扩展名
+$videoExtensions = @('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg')
+
+
+
+# 获取要处理的文件
+$allFiles = Get-ChildItem -LiteralPath $InputDirectory -File -Recurse:$Recursive | Where-Object {
+    $_.Extension -in $videoExtensions
+}
+
+
+Write-Host "找到 $($allFiles.Count) 个视频文件"
+
+# 如果没有找到符合条件的文件，退出
+if ($allFiles.Count -eq 0) {
+    Write-Host "没有找到需要处理的文件"
+    exit 0
+}
+
+# 处理状态跟踪
+$processedCount = 0
+$skippedCount = 0
+$failedCount = 0
+$movedCount = 0
+$convertedCount = 0
+$startTime = Get-Date
+
+
+foreach ($inputFile in $allFiles) {
     $processedCount++
     
     # 计算相对于输入目录的路径（用于保持目录结构）
@@ -391,7 +389,7 @@ foreach ($inputFile in $oldFiles) {
     }
     
     Write-Host ""
-    Write-Host "[$processedCount/$($oldFiles.Count)] 处理: $($inputFile.Name)"
+    Write-Host "[$processedCount/$($allFiles.Count)] 处理: $($inputFile.Name)"
     Write-Host "  输入: $($inputFile.FullName)"
     Write-Host "  输出: $outputFile"
     
@@ -471,12 +469,12 @@ foreach ($inputFile in $oldFiles) {
         # 更新进度并继续下一个文件
         $elapsed = (Get-Date) - $startTime
         $estimatedTotal = if ($processedCount -gt 0) {
-            $elapsed.TotalSeconds * $oldFiles.Count / $processedCount
+            $elapsed.TotalSeconds * $allFiles.Count / $processedCount
         }
         else { 0 }
         $remaining = [timespan]::FromSeconds($estimatedTotal - $elapsed.TotalSeconds)
         
-        Write-Host "  进度: $processedCount/$($oldFiles.Count) | 已用时: $($elapsed.ToString('hh\:mm\:ss')) | 预计剩余: $($remaining.ToString('hh\:mm\:ss'))"
+        Write-Host "  进度: $processedCount/$($allFiles.Count) | 已用时: $($elapsed.ToString('hh\:mm\:ss')) | 预计剩余: $($remaining.ToString('hh\:mm\:ss'))"
         continue
     }
     else {
@@ -534,12 +532,12 @@ foreach ($inputFile in $oldFiles) {
     # 显示进度
     $elapsed = (Get-Date) - $startTime
     $estimatedTotal = if ($processedCount -gt 0) {
-        $elapsed.TotalSeconds * $oldFiles.Count / $processedCount
+        $elapsed.TotalSeconds * $allFiles.Count / $processedCount
     }
     else { 0 }
     $remaining = [timespan]::FromSeconds($estimatedTotal - $elapsed.TotalSeconds)
     
-    Write-Host "  进度: $processedCount/$($oldFiles.Count) | 已用时: $($elapsed.ToString('hh\:mm\:ss')) | 预计剩余: $($remaining.ToString('hh\:mm\:ss'))"
+    Write-Host "  进度: $processedCount/$($allFiles.Count) | 已用时: $($elapsed.ToString('hh\:mm\:ss')) | 预计剩余: $($remaining.ToString('hh\:mm\:ss'))"
 }
 
 # 输出统计信息
@@ -549,10 +547,12 @@ $totalTime = $endTime - $startTime
 Write-Host ""
 Write-Host "=" * 50
 Write-Host "转换完成！"
-Write-Host "总文件数: $($oldFiles.Count)"
+Write-Host "总文件数: $($allFiles.Count)"
 Write-Host "已转换: $convertedCount"
 Write-Host "已移动: $movedCount"
 Write-Host "跳过: $skippedCount"
 Write-Host "失败: $failedCount"
 Write-Host "总用时: $($totalTime.ToString('hh\:mm\:ss'))"
 Write-Host "=" * 50
+
+#endregion
