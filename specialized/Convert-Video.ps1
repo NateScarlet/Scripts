@@ -187,7 +187,7 @@ function Test-CompressionRatio {
         return -1
     }
     
-    $testDuration = 10
+    $testDuration = 60
     $originalBitrate = $OriginalVideoInfo.Bitrate
     $originalDuration = $OriginalVideoInfo.Duration
     
@@ -208,13 +208,13 @@ function Test-CompressionRatio {
     $testPass1Args = @(
         @($baseOutputArgs)
         "-t", $actualTestDuration.ToString()
-        "-an"  # 测试时忽略音频
+        "-map", "0:v:0"  # 只映射第一个视频流
     )
     
     $testPass2Args = @(
         @($baseOutputArgs)
         "-t", $actualTestDuration.ToString()
-        "-an"  # 测试时忽略音频
+        "-map", "0:v:0"  # 只映射第一个视频流
         "-f", "matroska"
     )
     
