@@ -91,7 +91,7 @@ class CPUMonitor:
         except win32pdh.error as e:
             if e.winerror not in _IGNORE_PDH_ERRORS:
                 _LOGGER.exception("获取 CPU 使用率出错，视为不可用")
-            return None
+            return 1.0
         current_value = data[1] if data[1] is not None else 0.0
 
         # 计算两次采集的时间间隔
@@ -236,7 +236,7 @@ class GPUMonitor:
         except win32pdh.error as e:
             if e.winerror not in _IGNORE_PDH_ERRORS:
                 _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
-            return None
+            return 1.0
 
         max_usage = 0.0
         for _, usage in items.items():
@@ -263,7 +263,7 @@ class GPUMonitor:
         except win32pdh.error as e:
             if e.winerror not in _IGNORE_PDH_ERRORS:
                 _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
-            return None
+            return 1.0
 
         current_running_times = {}
 
