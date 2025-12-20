@@ -88,8 +88,9 @@ class CPUMonitor:
             data = win32pdh.GetFormattedCounterValue(
                 self._counter_handle, win32pdh.PDH_FMT_DOUBLE
             )
-        except win32pdh.error:
-            _LOGGER.exception("获取 CPU 使用率出错，视为不可用")
+        except win32pdh.error as e:
+            if e.winerror not in _IGNORE_PDH_ERRORS:
+                _LOGGER.exception("获取 CPU 使用率出错，视为不可用")
             return None
         current_value = data[1] if data[1] is not None else 0.0
 
@@ -132,6 +133,7 @@ class CPUMonitor:
 
 
 PDH_CSTATUS_INVALID_DATA = -1073738822
+_IGNORE_PDH_ERRORS = (PDH_CSTATUS_INVALID_DATA,)
 
 
 class GPUMonitor:
@@ -231,8 +233,9 @@ class GPUMonitor:
             items: dict = win32pdh.GetFormattedCounterArray(
                 self._counter_handle, win32pdh.PDH_FMT_DOUBLE
             )
-        except win32pdh.error:
-            _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
+        except win32pdh.error as e:
+            if e.winerror not in _IGNORE_PDH_ERRORS:
+                _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
             return None
 
         max_usage = 0.0
@@ -257,8 +260,9 @@ class GPUMonitor:
             items: dict = win32pdh.GetFormattedCounterArray(
                 self._counter_handle, win32pdh.PDH_FMT_LARGE
             )
-        except win32pdh.error:
-            _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
+        except win32pdh.error as e:
+            if e.winerror not in _IGNORE_PDH_ERRORS:
+                _LOGGER.exception("获取 GPU 使用率出错，视为不可用")
             return None
 
         current_running_times = {}
