@@ -66,3 +66,8 @@ build/
 /Comp/nuke/*
 
 node_modules
+
+
+# 
+
+*.local.*
