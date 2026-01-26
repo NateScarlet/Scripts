@@ -244,6 +244,7 @@ def generate_filename(
     stat: os.stat_result,
     original_ext: str,
     with_dir: bool,
+    dry_run: bool = False,
 ) -> str:
     # 文件名尽量幂等，方便在多个仓库之间合并，所以不使用数字序号
 
@@ -254,7 +255,7 @@ def generate_filename(
     date_str = dt.datetime.fromtimestamp(min_time).strftime("%Y%m%d_%H%M%S")
     size_str = hex(stat.st_size)[2:]
     random_str = ""
-    if with_dir:
+    if with_dir and not dry_run:
         os.makedirs(os.path.join(directory, title), exist_ok=True)
     while True:
         name: str
@@ -273,6 +274,7 @@ def rename_files(
     exclude_keywords: Optional[List[str]] = None,
     case_sensitive: bool = False,
     with_dir: bool = False,
+    dry_run: bool = False,
 ):
     """重命名主文件和配套文件"""
     exclude_keywords = exclude_keywords or []
@@ -316,7 +318,7 @@ def rename_files(
             # 生成新文件名
             stat = os.stat(file_path)
             new_basename = generate_filename(
-                title, directory, stat, original_ext, with_dir
+                title, directory, stat, original_ext, with_dir, dry_run
             )
             new_main_file = os.path.join(directory, new_basename)
 
@@ -326,7 +328,8 @@ def rename_files(
             for comp_file, suffix in find_companion_files(file_path):
                 new_comp_file = new_main_file + suffix
                 if not os.path.exists(new_comp_file):
-                    os.rename(comp_file, new_comp_file)
+                    if not dry_run:
+                        os.rename(comp_file, new_comp_file)
                     _LOGGER.info(
                         f"重命名: {comp_file} -> {new_basename+suffix} (配套文件)"
                     )
@@ -335,7 +338,8 @@ def rename_files(
 
             # 重命名主文件
             if not os.path.exists(new_main_file):
-                os.rename(file_path, new_main_file)
+                if not dry_run:
+                    os.rename(file_path, new_main_file)
                 _LOGGER.info(f"重命名: {file_path} -> {new_basename}")
             else:
                 _LOGGER.warning(f"目标文件已存在，跳过: {new_main_file}")
@@ -370,6 +374,9 @@ def main():
     parser.add_argument(
         "--with-dir", action="store_true", help="为每个标题创建单独的目录"
     )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="演练模式，不执行某些实际更改"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="详细输出")
 
     args = parser.parse_args()
@@ -385,6 +392,7 @@ def main():
         exclude_keywords=args.exclude_keywords,
         case_sensitive=args.case_sensitive,
         with_dir=args.with_dir,
+        dry_run=args.dry_run,
     )
 
 
