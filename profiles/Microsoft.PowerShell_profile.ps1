@@ -23,6 +23,9 @@ if ($proxySettings.ProxyEnable -eq 1) {
         )"
 } 
 
+# 让 vite 优先监听 ipv4 地址
+$env:NODE_OPTIONS = "--dns-result-order=ipv4first"
+
 if (-not $env:ANTIGRAVITY_AGENT) {
     try {
         Import-Module PSReadLine -ErrorAction Stop
