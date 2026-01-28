@@ -99,7 +99,8 @@ Write-Host "初始化序列号文件..." -ForegroundColor Cyan
 # 3. 生成自签名CA证书
 Write-Host "生成CA证书..." -ForegroundColor Cyan
 openssl req -x509 -new -nodes -key $caKeyPath -sha256 -days $validityDays `
-    -out $caCertPath -subj $subject
+    -out $caCertPath -subj $subject `
+    -addext "keyUsage=critical,digitalSignature,keyCertSign"
 
 # 4. 验证生成的CA证书
 Write-Host "`nCA证书信息:" -ForegroundColor Green
