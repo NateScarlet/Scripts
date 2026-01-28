@@ -93,8 +93,8 @@ Write-Host "`n生成CA私钥..." -ForegroundColor Cyan
 openssl genrsa -out $caKeyPath $keyLength
 
 # 2. 初始化序列号文件
-Write-Host "初始化序列号文件..." -ForegroundColor Cyan
-"01" | Out-File -FilePath $caSerialPath -Encoding ASCII
+# Write-Host "初始化序列号文件..." -ForegroundColor Cyan
+# "01" | Out-File -FilePath $caSerialPath -Encoding ASCII
 
 # 3. 生成自签名CA证书
 Write-Host "生成CA证书..." -ForegroundColor Cyan
