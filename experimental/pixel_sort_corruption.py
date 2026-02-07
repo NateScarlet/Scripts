@@ -321,7 +321,7 @@ class _Context:
             elif self.sort_method == "brightness":
                 if valid_pixels_rgb.ndim > 1:
                     pixel_brightness = self.calculate_brightness(valid_pixels_rgb)
-                    ref_brightness = self.calculate_brightness(ref_pixel_rgb)
+                    ref_brightness = self.calculate_brightness(ref_pixel_rgb[None, :])[0]
                     distances = np.abs(pixel_brightness - ref_brightness)
                 else:
                     distances = np.abs(valid_pixels_rgb - ref_pixel_rgb)
