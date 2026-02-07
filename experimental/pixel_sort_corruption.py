@@ -114,17 +114,34 @@ class _Context:
 
         height = self.image[1].shape[0]
 
-        corruption_probability = self.intensity / self.y_span
-        if self.intensity >= 1:
-            # 强制所有行损坏
-            corruption_probability = 1
-        elif self.edge_guide:
-            # 引导可能排除行，所以剩余行需要使用更高的比例
+        target_density = self.intensity
+
+        if self.intensity < 1 and self.edge_guide:
+            # 计算被引导图排除的行数（全黑行不参与损坏）
+            # 引导可能排除行，所以剩余行需要使用更高的比例以保持总体密度符合预期
             exclude_row_count = sum(
                 1 for row in range(height) if np.all(self.edge_guide[1][row, :] == 0)
             )
-            if exclude_row_count > 0:
-                corruption_probability *= height / exclude_row_count
+            valid_row_count = height - exclude_row_count
+            if valid_row_count > 0:
+                target_density *= height / valid_row_count
+            else:
+                target_density = 0
+
+        target_density = min(1.0, max(0.0, target_density))
+
+        if target_density >= 1:
+            corruption_probability = 1.0
+        elif self.y_span <= 1:
+            corruption_probability = target_density
+        else:
+            # 使用修正公式计算概率
+            # p = D / (L - D(L-1))
+            # 其中 D 是目标密度，L 是 y_span
+            # 修正 y_span > 1 时由于连续块互斥导致的实际密度偏低的问题
+            corruption_probability = target_density / (
+                self.y_span - target_density * (self.y_span - 1)
+            )
 
         index = 0
         last_corruption_start = -1
