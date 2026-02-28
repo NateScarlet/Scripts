@@ -99,6 +99,7 @@ class PromptValue(TypedDict):
     _meta: Dict[str, str]
 
 
+# 节点 ID 为字符串，嵌套节点可能是 '293:290' 这种带冒号的格式
 Prompt = Dict[str, PromptValue]
 
 
@@ -166,8 +167,10 @@ def title_from_prompt(
     case_sensitive: bool = False,
 ) -> Optional[Tuple[str, str]]:
     # 搜索所有包含text的节点
-    # 没有指定节点ID时，按 ID 顺序，ID必定是数字，如果改了接口此脚本应根据具体更改做变更而不是提前猜会怎么改
-    for node_id in node_ids or sorted(prompt.keys(), key=lambda id: int(id)):
+    # 没有指定节点ID时，按 ID 排序；嵌套节点的 ID 可能是 '293:290' 这种冒号分隔格式，按各段数字依次比较
+    for node_id in node_ids or sorted(
+        prompt.keys(), key=lambda id: [int(part) for part in id.split(":")]
+    ):
         node = prompt.get(node_id)
         if node:
             text = node["inputs"].get("text")
