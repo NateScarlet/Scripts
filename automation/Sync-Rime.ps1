@@ -51,7 +51,7 @@
         }
         else {        
             Write-Host "Committing changes..."
-            Invoke-NativeCommand git commit -a -m "Automatic sync at $timestamp"            
+            Invoke-NativeCommand git commit -A -m "Automatic sync at $timestamp"            
         }
 
         Write-Host "Pulling latest changes from remote..."
