@@ -41,6 +41,109 @@ except ImportError:
     win32pdh = None
     pythoncom = None
 
+from abc import ABC, abstractmethod
+
+class BaseChecker(ABC):
+    """
+    空闲状态检查器基类
+    """
+
+    def __init__(self, name: str):
+        self.name = name
+
+    @abstractmethod
+    def update(self, now_ns: int, last_tick_ns: int):
+        """执行检查器更新（如采集数据）"""
+        pass
+
+    @abstractmethod
+    def is_ok(self) -> bool:
+        """返回当前是否处于空闲状态"""
+        pass
+
+    @abstractmethod
+    def status_text(self) -> str:
+        """返回当前状态的描述文本，用于日志"""
+        pass
+
+    @abstractmethod
+    def threshold_text(self) -> str:
+        """返回阈值的描述文本，用于日志"""
+        pass
+
+
+class ThresholdChecker(BaseChecker):
+    """
+    基于阈值的数值检查器
+    """
+
+    def __init__(
+        self,
+        name: str,
+        get_usage: Callable[[], Optional[float]],
+        threshold: float,
+        unit: str = "%",
+    ):
+        super().__init__(name)
+        self.get_usage = get_usage
+        self.threshold = threshold
+        self.unit = unit
+        self._current_value = None
+
+    def update(self, now_ns: int, last_tick_ns: int):
+        self._current_value = self.get_usage()
+
+    def is_ok(self) -> bool:
+        if self._current_value is None:
+            return True
+        return self._current_value <= self.threshold
+
+    def status_text(self) -> str:
+        val = (
+            f"{self._current_value:.1f}{self.unit}"
+            if self._current_value is not None
+            else "N/A"
+        )
+        return f"{self.name}: {val}"
+
+    def threshold_text(self) -> str:
+        return f"{self.name} ≤ {self.threshold}{self.unit}"
+
+
+class InputChecker(BaseChecker):
+    """
+    用户输入检查器
+    """
+
+    def __init__(self, get_since_last_input_ns: Callable[[], Optional[int]]):
+        super().__init__("用户输入")
+        self.get_since_last_input_ns = get_since_last_input_ns
+        self._since_last_input_ns = None
+        self._now_ns = None
+        self._last_tick_ns = None
+
+    def update(self, now_ns: int, last_tick_ns: int):
+        self._since_last_input_ns = self.get_since_last_input_ns()
+        self._now_ns = now_ns
+        self._last_tick_ns = last_tick_ns
+
+    def is_ok(self) -> bool:
+        if self._since_last_input_ns is None:
+            return True
+        # 需要距离上次操作的时间大于检测间隔，才认为本周期是空闲的
+        return self._since_last_input_ns >= (self._now_ns - self._last_tick_ns)
+
+    def status_text(self) -> str:
+        val = (
+            f"{self._since_last_input_ns/1e9:.3f}秒前"
+            if self._since_last_input_ns is not None
+            else "N/A"
+        )
+        return f"距上次操作: {val}"
+
+    def threshold_text(self) -> str:
+        return "用户输入检测"
+
 
 class CPUMonitor:
     """CPU 监控类，使用 Windows Performance Counter API"""
@@ -579,22 +682,39 @@ def main():
 
     # 初始化等待
     threshold_msg = f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%"
-    if args.vram is not None:
-        threshold_msg += f", VRAM ≤ {args.vram}MB"
-    _LOGGER.info(threshold_msg)
-
-    # 获取 CPU 和 GPU 监控上下文和函数
+    # 初始化等待所需的资源
     stack = ExitStack()
-    _get_cpu_usage = get_cpu_monitor_func(stack, cpu_threshold)
-    _get_gpu_usage = get_gpu_monitor_func(stack, gpu_threshold)
-    _get_vram_usage = get_vram_monitor_func(stack, vram_threshold)
+    checkers: list[BaseChecker] = []
 
-    _get_since_last_input_ns = get_since_last_input_ns
+    # 1. CPU 检查器
+    _get_cpu = get_cpu_monitor_func(stack, cpu_threshold)
+    if cpu_threshold < 100:
+        checkers.append(ThresholdChecker("CPU", _get_cpu, cpu_threshold))
+
+    # 2. GPU 检查器
+    _get_gpu = get_gpu_monitor_func(stack, gpu_threshold)
+    if gpu_threshold < 100:
+        checkers.append(ThresholdChecker("GPU", _get_gpu, gpu_threshold))
+
+    # 3. VRAM 检查器
+    _get_vram = get_vram_monitor_func(stack, vram_threshold)
+    if vram_threshold is not None:
+        checkers.append(ThresholdChecker("VRAM", _get_vram, vram_threshold, unit="MB"))
+
+    # 4. 用户输入检查器
+    _get_input = get_since_last_input_ns
     if ignore_user_input:
-        _get_since_last_input_ns = lambda: None
+        _get_input = lambda: None
     elif get_since_last_input_ns() is None:
         _LOGGER.warning("未检测到用户输入检测支持，将忽略用户输入 (需 win32api)")
-        _get_since_last_input_ns = lambda: None
+        _get_input = lambda: None
+    
+    if not ignore_user_input and _get_input() is not None:
+        checkers.append(InputChecker(_get_input))
+
+    # 输出初始化信息
+    threshold_msg = "📊监控阈值: " + ", ".join(c.threshold_text() for c in checkers)
+    _LOGGER.info(threshold_msg)
 
     idle_start = None
     start_at = time.monotonic_ns()
@@ -609,37 +729,18 @@ def main():
             last_tick = start_at
 
             for now in precise_ticker(interval_ns, immediate=False):
-                cpu = _get_cpu_usage()
-                gpu = _get_gpu_usage()
-                vram = _get_vram_usage()
-                since_last_input_ns = _get_since_last_input_ns()
+                # 更新所有检查器
+                for checker in checkers:
+                    checker.update(now, last_tick)
 
-                # 检查资源使用情况
-                cpu_ok = (cpu is None) or (cpu <= cpu_threshold)
-                gpu_ok = (gpu is None) or (gpu <= gpu_threshold)
-                vram_ok = (vram is None) or (vram_threshold is None) or (vram <= vram_threshold)
-                input_ok = (since_last_input_ns is None) or (
-                    since_last_input_ns >= (now - last_tick)
-                )
+                # 检查是否全部空闲
+                all_ok = all(checker.is_ok() for checker in checkers)
 
-                cpu_status = None
-                gpu_status = None
-                vram_status = None
-                input_status = None
                 if _LOGGER.isEnabledFor(logging.DEBUG):
-                    cpu_status = f"{cpu:.1f}%" if cpu is not None else "N/A"
-                    gpu_status = f"{gpu:.1f}%" if gpu is not None else "N/A"
-                    vram_status = f"{vram:.1f}MB" if vram is not None else "N/A"
-                    input_status = (
-                        f"{since_last_input_ns/1e9:.3f}秒"
-                        if since_last_input_ns is not None
-                        else "N/A"
-                    )
-                    _LOGGER.debug(
-                        f"CPU: {cpu_status} | GPU: {gpu_status} | VRAM: {vram_status} | 距用户上次操作: {input_status}"
-                    )
+                    status_line = " | ".join(checker.status_text() for checker in checkers)
+                    _LOGGER.debug(status_line)
 
-                if cpu_ok and gpu_ok and vram_ok and input_ok:
+                if all_ok:
                     if idle_start is None:
                         if target_duration_ns == 0:
                             # 不进行下个循环直接终止
@@ -665,16 +766,12 @@ def main():
                 else:
                     if idle_start is not None:
                         if _LOGGER.isEnabledFor(logging.DEBUG):
-                            reason = ""
-                            if not cpu_ok:
-                                reason += f"CPU {cpu_status}%;"
-                            if not gpu_ok:
-                                reason += f"GPU {gpu_status};"
-                            if not vram_ok:
-                                reason += f"VRAM {vram_status};"
-                            if not input_ok:
-                                reason += f"用户于 {input_status} 前进行了操作;"
-                            _LOGGER.debug("❌ 重置计时器，原因：%s", reason)
+                            reasons = [
+                                checker.status_text()
+                                for checker in checkers
+                                if not checker.is_ok()
+                            ]
+                            _LOGGER.debug("❌ 重置计时器，原因：%s", "; ".join(reasons))
                         progress.reset()
                     idle_start = None
                 last_tick = now
