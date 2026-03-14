@@ -1,19 +1,27 @@
 # 脚本用途：根据当前会话状态自动管理 PowerToys Awake
-# 1. 活跃的远程会话 (RDP-Tcp#n) -> 启用防睡眠 (Mode 1)
-# 2. 本地会话或已断开的会话 -> 禁用防睡眠 (Mode 0)
+# 1. 活跃的远程会话 (Active RDP) -> 启用防睡眠
+# 2. 已断开的远程会话或本地会话 -> 禁用防睡眠 (Mode 0)
 
 $awakePath = "$env:LOCALAPPDATA\PowerToys\PowerToys.Awake.exe"
 if (-not (Test-Path $awakePath)) {
     $awakePath = "C:\Program Files\PowerToys\PowerToys.Awake.exe"
 }
-
 if (-not (Test-Path $awakePath)) { exit 0 }
 
-# 核心逻辑：只有当前会话是活跃且为远程 RDP 时（SESSIONNAME 包含 # 数字），才开启防睡眠。
-# 断开连接时，SESSIONNAME 通常会变回 RDP-Tcp (没有编号)，此时 $isActiveRemote 为 False。
-$isActiveRemote = $null -ne $env:SESSIONNAME -and $env:SESSIONNAME -match "^RDP-Tcp#\d+"
-$targetMode = if ($isActiveRemote) { 1 } else { 0 }
+# 获取当前进程的 Session ID
+$currentSessionId = (Get-Process -Id $PID).SessionId
 
+# 使用 qwinsta 获取所有会话，并锁定当前 Session ID 的那一行
+# 过滤掉表头，只关注包含当前 ID 且状态为 Active 的行
+$sessionLine = qwinsta $currentSessionId 2>$null | Where-Object { $_ -match "\s+$currentSessionId\s+Active" }
+
+$isActiveRemote = $false
+# 如果找到了活跃行，且会话名称（通常在行首）包含 "rdp"
+if ($null -ne $sessionLine -and $sessionLine -match "(?i)rdp") {
+    $isActiveRemote = $true
+}
+
+$targetMode = if ($isActiveRemote) { 1 } else { 0 }
 $settingsPath = "$env:LOCALAPPDATA\Microsoft\PowerToys\Awake\settings.json"
 
 if (Test-Path $settingsPath) {
@@ -23,7 +31,7 @@ if (Test-Path $settingsPath) {
             $settings.properties.mode = $targetMode
             $settings | ConvertTo-Json -Compress | Set-Content $settingsPath
             
-            # 通知 Awake 应用新配置
+            # 通知 Awake 应用新配置 (使用子进程静默启动)
             Start-Process -FilePath $awakePath -ArgumentList "--use-pt-config" -WindowStyle Hidden
         }
     }
@@ -31,9 +39,6 @@ if (Test-Path $settingsPath) {
         # 静默失败
     }
 }
-else {
-    # 如果处于活跃远程连接但没找到配置文件，尝试直接启动
-    if ($isActiveRemote) {
-        Start-Process -FilePath $awakePath -WindowStyle Hidden
-    }
+elseif ($isActiveRemote) {
+    Start-Process -FilePath $awakePath -WindowStyle Hidden
 }
