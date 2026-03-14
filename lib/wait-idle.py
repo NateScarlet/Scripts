@@ -321,6 +321,86 @@ class GPUMonitor:
             self._com_initialized = False
 
 
+class VRAMMonitor:
+    """显存监控类，使用 Windows Performance Counter API"""
+
+    def __init__(self):
+        assert pythoncom
+        assert win32pdh
+
+        self._query_handle = None
+        self._counter_handle = None
+        self._com_initialized = False
+
+        # 初始化 COM
+        pythoncom.CoInitialize()
+        self._com_initialized = True
+
+        # 创建 PDH 查询
+        self._query_handle = win32pdh.OpenQuery()
+        # 使用 Dedicated Usage 计数器获取专用显存占用情况
+        counter_path = r"\GPU Adapter Memory(*)\Dedicated Usage"
+        try:
+            self._counter_handle = win32pdh.AddCounter(self._query_handle, counter_path)
+            # 收集初始数据
+            win32pdh.CollectQueryData(self._query_handle)
+        except Exception as e:
+            self.cleanup()
+            raise RuntimeError(f"无法初始化显存监控: {e}")
+
+    def get_usage_mb(self) -> Optional[float]:
+        """获取所有显卡显存占用总量（MB）"""
+        if not self._query_handle or not self._counter_handle:
+            return None
+
+        assert win32pdh
+        try:
+            win32pdh.CollectQueryData(self._query_handle)
+            items: dict = win32pdh.GetFormattedCounterArray(
+                self._counter_handle, win32pdh.PDH_FMT_LARGE
+            )
+        except win32pdh.error as e:
+            if e.winerror not in _IGNORE_PDH_ERRORS:
+                _LOGGER.exception("获取显存使用量出错")
+            return None
+
+        if not items:
+            return 0.0
+
+        total_bytes = 0
+        for usage in items.values():
+            if usage is not None:
+                total_bytes += usage
+
+        return total_bytes / (1024 * 1024)
+
+    def cleanup(self):
+        """清理资源"""
+        if self._counter_handle:
+            try:
+                assert win32pdh
+                win32pdh.RemoveCounter(self._counter_handle)
+            except:
+                pass
+            self._counter_handle = None
+
+        if self._query_handle:
+            try:
+                assert win32pdh
+                win32pdh.CloseQuery(self._query_handle)
+            except:
+                pass
+            self._query_handle = None
+
+        if self._com_initialized:
+            try:
+                assert pythoncom
+                pythoncom.CoUninitialize()
+            except:
+                pass
+            self._com_initialized = False
+
+
 def get_cpu_monitor_func(
     stack: ExitStack,
     cpu_threshold: float,
@@ -352,7 +432,7 @@ def get_gpu_monitor_func(
     gpu_threshold: float,
 ) -> Callable[[], Optional[float]]:
     """
-    返回获取 CPU 使用率的函数
+    返回获取 GPU 使用率的函数
     """
     # 如果阈值为 100，表示忽略 GPU
     if gpu_threshold == 100:
@@ -370,6 +450,32 @@ def get_gpu_monitor_func(
         return monitor.get_usage
     except RuntimeError:
         _LOGGER.warning("未找到可用的 GPU 计数器，将忽略 GPU 阈值")
+        return lambda: None
+
+
+def get_vram_monitor_func(
+    stack: ExitStack,
+    vram_threshold: Optional[float],
+) -> Callable[[], Optional[float]]:
+    """
+    返回获取显存使用率 (MB) 的函数
+    """
+    # 如果阈值为 None，表示忽略显存
+    if vram_threshold is None:
+        return lambda: None
+
+    # 检查 Windows API 是否可用
+    if not all([win32pdh, pythoncom]):
+        _LOGGER.warning("显存监控不可用: 需要 pywin32 库，将忽略显存阈值")
+        return lambda: None
+
+    # 尝试创建显存监控器
+    try:
+        monitor = VRAMMonitor()
+        stack.callback(monitor.cleanup)
+        return monitor.get_usage_mb
+    except Exception as e:
+        _LOGGER.warning(f"显存监控初始化失败: {e}，将忽略显存阈值")
         return lambda: None
 
 
@@ -436,6 +542,7 @@ def main():
     # XXX: 闲置时CPU占用率比资源管理器看到的要高，不知原因，测试满载时都是100%
     parser.add_argument("--cpu", type=float, default=50, help="CPU阈值")
     parser.add_argument("--gpu", type=float, default=50, help="GPU阈值")
+    parser.add_argument("--vram", type=float, default=None, help="显存占用阈值(MB)，超过该值视为非空闲")
     parser.add_argument("--interval-secs", type=float, default=1.0, help="检测间隔(秒)")
     args = parser.parse_args()
 
@@ -448,6 +555,7 @@ def main():
     target_duration_ns = int(args.duration_secs * 1e9)
     cpu_threshold = args.cpu
     gpu_threshold = args.gpu
+    vram_threshold = args.vram
     ignore_user_input = args.ignore_user_input
     interval_ns = int(args.interval_secs * 1e9)
     try:
@@ -460,6 +568,9 @@ def main():
         if not (0 <= gpu_threshold <= 100):
             raise ValueError("GPU 阈值应该为 0-100")
 
+        if vram_threshold is not None and vram_threshold < 0:
+            raise ValueError("VRAM 阈值不能为负数")
+
         if not (interval_ns > 0):
             raise ValueError("检测间隔应该大于 0")
     except Exception as e:
@@ -467,12 +578,16 @@ def main():
         sys.exit(2)
 
     # 初始化等待
-    _LOGGER.info(f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%")
+    threshold_msg = f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%"
+    if args.vram is not None:
+        threshold_msg += f", VRAM ≤ {args.vram}MB"
+    _LOGGER.info(threshold_msg)
 
     # 获取 CPU 和 GPU 监控上下文和函数
     stack = ExitStack()
     _get_cpu_usage = get_cpu_monitor_func(stack, cpu_threshold)
     _get_gpu_usage = get_gpu_monitor_func(stack, gpu_threshold)
+    _get_vram_usage = get_vram_monitor_func(stack, vram_threshold)
 
     _get_since_last_input_ns = get_since_last_input_ns
     if ignore_user_input:
@@ -496,31 +611,35 @@ def main():
             for now in precise_ticker(interval_ns, immediate=False):
                 cpu = _get_cpu_usage()
                 gpu = _get_gpu_usage()
+                vram = _get_vram_usage()
                 since_last_input_ns = _get_since_last_input_ns()
 
                 # 检查资源使用情况
                 cpu_ok = (cpu is None) or (cpu <= cpu_threshold)
                 gpu_ok = (gpu is None) or (gpu <= gpu_threshold)
+                vram_ok = (vram is None) or (vram_threshold is None) or (vram <= vram_threshold)
                 input_ok = (since_last_input_ns is None) or (
                     since_last_input_ns >= (now - last_tick)
                 )
 
                 cpu_status = None
                 gpu_status = None
+                vram_status = None
                 input_status = None
                 if _LOGGER.isEnabledFor(logging.DEBUG):
                     cpu_status = f"{cpu:.1f}%" if cpu is not None else "N/A"
                     gpu_status = f"{gpu:.1f}%" if gpu is not None else "N/A"
+                    vram_status = f"{vram:.1f}MB" if vram is not None else "N/A"
                     input_status = (
                         f"{since_last_input_ns/1e9:.3f}秒"
                         if since_last_input_ns is not None
                         else "N/A"
                     )
                     _LOGGER.debug(
-                        f"CPU: {cpu_status} | GPU: {gpu_status} | 距用户上次操作: {input_status}"
+                        f"CPU: {cpu_status} | GPU: {gpu_status} | VRAM: {vram_status} | 距用户上次操作: {input_status}"
                     )
 
-                if cpu_ok and gpu_ok and input_ok:
+                if cpu_ok and gpu_ok and vram_ok and input_ok:
                     if idle_start is None:
                         if target_duration_ns == 0:
                             # 不进行下个循环直接终止
@@ -551,6 +670,8 @@ def main():
                                 reason += f"CPU {cpu_status}%;"
                             if not gpu_ok:
                                 reason += f"GPU {gpu_status};"
+                            if not vram_ok:
+                                reason += f"VRAM {vram_status};"
                             if not input_ok:
                                 reason += f"用户于 {input_status} 前进行了操作;"
                             _LOGGER.debug("❌ 重置计时器，原因：%s", reason)
