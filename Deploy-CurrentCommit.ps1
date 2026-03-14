@@ -2,6 +2,8 @@
 #Requires -Version 7.0
 $ErrorActionPreference = "Stop"
 
+
+
 # 目标脚本路径（本地应用程序数据目录）
 $targetDir = Join-Path $env:LOCALAPPDATA "Scripts"
 
@@ -142,6 +144,109 @@ else {
     Write-Host "⚠️  未找到 $targetScript，跳过计划任务管理" -ForegroundColor Yellow
 }
 
+#endregion
+
+#endregion
+
+#region 登录任务管理 (计划任务方式)
+$regPath = "HKCU:\Environment"
+$regValueName = "UserInitMprLogonScript"
+if (Get-ItemProperty -Path $regPath -Name $regValueName -ErrorAction SilentlyContinue) {
+    Remove-ItemProperty -Path $regPath -Name $regValueName
+    Write-Host "🧹 已清理 UserInitMprLogonScript 注册表项"
+}
+
+$loginTaskName = "远程会话防睡眠_ea8baf975afe"
+$loginTargetScript = Join-Path $targetDir "profiles\Invoke-LoginTask.ps1"
+$loginDescription = "用户登录或会话重连时运行的初始化任务 (Commit: $shortHead)"
+
+if (Test-Path $loginTargetScript) {
+    $loginAction = New-ScheduledTaskAction -Execute "$PSHOME\pwsh.exe" `
+        -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$loginTargetScript`""
+    
+    # 使用 XML 方式定义任务，以完美支持多种高级触发器并避开 PowerShell 类型绑定 Bug
+    $currentUser = "$env:USERDOMAIN\$env:USERNAME"
+    $taskXml = @"
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>$loginDescription</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <UserId>$currentUser</UserId>
+    </LogonTrigger>
+    <SessionStateChangeTrigger>
+      <Enabled>true</Enabled>
+      <StateChange>ConsoleConnect</StateChange>
+      <UserId>$currentUser</UserId>
+    </SessionStateChangeTrigger>
+    <SessionStateChangeTrigger>
+      <Enabled>true</Enabled>
+      <StateChange>RemoteConnect</StateChange>
+      <UserId>$currentUser</UserId>
+    </SessionStateChangeTrigger>
+    <SessionStateChangeTrigger>
+      <Enabled>true</Enabled>
+      <StateChange>RemoteDisconnect</StateChange>
+      <UserId>$currentUser</UserId>
+    </SessionStateChangeTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>$currentUser</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>false</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>$PSHOME\pwsh.exe</Command>
+      <Arguments>-WindowStyle Hidden -ExecutionPolicy Bypass -File "$loginTargetScript"</Arguments>
+    </Exec>
+  </Actions>
+</Task>
+"@
+
+    $existingTask = Get-ScheduledTask -TaskName $loginTaskName -ErrorAction SilentlyContinue
+    
+    if (-not $existingTask -or $existingTask.Description -ne $loginDescription) {
+        $null = Register-ScheduledTask -Xml $taskXml -TaskName $loginTaskName -Force
+        if (-not $existingTask) {
+            Write-Host "✅ 已通过 XML 创建登录计划任务: $loginTaskName"
+        } else {
+            Write-Host "🔄 已通过 XML 更新登录计划任务: $loginTaskName"
+        }
+    }
+    else {
+        Write-Host "⏩ 登录计划任务已是最新版本"
+    }
+}
+else {
+    Write-Host "⚠️  未找到脚本 $loginTargetScript，跳过登录任务管理" -ForegroundColor Yellow
+}
 #endregion
 
 Write-Host "🎉 部署完成！脚本已更新到版本 $shortHead。" -ForegroundColor Green
