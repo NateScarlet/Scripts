@@ -142,7 +142,7 @@ class InputChecker(BaseChecker):
         return f"距上次操作: {val}"
 
     def threshold_text(self) -> str:
-        return "用户输入检测"
+        return "用户无操作"
 
 
 class CPUMonitor:
