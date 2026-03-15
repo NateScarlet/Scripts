@@ -121,11 +121,30 @@ class InputChecker(BaseChecker):
         self._since_last_input_ns = None
         self._now_ns = None
         self._last_tick_ns = None
+        self._not_ok_count = 0
+        self._warning_sent = False
+        self._has_been_idle = False
 
     def update(self, now_ns: int, last_tick_ns: int):
         self._since_last_input_ns = self.get_since_last_input_ns()
         self._now_ns = now_ns
         self._last_tick_ns = last_tick_ns
+
+        # 启动诊断逻辑：仅在首次确认闲置前进行一次性检查
+        if self._has_been_idle or self._since_last_input_ns is None:
+            return
+
+        if self.is_ok():
+            _LOGGER.info("✅ 正常检测到用户停止输入")
+            self._has_been_idle = True
+            return
+
+        self._not_ok_count += 1
+        if not self._warning_sent and self._not_ok_count >= 3:
+            _LOGGER.warning(
+                "⚠️ 检测到持续的用户输入已超过 3 个检测周期。如果并非人工操作，可能某个设备（如模拟鼠标、键鼠宏或损坏的设备）在持续自动发送输入，这将导致无法进入空闲状态。建议检查设备或使用 --ignore-user-input 选项。"
+            )
+            self._warning_sent = True
 
     def is_ok(self) -> bool:
         if self._since_last_input_ns is None:
