@@ -1,9 +1,7 @@
-if (-not $env:ANTIGRAVITY_AGENT) {
-    # https://github.com/PowerShell/PSReadLine/issues/779
-    $OutputEncoding = [System.Text.Encoding]::UTF8
-    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-    [System.Console]::InputEncoding = [System.Text.Encoding]::UTF8
-}
+# https://github.com/PowerShell/PSReadLine/issues/779
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[System.Console]::InputEncoding = [System.Text.Encoding]::UTF8
 
 # Refresh env
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
