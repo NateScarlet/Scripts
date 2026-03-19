@@ -156,12 +156,12 @@ if (Get-ItemProperty -Path $regPath -Name $regValueName -ErrorAction SilentlyCon
     Write-Host "🧹 已清理 UserInitMprLogonScript 注册表项"
 }
 
-$loginTaskName = "按需保持唤醒_ea8baf975afe"
-$loginTargetScript = Join-Path $targetDir "automation\Manage-PowerToysAwake.ps1"
-$loginDescription = "根据 RDP 连接状态自动切换 PowerToys Awake 模式 (Commit: $shortHead)"
+$loginTaskName = "会话状态同步_ea8baf975afe"
+$loginTargetScript = Join-Path $targetDir "automation\Update-SessionState.ps1"
+$loginDescription = "根据会话状态自动同步 PowerToys Awake 和 Stretchly (Commit: $shortHead)"
 
 # 清理过时的任务名称
-$obsoleteTasks = @("用户登录初始化任务_c6ed3a2b", "远程会话防睡眠_ea8baf975afe")
+$obsoleteTasks = @("用户登录初始化任务_c6ed3a2b", "远程会话防睡眠_ea8baf975afe", "按需保持唤醒_ea8baf975afe")
 foreach ($oldTask in $obsoleteTasks) {
     if (Get-ScheduledTask -TaskName $oldTask -ErrorAction SilentlyContinue) {
         Unregister-ScheduledTask -TaskName $oldTask -Confirm:$false

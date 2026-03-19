@@ -1,6 +1,13 @@
-# 脚本用途：根据当前会话状态自动管理 PowerToys Awake
-# 1. 活跃的远程会话 (Active RDP) -> 启用防睡眠
-# 2. 已断开的远程会话或本地会话 -> 禁用防睡眠 (Mode 0)
+param(
+    [Parameter(Mandatory = $false)]
+    [bool]$IsRemote
+)
+
+# 如果没有传入参数，则主动获取会话状态
+if (-not $PSBoundParameters.ContainsKey('IsRemote')) {
+    . "$PSScriptRoot\..\lib\Get-SessionStatus.ps1"
+    $IsRemote = Get-IsRemoteSession
+}
 
 $awakePath = "$env:LOCALAPPDATA\PowerToys\PowerToys.Awake.exe"
 if (-not (Test-Path $awakePath)) {
@@ -8,20 +15,7 @@ if (-not (Test-Path $awakePath)) {
 }
 if (-not (Test-Path $awakePath)) { exit 0 }
 
-# 获取当前进程的 Session ID
-$currentSessionId = (Get-Process -Id $PID).SessionId
-
-# 使用 qwinsta 获取所有会话，并锁定当前 Session ID 的那一行
-# 过滤掉表头，只关注包含当前 ID 且状态为 Active 的行
-$sessionLine = qwinsta $currentSessionId 2>$null | Where-Object { $_ -match "\s+$currentSessionId\s+Active" }
-
-$isActiveRemote = $false
-# 如果找到了活跃行，且会话名称（通常在行首）包含 "rdp"
-if ($null -ne $sessionLine -and $sessionLine -match "(?i)rdp") {
-    $isActiveRemote = $true
-}
-
-$targetMode = if ($isActiveRemote) { 1 } else { 0 }
+$targetMode = if ($IsRemote) { 1 } else { 0 }
 $settingsPath = "$env:LOCALAPPDATA\Microsoft\PowerToys\Awake\settings.json"
 
 if (Test-Path $settingsPath) {
@@ -39,6 +33,6 @@ if (Test-Path $settingsPath) {
         # 静默失败
     }
 }
-elseif ($isActiveRemote) {
+elseif ($IsRemote) {
     Start-Process -FilePath $awakePath -WindowStyle Hidden
 }
