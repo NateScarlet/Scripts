@@ -13,7 +13,7 @@ $proxySettings = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\Curren
 if ($proxySettings.ProxyEnable -eq 1) {
     $env:HTTP_PROXY = $proxySettings.ProxyServer
     $env:HTTPS_PROXY = $proxySettings.ProxyServer
-    $env:NO_PROXY = "localhost,127.0.0.1,0.0.0.0,$(
+    $env:NO_PROXY = "localhost,127.0.0.1,::1,0.0.0.0,$(
         ($proxySettings.ProxyOverride -split ';' | ForEach-Object { $_ `
             -replace '^(\*\.)+','.' `
             -replace '^(\d+)(?:\.\*){1,3}$','$1.0.0.0/8' `
