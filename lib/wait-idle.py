@@ -704,7 +704,7 @@ def main():
     # XXX: 闲置时CPU占用率比资源管理器看到的要高，不知原因，测试满载时都是100%
     parser.add_argument("--cpu", type=float, default=50, help="CPU阈值")
     parser.add_argument("--gpu", type=float, default=50, help="GPU阈值")
-    parser.add_argument("--vram", type=float, default=None, help="显存占用阈值(MB)，默认自动设置为总显存的 50%")
+    parser.add_argument("--vram", type=float, default=None, help="显存占用阈值(MB)")
     parser.add_argument("--interval-secs", type=float, default=1.0, help="检测间隔(秒)")
     args = parser.parse_args()
 
@@ -741,12 +741,6 @@ def main():
 
     # 初始化等待
     threshold_msg = f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%"
-    # 计算显存默认值
-    if vram_threshold is None:
-        total_vram = VRAMMonitor.get_total_vram_mb()
-        if total_vram > 0:
-            vram_threshold = total_vram * 0.5
-            _LOGGER.debug(f"自动设置显存阈值为总显存 ({total_vram:.0f}MB) 的 50%: {vram_threshold:.0f}MB")
 
     # 初始化等待所需的资源
     stack = ExitStack()
