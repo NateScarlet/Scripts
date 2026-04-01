@@ -51,11 +51,11 @@
         }
         else {        
             Write-Host "Committing changes..."
-            Invoke-NativeCommand git commit -A -m "Automatic sync at $timestamp"            
+            Invoke-NativeCommand git commit --all -m "Automatic sync at $timestamp"            
         }
 
         Write-Host "Pulling latest changes from remote..."
-        Invoke-NativeCommand git pull --rebase
+        Invoke-NativeCommand git pull --rebase -Xtheirs
                 
         Write-Host "Running WeaselDeployer..."
         WeaselDeployer.exe /sync
