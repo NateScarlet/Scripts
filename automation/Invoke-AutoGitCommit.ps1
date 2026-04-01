@@ -162,7 +162,6 @@
             $statusOutput = Invoke-NativeCommand git status --porcelain
             if ([string]::IsNullOrWhiteSpace($statusOutput)) {
                 Write-Host "无变更需要提交" -ForegroundColor Yellow
-                $result.Success = $true
                 $result.Message = "无变更"
                 $resultDetails = $null
             }
@@ -177,7 +176,6 @@
                 Write-Host "创建提交: $commitMsg"
                 Invoke-NativeCommand git commit -m $commitMsg --quiet
                 
-                $result.Success = $true
                 $result.Message = "提交成功"
             }
 
@@ -185,7 +183,7 @@
             if ($result.PullEnabled) {
                 try {
                     Write-Host "正在拉取最新变更..."
-                    Invoke-NativeCommand git pull --rebase --quiet
+                    Invoke-NativeCommand git pull --rebase --autostash --quiet
                 }
                 catch {
                     throw "拉取失败: $_"
@@ -210,6 +208,7 @@
             }
 
             
+            $result.Success = $true
             Write-Host "仓库 $repoPath 处理成功" -ForegroundColor Green
         }
         catch {

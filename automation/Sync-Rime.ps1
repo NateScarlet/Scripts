@@ -55,7 +55,7 @@
         }
 
         Write-Host "Pulling latest changes from remote..."
-        Invoke-NativeCommand git pull --rebase -Xtheirs
+        Invoke-NativeCommand git pull --rebase --autostash -Xtheirs
                 
         Write-Host "Running WeaselDeployer..."
         WeaselDeployer.exe /sync
