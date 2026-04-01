@@ -173,10 +173,17 @@
                 Write-Host "添加所有变更..."
                 Invoke-NativeCommand git add -A
                 
-                Write-Host "创建提交: $commitMsg"
-                Invoke-NativeCommand git commit -m $commitMsg --quiet
-                
-                $result.Message = "提交成功"
+                # 检查是否有已暂存的变更（避免子模块等导致的有 status 但无 commit 内容的情况）
+                $null = git diff --cached --quiet
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "无可提交的变更" -ForegroundColor Yellow
+                    $result.Message = "无变更"
+                }
+                else {
+                    Write-Host "创建提交: $commitMsg"
+                    Invoke-NativeCommand git commit -m $commitMsg --quiet
+                    $result.Message = "提交成功"
+                }
             }
 
             # 执行拉取操作（如果启用）
