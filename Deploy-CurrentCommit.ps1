@@ -125,19 +125,27 @@ if (Test-Path $targetScript) {
         
         Write-Host "✅ 计划任务已创建: $taskName"
     }
-    elseif ($task.Description -ne $currentDescription) {
-        # 更新动作和描述
-        $task.Actions = $newAction
-        $task.Description = $currentDescription
-        # 不更新触发器，允许用户自定义
+    elseif ($task) {
+        $actionChanged = ($task.Actions[0].Execute -ne $newAction.Execute) -or ($task.Actions[0].Arguments -ne $newAction.Arguments)
+        if ($actionChanged -or ($task.Description -ne $currentDescription)) {
+            # 如果动作没变，且用户修改了登录类型（非 Interactive），则跳过描述更新以避开密码错误
+            if (-not $actionChanged -and $task.Principal.LogonType -ne "Interactive") {
+                Write-Host "⏩ 计划任务 $taskName 动作未变更，且检测到非交互式登录类型，跳过描述更新"
+            }
+            else {
+                # 更新动作和描述
+                $task.Actions = $newAction
+                $task.Description = $currentDescription
+                # 不更新触发器，允许用户自定义
 
-        # 保存更新
-        $null = Set-ScheduledTask $task
-            
-        Write-Host "🔄 更新计划任务: $taskName"
-    }
-    else {
-        Write-Host "⏩ 计划任务 $taskName 已是最新版本"
+                # 保存更新
+                $null = Set-ScheduledTask $task
+                Write-Host "🔄 更新计划任务: $taskName"
+            }
+        }
+        else {
+            Write-Host "⏩ 计划任务 $taskName 已是最新版本"
+        }
     }   
 }
 else {
@@ -239,14 +247,21 @@ if (Test-Path $loginTargetScript) {
 </Task>
 "@
 
-    $existingTask = Get-ScheduledTask -TaskName $loginTaskName -ErrorAction SilentlyContinue
+    $actionChanged = $existingTask -and (($existingTask.Actions[0].Execute -ne $loginAction.Execute) -or ($existingTask.Actions[0].Arguments -ne $loginAction.Arguments))
     
-    if (-not $existingTask -or $existingTask.Description -ne $loginDescription) {
-        $null = Register-ScheduledTask -Xml $taskXml -TaskName $loginTaskName -Force
-        if (-not $existingTask) {
-            Write-Host "✅ 已通过 XML 创建登录计划任务: $loginTaskName"
-        } else {
-            Write-Host "🔄 已通过 XML 更新登录计划任务: $loginTaskName"
+    if (-not $existingTask -or $actionChanged -or $existingTask.Description -ne $loginDescription) {
+        # 如果动作没变，且用户修改了登录类型（非 Interactive），则跳过描述更新以避开密码错误
+        if ($existingTask -and -not $actionChanged -and $existingTask.Principal.LogonType -ne "Interactive") {
+            Write-Host "⏩ 登录计划任务 $loginTaskName 动作未变更，且检测到非交互式登录类型，跳过描述更新"
+        }
+        else {
+            $null = Register-ScheduledTask -Xml $taskXml -TaskName $loginTaskName -Force
+            if (-not $existingTask) {
+                Write-Host "✅ 已通过 XML 创建登录计划任务: $loginTaskName"
+            }
+            else {
+                Write-Host "🔄 已通过 XML 更新登录计划任务: $loginTaskName"
+            }
         }
     }
     else {
