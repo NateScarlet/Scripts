@@ -21,27 +21,21 @@ if (-not (Test-Path $stretchlyExe)) {
 # 检查 Stretchly 进程是否已经在运行
 $process = Get-Process Stretchly -ErrorAction SilentlyContinue
 
-if ($IsRemote) {
-    # 远程会话：暂停休息提醒
-    # 使用 Start-Process 异步执行命令，避免在 Stretchly 刚启动时脚本发生阻塞
-    Start-Process $stretchlyexe -ArgumentList "pause"
-    if ($process) {
+if ($process) {
+    if ($IsRemote) {
+        # 远程会话：暂停休息提醒
+        # 仅对已运行的实例发送命令，避免脚本阻塞或抢占开机启动
+        Start-Process $stretchlyexe -ArgumentList "pause"
         Write-Host "⏸️ 已在远程会话中暂停 Stretchly 休息提醒"
     }
     else {
-        # 如果当前未运行，上述命令会启动它并处于暂停状态
-        Write-Host "🚀 Stretchly 未运行，已启动并暂停休息提醒"
-    }
-}
-else {
-    # 本地会话：恢复休息提醒
-    if ($process) {
+        # 本地会话：恢复休息提醒
         Start-Process $stretchlyexe -ArgumentList "resume"
         Write-Host "▶️ 已在本地会话中恢复 Stretchly 休息提醒"
     }
-    else {
-        # 如果未运行且是本地会话，直接启动主程序即可（默认即为恢复/运行状态）
-        Start-Process $stretchlyexe
-        Write-Host "🚀 Stretchly 未运行，已启动程序"
-    }
+}
+else {
+    # 如果 Stretchly 未运行，则不主动启动它，交给系统开机启动项处理
+    # 这可以避免脚本在开机时由于启动了主程序而一直处于等待状态
+    Write-Host "🚀 Stretchly 未运行，略过状态同步"
 }
