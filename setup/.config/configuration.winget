@@ -121,10 +121,10 @@ properties:
         id: Obsidian.Obsidian
 
     - directives:
-        description: Install Ollama
+        description: Install LMStudio
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
-        id: Ollama.Ollama
+        id: ElementLabs.LMStudio
 
     - directives:
         description: Install NodeJS
