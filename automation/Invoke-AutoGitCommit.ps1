@@ -6,6 +6,9 @@
     # 设置严格的错误处理
     $ErrorActionPreference = "Stop"
 
+    # 加载通知模块
+    . "$PSScriptRoot/../lib/Send-Notification.ps1"
+
     function Invoke-NativeCommand {
         $command = $args[0]
         $arguments = $args[1..($args.Length - 1)]
@@ -223,6 +226,7 @@
             $resultDetails = $_.Exception
             Write-Host "处理失败: $repoPath" -ForegroundColor Red
             Write-Host "错误详情: $($_.Exception.Message)" -ForegroundColor Red
+            Send-Notification -Title "Invoke-AutoGitCommit 出错" -Message "$repoPath - $($_.Exception.Message)" -Priority 8
         }
         finally {
             # 确保切换回原目录

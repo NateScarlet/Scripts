@@ -2,6 +2,10 @@
 & {
     # 使用严格的错误处理
     $ErrorActionPreference = "Stop"
+
+    # 加载通知模块
+    . "$PSScriptRoot/../lib/Send-Notification.ps1"
+
     function Invoke-NativeCommand {
         $command = $args[0]
         $arguments = $args[1..($args.Length-1)]
@@ -64,6 +68,10 @@
         Invoke-NativeCommand git push   
 
         Write-Host "Rime sync completed successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "执行出错: $_"
+        Send-Notification -Title "Sync-Rime 出错" -Message $_.Exception.Message -Priority 8
     }
     finally {
         # 确保切换回原目录

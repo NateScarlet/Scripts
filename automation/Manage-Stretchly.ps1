@@ -7,6 +7,9 @@ param(
     [bool]$IsRemote
 )
 
+# 加载通知模块
+. "$PSScriptRoot/../lib/Send-Notification.ps1"
+
 # 如果没有传入参数，则主动获取会话状态
 if (-not $PSBoundParameters.ContainsKey('IsRemote')) {
     . "$PSScriptRoot\..\lib\Get-SessionStatus.ps1"
@@ -18,24 +21,30 @@ if (-not (Test-Path $stretchlyExe)) {
     exit 0
 }
 
-# 检查 Stretchly 进程是否已经在运行
-$process = Get-Process Stretchly -ErrorAction SilentlyContinue
+try {
+    # 检查 Stretchly 进程是否已经在运行
+    $process = Get-Process Stretchly -ErrorAction SilentlyContinue
 
-if ($process) {
-    if ($IsRemote) {
-        # 远程会话：暂停休息提醒
-        # 仅对已运行的实例发送命令，避免脚本阻塞或抢占开机启动
-        Start-Process $stretchlyexe -ArgumentList "pause"
-        Write-Host "⏸️ 已在远程会话中暂停 Stretchly 休息提醒"
+    if ($process) {
+        if ($IsRemote) {
+            # 远程会话：暂停休息提醒
+            # 仅对已运行的实例发送命令，避免脚本阻塞或抢占开机启动
+            Start-Process $stretchlyexe -ArgumentList "pause"
+            Write-Host "⏸️ 已在远程会话中暂停 Stretchly 休息提醒"
+        }
+        else {
+            # 本地会话：恢复休息提醒
+            Start-Process $stretchlyexe -ArgumentList "resume"
+            Write-Host "▶️ 已在本地会话中恢复 Stretchly 休息提醒"
+        }
     }
     else {
-        # 本地会话：恢复休息提醒
-        Start-Process $stretchlyexe -ArgumentList "resume"
-        Write-Host "▶️ 已在本地会话中恢复 Stretchly 休息提醒"
+        # 如果 Stretchly 未运行，则不主动启动它，交给系统开机启动项处理
+        # 这可以避免脚本在开机时由于启动了主程序而一直处于等待状态
+        Write-Host "🚀 Stretchly 未运行，略过状态同步"
     }
 }
-else {
-    # 如果 Stretchly 未运行，则不主动启动它，交给系统开机启动项处理
-    # 这可以避免脚本在开机时由于启动了主程序而一直处于等待状态
-    Write-Host "🚀 Stretchly 未运行，略过状态同步"
+catch {
+    Write-Warning "执行出错: $_"
+    Send-Notification -Title "Manage-Stretchly 出错" -Message $_.Exception.Message -Priority 8
 }

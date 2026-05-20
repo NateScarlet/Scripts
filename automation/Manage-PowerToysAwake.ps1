@@ -3,6 +3,9 @@ param(
     [bool]$IsRemote
 )
 
+# 加载通知模块
+. "$PSScriptRoot/../lib/Send-Notification.ps1"
+
 # 切换至本地时保持唤醒的时间 (分钟)
 $idleMinutes = 10
 
@@ -59,7 +62,8 @@ if (Test-Path $settingsPath) {
         }
     }
     catch {
-        # 静默失败
+        Write-Warning "执行出错: $_"
+        Send-Notification -Title "Manage-PowerToysAwake 出错" -Message $_.Exception.Message -Priority 8
     }
 }
 elseif ($IsRemote) {
