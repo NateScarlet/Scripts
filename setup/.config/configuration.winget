@@ -215,3 +215,9 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: CrystalDewWorld.CrystalDiskInfo
+
+    - directives:
+        description: Install DB Browser for SQLite
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: DBBrowserForSQLite.DBBrowserForSQLite
