@@ -67,6 +67,12 @@ properties:
         id: GoLang.Go
 
     - directives:
+        description: Install UV
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: astral-sh.uv
+
+    - directives:
         description: Install ImageMagick
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
