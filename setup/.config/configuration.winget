@@ -227,3 +227,10 @@ properties:
       resource: Microsoft.WinGet.DSC/WinGetPackage
       settings:
         id: DBBrowserForSQLite.DBBrowserForSQLite
+
+    - directives:
+        description: Install ripgrep
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: BurntSushi.ripgrep.MSVC
+        source: winget
