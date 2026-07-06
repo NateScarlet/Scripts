@@ -234,3 +234,10 @@ properties:
       settings:
         id: BurntSushi.ripgrep.MSVC
         source: winget
+
+    - directives:
+        description: Install sd
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: chmln.sd
+        source: winget
