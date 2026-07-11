@@ -18,7 +18,7 @@
 输出正方形 GIF 的边长（像素），默认 512。
 
 .PARAMETER Fps
-GIF 帧率（每秒帧数），默认 25。
+GIF 帧率（每秒帧数），默认 15。
 
 .PARAMETER MaxSize
 输出 GIF 最大文件大小（MB），默认 6。超过此大小时自动裁剪尾部时长。
@@ -40,7 +40,7 @@ param(
     [int]$Size = 512,
     
     [Parameter(Mandatory = $false)]
-    [int]$Fps = 25,
+    [int]$Fps = 15,
     
     [Parameter(Mandatory = $false)]
     [int]$MaxSize = 6,
