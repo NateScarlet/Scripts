@@ -5,7 +5,8 @@
 
 .DESCRIPTION
 使用 ffmpeg 和 ffprobe，自动计算视频中央正方形裁剪区域，
-生成优化调色板后再转换为 GIF，支持自定义尺寸和帧率。
+生成优化调色板后再转换为 GIF，支持自定义尺寸、帧率和最大文件大小。
+超过最大文件大小时自动裁剪视频尾部时长以满足限制。
 
 .PARAMETER InputFile
 输入视频文件路径（支持 MKV、MP4 等 ffmpeg 支持的所有格式）。
@@ -17,7 +18,10 @@
 输出正方形 GIF 的边长（像素），默认 512。
 
 .PARAMETER Fps
-GIF 帧率（每秒帧数），默认 15。
+GIF 帧率（每秒帧数），默认 25。
+
+.PARAMETER MaxSize
+输出 GIF 最大文件大小（MB），默认 6。超过此大小时自动裁剪尾部时长。
 #>
 
 param(
@@ -31,7 +35,10 @@ param(
     [int]$Size = 512,
     
     [Parameter(Mandatory = $false)]
-    [int]$Fps = 15
+    [int]$Fps = 25,
+    
+    [Parameter(Mandatory = $false)]
+    [int]$MaxSize = 6
 )
 
 # -------- 调试函数：打印变量 --------
@@ -87,6 +94,7 @@ Write-Host "输入文件: $InputFile"
 Write-Host "输出文件: $OutputFile"
 Write-Host "目标尺寸: ${Size}x${Size} 像素"
 Write-Host "帧率: $Fps fps"
+Write-Host "最大文件大小: ${MaxSize} MB"
 Write-Host "========================================"
 
 # -------- 临时调色板文件 --------
@@ -101,7 +109,7 @@ Write-DebugVar "tempPalette" $tempPalette
 
 try {
     # -------- 步骤1：获取视频尺寸 --------
-    Write-Host "步骤1/3: 分析视频尺寸..."
+    Write-Host "步骤1/4: 分析视频尺寸..."
     $ffprobeArgs = @(
         '-v', 'error',
         '-select_streams', 'v:0',
@@ -126,44 +134,91 @@ try {
     $cropY = [Math]::Floor(($height - $cropSize) / 2)
     Write-Host "  裁剪区域: 从 ($cropX, $cropY) 裁剪 ${cropSize}x${cropSize}"
 
-    # -------- 步骤2：生成调色板 --------
-    Write-Host "步骤2/3: 生成调色板..."
-    $paletteArgs = @(
-        '-i', $InputFile,
-        '-vf', "crop=${cropSize}:${cropSize}:${cropX}:${cropY},scale=${Size}:${Size}:flags=lanczos,palettegen=stats_mode=diff",
-        '-y', $tempPalette
+    # #region 获取视频时长
+    Write-Host "步骤2/4: 获取视频时长..."
+    $ffprobeDurationArgs = @(
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        $InputFile
     )
-    Write-DebugVar "paletteArgs" ($paletteArgs -join ' ')
-    & ffmpeg $paletteArgs *>&1 | Write-Host
-    if (-not (Test-Path $tempPalette)) {
-        Write-Error "调色板生成失败"
+    Write-DebugVar "ffprobeDurationArgs" ($ffprobeDurationArgs -join ' ')
+    $totalDurationRaw = & ffprobe $ffprobeDurationArgs *>&1
+    $totalDurationStr = ($totalDurationRaw -split "`r`n" | Where-Object { $_ -match '^\d+\.?\d*$' } | Select-Object -First 1)
+    if (-not $totalDurationStr) {
+        Write-Error "无法获取视频时长"
         exit 1
     }
+    $totalDuration = [double]$totalDurationStr
+    Write-Host "  视频时长: $([Math]::Round($totalDuration, 2)) 秒"
+    # #endregion
 
-    # -------- 步骤3：生成 GIF --------
-    Write-Host "步骤3/3: 生成GIF动画..."
-    $gifArgs = @(
-        '-i', $InputFile,
-        '-i', $tempPalette,
-        '-filter_complex', "[0:v]crop=${cropSize}:${cropSize}:${cropX}:${cropY},scale=${Size}:${Size}:flags=lanczos,fps=$Fps[v];[v][1:v]paletteuse",
-        '-y', $OutputFile
-    )
-    Write-DebugVar "gifArgs" ($gifArgs -join ' ')
-    Write-Host "即将执行 ffmpeg ..." -ForegroundColor Yellow
-    & ffmpeg $gifArgs *>&1 | Write-Host
+    # #region 步骤3/4：生成调色板和 GIF（带大小限制）
+    Write-Host "步骤3/4: 生成 GIF（大小限制 ${MaxSize} MB）..."
+    $maxSizeBytes = $MaxSize * 1MB
+    $targetDuration = $totalDuration
 
-    # -------- 检查结果 --------
-    if (Test-Path $OutputFile) {
-        $fileSize = (Get-Item $OutputFile).Length / 1MB
-        Write-Host "========================================" -ForegroundColor Green
-        Write-Host "✅ 成功生成 GIF！" -ForegroundColor Green
-        Write-Host "  输出文件: $OutputFile"
-        Write-Host "  文件大小: $([Math]::Round($fileSize, 2)) MB"
-        Write-Host "========================================" -ForegroundColor Green
+    do {
+        Write-Host "  生成调色板（时长: $([Math]::Round($targetDuration, 2)) 秒）..."
+        $paletteArgs = @(
+            '-t', $targetDuration,
+            '-i', $InputFile,
+            '-vf', "crop=${cropSize}:${cropSize}:${cropX}:${cropY},scale=${Size}:${Size}:flags=lanczos,palettegen=stats_mode=diff",
+            '-y', $tempPalette
+        )
+        Write-DebugVar "paletteArgs" ($paletteArgs -join ' ')
+        & ffmpeg $paletteArgs *>&1 | Write-Host
+        if (-not (Test-Path $tempPalette)) {
+            Write-Error "调色板生成失败"
+            exit 1
+        }
+
+        Write-Host "  生成 GIF（时长: $([Math]::Round($targetDuration, 2)) 秒）..."
+        $gifArgs = @(
+            '-t', $targetDuration,
+            '-i', $InputFile,
+            '-i', $tempPalette,
+            '-filter_complex', "[0:v]crop=${cropSize}:${cropSize}:${cropX}:${cropY},scale=${Size}:${Size}:flags=lanczos,fps=$Fps[v];[v][1:v]paletteuse",
+            '-y', $OutputFile
+        )
+        Write-DebugVar "gifArgs" ($gifArgs -join ' ')
+        & ffmpeg $gifArgs *>&1 | Write-Host
+
+        if (-not (Test-Path $OutputFile)) {
+            Write-Error "GIF 生成失败"
+            exit 1
+        }
+
+        $fileSizeBytes = (Get-Item $OutputFile).Length
+        $fileSizeMB = $fileSizeBytes / 1MB
+
+        if ($fileSizeBytes -gt $maxSizeBytes) {
+            $scale = [Math]::Max($maxSizeBytes / $fileSizeBytes, 0.05)
+            $newDuration = [Math]::Round($targetDuration * $scale, 2)
+            if ([Math]::Abs($newDuration - $targetDuration) -lt 0.1) {
+                Write-Host "  文件大小 $([Math]::Round($fileSizeMB, 2)) MB 超过限制 ${MaxSize} MB，无法进一步缩短" -ForegroundColor Yellow
+                break
+            }
+            Write-Host "  文件大小 $([Math]::Round($fileSizeMB, 2)) MB 超过限制 ${MaxSize} MB，缩短到 ${newDuration} 秒重试" -ForegroundColor Yellow
+            $targetDuration = $newDuration
+        } else {
+            break
+        }
+    } while ($true)
+
+    if ($targetDuration -ge $totalDuration) {
+        $effectiveDurationDisplay = "完整视频 ($([Math]::Round($totalDuration, 2)) 秒)"
     } else {
-        Write-Error "GIF 生成失败，输出文件不存在"
-        exit 1
+        $effectiveDurationDisplay = "$([Math]::Round($targetDuration, 2)) 秒"
     }
+
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "✅ 成功生成 GIF！" -ForegroundColor Green
+    Write-Host "  输出文件: $OutputFile"
+    Write-Host "  文件大小: $([Math]::Round($fileSizeMB, 2)) MB / ${MaxSize} MB"
+    Write-Host "  有效时长: $effectiveDurationDisplay"
+    Write-Host "========================================" -ForegroundColor Green
+    # #endregion
 
 } catch {
     Write-Error "处理过程中发生错误: $_"
