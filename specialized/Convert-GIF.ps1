@@ -128,8 +128,8 @@ function Find-SeamlessLoop {
         return $null
     }
 
-    # 匹配帧就是帧 0 的视觉等价物，应作为循环最后一帧包含进来
-    $loopSeconds = $bestFrame / $AnalysisFps
+    # 匹配帧就是帧 0 的视觉等价物，不应作为循环最后一帧包含进来
+    $loopSeconds = $bestFrame / $AnalysisFps - (1 / $OutputFps)
 
     Write-DebugVar "最佳匹配帧" $bestFrame
     Write-DebugVar "最佳 PSNR" $bestPsnr
