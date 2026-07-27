@@ -1,4 +1,4 @@
-import type { Plugin, ToolDefinition } from "@opencode-ai/plugin";
+import { type Plugin, tool } from "@opencode-ai/plugin";
 import { readFileSync, appendFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
@@ -8,7 +8,11 @@ import { execSync } from "node:child_process";
 
 const ghRepoRe = /\bgh\b.*--repo\b|--repo\b.*\bgh\b/i;
 
-const knownReposPath = resolve(homedir(), ".config", "known_github_repositories");
+const knownReposPath = resolve(
+  homedir(),
+  ".config",
+  "known_github_repositories"
+);
 
 const getKnownRepos = (): Set<string> => {
   try {
@@ -51,10 +55,11 @@ const getCurrentRepo = (): string | null => {
 export default (async () => {
   return {
     tool: {
-      "guard-gh-allow": {
-        description: "将仓库添加到 guard-gh 的放行列表，允许 gh --repo 访问该仓库",
-        parameters: {
-          repo: { type: "string", description: "仓库标识，格式 owner/repo", required: true },
+      "guard-gh-allow": tool({
+        description:
+          "将仓库添加到 guard-gh 的放行列表，允许 gh --repo 访问该仓库",
+        args: {
+          repo: tool.schema.string().describe("仓库标识，格式 owner/repo"),
         },
         async execute(args, context) {
           const repo = String(args.repo).trim();
@@ -86,7 +91,7 @@ export default (async () => {
             return { output: `添加失败：${e}` };
           }
         },
-      } satisfies ToolDefinition,
+      }),
     },
     "tool.execute.before": async (input, output) => {
       const toolName = String(input?.tool ?? "").toLowerCase();
@@ -108,12 +113,16 @@ export default (async () => {
       if (currentRepo) {
         const match = currentRepo.match(repoUrlRe);
         const currentName = match?.[1];
-        if (currentName && currentName.toLowerCase() === repoValue.toLowerCase()) return;
+        if (
+          currentName &&
+          currentName.toLowerCase() === repoValue.toLowerCase()
+        )
+          return;
       }
 
       throw new Error(
         `[guard-gh] 当前仓库 remote：${currentRepo ?? "未设置 remote origin"}\n` +
-        `请移除 gh 的 --repo 参数，默认应操作当前仓库。如需操作目标仓库，请使用 guard-gh-allow 工具放行 "${repoValue}"`
+          `请移除 gh 的 --repo 参数，默认应操作当前仓库。如需操作目标仓库，请使用 guard-gh-allow 工具放行 "${repoValue}"`
       );
     },
   };
