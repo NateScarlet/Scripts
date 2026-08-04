@@ -193,7 +193,7 @@
             if ($result.PullEnabled) {
                 try {
                     Write-Host "正在拉取最新变更..."
-                    Invoke-NativeCommand git pull --rebase --autostash --quiet
+                    Invoke-NativeCommand git pull --autostash --quiet
                 }
                 catch {
                     throw "拉取失败: $_"
