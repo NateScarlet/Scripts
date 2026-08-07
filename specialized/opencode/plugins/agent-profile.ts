@@ -12,7 +12,10 @@ export default (async () => {
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool === "bash" && typeof output.args?.command === "string") {
-        output.args.command = PREFIX + output.args.command;
+        // agent 可能从历史命令中惯性复制前缀，避免重复注入导致 profile 执行两次
+        if (!output.args.command.includes(PROFILE)) {
+          output.args.command = PREFIX + output.args.command;
+        }
       }
     },
   };
