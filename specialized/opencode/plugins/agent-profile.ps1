@@ -16,3 +16,7 @@ Set-Alias powershell.exe pwsh -Scope Global
 $env:GIT_CONFIG_COUNT = "1"
 $env:GIT_CONFIG_KEY_0 = "commit.gpgsign"
 $env:GIT_CONFIG_VALUE_0 = "false"
+
+# 临时产物统一放到项目 .scratch 目录，避免污染系统临时目录
+$env:TEMP = Join-Path $PWD ".scratch"
+New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
