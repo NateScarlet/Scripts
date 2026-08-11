@@ -12,6 +12,9 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 Set-Alias powershell pwsh
 Set-Alias powershell.exe pwsh
 
+# 替代 no-npm 插件：npx 重定向到 pnpx（pnpm 提供的对应命令）
+Set-Alias npx pnpx
+
 # 替代 git-no-sign 插件：禁止 git 提交签名
 $env:GIT_CONFIG_COUNT = "1"
 $env:GIT_CONFIG_KEY_0 = "commit.gpgsign"
