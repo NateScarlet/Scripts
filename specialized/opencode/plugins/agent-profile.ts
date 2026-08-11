@@ -6,7 +6,7 @@ const PROFILE = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "agent-profile.ps1"
 );
-const PREFIX = `& $env:AGENT_PROFILE; `;
+const PREFIX = `. $env:AGENT_PROFILE; `;
 
 export default (async ({ worktree }) => {
   // bash 命令可能在子目录运行，scratch 目录固定挂在项目根目录（git 工作树）
@@ -20,7 +20,7 @@ export default (async ({ worktree }) => {
     "tool.execute.before": async (input, output) => {
       if (input.tool === "bash" && typeof output.args?.command === "string") {
         // agent 可能从历史命令中惯性复制前缀，避免重复注入导致 profile 执行两次
-        if (!output.args.command.includes("& $env:AGENT_PROFILE")) {
+        if (!output.args.command.includes(PREFIX)) {
           output.args.command = PREFIX + output.args.command;
         }
       }
