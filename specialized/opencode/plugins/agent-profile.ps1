@@ -20,6 +20,10 @@ $env:GIT_CONFIG_COUNT = "1"
 $env:GIT_CONFIG_KEY_0 = "commit.gpgsign"
 $env:GIT_CONFIG_VALUE_0 = "false"
 
-# 临时产物统一放到项目 .scratch 目录，避免污染系统临时目录
-$env:TEMP = Join-Path $PWD ".scratch"
+# 临时产物统一放到项目根目录 .scratch 目录，避免污染系统临时目录
+# 项目根目录由 agent-profile 插件注入（git 工作树），bash 在子目录运行时仍指向同一目录
+if (-not $env:SCRATCH_DIR) {
+  throw "[agent-profile] 缺少 SCRATCH_DIR 环境变量，请确认 agent-profile 插件已加载"
+}
+$env:TEMP = $env:SCRATCH_DIR
 New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null

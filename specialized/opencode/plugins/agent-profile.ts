@@ -8,10 +8,14 @@ const PROFILE = path.join(
 );
 const PREFIX = `. $env:AGENT_PROFILE; `;
 
-export default (async () => {
+export default (async ({ worktree }) => {
+  // bash 命令可能在子目录运行，scratch 目录固定挂在项目根目录（git 工作树）
+  const SCRATCH_DIR = path.join(worktree, ".scratch");
+
   return {
     "shell.env": async (_input, output) => {
       output.env.AGENT_PROFILE = PROFILE;
+      output.env.SCRATCH_DIR = SCRATCH_DIR;
     },
     "tool.execute.before": async (input, output) => {
       if (input.tool === "bash" && typeof output.args?.command === "string") {
