@@ -2,7 +2,7 @@
 . "$PSScriptRoot/../lib/Send-Notification.ps1"
 
 try {
-    Get-ChildItem -Recurse "C:/ComfyUI/ComfyUI/input" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-90) } | ForEach-Object { Send-To-RecycleBin $_ }
+    Get-ChildItem -Recurse "C:/ComfyUI/ComfyUI/input" | Where-Object { ($_.Name -ne "example.png") -and ($_.LastWriteTime -lt (Get-Date).AddDays(-90)) } | ForEach-Object { Send-To-RecycleBin $_ }
 }
 catch {
     Write-Warning "执行出错: $_"
