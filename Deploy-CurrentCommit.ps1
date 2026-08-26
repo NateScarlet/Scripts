@@ -181,6 +181,9 @@ if (Test-Path $loginTargetScript) {
     $loginAction = New-ScheduledTaskAction -Execute "$PSHOME\pwsh.exe" `
         -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$loginTargetScript`""
     
+    # 查询现有的登录计划任务，用于后续变更检测
+    $existingTask = Get-ScheduledTask -TaskName $loginTaskName -ErrorAction SilentlyContinue
+    
     # 使用 XML 方式定义任务，以完美支持多种高级触发器并避开 PowerShell 类型绑定 Bug
     $currentUser = "$env:USERDOMAIN\$env:USERNAME"
     $taskXml = @"
