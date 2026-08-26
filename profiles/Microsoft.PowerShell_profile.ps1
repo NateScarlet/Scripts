@@ -129,3 +129,17 @@ function Remove-Empty-Dir {
 }
 
 . "$ScriptLib/New-GitWorkspace.ps1"
+
+#region 远程 VSCode 会话防休眠
+# 仅在“正通过浏览器版 VSCode (code serve-web) 操作本机”时自动阻止空闲休眠。
+# 判定逻辑自包含在 Test-IsServeWebSession：先用 TERM_PROGRAM 快速排除非 VSCode 终端，
+# 再沿父进程链区分 serve-web 服务端与桌面版 Code。
+# 请求随本 pwsh 进程结束自动释放，手动开关见 lib/NoSleep.ps1（Enable/Disable-NoSleep）。
+. "$ScriptLib/NoSleep.ps1"
+if (Test-IsServeWebSession) {
+    # 原因会附带时间与 pid 显示在 powercfg /requests 中
+    Enable-NoSleep -Reason 'code serve-web 会话'
+    # 遗弃终端自杀看门狗：会话被取代且闲置超时后自动退出（NO_SLEEP_WATCHDOG_OFF=1 禁用）
+    Enable-NoSleepWatchdog
+}
+#endregion
