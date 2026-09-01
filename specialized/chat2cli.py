@@ -173,11 +173,11 @@ def print_instruction():
 ```tool
 {{
   "jsonrpc": "2.0",
+  "id": 1,
   "method": "pwsh",
   "params": {{
     "command": "在此填写要执行的命令"
-  }},
-  "id": 1
+  }}
 }}
 ```
 </response_template>
@@ -190,12 +190,12 @@ def print_instruction():
 1. str_replace_editor - 自定义编辑工具（查看、创建、编辑文件）：
 {{
   "jsonrpc": "2.0",
+  "id": 1,
   "method": "str_replace_editor",
   "params": {{
     "command": "view",
     "path": "文件或目录的绝对路径"
-  }},
-  "id": 1
+  }}
 }}
 - command 支持：view、create、str_replace、insert。
 - path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
@@ -209,12 +209,12 @@ def print_instruction():
 2. pwsh - 执行 PowerShell 命令：
 {{
   "jsonrpc": "2.0",
+  "id": 2,
   "method": "pwsh",
   "params": {{
     "description": "命令用途简述（可选，用于汇总展示）",
     "command": "要执行的命令"
-  }},
-  "id": 2
+  }}
 }}
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
@@ -223,11 +223,11 @@ def print_instruction():
 3. skill - 激活指定 skill：
 {{
   "jsonrpc": "2.0",
+  "id": 4,
   "method": "skill",
   "params": {{
     "name": "skill 名称"
-  }},
-  "id": 4
+  }}
 }}
 - name 必须是 available_skills 中列出的精确名称。
 - 激活后返回 <skill_content> 块，包含该 skill 的完整指令。
@@ -1250,13 +1250,35 @@ def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
 
 def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     """校验单个 JSON-RPC 请求结构，返回 (是否合法, 错误消息)"""
+    # 顶层只允许已知字段
+    allowed_top = {"jsonrpc", "method", "params", "id"}
+    unknown_top = set(req.keys()) - allowed_top
+    if unknown_top:
+        return False, f"顶层存在未知字段：{sorted(unknown_top)}"
+
     if "method" not in req:
         return False, "缺少 method 字段"
     method = req.get("method")
     if method not in ("str_replace_editor", "pwsh", "skill"):
         return False, f"未知 method：{method}"
+
     if "params" not in req or not isinstance(req.get("params"), dict):
         return False, "params 必须是对象"
+
+    # 各 method 允许的 params key（不含 id，id 必须在顶层）
+    allowed_params = {
+        "str_replace_editor": {"command", "path", "file_text", "old_str", "new_str", "insert_line", "offset", "limit"},
+        "pwsh": {"command", "description"},
+        "skill": {"name"},
+    }
+    allowed = allowed_params[method]
+    unknown_params = set(req["params"].keys()) - allowed
+    if unknown_params:
+        hint = ""
+        if "id" in unknown_params:
+            hint = "注意：id 必须放在顶层，不能放在 params 内。"
+        return False, f"params 中存在未知字段：{sorted(unknown_params)}，method={method} 允许的字段：{sorted(allowed)}。{hint}"
+
     return True, ""
 
 
