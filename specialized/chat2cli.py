@@ -562,122 +562,6 @@ def _calculate_line_changes(before: str, after: str) -> Dict[str, int]:
 
 
 
-def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
-    """执行文件替换，返回 JSON-RPC result 字典"""
-    import difflib
-    import sys
-
-    path = params.get("path")
-    old = params.get("old")
-    new = params.get("new")
-
-    if not isinstance(path, str) or not validate_path(path):
-        return {
-            "success": False,
-            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，不能包含 .. 或绝对路径。",
-        }
-    if not isinstance(old, str) or not old:
-        return {"success": False, "message": "错误：old 字符串不能为空。"}
-    if not isinstance(new, str):
-        return {"success": False, "message": "错误：new 必须是字符串。"}
-    if not os.path.isfile(path):
-        return {"success": False, "message": "错误：文件不存在。"}
-
-    # 尝试以 UTF-8 读取，失败则回退到系统默认编码
-    encoding_to_use = "utf-8"
-    try:
-        with open(path, "r", encoding=encoding_to_use, newline="") as f:
-            raw_content = f.read()
-    except UnicodeDecodeError:
-        import locale
-        encoding_to_use = locale.getpreferredencoding(False)
-        try:
-            with open(path, "r", encoding=encoding_to_use, newline="") as f:
-                raw_content = f.read()
-        except Exception as e:
-            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
-    except Exception as e:
-        return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
-
-    newline_style = _detect_dominant_newline(raw_content)
-    content = _normalize_newlines(raw_content)
-    old_normalized = _normalize_newlines(old)
-    new_normalized = _normalize_newlines(new)
-
-    count = content.count(old_normalized)
-    if count == 0:
-        hint = _find_closest_line(content, old_normalized)
-        if hint:
-            return {
-                "success": False,
-                "message": f"错误：未找到匹配文本。可能的原因：\n{hint}",
-            }
-        return {"success": False, "message": "错误：未找到匹配文本。"}
-    elif count > 1:
-        return {
-            "success": False,
-            "message": f"错误：检测到 {count} 处匹配，无法唯一确定替换位置。请提供更长的 old 字符串。",
-        }
-
-    abs_path = os.path.abspath(path)
-    old_lines = old_normalized.split("\n")
-    new_lines = new_normalized.split("\n")
-
-    # 检查 old 和 new 是否相同
-    if old_normalized == new_normalized:
-        sys.stderr.write(f"\033[33m⚠️  str_replace: old 和 new 内容相同，文件未修改: {abs_path}\033[0m\n")
-        sys.stderr.flush()
-        return {
-            "success": True,
-            "path": abs_path,
-            "deleted_lines": 0,
-            "added_lines": 0,
-            "message": f"文件未修改（old 和 new 相同）: {abs_path}",
-        }
-
-    new_content_normalized = content.replace(old_normalized, new_normalized, 1)
-    new_content = _restore_newlines(new_content_normalized, newline_style)
-    try:
-        with open(path, "w", encoding=encoding_to_use, newline="") as f:
-            f.write(new_content)
-    except Exception as e:
-        return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
-
-    # 生成彩色 diff 输出到 stderr
-    diff = difflib.unified_diff(
-        old_lines,
-        new_lines,
-        fromfile=f"a/{path}",
-        tofile=f"b/{path}",
-        lineterm=""
-    )
-    diff_output = list(diff)
-
-    if diff_output:
-        sys.stderr.write(f"\033[36m📝 str_replace 修改 {path}:\033[0m\n")
-        for line in diff_output:
-            if line.startswith("---") or line.startswith("+++"):
-                sys.stderr.write(f"\033[36m{line}\033[0m\n")
-            elif line.startswith("@@"):
-                sys.stderr.write(f"\033[35m{line}\033[0m\n")
-            elif line.startswith("-"):
-                sys.stderr.write(f"\033[31m{line}\033[0m\n")
-            elif line.startswith("+"):
-                sys.stderr.write(f"\033[32m{line}\033[0m\n")
-            else:
-                sys.stderr.write(f"{line}\n")
-        sys.stderr.flush()
-
-    changes = _calculate_line_changes(content, new_content_normalized)
-
-    return {
-        "success": True,
-        "path": abs_path,
-        "changes": changes,
-        "message": f"The file {abs_path} has been updated successfully.",
-    }
-
-
 def execute_read(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """读取文件内容，返回 (元数据, 行号化内容)"""
     path_raw = params.get("file_path")
@@ -1055,11 +939,11 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
         sys.stderr.write(f"\033[33m⚠️  str_replace_editor: old_str 和 new_str 内容相同，文件未修改: {abs_path}\033[0m\n")
         sys.stderr.flush()
         return {
-            "success": True,
+            "success": False,
             "path": abs_path,
             "deleted_lines": 0,
             "added_lines": 0,
-            "message": f"文件未修改（old_str 和 new_str 相同）: {abs_path}",
+            "message": f"错误：old_str 和 new_str 内容相同，拒绝执行无效替换: {abs_path}",
         }
 
     new_content_normalized = content.replace(old_normalized, new_normalized, 1)
