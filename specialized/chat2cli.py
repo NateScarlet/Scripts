@@ -1088,7 +1088,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
 
     wrapped_command = (
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
-        f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {command}"
+        f"$OutputEncoding = [System.Text.Encoding]::UTF8; "
+        f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+        f"$env:PYTHONIOENCODING = 'utf-8'; {command}"
     )
 
     # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
