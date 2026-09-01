@@ -166,6 +166,7 @@ def print_instruction():
 回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
 
 <response_template>
+简短说明思路：
 ```chat2cli
 {{
   "jsonrpc": "2.0",
@@ -176,7 +177,6 @@ def print_instruction():
   "id": 1
 }}
 ```
-调用的简短说明
 </response_template>
 
 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
