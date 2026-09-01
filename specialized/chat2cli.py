@@ -959,10 +959,16 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
             meta, content = execute_read(req_id, params)
             if meta.get("success"):
                 total_lines = meta.get("total_lines", 0)
+                first_line = meta.get("first_line", 0)
+                last_line = meta.get("last_line", 0)
                 if content:
-                    content_with_footer = content + f"\n(End of file - total {total_lines} lines)"
+                    if last_line < total_lines:
+                        footer = f"\n(Showing lines {first_line}-{last_line} of {total_lines}. Use offset={last_line + 1} to continue.)"
+                    else:
+                        footer = f"\n(End of file - total {total_lines} lines)"
+                    content_with_footer = content + footer
                 else:
-                    content_with_footer = f"(End of file - total {total_lines} lines)"
+                    content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
                 content_block = f'<content id="{req_id}">\n{meta["path"]}:L{meta["first_line"]}-{meta["last_line"]}\n{content_with_footer}\n</content>\n'
                 meta.pop("total_lines", None)
                 meta.pop("returned_lines", None)
