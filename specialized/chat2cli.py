@@ -595,9 +595,20 @@ def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
                 sys.stderr.write(f"{line}\n")
         sys.stderr.flush()
 
-    # 计算实际行数变化
-    deleted_lines = max(0, old_normalized.count("\n"))
-    added_lines = max(0, new_normalized.count("\n"))
+    # 计算实际行数变化（基于整个文件替换前后的 diff）
+    before_lines = content.split("\n")
+    after_lines = new_content_normalized.split("\n")
+    matcher = difflib.SequenceMatcher(None, before_lines, after_lines, autojunk=False)
+    deleted_lines = 0
+    added_lines = 0
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "delete":
+            deleted_lines += i2 - i1
+        elif tag == "insert":
+            added_lines += j2 - j1
+        elif tag == "replace":
+            deleted_lines += i2 - i1
+            added_lines += j2 - j1
 
     return {
         "success": True,
