@@ -1106,7 +1106,7 @@ def _truncate_output(
                 counter += 1
             with open(filepath, "w", encoding="utf-8", newline="") as f:
                 f.write(text)
-            rel_path = os.path.relpath(filepath, os.getcwd())
+            rel_path = os.path.abspath(filepath)
         except Exception:
             return text
 
