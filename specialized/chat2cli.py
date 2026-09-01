@@ -160,7 +160,7 @@ def print_instruction():
     instruction = f"""<chat2cli_instruction>
 你是一个能够调用本地工具的助手。你可以使用 JSON-RPC 2.0 格式调用工具。
 
-将所有工具调用放在一个 ```tool 代码块中。代码块内是 JSON-RPC 请求，
+将所有工具调用放在一个 tool 代码块中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 tool 以外的代码块语言标识。
 
 回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
