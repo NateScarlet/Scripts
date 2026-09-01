@@ -662,12 +662,10 @@ def _truncate_output(
     stdout: str,
     stderr: str,
     max_lines: int = 200,
-) -> Tuple[Tuple[str, str], List[str]]:
+) -> Tuple[str, str]:
     """对过长输出进行截断，完整内容写入 scratch 文件。"""
-    saved_files: List[str] = []
 
     def _process(stream_name: str, text: str) -> str:
-        nonlocal saved_files
         if not text:
             return text
         line_count = text.count("\n") + 1
@@ -689,7 +687,6 @@ def _truncate_output(
             with open(filepath, "w", encoding="utf-8", newline="") as f:
                 f.write(text)
             rel_path = os.path.relpath(filepath, os.getcwd())
-            saved_files.append(rel_path)
         except Exception:
             return text
 
@@ -704,7 +701,7 @@ def _truncate_output(
 
     stdout_display = _process("stdout", stdout)
     stderr_display = _process("stderr", stderr)
-    return (stdout_display, stderr_display), saved_files
+    return stdout_display, stderr_display
 
 
 def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -743,17 +740,13 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     stdout = result.stdout.rstrip("\n")
     stderr = result.stderr.rstrip("\n")
 
-    (stdout_display, stderr_display), saved_files = _truncate_output(
-        id_, stdout, stderr
-    )
+    stdout_display, stderr_display = _truncate_output(id_, stdout, stderr)
 
     return {
         "success": True,
         "exit_code": result.returncode,
         "stdout": stdout_display,
         "stderr": stderr_display,
-        "saved_files": saved_files,
-        "message": f"命令已执行（退出码 {result.returncode}）",
     }
 
 
