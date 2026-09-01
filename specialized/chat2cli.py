@@ -320,6 +320,50 @@ def validate_path(path: str) -> bool:
     return True
 
 
+
+def _is_gitignored(path: str) -> bool:
+    """检查路径是否被 gitignore 忽略。"""
+    try:
+        result = subprocess.run(
+            ["git", "check-ignore", "--quiet", "--", path],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=os.getcwd(),
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _colorize_ignored_path(path: str) -> str:
+    """将 gitignore 忽略的路径部分使用橙色显示。"""
+    if not _is_gitignored(path):
+        return path
+
+    try:
+        cwd = os.path.abspath(os.getcwd())
+        abs_path = os.path.abspath(path)
+        if abs_path.startswith(cwd + os.sep):
+            rel = os.path.relpath(abs_path, cwd)
+            parts = rel.split(os.sep)
+            ignored_index = 0
+            for i in range(len(parts)):
+                candidate = os.path.join(cwd, *parts[: i + 1])
+                if _is_gitignored(candidate):
+                    ignored_index = i
+                    break
+            normal = os.sep.join(parts[:ignored_index])
+            ignored = os.sep.join(parts[ignored_index:])
+            if normal:
+                return f"{normal}{os.sep}\033[38;5;208m{ignored}\033[0m"
+            return f"\033[38;5;208m{ignored}\033[0m"
+    except Exception:
+        pass
+
+    return f"\033[38;5;208m{path}\033[0m"
+
+
+
 def _normalize_newlines(text: str) -> str:
     """将 CRLF 和 CR 统一规范化为 LF"""
     return text.replace("\r\n", "\n").replace("\r", "\n")
@@ -910,6 +954,10 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
         content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
 
     content_block = f'<content id="{id_}">\n{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}\n</content>\n'
+    # stderr 显示读取路径（gitignore 部分橙色高亮）
+    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(meta['path'])}:L{first_line}-{last_line}\n")
+    sys.stderr.flush()
+
     return meta, content_block
 
 
@@ -943,6 +991,10 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
             lines.append(entry)
 
     content_block = f'<content id="{id_}">\n{os.path.abspath(path)}\n' + "\n".join(lines) + "\n</content>\n"
+    # stderr 显示目录读取路径（gitignore 部分橙色高亮）
+    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(os.path.abspath(path))}\n")
+    sys.stderr.flush()
+
     meta = {
         "success": True,
         "path": os.path.abspath(path),
