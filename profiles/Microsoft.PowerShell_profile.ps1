@@ -128,14 +128,14 @@ function Remove-Empty-Dir {
     Get-ChildItem -Directory $args | Where-Object { $_.GetFiles().Count -eq 0 -and $_.GetDirectories().Count -eq 0 } | ForEach-Object { $_; Remove-Item $_ }
 }
 
-function Invoke-Chat2Cli {
+function Invoke-Chat2CLI {
     Get-Clipboard | py $ScriptsRoot/specialized/chat2cli.py | Set-Clipboard
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
 }
 
-Set-Alias "chat2cli" Invoke-Chat2Cli
+Set-Alias "chat2cli" Invoke-Chat2CLI
 
 . "$ScriptLib/New-GitWorkspace.ps1"
 
