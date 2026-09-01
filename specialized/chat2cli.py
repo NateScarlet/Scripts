@@ -1356,13 +1356,13 @@ def main():
     input_text = sys.stdin.read()
 
     if not input_text.strip():
-        sys.stderr.write("[tool] 输入为空，已输出初始指令。\n")
+        sys.stderr.write("[chat2cli] 输入为空，已输出初始指令。\n")
         print_instruction()
         return
 
     requests = extract_chat2cli_blocks(input_text)
     if not requests:
-        sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块，已输出初始指令。\n")
+        sys.stderr.write("[chat2cli] 未检测到 tool 代码块，已输出初始指令。\n")
         print_instruction()
         return
 

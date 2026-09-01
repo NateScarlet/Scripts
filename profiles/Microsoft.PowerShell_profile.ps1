@@ -254,7 +254,7 @@ function Watch-Chat2CLI {
         }
     }
 
-    Write-Host '[Watch-Chat2CLI] 已启动，等待新的 ```tool 调用...'
+    Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 tool 调用...'
 
     try {
         # 启动时处理当前剪贴板：无 tool 请求时由 chat2cli.py 生成初始指令
