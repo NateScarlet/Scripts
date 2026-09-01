@@ -167,10 +167,11 @@ def print_instruction():
 将所有工具调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 localrpc 以外的代码块语言标识。
 
-回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
+执行 localrpc 工具调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
+按以下 response_template 输出工具调用：
 
 <response_template>
-你的操作简短说明思路：
+你的操作意图：
 ```localrpc
 {{
   "jsonrpc": "2.0",
