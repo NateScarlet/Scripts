@@ -61,6 +61,53 @@ function Test-Chat2CLIClipboardGenerated {
 
 
 
+
+function Show-Chat2CLIToast {
+    param(
+        [string]$Message = "Chat2CLI 执行完成"
+    )
+
+    Add-Type -AssemblyName PresentationFramework
+    Add-Type -AssemblyName PresentationCore
+    Add-Type -AssemblyName WindowsBase
+
+    if ($null -eq $script:Chat2CLIToastWindow) {
+        $script:Chat2CLIToastWindow = New-Object System.Windows.Window
+        $script:Chat2CLIToastWindow.WindowStyle = 'None'
+        $script:Chat2CLIToastWindow.AllowsTransparency = $true
+        $script:Chat2CLIToastWindow.Background = [System.Windows.Media.Brushes]::Transparent
+        $script:Chat2CLIToastWindow.ShowInTaskbar = $false
+        $script:Chat2CLIToastWindow.Topmost = $true
+        $script:Chat2CLIToastWindow.SizeToContent = 'WidthAndHeight'
+
+        $script:Chat2CLIToastBorder = New-Object System.Windows.Controls.Border
+        $script:Chat2CLIToastBorder.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(220, 30, 30, 30))
+        $script:Chat2CLIToastBorder.CornerRadius = New-Object System.Windows.CornerRadius(10)
+        $script:Chat2CLIToastBorder.Padding = New-Object System.Windows.Thickness(24, 12, 24, 12)
+
+        $script:Chat2CLIToastText = New-Object System.Windows.Controls.TextBlock
+        $script:Chat2CLIToastText.Foreground = [System.Windows.Media.Brushes]::White
+        $script:Chat2CLIToastText.FontSize = 16
+        $script:Chat2CLIToastText.FontFamily = 'Microsoft YaHei'
+
+        $script:Chat2CLIToastBorder.Child = $script:Chat2CLIToastText
+        $script:Chat2CLIToastWindow.Content = $script:Chat2CLIToastBorder
+        $script:Chat2CLIToastWindow.WindowStartupLocation = 'CenterScreen'
+    }
+
+    $script:Chat2CLIToastText.Text = $Message
+
+    if ($script:Chat2CLIToastWindow.IsVisible) {
+        $script:Chat2CLIToastWindow.Hide()
+    }
+
+    $script:Chat2CLIToastWindow.Show()
+    $script:Chat2CLIToastWindow.Top = [System.Windows.SystemParameters]::WorkArea.Top + ([System.Windows.SystemParameters]::WorkArea.Height * 0.12)
+
+    Start-Sleep -Milliseconds 1800
+    $script:Chat2CLIToastWindow.Hide()
+}
+
 function Watch-Chat2CLI {
     param(
         [int]$IntervalMilliseconds = 500
@@ -115,6 +162,8 @@ function Watch-Chat2CLI {
             if ($process.ExitCode -ne 0) {
                 throw "Command failed with exit code $($process.ExitCode)"
             }
+
+            Show-Chat2CLIToast "Chat2CLI 执行完成"
         }
         finally {
             if (-not $process.HasExited) {
