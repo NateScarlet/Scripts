@@ -212,13 +212,11 @@ def print_instruction():
   "id": 2,
   "method": "pwsh",
   "params": {{
-    "description": "命令用途简述（可选，用于汇总展示）",
     "command": "要执行的命令"
   }}
 }}
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
-- description 可选，用于执行汇总展示。
 
 3. skill - 激活指定 skill：
 {{
@@ -1268,7 +1266,7 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     # 各 method 允许的 params key（不含 id，id 必须在顶层）
     allowed_params = {
         "str_replace_editor": {"command", "path", "file_text", "old_str", "new_str", "insert_line", "offset", "limit"},
-        "pwsh": {"command", "description"},
+        "pwsh": {"command"},
         "skill": {"name"},
     }
     allowed = allowed_params[method]
@@ -1391,8 +1389,9 @@ def main():
                 )
             elif method == "pwsh":
                 params: Dict[str, Any] = cast(Dict[str, Any], req.get("params", {}))
-                desc: Any = params.get("description", "(无描述)")
-                summary_parts.append(f"pwsh id={resp.get('id')}: {desc}")
+                cmd = params.get("command", "")
+                cmd_summary = cmd[:50] + "..." if len(cmd) > 50 else cmd
+                summary_parts.append(f"pwsh id={resp.get('id')}: {cmd_summary}")
 
 
     # 输出附加内容块（read 结果）
