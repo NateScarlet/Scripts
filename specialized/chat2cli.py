@@ -14,8 +14,12 @@ chat2cli.py - JSON-RPC 工具调用助手（代码块标识已改为 tool）
 
 from __future__ import annotations
 
-import sys
 import os
+import sys
+
+# 设置 PYTHONIOENCODING，确保子 Python 进程也以 UTF-8 输出，
+# 避免 Windows 控制台 GBK 代码页下出现中文乱码。
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 import re
 import json
 import subprocess
@@ -183,21 +187,23 @@ def print_instruction():
 
 可用方法：
 
-1. str_replace - 文件替换：
+1. str_replace_editor - 自定义编辑工具（查看、创建、编辑文件）：
 {{
   "jsonrpc": "2.0",
-  "method": "str_replace",
+  "method": "str_replace_editor",
   "params": {{
-    "path": "相对路径",
-    "old": "要替换的原文",
-    "new": "新文本"
+    "command": "view",
+    "path": "文件或目录的绝对路径"
   }},
   "id": 1
 }}
-- path 必须是当前目录下的相对路径（禁止使用 .. 或绝对路径）。
-- old 必须在文件中唯一匹配（出现且仅出现一次），否则会报错。
-- old 不能为空字符串。
-- 替换会直接写入原文件，不保留备份。
+- command 支持：view、create、str_replace、insert。
+- view：查看文件（cat -n 效果）或目录（列出非隐藏项，最多 2 层）。
+- create：创建新文件（path 已存在时报错）。
+- str_replace：替换文件中的文本（old_str 需唯一匹配）。
+- insert：在指定行后插入文本。
+- 状态在多次调用间保持持久。
+- 长输出会截断并标记 <response clipped>。
 
 2. pwsh - 执行 PowerShell 命令：
 {{
@@ -213,23 +219,7 @@ def print_instruction():
 - 仅支持非交互式命令。
 - description 可选，用于执行汇总展示。
 
-3. read - 读取文本文件：
-{{
-  "jsonrpc": "2.0",
-  "method": "read",
-  "params": {{
-    "file_path": "相对路径或 skill 目录下文件路径",
-    "offset": 1,
-    "limit": 2000
-  }},
-  "id": 3
-}}
-- file_path 可为当前目录下的相对路径（禁止使用 ..），或已发现 skill 目录下的文件路径（支持绝对路径或 ~ 开头路径）。
-- offset 为返回的起始行号（1 起，默认 1）。
-- limit 为最大返回行数（默认 2000）。
-- 返回内容以行号前缀形式输出（如 "123:content"），不做 JSON 转义。
-
-4. skill - 激活指定 skill：
+3. skill - 激活指定 skill：
 {{
   "jsonrpc": "2.0",
   "method": "skill",
@@ -720,6 +710,327 @@ Resolve relative paths mentioned by this skill against the base directory before
     }
     return meta, content_block
 
+def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+    """执行 str_replace_editor 命令（view/create/str_replace/insert），返回 (元数据, 内容块)"""
+    import difflib
+    import sys
+
+    command = params.get("command")
+    path_raw = params.get("path")
+
+    if not isinstance(command, str) or command not in ("view", "create", "str_replace", "insert"):
+        return {
+            "success": False,
+            "message": "错误：command 必须是 view、create、str_replace 或 insert。",
+        }, ""
+    if not isinstance(path_raw, str) or not path_raw:
+        return {"success": False, "message": "错误：path 不能为空。"}, ""
+
+    path = _resolve_read_path(path_raw)
+    if not path:
+        return {
+            "success": False,
+            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，或已发现 skill 目录下的文件路径。",
+        }, ""
+
+    if command == "view":
+        if os.path.isdir(path):
+            return _view_directory(id_, path)
+        elif os.path.isfile(path):
+            return _view_file(id_, path, params)
+        else:
+            return {"success": False, "message": f"错误：路径不存在：{path}"}, ""
+
+    elif command == "create":
+        if os.path.exists(path):
+            return {"success": False, "message": f"错误：文件已存在：{path}"}, ""
+        file_text = params.get("file_text")
+        if not isinstance(file_text, str):
+            return {"success": False, "message": "错误：create 命令需要 file_text 参数（字符串）。"}, ""
+        try:
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                f.write(file_text)
+        except Exception as e:
+            return {"success": False, "message": f"错误：创建文件失败：{str(e)}"}, ""
+        return {
+            "success": True,
+            "path": os.path.abspath(path),
+            "message": f"文件已创建：{os.path.abspath(path)}",
+        }, ""
+
+    elif command == "str_replace":
+        if not os.path.isfile(path):
+            return {"success": False, "message": "错误：文件不存在。"}, ""
+        old_str = params.get("old_str")
+        new_str = params.get("new_str", "")
+        if not isinstance(old_str, str) or not old_str:
+            return {"success": False, "message": "错误：old_str 字符串不能为空。"}, ""
+        if not isinstance(new_str, str):
+            return {"success": False, "message": "错误：new_str 必须是字符串。"}, ""
+        return _str_replace_file(id_, path, old_str, new_str), ""
+
+    elif command == "insert":
+        if not os.path.isfile(path):
+            return {"success": False, "message": "错误：文件不存在。"}, ""
+        insert_line = params.get("insert_line")
+        new_str = params.get("new_str")
+        if not isinstance(insert_line, int) or isinstance(insert_line, bool) or insert_line < 1:
+            return {"success": False, "message": "错误：insert_line 必须是 >=1 的整数。"}, ""
+        if not isinstance(new_str, str):
+            return {"success": False, "message": "错误：new_str 必须是字符串。"}, ""
+        return _insert_in_file(id_, path, insert_line, new_str), ""
+
+    return {"success": False, "message": "未知错误。"}, ""
+
+
+def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+    """查看文件内容，返回 (元数据, 行号化内容)"""
+    offset_param = params.get("offset", 1)
+    limit_param = params.get("limit", 2000)
+    if not isinstance(offset_param, int) or isinstance(offset_param, bool) or offset_param < 1:
+        return {"success": False, "message": "错误：offset 必须是 >=1 的整数。"}, ""
+    if not isinstance(limit_param, int) or isinstance(limit_param, bool) or limit_param < 1:
+        return {"success": False, "message": "错误：limit 必须是 >=1 的整数。"}, ""
+
+    encoding_to_use = "utf-8"
+    try:
+        with open(path, "r", encoding=encoding_to_use, newline="") as f:
+            raw_content = f.read()
+    except UnicodeDecodeError:
+        import locale
+        encoding_to_use = locale.getpreferredencoding(False)
+        try:
+            with open(path, "r", encoding=encoding_to_use, newline="") as f:
+                raw_content = f.read()
+        except Exception as e:
+            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}, ""
+    except Exception as e:
+        return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}, ""
+
+    content = _normalize_newlines(raw_content)
+    all_lines = content.split("\n")
+    if all_lines and all_lines[-1] == "":
+        all_lines = all_lines[:-1]
+    total_lines = len(all_lines)
+
+    start_idx = offset_param - 1
+    end_idx = min(start_idx + limit_param, total_lines)
+    if start_idx >= total_lines:
+        selected: List[str] = []
+    else:
+        selected = all_lines[start_idx:end_idx]
+
+    output_lines: List[str] = []
+    for i, line in enumerate(selected):
+        line_num = offset_param + i
+        output_lines.append(f"{line_num}:{line}")
+    content_out = "\n".join(output_lines)
+
+    first_line = offset_param
+    last_line = offset_param + len(selected) - 1 if selected else offset_param - 1
+    meta = {
+        "success": True,
+        "path": os.path.abspath(path),
+        "total_lines": total_lines,
+        "returned_lines": len(selected),
+        "first_line": first_line,
+        "last_line": last_line,
+        "message": "Read completed.",
+    }
+
+    if content_out:
+        if last_line < total_lines:
+            footer = f"\n(Showing lines {first_line}-{last_line} of {total_lines}. Use offset={last_line + 1} to continue.)"
+        else:
+            footer = f"\n(End of file - total {total_lines} lines)"
+        content_with_footer = content_out + footer
+    else:
+        content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
+
+    content_block = f'<content id="{id_}">\n{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}\n</content>\n'
+    return meta, content_block
+
+
+def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
+    """列出目录内容（非隐藏项，最多 2 层），返回 (元数据, 目录列表)"""
+    try:
+        entries = sorted(os.listdir(path))
+    except Exception as e:
+        return {"success": False, "message": f"错误：读取目录失败：{str(e)}"}, ""
+
+    lines: List[str] = []
+    for entry in entries:
+        if entry.startswith("."):
+            continue
+        full = os.path.join(path, entry)
+        if os.path.isdir(full):
+            lines.append(f"{entry}/")
+            try:
+                sub_entries = sorted(os.listdir(full))
+            except Exception:
+                continue
+            for sub in sub_entries:
+                if sub.startswith("."):
+                    continue
+                sub_full = os.path.join(full, sub)
+                if os.path.isdir(sub_full):
+                    lines.append(f"  {sub}/")
+                else:
+                    lines.append(f"  {sub}")
+        else:
+            lines.append(entry)
+
+    content_block = f'<content id="{id_}">\n{os.path.abspath(path)}\n' + "\n".join(lines) + "\n</content>\n"
+    meta = {
+        "success": True,
+        "path": os.path.abspath(path),
+        "entry_count": len(entries),
+        "message": "Directory listed.",
+    }
+    return meta, content_block
+
+
+def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[str, Any]:
+    """替换文件中的文本，返回 result 字典"""
+    encoding_to_use = "utf-8"
+    try:
+        with open(path, "r", encoding=encoding_to_use, newline="") as f:
+            raw_content = f.read()
+    except UnicodeDecodeError:
+        import locale
+        encoding_to_use = locale.getpreferredencoding(False)
+        try:
+            with open(path, "r", encoding=encoding_to_use, newline="") as f:
+                raw_content = f.read()
+        except Exception as e:
+            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+    except Exception as e:
+        return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+
+    newline_style = _detect_dominant_newline(raw_content)
+    content = _normalize_newlines(raw_content)
+    old_normalized = _normalize_newlines(old_str)
+    new_normalized = _normalize_newlines(new_str)
+
+    count = content.count(old_normalized)
+    if count == 0:
+        hint = _find_closest_line(content, old_normalized)
+        if hint:
+            return {
+                "success": False,
+                "message": f"错误：未找到匹配文本。可能的原因：\n{hint}",
+            }
+        return {"success": False, "message": "错误：未找到匹配文本。"}
+    elif count > 1:
+        return {
+            "success": False,
+            "message": f"错误：检测到 {count} 处匹配，无法唯一确定替换位置。请提供更长的 old_str 字符串。",
+        }
+
+    abs_path = os.path.abspath(path)
+    old_lines = old_normalized.split("\n")
+    new_lines = new_normalized.split("\n")
+
+    if old_normalized == new_normalized:
+        sys.stderr.write(f"\033[33m⚠️  str_replace_editor: old_str 和 new_str 内容相同，文件未修改: {abs_path}\033[0m\n")
+        sys.stderr.flush()
+        return {
+            "success": True,
+            "path": abs_path,
+            "deleted_lines": 0,
+            "added_lines": 0,
+            "message": f"文件未修改（old_str 和 new_str 相同）: {abs_path}",
+        }
+
+    new_content_normalized = content.replace(old_normalized, new_normalized, 1)
+    new_content = _restore_newlines(new_content_normalized, newline_style)
+    try:
+        with open(path, "w", encoding=encoding_to_use, newline="") as f:
+            f.write(new_content)
+    except Exception as e:
+        return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
+
+    diff = difflib.unified_diff(
+        old_lines, new_lines, fromfile=f"a/{path}", tofile=f"b/{path}", lineterm=""
+    )
+    diff_output = list(diff)
+    if diff_output:
+        sys.stderr.write(f"\033[36m📝 str_replace_editor 修改 {path}:\033[0m\n")
+        for line in diff_output:
+            if line.startswith("---") or line.startswith("+++"):
+                sys.stderr.write(f"\033[36m{line}\033[0m\n")
+            elif line.startswith("@@"):
+                sys.stderr.write(f"\033[35m{line}\033[0m\n")
+            elif line.startswith("-"):
+                sys.stderr.write(f"\033[31m{line}\033[0m\n")
+            elif line.startswith("+"):
+                sys.stderr.write(f"\033[32m{line}\033[0m\n")
+            else:
+                sys.stderr.write(f"{line}\n")
+        sys.stderr.flush()
+
+    deleted_lines = max(0, old_normalized.count("\n"))
+    added_lines = max(0, new_normalized.count("\n"))
+    return {
+        "success": True,
+        "path": abs_path,
+        "deleted_lines": deleted_lines,
+        "added_lines": added_lines,
+        "message": f"The file {abs_path} has been updated successfully.",
+    }
+
+
+def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict[str, Any]:
+    """在指定行后插入文本，返回 result 字典"""
+    encoding_to_use = "utf-8"
+    try:
+        with open(path, "r", encoding=encoding_to_use, newline="") as f:
+            raw_content = f.read()
+    except UnicodeDecodeError:
+        import locale
+        encoding_to_use = locale.getpreferredencoding(False)
+        try:
+            with open(path, "r", encoding=encoding_to_use, newline="") as f:
+                raw_content = f.read()
+        except Exception as e:
+            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+    except Exception as e:
+        return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+
+    newline_style = _detect_dominant_newline(raw_content)
+    content = _normalize_newlines(raw_content)
+    content_lines = content.split("\n")
+    if content_lines and content_lines[-1] == "":
+        content_lines = content_lines[:-1]
+
+    if insert_line > len(content_lines):
+        return {
+            "success": False,
+            "message": f"错误：insert_line={insert_line} 超出文件行数 {len(content_lines)}。",
+        }
+
+    new_str_normalized = _normalize_newlines(new_str)
+    content_lines.insert(insert_line, new_str_normalized)
+    new_content_normalized = "\n".join(content_lines)
+    new_content = _restore_newlines(new_content_normalized, newline_style)
+
+    try:
+        with open(path, "w", encoding=encoding_to_use, newline="") as f:
+            f.write(new_content)
+    except Exception as e:
+        return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
+
+    abs_path = os.path.abspath(path)
+    sys.stderr.write(f"\033[36m📝 str_replace_editor insert {path}: 在第 {insert_line} 行后插入\033[0m\n")
+    sys.stderr.flush()
+    return {
+        "success": True,
+        "path": abs_path,
+        "inserted_line": insert_line + 1,
+        "message": f"The file {abs_path} has been updated successfully.",
+    }
+
+
 
 def _truncate_output(
     id_: Any,
@@ -919,7 +1230,7 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     if "method" not in req:
         return False, "缺少 method 字段"
     method = req.get("method")
-    if method not in ("str_replace", "pwsh", "read", "skill"):
+    if method not in ("str_replace_editor", "pwsh", "skill"):
         return False, f"未知 method：{method}"
     if "params" not in req or not isinstance(req.get("params"), dict):
         return False, "params 必须是对象"
@@ -949,14 +1260,25 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     params: Any = req["params"]
 
     try:
-        if method == "str_replace":
-            result = execute_str_replace(req_id, params)
-            if result.get("success"):
-                return {"jsonrpc": "2.0", "result": result, "id": req_id}, ""
+        if method == "str_replace_editor":
+            meta, content_block = execute_str_replace_editor(req_id, params)
+            if meta.get("success"):
+                if content_block:
+                    total_lines = meta.get("total_lines", 0)
+                    first_line = meta.get("first_line", 0)
+                    last_line = meta.get("last_line", 0)
+                    meta.pop("total_lines", None)
+                    meta.pop("returned_lines", None)
+                    meta.pop("first_line", None)
+                    meta.pop("last_line", None)
+                    meta.pop("message", None)
+                    return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
+                else:
+                    return {"jsonrpc": "2.0", "result": meta, "id": req_id}, ""
             else:
                 return {
                     "jsonrpc": "2.0",
-                    "error": {"code": -32000, "message": result.get("message", "未知错误")},
+                    "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
                 }, ""
         elif method == "pwsh":
@@ -980,33 +1302,7 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
                     "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
                 }, ""
-        else:  # read
-            meta, content = execute_read(req_id, params)
-            if meta.get("success"):
-                total_lines = meta.get("total_lines", 0)
-                first_line = meta.get("first_line", 0)
-                last_line = meta.get("last_line", 0)
-                if content:
-                    if last_line < total_lines:
-                        footer = f"\n(Showing lines {first_line}-{last_line} of {total_lines}. Use offset={last_line + 1} to continue.)"
-                    else:
-                        footer = f"\n(End of file - total {total_lines} lines)"
-                    content_with_footer = content + footer
-                else:
-                    content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
-                content_block = f'<content id="{req_id}">\n{meta["path"]}:L{meta["first_line"]}-{meta["last_line"]}\n{content_with_footer}\n</content>\n'
-                meta.pop("total_lines", None)
-                meta.pop("returned_lines", None)
-                meta.pop("first_line", None)
-                meta.pop("last_line", None)
-                meta.pop("message", None)
-                return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
-            else:
-                return {
-                    "jsonrpc": "2.0",
-                    "error": {"code": -32000, "message": meta.get("message", "未知错误")},
-                    "id": req_id,
-                }, ""
+
     except Exception as e:
         return {
             "jsonrpc": "2.0",
@@ -1044,16 +1340,15 @@ def main():
         else:
             result: Any = resp.get("result", {})
             method: Any = req.get("method", "unknown")
-            if method == "str_replace":
+            if method == "str_replace_editor":
                 summary_parts.append(
-                    f"str_replace id={resp.get('id')}: 删除{result.get('deleted_lines', 0)}行 新增{result.get('added_lines', 0)}行"
+                    f"str_replace_editor id={resp.get('id')}: 完成操作"
                 )
             elif method == "pwsh":
                 params: Dict[str, Any] = cast(Dict[str, Any], req.get("params", {}))
                 desc: Any = params.get("description", "(无描述)")
                 summary_parts.append(f"pwsh id={resp.get('id')}: {desc}")
-            elif method == "read":
-                summary_parts.append(f"read id={resp.get('id')}: 成功读取 {result.get('path', '')}")
+
 
     # 输出附加内容块（read 结果）
     if content_blocks:
