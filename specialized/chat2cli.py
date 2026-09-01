@@ -2,11 +2,11 @@
 # pyright: strict
 
 """
-chat2cli.py - JSON-RPC 工具调用助手
+chat2cli.py - JSON-RPC 工具调用助手（代码块标识已改为 tool）
 
-从 stdin 读取文本，提取 ```chat2cli 代码块，解析 JSON-RPC 2.0 请求，
+从 stdin 读取文本，提取 ```tool 代码块，解析 JSON-RPC 2.0 请求，
 执行本地操作（文件替换或 PowerShell 命令），并将结果以 JSON-RPC 2.0
-响应格式输出到 stdout。输入为空或无 chat2cli 代码块时，输出初始指令。
+响应格式输出到 stdout。输入为空或无 tool 代码块时，输出初始指令。
 
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
@@ -160,14 +160,14 @@ def print_instruction():
     instruction = f"""<chat2cli_instruction>
 你是一个能够调用本地工具的助手。你可以使用 JSON-RPC 2.0 格式调用工具。
 
-将所有工具调用放在一个 ```chat2cli 代码块中。代码块内是 JSON-RPC 请求，
-支持单个对象或对象数组（批处理，按顺序执行）。不支持 chat2cli 以外的代码块语言标识。
+将所有工具调用放在一个 ```tool 代码块中。代码块内是 JSON-RPC 请求，
+支持单个对象或对象数组（批处理，按顺序执行）。不支持 tool 以外的代码块语言标识。
 
 回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
 
 <response_template>
 简短说明思路：
-```chat2cli
+```tool
 {{
   "jsonrpc": "2.0",
   "method": "pwsh",
@@ -245,7 +245,7 @@ def print_instruction():
 
 当前工作目录：{cwd}
 
-请根据用户需求，生成包含 JSON-RPC 请求的 chat2cli 代码块。
+请根据用户需求，生成包含 JSON-RPC 请求的 tool 代码块。
 </chat2cli_instruction>"""
     print(instruction)
 
@@ -819,9 +819,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
-    """提取所有 ```chat2cli 代码块并解析 JSON"""
+    """提取所有 ```tool 代码块并解析 JSON"""
     blocks: List[Dict[str, Any]] = []
-    pattern = re.compile(r"```chat2cli\s*\n(.*?)\n```", re.DOTALL)
+    pattern = re.compile(r"```tool\s*\n(.*?)\n```", re.DOTALL)
     for match in pattern.finditer(text):
         content = match.group(1).strip()
         if not content:
@@ -944,7 +944,7 @@ def main():
     input_text = sys.stdin.read()
 
     if not input_text.strip():
-        sys.stderr.write("[chat2cli] 输入为空，已输出初始指令。\n")
+        sys.stderr.write("[tool] 输入为空，已输出初始指令。\n")
         print_instruction()
         return
 
@@ -989,7 +989,7 @@ def main():
         if len(responses) == 1
         else json.dumps(responses, ensure_ascii=False, indent=2)
     )
-    print("```chat2cli-response")
+    print("```tool-result")
     print(json_resp)
     print("```")
 
