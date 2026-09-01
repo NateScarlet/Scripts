@@ -2,11 +2,11 @@
 # pyright: strict
 
 """
-chat2cli.py - JSON-RPC 工具调用助手（代码块标识已改为 tool）
+chat2cli.py - JSON-RPC 工具调用助手（代码块标识为 localrpc）
 
-从 stdin 读取文本，提取 ```tool 代码块，解析 JSON-RPC 2.0 请求，
+从 stdin 读取文本，提取 ```localrpc 代码块，解析 JSON-RPC 2.0 请求，
 执行本地操作（文件替换或 PowerShell 命令），并将结果以 JSON-RPC 2.0
-响应格式输出到 stdout。输入为空或无 tool 代码块时，输出初始指令。
+响应格式输出到 stdout。输入为空或无 localrpc 代码块时，输出初始指令。
 
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
@@ -164,14 +164,14 @@ def print_instruction():
     instruction = f"""<chat2cli_instruction>
 你是一个能够调用本地工具的助手。你可以使用 JSON-RPC 2.0 格式调用工具。
 
-将所有工具调用放在一个语言标记为 tool 的**代码块**之中。代码块内是 JSON-RPC 请求，
-支持单个对象或对象数组（批处理，按顺序执行）。不支持 tool 以外的代码块语言标识。
+将所有工具调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
+支持单个对象或对象数组（批处理，按顺序执行）。不支持 localrpc 以外的代码块语言标识。
 
 回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
 
 <response_template>
 你的操作简短说明思路：
-```tool
+```localrpc
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -183,7 +183,7 @@ def print_instruction():
 ```
 </response_template>
 
-tool 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
+localrpc 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，工具调用才会被执行。
 
 可用方法：
@@ -251,7 +251,7 @@ tool 代码块可以出现在正文的任意位置，也可以前后补充必要
 
 当前工作目录：{cwd}
 
-请根据用户需求，生成包含 JSON-RPC 请求的 tool 代码块。
+请根据用户需求，生成包含 JSON-RPC 请求的 localrpc 代码块。
 </chat2cli_instruction>"""
     print(instruction)
 
@@ -298,8 +298,8 @@ A skill is a reusable set of task-specific instructions. The following skills ar
 {entries}
 </available_skills>
 
-If the user names a skill, or the task clearly matches a skill's description, call the `skill` tool with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
-A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` tool again for that skill.
+If the user names a skill, or the task clearly matches a skill's description, call the `skill` localrpc method with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
+A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` localrpc method again for that skill.
 </system-reminder>""".format(entries="\n".join(skill_entries))
         print(skills_reminder)
 
@@ -1210,9 +1210,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
-    """提取所有 ```tool 代码块并解析 JSON"""
+    """提取所有 ```localrpc 代码块并解析 JSON"""
     blocks: List[Dict[str, Any]] = []
-    pattern = re.compile(r"```tool\s*\n(.*?)\n```", re.DOTALL)
+    pattern = re.compile(r"```localrpc\s*\n(.*?)\n```", re.DOTALL)
     for match in pattern.finditer(text):
         content = match.group(1).strip()
         if not content:
@@ -1362,7 +1362,7 @@ def main():
 
     requests = extract_chat2cli_blocks(input_text)
     if not requests:
-        sys.stderr.write("[chat2cli] 未检测到 tool 代码块，已输出初始指令。\n")
+        sys.stderr.write("[chat2cli] 未检测到 localrpc 代码块，已输出初始指令。\n")
         print_instruction()
         return
 
@@ -1400,7 +1400,7 @@ def main():
         if len(responses) == 1
         else json.dumps(responses, ensure_ascii=False, indent=2)
     )
-    print("```tool-result")
+    print("```localrpc-result")
     print(json_resp)
     print("```")
 
@@ -1413,3 +1413,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

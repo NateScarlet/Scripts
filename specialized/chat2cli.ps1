@@ -173,18 +173,18 @@ function Watch-Chat2CLI {
         }
     }
 
-    Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 tool 调用...'
+    Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 localrpc 调用...'
 
     try {
-        # 启动时处理当前剪贴板：无 tool 请求时由 chat2cli.py 生成初始指令
+        # 启动时处理当前剪贴板：无 localrpc 请求时由 chat2cli.py 生成初始指令
         Invoke-Chat2CLIProcess
 
         while ($true) {
             $current = Get-Clipboard -Raw
 
             if (-not (Test-Chat2CLIClipboardGenerated)) {
-                # 必须匹配完整的 ```tool fenced block，避免误触发 ```tool-result
-                $hasToolBlock = $current -match '(?ms)^```tool\s*$.*?^```\s*$'
+                # 必须匹配完整的 ```localrpc fenced block，避免误触发 ```localrpc-result
+                $hasToolBlock = $current -match '(?ms)^```localrpc\s*$.*?^```\s*$'
 
                 if ($hasToolBlock) {
                     Invoke-Chat2CLIProcess
@@ -201,3 +201,5 @@ function Watch-Chat2CLI {
         Write-Host "[Watch-Chat2CLI] 已停止"
     }
 }
+
+
