@@ -723,6 +723,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             timeout=COMMAND_TIMEOUT,
             encoding="utf-8",
             errors="replace",
+            stdin=subprocess.DEVNULL,
         )
     except FileNotFoundError:
         return {
