@@ -858,6 +858,11 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
             return {"success": False, "message": f"错误：创建文件失败：{str(e)}"}, ""
         abs_path = os.path.abspath(path)
         sys.stderr.write(f"\033[36m📝 str_replace_editor create {abs_path}\033[0m\n")
+        sys.stderr.write("\033[32m+++ 写入内容:\033[0m\n")
+        sys.stderr.write(file_text)
+        if not file_text.endswith("\n"):
+            sys.stderr.write("\n")
+        sys.stderr.write("\033[32m+++ 写入结束\033[0m\n")
         sys.stderr.flush()
         return {
             "success": True,
@@ -1135,6 +1140,11 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
 
     abs_path = os.path.abspath(path)
     sys.stderr.write(f"\033[36m📝 str_replace_editor insert {abs_path}: 在第 {insert_line} 行后插入\033[0m\n")
+    sys.stderr.write("\033[32m+++ 插入内容:\033[0m\n")
+    sys.stderr.write(new_str)
+    if not new_str.endswith("\n"):
+        sys.stderr.write("\n")
+    sys.stderr.write("\033[32m+++ 插入结束\033[0m\n")
     sys.stderr.flush()
     return {
         "success": True,

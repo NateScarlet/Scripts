@@ -147,8 +147,8 @@ function Watch-Chat2CLI {
 
     function Invoke-Chat2CLIProcess {
         $clipboard = Get-Clipboard -Raw
-        if ([string]::IsNullOrWhiteSpace($clipboard)) {
-            return
+        if ($null -eq $clipboard) {
+            $clipboard = ""
         }
 
         $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -171,12 +171,17 @@ function Watch-Chat2CLI {
             $process.StandardInput.Write($clipboard)
             $process.StandardInput.Close()
 
-            $output = $process.StandardOutput.ReadToEnd()
-            $errorOutput = $process.StandardError.ReadToEnd()
-            $process.WaitForExit()
+            $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+            $stderrTask = $process.StandardError.ReadToEndAsync()
+
+            while (-not $process.HasExited) {
+                Start-Sleep -Milliseconds 100
+            }
+
+            $output = $stdoutTask.Result
+            $errorOutput = $stderrTask.Result
 
             if ($output) {
-                Write-Host $output
                 Set-Clipboard $output
             }
 
@@ -200,6 +205,11 @@ function Watch-Chat2CLI {
 
     try {
         $lastClipboard = ""
+
+        # 启动时处理当前剪贴板：无 tool 请求时由 chat2cli.py 生成初始指令
+        Invoke-Chat2CLIProcess
+        # 记录 chat2cli 自己生成的结果，避免将初始指令再次执行
+        $lastClipboard = Get-Clipboard -Raw
 
         while ($true) {
             $current = Get-Clipboard -Raw
