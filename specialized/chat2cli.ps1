@@ -1,7 +1,7 @@
 function Invoke-Chat2CLI {
-    $output = Get-Clipboard | py $PSScriptRoot/chat2cli.py
+    $output = Get-Clipboard | uv run $PSScriptRoot/chat2cli.py
     if ($LASTEXITCODE -ne 0) {
-        throw "Command failed with exit code $LASTEXITCODE"
+        throw "chat2cli process failed with exit code $LASTEXITCODE"
     }
     Set-Chat2CLIClipboard $output
 }
@@ -122,8 +122,8 @@ function Watch-Chat2CLI {
         }
 
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = "py"
-        $psi.Arguments = "`"$scriptPath`""
+        $psi.FileName = "uv"
+        $psi.Arguments = "run `"$scriptPath`""
         $psi.WorkingDirectory = (Get-Location).Path
         $psi.RedirectStandardInput = $true
         $psi.RedirectStandardOutput = $true
@@ -160,7 +160,7 @@ function Watch-Chat2CLI {
             }
 
             if ($process.ExitCode -ne 0) {
-                throw "Command failed with exit code $($process.ExitCode)"
+                throw "chat2cli process failed with exit code $($process.ExitCode)"
             }
 
             Show-Chat2CLIToast "Chat2CLI 执行完成"

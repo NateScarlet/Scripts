@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "pyyaml>=6.0",
+# ]
+# ///
 # pyright: strict
 
 """
@@ -20,14 +26,19 @@ import sys
 # 设置 PYTHONIOENCODING，确保子 Python 进程也以 UTF-8 输出，
 # 避免 Windows 控制台 GBK 代码页下出现中文乱码。
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
-import re
-import json
-import subprocess
-import threading
+
 import difflib
+import json
+import re
 import signal
+import subprocess
+import tempfile
+import threading
+import traceback
 from datetime import date
-from typing import Any, Dict, List, Tuple, cast
+
+import yaml
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 # 确保输入输出使用 UTF-8（避免 Windows 默认编码问题）
 try:
@@ -43,14 +54,13 @@ _discovered_skills: Dict[str, Dict[str, Any]] = {}
 
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
-    """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)"""
+    """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)。"""
     try:
         with open(skill_md_path, "r", encoding="utf-8") as f:
             content = f.read()
     except Exception:
         return "", ""
 
-    # frontmatter 必须以 --- 开头
     if not content.startswith("---"):
         return "", ""
 
@@ -58,34 +68,24 @@ def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     if end_idx == -1:
         return "", ""
 
-    frontmatter = content[3:end_idx].strip()
-    name = ""
-    description = ""
-    in_description_block = False
-    description_lines: List[str] = []
+    frontmatter = content[3:end_idx]
+    try:
+        loaded_metadata = yaml.safe_load(frontmatter)
+    except yaml.YAMLError:
+        return "", ""
 
-    for line in frontmatter.split("\n"):
-        stripped = line.strip()
-        if stripped.startswith("name:"):
-            name = stripped[5:].strip().strip('"').strip("'")
-        elif stripped.startswith("description:"):
-            desc_value = stripped[12:].strip()
-            if desc_value in ("|", ">"):
-                # 多行 description 块
-                in_description_block = True
-                description_lines = []
-            elif desc_value:
-                description = desc_value.strip('"').strip("'")
-        elif in_description_block:
-            indent = len(line) - len(line.lstrip())
-            if indent == 0 and stripped:
-                # 无缩进的新字段，结束 description 块
-                in_description_block = False
-            else:
-                description_lines.append(stripped)
+    if not isinstance(loaded_metadata, dict):
+        return "", ""
 
-    if in_description_block and description_lines:
-        description = " ".join(description_lines)
+    metadata: Dict[str, Any] = cast(Dict[str, Any], loaded_metadata)
+
+    name = metadata.get("name", "")
+    description = metadata.get("description", "")
+
+    if not isinstance(name, str):
+        name = ""
+    if not isinstance(description, str):
+        description = ""
 
     return name, description
 
@@ -364,6 +364,37 @@ def _colorize_ignored_path(path: str) -> str:
         pass
 
     return f"\033[38;5;208m{path}\033[0m"
+
+
+
+def _read_text_file(path: str) -> Tuple[str, str]:
+    """读取文本文件，返回 (内容, 使用的编码)。"""
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            return f.read(), "utf-8"
+    except UnicodeDecodeError:
+        import locale
+        encoding = locale.getpreferredencoding(False)
+        with open(path, "r", encoding=encoding, newline="") as f:
+            return f.read(), encoding
+
+
+def _write_text_file_atomic(path: str, content: str, encoding: str = "utf-8") -> None:
+    """原子写入文本文件，避免写入中断导致目标文件损坏。"""
+    directory = os.path.dirname(os.path.abspath(path))
+    fd, temp_path = tempfile.mkstemp(dir=directory, prefix=".chat2cli-")
+    try:
+        with os.fdopen(fd, "w", encoding=encoding, newline="") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temp_path, path)
+    except Exception:
+        try:
+            os.unlink(temp_path)
+        except Exception:
+            pass
+        raise
 
 
 
@@ -738,8 +769,7 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
         if not isinstance(file_text, str):
             return {"success": False, "message": "错误：create 命令需要 file_text 参数（字符串）。"}, ""
         try:
-            with open(path, "w", encoding="utf-8", newline="") as f:
-                f.write(file_text)
+            _write_text_file_atomic(path, file_text, "utf-8")
         except Exception as e:
             return {"success": False, "message": f"错误：创建文件失败：{str(e)}"}, ""
         abs_path = os.path.abspath(path)
@@ -898,18 +928,8 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
 
 def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[str, Any]:
     """替换文件中的文本，返回 result 字典"""
-    encoding_to_use = "utf-8"
     try:
-        with open(path, "r", encoding=encoding_to_use, newline="") as f:
-            raw_content = f.read()
-    except UnicodeDecodeError:
-        import locale
-        encoding_to_use = locale.getpreferredencoding(False)
-        try:
-            with open(path, "r", encoding=encoding_to_use, newline="") as f:
-                raw_content = f.read()
-        except Exception as e:
-            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+        raw_content, encoding_to_use = _read_text_file(path)
     except Exception as e:
         return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
 
@@ -951,8 +971,7 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
     new_content_normalized = content.replace(old_normalized, new_normalized, 1)
     new_content = _restore_newlines(new_content_normalized, newline_style)
     try:
-        with open(path, "w", encoding=encoding_to_use, newline="") as f:
-            f.write(new_content)
+        _write_text_file_atomic(path, new_content, encoding_to_use)
     except Exception as e:
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
@@ -986,18 +1005,8 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
 
 def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict[str, Any]:
     """在指定行后插入文本，返回 result 字典"""
-    encoding_to_use = "utf-8"
     try:
-        with open(path, "r", encoding=encoding_to_use, newline="") as f:
-            raw_content = f.read()
-    except UnicodeDecodeError:
-        import locale
-        encoding_to_use = locale.getpreferredencoding(False)
-        try:
-            with open(path, "r", encoding=encoding_to_use, newline="") as f:
-                raw_content = f.read()
-        except Exception as e:
-            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
+        raw_content, encoding_to_use = _read_text_file(path)
     except Exception as e:
         return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}
 
@@ -1014,13 +1023,13 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
         }
 
     new_str_normalized = _normalize_newlines(new_str)
+    # insert_line 表示目标行号，接口语义要求插入到该行之后。
     content_lines.insert(insert_line, new_str_normalized)
     new_content_normalized = "\n".join(content_lines)
     new_content = _restore_newlines(new_content_normalized, newline_style)
 
     try:
-        with open(path, "w", encoding=encoding_to_use, newline="") as f:
-            f.write(new_content)
+        _write_text_file_atomic(path, new_content, encoding_to_use)
     except Exception as e:
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
@@ -1035,7 +1044,9 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
     return {
         "success": True,
         "path": abs_path,
-        "inserted_line": insert_line + 1,
+        "insert_after_line": insert_line,
+        "inserted_start_line": insert_line + 1,
+        "inserted_end_line": insert_line + new_str_normalized.count("\n") + 1,
         "message": f"The file {abs_path} has been updated successfully.",
     }
 
@@ -1270,11 +1281,18 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     return True, ""
 
 
-def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
-    """分发执行单个请求，返回 (JSON-RPC 响应, 附加内容块)"""
+def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]]:
+    """分发执行单个请求。
+
+    返回 (JSON-RPC response, 附加内容块)。
+    JSON-RPC notification（没有 id）只执行方法，不返回响应。
+    """
+    has_id = "id" in req
     req_id: Any = req.get("id")
 
     if "_parse_error" in req:
+        if not has_id:
+            return None
         return {
             "jsonrpc": "2.0",
             "error": {"code": -32700, "message": req["_parse_error"]},
@@ -1283,64 +1301,74 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
 
     valid, err_msg = validate_request(req)
     if not valid:
+        if not has_id:
+            return None
         return {
             "jsonrpc": "2.0",
             "error": {"code": -32600, "message": err_msg},
             "id": req_id,
         }, ""
 
-    method: Any = req["method"]
-    params: Any = req["params"]
+    method: str = cast(str, req["method"])
+    params: Dict[str, Any] = cast(Dict[str, Any], req["params"])
 
     try:
+        response: Optional[Dict[str, Any]] = None
+        content_block = ""
+
         if method == "str_replace_editor":
             meta, content_block = execute_str_replace_editor(req_id, params)
             if meta.get("success"):
-                # 从 meta 中移除不需要的字段
-                meta.pop("total_lines", None)
-                meta.pop("returned_lines", None)
-                meta.pop("first_line", None)
-                meta.pop("last_line", None)
-                meta.pop("message", None)
-                return {"jsonrpc": "2.0", "id": req_id, "result": meta}, content_block
+                for key in ("total_lines", "returned_lines", "first_line", "last_line", "message"):
+                    meta.pop(key, None)
+                response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
             else:
-                return {
+                response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
-                }, ""
+                }
+
         elif method == "pwsh":
             result = execute_pwsh(req_id, params)
             if result.get("success"):
-                return {"jsonrpc": "2.0", "id": req_id, "result": result}, ""
+                response = {"jsonrpc": "2.0", "id": req_id, "result": result}
             else:
-                return {
+                response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": result.get("message", "未知错误")},
                     "id": req_id,
-                }, ""
+                }
+
         elif method == "skill":
             meta, content_block = execute_skill(req_id, params)
             if meta.get("success"):
                 meta.pop("message", None)
-                return {"jsonrpc": "2.0", "id": req_id, "result": meta}, content_block
+                response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
             else:
-                return {
+                response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
-                }, ""
+                }
+
+        if not has_id:
+            return None
+
+        if response is None:
+            return None
+
+        return response, content_block
 
     except Exception as e:
+        traceback.print_exc(file=sys.stderr)
+        if not has_id:
+            return None
         return {
             "jsonrpc": "2.0",
             "error": {"code": -32603, "message": f"内部错误：{str(e)}"},
             "id": req_id,
         }, ""
-    # 所有路径都已返回，这里仅为满足类型检查
-    return {"jsonrpc": "2.0", "error": {"code": -32603, "message": "未预期的执行路径"}, "id": req_id}, ""
-
-
 
 def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
     """输出 stderr 汇总，过长内容在展示层截断并提示。"""
@@ -1371,7 +1399,10 @@ def main():
     content_blocks: List[str] = []
     summary_parts: List[str] = []
     for req in requests:
-        resp, content_block = dispatch_request(req)
+        result = dispatch_request(req)
+        if result is None:
+            continue
+        resp, content_block = result
         responses.append(resp)
         if content_block:
             content_blocks.append(content_block)
@@ -1414,5 +1445,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
