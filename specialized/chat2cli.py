@@ -163,13 +163,13 @@ def print_instruction():
     instruction = f"""<chat2cli_instruction>
 你是一个能够调用本地工具的助手。你可以使用 JSON-RPC 2.0 格式调用工具。
 
-将所有工具调用放在一个 tool 代码块中。代码块内是 JSON-RPC 请求，
+将所有工具调用放在一个语言标记为 tool 的**代码块**之中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 tool 以外的代码块语言标识。
 
 回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
 
 <response_template>
-简短说明思路：
+你的操作简短说明思路：
 ```tool
 {{
   "jsonrpc": "2.0",
@@ -182,7 +182,7 @@ def print_instruction():
 ```
 </response_template>
 
-代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
+tool 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，工具调用才会被执行。
 
 可用方法：
@@ -955,7 +955,7 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
 
     content_block = f'<content id="{id_}">\n{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}\n</content>\n'
     # stderr 显示读取路径（gitignore 部分橙色高亮）
-    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(meta['path'])}:L{first_line}-{last_line}\n")
+    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n")
     sys.stderr.flush()
 
     return meta, content_block
