@@ -8,7 +8,7 @@
 # pyright: strict
 
 """
-chat2cli.py - JSON-RPC 工具调用助手（代码块标识为 localrpc）
+chat2cli.py - JSON-RPC RPC调用助手（代码块标识为 localrpc）
 
 从 stdin 读取文本，提取 ```localrpc 代码块，解析 JSON-RPC 2.0 请求，
 执行本地操作（文件替换或 PowerShell 命令），并将结果以 JSON-RPC 2.0
@@ -159,16 +159,16 @@ def _resolve_read_path(path: str) -> str:
 
 
 def print_instruction():
-    """输出初始系统环境提示词，用于指导模型调用工具"""
+    """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
     instruction = f"""<chat2cli_instruction>
-你是一个能够调用本地工具的助手。你可以使用 JSON-RPC 2.0 格式调用工具。
+你是一个通过在正文提供 RPC 请求代码块调用用户本地 RPC 方法辅助工作的助手，不依赖于工具注册即可操作用户环境。
 
-将所有工具调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
+将所有 RPC 调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 localrpc 以外的代码块语言标识。
 
-执行 localrpc 工具调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
-按以下 response_template 输出工具调用：
+执行 localrpc R调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
+按以下 response_template 输出R调用：
 
 <response_template>
 你的操作意图：
@@ -185,11 +185,11 @@ def print_instruction():
 </response_template>
 
 localrpc 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
-但代码块本身必须完整地出现在正文回复中，工具调用才会被执行。
+但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
 
 可用方法：
 
-1. str_replace_editor - 自定义编辑工具（查看、创建、编辑文件）：
+1. str_replace_editor - 自定义编辑RPC（查看、创建、编辑文件）：
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -746,12 +746,12 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
         sys.stderr.write(
             "\n[chat2cli] 路径校验失败：操作范围仅限当前工作目录（cwd）。\n"
             f"[chat2cli] 您请求的路径：{path_raw}\n"
-            f"[chat2cli] 请用户切换到对应目录（{os.path.dirname(path_raw)}）后再执行此工具。\n\n"
+            f"[chat2cli] 请用户切换到对应目录（{os.path.dirname(path_raw)}）后再执行此方法。\n\n"
         )
         sys.stderr.flush()
         return {
             "success": False,
-            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。如需操作目录外的文件，请提示用户在对应目录下重新运行此工具。",
+            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。如需操作目录外的文件，请提示用户在对应目录下重新运行此方法。",
         }, ""
 
     if command == "view":
@@ -1440,7 +1440,7 @@ def main():
     if summary_parts:
         for part in summary_parts:
             _write_stderr_summary(f"[chat2cli] {part}\n")
-        _write_stderr_summary(f"[chat2cli] 共执行 {len(responses)} 个工具调用。\n")
+        _write_stderr_summary(f"[chat2cli] 共执行 {len(responses)} 个本地 RPC 调用。\n")
 
 
 if __name__ == "__main__":
