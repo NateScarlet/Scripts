@@ -489,6 +489,34 @@ def _restore_newlines(text: str, newline_style: str) -> str:
     return text.replace("\n", newline_style)
 
 
+def _calculate_line_changes(before: str, after: str) -> Dict[str, int]:
+    """计算文本修改造成的行级变化。"""
+    import difflib
+
+    before_lines = before.split("\n")
+    after_lines = after.split("\n")
+    matcher = difflib.SequenceMatcher(None, before_lines, after_lines, autojunk=False)
+
+    removed_lines = 0
+    added_lines = 0
+    modified_lines = 0
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "delete":
+            removed_lines += i2 - i1
+        elif tag == "insert":
+            added_lines += j2 - j1
+        elif tag == "replace":
+            modified_lines += max(i2 - i1, j2 - j1)
+
+    return {
+        "removed_lines": removed_lines,
+        "added_lines": added_lines,
+        "modified_lines": modified_lines,
+    }
+
+
+
 def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     """执行文件替换，返回 JSON-RPC result 字典"""
     import difflib
@@ -595,26 +623,12 @@ def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
                 sys.stderr.write(f"{line}\n")
         sys.stderr.flush()
 
-    # 计算实际行数变化（基于整个文件替换前后的 diff）
-    before_lines = content.split("\n")
-    after_lines = new_content_normalized.split("\n")
-    matcher = difflib.SequenceMatcher(None, before_lines, after_lines, autojunk=False)
-    deleted_lines = 0
-    added_lines = 0
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == "delete":
-            deleted_lines += i2 - i1
-        elif tag == "insert":
-            added_lines += j2 - j1
-        elif tag == "replace":
-            deleted_lines += i2 - i1
-            added_lines += j2 - j1
+    changes = _calculate_line_changes(content, new_content_normalized)
 
     return {
         "success": True,
         "path": abs_path,
-        "deleted_lines": deleted_lines,
-        "added_lines": added_lines,
+        "changes": changes,
         "message": f"The file {abs_path} has been updated successfully.",
     }
 
@@ -797,10 +811,13 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
                 f.write(file_text)
         except Exception as e:
             return {"success": False, "message": f"错误：创建文件失败：{str(e)}"}, ""
+        abs_path = os.path.abspath(path)
+        sys.stderr.write(f"\033[36m📝 str_replace_editor create {abs_path}\033[0m\n")
+        sys.stderr.flush()
         return {
             "success": True,
-            "path": os.path.abspath(path),
-            "message": f"文件已创建：{os.path.abspath(path)}",
+            "path": abs_path,
+            "message": f"文件已创建：{abs_path}",
         }, ""
 
     elif command == "str_replace":
@@ -1014,13 +1031,11 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
                 sys.stderr.write(f"{line}\n")
         sys.stderr.flush()
 
-    deleted_lines = max(0, old_normalized.count("\n"))
-    added_lines = max(0, new_normalized.count("\n"))
+    changes = _calculate_line_changes(content, new_content_normalized)
     return {
         "success": True,
         "path": abs_path,
-        "deleted_lines": deleted_lines,
-        "added_lines": added_lines,
+        "changes": changes,
         "message": f"The file {abs_path} has been updated successfully.",
     }
 
@@ -1066,7 +1081,7 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
     abs_path = os.path.abspath(path)
-    sys.stderr.write(f"\033[36m📝 str_replace_editor insert {path}: 在第 {insert_line} 行后插入\033[0m\n")
+    sys.stderr.write(f"\033[36m📝 str_replace_editor insert {abs_path}: 在第 {insert_line} 行后插入\033[0m\n")
     sys.stderr.flush()
     return {
         "success": True,
