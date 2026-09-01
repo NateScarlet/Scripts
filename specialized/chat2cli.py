@@ -89,7 +89,7 @@ def print_instruction():
 - file_path 必须是当前目录下的相对路径（禁止使用 .. 或绝对路径）。
 - offset 为返回的起始行号（1 起，默认 1）。
 - limit 为最大返回行数（默认 2000）。
-- 返回内容以行号前缀形式输出（如 "   123  content"），不做 JSON 转义。
+- 返回内容以行号前缀形式输出（如 "123:content"），不做 JSON 转义。
 
 当前工作目录：{cwd}
 
@@ -436,7 +436,7 @@ def execute_read(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]
     output_lines: List[str] = []
     for i, line in enumerate(selected):
         line_num = offset_param + i
-        output_lines.append(f"{line_num:6}:  {line}")
+        output_lines.append(f"{line_num}:{line}")
     content_out = "\n".join(output_lines)
 
     first_line = offset_param
