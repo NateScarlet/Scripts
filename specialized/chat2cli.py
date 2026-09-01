@@ -1405,7 +1405,7 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
                 meta.pop("first_line", None)
                 meta.pop("last_line", None)
                 meta.pop("message", None)
-                return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
+                return {"jsonrpc": "2.0", "id": req_id, "result": meta}, content_block
             else:
                 return {
                     "jsonrpc": "2.0",
@@ -1415,7 +1415,7 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
         elif method == "pwsh":
             result = execute_pwsh(req_id, params)
             if result.get("success"):
-                return {"jsonrpc": "2.0", "result": result, "id": req_id}, ""
+                return {"jsonrpc": "2.0", "id": req_id, "result": result}, ""
             else:
                 return {
                     "jsonrpc": "2.0",
@@ -1426,7 +1426,7 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
             meta, content_block = execute_skill(req_id, params)
             if meta.get("success"):
                 meta.pop("message", None)
-                return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
+                return {"jsonrpc": "2.0", "id": req_id, "result": meta}, content_block
             else:
                 return {
                     "jsonrpc": "2.0",
