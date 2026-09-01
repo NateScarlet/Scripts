@@ -19,6 +19,7 @@ import os
 import re
 import json
 import subprocess
+import threading
 import difflib
 from datetime import date
 from typing import Any, Dict, List, Tuple, cast
@@ -724,7 +725,7 @@ def _truncate_output(
 
 
 def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
-    """执行 PowerShell 命令，返回 JSON-RPC result 字典"""
+    """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
     command = params.get("command")
 
     if not isinstance(command, str) or not command.strip():
@@ -734,21 +735,36 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
         f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {command}"
     )
-    try:
-        # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
-        # CI=true 让 vitest 等工具默认进入非交互模式而非 watch，避免超时；
-        # NO_COLOR=1 禁用彩色输出，避免转义码污染捕获的文本。
-        env = os.environ.copy()
-        env["CI"] = "true"
-        env["NO_COLOR"] = "1"
 
-        result = subprocess.run(
+    # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
+    # CI=true 让 vitest 等工具默认进入非交互模式而非 watch，避免超时；
+    # NO_COLOR=1 禁用彩色输出，避免转义码污染捕获的文本。
+    env = os.environ.copy()
+    env["CI"] = "true"
+    env["NO_COLOR"] = "1"
+
+    def _stream_reader(stream: Any, stream_name: str, lines_list: List[str]) -> None:
+        """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
+        try:
+            for line in iter(stream.readline, ""):
+                sys.stderr.write(f"[pwsh:{stream_name}] {line}")
+                sys.stderr.flush()
+                lines_list.append(line)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    try:
+        proc = subprocess.Popen(
             ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=COMMAND_TIMEOUT,
             encoding="utf-8",
             errors="replace",
+            bufsize=1,
             stdin=subprocess.DEVNULL,
             env=env,
         )
@@ -757,22 +773,46 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             "success": False,
             "message": "错误：未找到 pwsh.exe，请确保 PowerShell Core 已安装并添加到 PATH。",
         }
+    except Exception as e:
+        return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
+
+    stdout_lines: List[str] = []
+    stderr_lines: List[str] = []
+    t_out = threading.Thread(
+        target=_stream_reader,
+        args=(proc.stdout, "out", stdout_lines),
+        daemon=True,
+    )
+    t_err = threading.Thread(
+        target=_stream_reader,
+        args=(proc.stderr, "err", stderr_lines),
+        daemon=True,
+    )
+    t_out.start()
+    t_err.start()
+
+    try:
+        returncode = proc.wait(timeout=COMMAND_TIMEOUT)
     except subprocess.TimeoutExpired:
+        proc.kill()
+        t_out.join(timeout=5)
+        t_err.join(timeout=5)
         return {
             "success": False,
             "message": f"错误：命令执行超时（超过 {COMMAND_TIMEOUT} 秒），已终止。",
         }
-    except Exception as e:
-        return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
 
-    stdout = result.stdout.rstrip("\n")
-    stderr = result.stderr.rstrip("\n")
+    t_out.join()
+    t_err.join()
+
+    stdout = "".join(stdout_lines).rstrip("\n")
+    stderr = "".join(stderr_lines).rstrip("\n")
 
     stdout_display, stderr_display = _truncate_output(id_, stdout, stderr)
 
     return {
         "success": True,
-        "exit_code": result.returncode,
+        "exit_code": returncode,
         "stdout": stdout_display,
         "stderr": stderr_display,
     }
