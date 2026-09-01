@@ -198,6 +198,7 @@ def print_instruction():
   "id": 1
 }}
 - command 支持：view、create、str_replace、insert。
+- path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
 - view：查看文件（cat -n 效果）或目录（列出非隐藏项，最多 2 层）。
 - create：创建新文件（path 已存在时报错）。
 - str_replace：替换文件中的文本（old_str 需唯一匹配）。
@@ -710,6 +711,20 @@ Resolve relative paths mentioned by this skill against the base directory before
     }
     return meta, content_block
 
+def _resolve_editor_path(path_raw: str) -> str:
+    """解析 str_replace_editor 的 path：必须为绝对路径且位于当前工作目录内"""
+    expanded = os.path.expanduser(path_raw)
+    if not os.path.isabs(expanded):
+        return ""
+    abs_path = os.path.abspath(expanded)
+    cwd = os.path.abspath(os.getcwd())
+    if abs_path == cwd:
+        return abs_path
+    if abs_path.startswith(cwd + os.sep):
+        return abs_path
+    return ""
+
+
 def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """执行 str_replace_editor 命令（view/create/str_replace/insert），返回 (元数据, 内容块)"""
     import difflib
@@ -726,11 +741,17 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
     if not isinstance(path_raw, str) or not path_raw:
         return {"success": False, "message": "错误：path 不能为空。"}, ""
 
-    path = _resolve_read_path(path_raw)
+    path = _resolve_editor_path(path_raw)
     if not path:
+        sys.stderr.write(
+            "\n[chat2cli] 路径校验失败：操作范围仅限当前工作目录（cwd）。\n"
+            f"[chat2cli] 您请求的路径：{path_raw}\n"
+            f"[chat2cli] 请用户切换到对应目录（{os.path.dirname(path_raw)}）后再执行此工具。\n\n"
+        )
+        sys.stderr.flush()
         return {
             "success": False,
-            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，或已发现 skill 目录下的文件路径。",
+            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。如需操作目录外的文件，请提示用户在对应目录下重新运行此工具。",
         }, ""
 
     if command == "view":
