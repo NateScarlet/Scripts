@@ -137,6 +137,95 @@ function Invoke-Chat2CLI {
 
 Set-Alias "chat2cli" Invoke-Chat2CLI
 
+
+function Watch-Chat2CLI {
+    param(
+        [int]$IntervalMilliseconds = 500
+    )
+
+    $scriptPath = "$ScriptsRoot/specialized/chat2cli.py"
+
+    function Invoke-Chat2CLIProcess {
+        $clipboard = Get-Clipboard -Raw
+        if ([string]::IsNullOrWhiteSpace($clipboard)) {
+            return
+        }
+
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = "py"
+        $psi.Arguments = "`"$scriptPath`""
+        $psi.WorkingDirectory = (Get-Location).Path
+        $psi.RedirectStandardInput = $true
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.UseShellExecute = $false
+        $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+        $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+        $psi.CreateNoWindow = $true
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $psi
+        $process.Start() | Out-Null
+
+        try {
+            $process.StandardInput.Write($clipboard)
+            $process.StandardInput.Close()
+
+            $output = $process.StandardOutput.ReadToEnd()
+            $errorOutput = $process.StandardError.ReadToEnd()
+            $process.WaitForExit()
+
+            if ($output) {
+                Write-Host $output
+                Set-Clipboard $output
+            }
+
+            if ($errorOutput) {
+                Write-Host $errorOutput -ForegroundColor Red
+            }
+
+            if ($process.ExitCode -ne 0) {
+                throw "Command failed with exit code $($process.ExitCode)"
+            }
+        }
+        finally {
+            if (-not $process.HasExited) {
+                $process.Kill()
+            }
+            $process.Dispose()
+        }
+    }
+
+    Write-Host '[Watch-Chat2CLI] 已启动，等待新的 ```tool 调用...'
+
+    try {
+        $lastClipboard = ""
+
+        while ($true) {
+            $current = Get-Clipboard -Raw
+
+            # 必须匹配完整的 ```tool fenced block，避免误触发 ```tool-result
+            $hasToolBlock = $current -match '(?ms)^```tool\s*$.*?^```\s*$'
+
+            if ($current -ne $lastClipboard -and $hasToolBlock) {
+                $lastClipboard = $current
+                Invoke-Chat2CLIProcess
+            }
+
+            Start-Sleep -Milliseconds $IntervalMilliseconds
+        }
+    }
+    catch [System.Management.Automation.PipelineStoppedException] {
+        Write-Host "[Watch-Chat2CLI] 已停止"
+    }
+    catch [System.OperationCanceledException] {
+        Write-Host "[Watch-Chat2CLI] 已停止"
+    }
+}
+
+
+
+
 . "$ScriptLib/New-GitWorkspace.ps1"
 
 #region 远程 VSCode 会话防休眠

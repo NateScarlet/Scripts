@@ -33,6 +33,7 @@ from typing import Any, Dict, List, Tuple, cast
 try:
     sys.stdin.reconfigure(encoding="utf-8")  # type: ignore
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+    sys.stderr.reconfigure(encoding="utf-8")  # type: ignore
 except AttributeError:
     pass
 
