@@ -197,12 +197,28 @@ def print_instruction():
     "path": "文件或目录的绝对路径"
   }}
 }}
-- command 支持：view、create、str_replace、insert。
 - path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
-- view：查看文件（cat -n 效果）或目录（列出非隐藏项，最多 2 层）。
-- create：创建新文件（path 已存在时报错）。
-- str_replace：替换文件中的文本（old_str 需唯一匹配）。
-- insert：在指定行后插入文本。
+- command 支持四种子命令，各子命令所需字段如下：
+
+  1) view — 查看文件或目录
+     必填：command, path
+     可选：offset（起始行号，1 起）、limit（最大行数，默认 2000）
+     · path 指向文件：显示带行号的内容（cat -n 效果）
+     · path 指向目录：列出非隐藏项，最多 2 层
+
+  2) create — 创建新文件（path 已存在时报错）
+     必填：command, path, file_text
+     · file_text：要写入的文件内容
+
+  3) str_replace — 替换文件中的文本
+     必填：command, path, old_str
+     可选：new_str（缺省表示删除 old_str）
+     · old_str 必须在文件中唯一匹配，建议包含上下文
+
+  4) insert — 在指定行后插入文本
+     必填：command, path, insert_line, new_str
+     · insert_line：目标行号（1 起），new_str 插入到该行之后
+
 - 状态在多次调用间保持持久。
 - 长输出会截断并标记 <response clipped>。
 
