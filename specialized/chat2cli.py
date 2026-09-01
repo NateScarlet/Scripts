@@ -741,7 +741,6 @@ def _resolve_editor_path(path_raw: str) -> str:
 
 def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """执行 str_replace_editor 命令（view/create/str_replace/insert），返回 (元数据, 内容块)"""
-    import difflib
     import sys
 
     command = params.get("command")
@@ -1322,18 +1321,13 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
         if method == "str_replace_editor":
             meta, content_block = execute_str_replace_editor(req_id, params)
             if meta.get("success"):
-                if content_block:
-                    total_lines = meta.get("total_lines", 0)
-                    first_line = meta.get("first_line", 0)
-                    last_line = meta.get("last_line", 0)
-                    meta.pop("total_lines", None)
-                    meta.pop("returned_lines", None)
-                    meta.pop("first_line", None)
-                    meta.pop("last_line", None)
-                    meta.pop("message", None)
-                    return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
-                else:
-                    return {"jsonrpc": "2.0", "result": meta, "id": req_id}, ""
+                # 从 meta 中移除不需要的字段
+                meta.pop("total_lines", None)
+                meta.pop("returned_lines", None)
+                meta.pop("first_line", None)
+                meta.pop("last_line", None)
+                meta.pop("message", None)
+                return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
             else:
                 return {
                     "jsonrpc": "2.0",
@@ -1368,6 +1362,8 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
             "error": {"code": -32603, "message": f"内部错误：{str(e)}"},
             "id": req_id,
         }, ""
+    # 所有路径都已返回，这里仅为满足类型检查
+    return {"jsonrpc": "2.0", "error": {"code": -32603, "message": "未预期的执行路径"}, "id": req_id}, ""
 
 
 def main():
@@ -1397,7 +1393,6 @@ def main():
         if "error" in resp:
             summary_parts.append(f"id={resp.get('id')}: 失败 - {resp['error']['message'][:50]}")
         else:
-            result: Any = resp.get("result", {})
             method: Any = req.get("method", "unknown")
             if method == "str_replace_editor":
                 summary_parts.append(
