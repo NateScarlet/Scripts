@@ -162,6 +162,25 @@ def print_instruction():
 将所有工具调用放在一个 ```chat2cli 代码块中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 chat2cli 以外的代码块语言标识。
 
+回复时如需调用工具，请直接在正文中按以下 response_template 输出工具调用：
+
+<response_template>
+```chat2cli
+{{
+  "jsonrpc": "2.0",
+  "method": "pwsh",
+  "params": {{
+    "command": "在此填写要执行的命令"
+  }},
+  "id": 1
+}}
+```
+调用的简短说明
+</response_template>
+
+代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
+但代码块本身必须完整地出现在正文回复中，工具调用才会被执行。
+
 可用方法：
 
 1. str_replace - 文件替换：
