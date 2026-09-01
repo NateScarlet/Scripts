@@ -963,7 +963,7 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
                     content_with_footer = content + f"\n(End of file - total {total_lines} lines)"
                 else:
                     content_with_footer = f"(End of file - total {total_lines} lines)"
-                content_block = f'<chat2cli_content id="{req_id}">\n{content_with_footer}\n</chat2cli_content>\n'
+                content_block = f'<content id="{req_id}">\n{meta["path"]}:L{meta["first_line"]}-{meta["last_line"]}\n{content_with_footer}\n</content>\n'
                 meta.pop("total_lines", None)
                 meta.pop("returned_lines", None)
                 meta.pop("first_line", None)
