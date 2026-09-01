@@ -33,6 +33,125 @@ except AttributeError:
 # 工具超时设置（秒）
 COMMAND_TIMEOUT = 30
 
+# 已发现的 skills 缓存（name -> 信息字典）
+_discovered_skills: Dict[str, Dict[str, Any]] = {}
+
+
+def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
+    """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)"""
+    try:
+        with open(skill_md_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception:
+        return "", ""
+
+    # frontmatter 必须以 --- 开头
+    if not content.startswith("---"):
+        return "", ""
+
+    end_idx = content.find("\n---", 3)
+    if end_idx == -1:
+        return "", ""
+
+    frontmatter = content[3:end_idx].strip()
+    name = ""
+    description = ""
+    in_description_block = False
+    description_lines: List[str] = []
+
+    for line in frontmatter.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("name:"):
+            name = stripped[5:].strip().strip('"').strip("'")
+        elif stripped.startswith("description:"):
+            desc_value = stripped[12:].strip()
+            if desc_value in ("|", ">"):
+                # 多行 description 块
+                in_description_block = True
+                description_lines = []
+            elif desc_value:
+                description = desc_value.strip('"').strip("'")
+        elif in_description_block:
+            indent = len(line) - len(line.lstrip())
+            if indent == 0 and stripped:
+                # 无缩进的新字段，结束 description 块
+                in_description_block = False
+            else:
+                description_lines.append(stripped)
+
+    if in_description_block and description_lines:
+        description = " ".join(description_lines)
+
+    return name, description
+
+
+def discover_skills() -> Dict[str, Dict[str, Any]]:
+    """扫描 ~/.agents/skills 和 <cwd>/.agents/skills，发现可用 skills"""
+    global _discovered_skills
+
+    skills: Dict[str, Dict[str, Any]] = {}
+    # 扫描顺序：先用户级，后项目级（项目级覆盖用户级）
+    scan_dirs = [
+        ("user", os.path.expanduser("~/.agents/skills")),
+        ("project", os.path.join(os.getcwd(), ".agents/skills")),
+    ]
+
+    for scope, base_dir in scan_dirs:
+        if not os.path.isdir(base_dir):
+            continue
+        try:
+            entries = sorted(os.listdir(base_dir))
+        except Exception:
+            continue
+
+        for entry in entries:
+            # 跳过隐藏目录和常见非 skill 目录
+            if entry.startswith(".") or entry == "node_modules":
+                continue
+            skill_dir = os.path.join(base_dir, entry)
+            if not os.path.isdir(skill_dir):
+                continue
+            skill_md = os.path.join(skill_dir, "SKILL.md")
+            if not os.path.isfile(skill_md):
+                continue
+
+            name, description = _parse_skill_frontmatter(skill_md)
+            if not name:
+                # frontmatter 缺失时回退到目录名
+                name = entry
+
+            skills[name] = {
+                "name": name,
+                "description": description,
+                "path": skill_dir,
+                "scope": scope,
+            }
+
+    _discovered_skills = skills
+    return skills
+
+
+def _resolve_read_path(path: str) -> str:
+    """解析 read 路径，支持合法相对路径和已发现 skill 目录下的绝对路径/~路径"""
+    # 确保 skills 缓存已填充
+    if not _discovered_skills:
+        discover_skills()
+
+    # 1. 合法相对路径直接返回
+    if validate_path(path):
+        return path
+
+    # 2. 展开 ~ 并检查是否是 skill 目录下的文件
+    expanded = os.path.expanduser(path)
+    if os.path.isabs(expanded):
+        abs_path = os.path.abspath(expanded)
+        for skill_info in _discovered_skills.values():
+            skill_dir = os.path.abspath(skill_info["path"])
+            if abs_path == skill_dir or abs_path.startswith(skill_dir + os.sep):
+                return abs_path
+
+    return ""
+
 
 def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用工具"""
@@ -80,16 +199,29 @@ def print_instruction():
   "jsonrpc": "2.0",
   "method": "read",
   "params": {{
-    "file_path": "相对路径",
+    "file_path": "相对路径或 skill 目录下文件路径",
     "offset": 1,
     "limit": 2000
   }},
   "id": 3
 }}
-- file_path 必须是当前目录下的相对路径（禁止使用 .. 或绝对路径）。
+- file_path 可为当前目录下的相对路径（禁止使用 ..），或已发现 skill 目录下的文件路径（支持绝对路径或 ~ 开头路径）。
 - offset 为返回的起始行号（1 起，默认 1）。
 - limit 为最大返回行数（默认 2000）。
 - 返回内容以行号前缀形式输出（如 "123:content"），不做 JSON 转义。
+
+4. skill - 激活指定 skill：
+{{
+  "jsonrpc": "2.0",
+  "method": "skill",
+  "params": {{
+    "name": "skill 名称"
+  }},
+  "id": 4
+}}
+- name 必须是 available_skills 中列出的精确名称。
+- 激活后返回 <skill_content> 块，包含该 skill 的完整指令。
+- 仅在用户点名 skill，或任务明显匹配 skill 描述时调用，且每个 skill 只激活一次。
 
 当前工作目录：{cwd}
 
@@ -124,6 +256,26 @@ def print_instruction():
         reminder += "\n\n".join(reminder_parts)
         reminder += "\n</system-reminder>"
         print(reminder)
+
+    # 输出可用 skills 目录（tier 1 元数据）
+    skills = discover_skills()
+    if skills:
+        skill_entries: List[str] = []
+        for name in sorted(skills.keys()):
+            info = skills[name]
+            desc = info["description"] or "（无描述）"
+            skill_entries.append(f"- `{name}`: {desc}")
+        skills_reminder = """<system-reminder>
+A skill is a reusable set of task-specific instructions. The following skills are available in this session:
+
+<available_skills>
+{entries}
+</available_skills>
+
+If the user names a skill, or the task clearly matches a skill's description, call the `skill` tool with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
+A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` tool again for that skill.
+</system-reminder>""".format(entries="\n".join(skill_entries))
+        print(skills_reminder)
 
     print()
 
@@ -389,11 +541,17 @@ def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
 
 def execute_read(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """读取文件内容，返回 (元数据, 行号化内容)"""
-    path = params.get("file_path")
-    if not isinstance(path, str) or not validate_path(path):
+    path_raw = params.get("file_path")
+    if not isinstance(path_raw, str):
         return {
             "success": False,
             "message": "错误：路径不合法。路径必须为当前目录下的相对路径，不能包含 .. 或绝对路径。",
+        }, ""
+    path = _resolve_read_path(path_raw)
+    if not path:
+        return {
+            "success": False,
+            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，或已发现 skill 目录下的文件路径。",
         }, ""
     if not os.path.isfile(path):
         return {"success": False, "message": "错误：文件不存在。"}, ""
@@ -451,6 +609,52 @@ def execute_read(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]
         "message": "Read completed.",
     }
     return meta, content_out
+
+
+def execute_skill(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+    """激活指定 skill，返回 (元数据, skill_content 内容块)"""
+    name = params.get("name")
+    if not isinstance(name, str) or not name:
+        return {"success": False, "message": "错误：name 不能为空。"}, ""
+
+    if not _discovered_skills:
+        discover_skills()
+
+    if name not in _discovered_skills:
+        available = sorted(_discovered_skills.keys())
+        avail_text = ", ".join(f"`{n}`" for n in available) if available else "无"
+        return {
+            "success": False,
+            "message": f"错误：未找到名为 `{name}` 的 skill。可用 skills：{avail_text}",
+        }, ""
+
+    skill_dir = os.path.abspath(_discovered_skills[name]["path"])
+    skill_md_path = os.path.join(skill_dir, "SKILL.md")
+    try:
+        with open(skill_md_path, "r", encoding="utf-8") as f:
+            raw_content = f.read()
+    except Exception as e:
+        return {"success": False, "message": f"错误：读取 SKILL.md 失败：{str(e)}"}, ""
+
+    content_block = f"""<skill_content name="{name}">
+<skill_resources>
+Base directory for this skill: {skill_dir}
+Resolve relative paths mentioned by this skill against the base directory before using them. Load referenced resources only as needed.
+</skill_resources>
+
+<skill_instructions>
+{raw_content}
+</skill_instructions>
+</skill_content>
+"""
+
+    meta = {
+        "success": True,
+        "name": name,
+        "path": skill_dir,
+        "message": "Skill activated.",
+    }
+    return meta, content_block
 
 
 def _truncate_output(
@@ -544,16 +748,12 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     return {
-        "success": result.returncode == 0,
+        "success": True,
         "exit_code": result.returncode,
         "stdout": stdout_display,
         "stderr": stderr_display,
         "saved_files": saved_files,
-        "message": (
-            "命令执行成功（退出码 0）"
-            if result.returncode == 0
-            else f"命令执行失败（退出码 {result.returncode}）"
-        ),
+        "message": f"命令已执行（退出码 {result.returncode}）",
     }
 
 
@@ -588,7 +788,7 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     if "method" not in req:
         return False, "缺少 method 字段"
     method = req.get("method")
-    if method not in ("str_replace", "pwsh", "read"):
+    if method not in ("str_replace", "pwsh", "read", "skill"):
         return False, f"未知 method：{method}"
     if "params" not in req or not isinstance(req.get("params"), dict):
         return False, "params 必须是对象"
@@ -636,6 +836,17 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
                 return {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": result.get("message", "未知错误")},
+                    "id": req_id,
+                }, ""
+        elif method == "skill":
+            meta, content_block = execute_skill(req_id, params)
+            if meta.get("success"):
+                meta.pop("message", None)
+                return {"jsonrpc": "2.0", "result": meta, "id": req_id}, content_block
+            else:
+                return {
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
                 }, ""
         else:  # read
