@@ -1339,6 +1339,17 @@ def dispatch_request(req: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     return {"jsonrpc": "2.0", "error": {"code": -32603, "message": "未预期的执行路径"}, "id": req_id}, ""
 
 
+
+def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
+    """输出 stderr 汇总，过长内容在展示层截断并提示。"""
+    if len(text) <= max_chars:
+        sys.stderr.write(text)
+        return
+
+    truncated = len(text) - max_chars
+    sys.stderr.write(f"{text[:max_chars]} ({truncated} more chars)\n")
+
+
 def main():
     # 读取 stdin 全部内容
     input_text = sys.stdin.read()
@@ -1364,7 +1375,7 @@ def main():
             content_blocks.append(content_block)
         # 构建 stderr 汇总
         if "error" in resp:
-            summary_parts.append(f"id={resp.get('id')}: 失败 - {resp['error']['message'][:50]}")
+            summary_parts.append(f"id={resp.get('id')}: 失败 - {resp['error']['message']}")
         else:
             method: Any = req.get("method", "unknown")
             if method == "str_replace_editor":
@@ -1395,8 +1406,8 @@ def main():
     # stderr 汇总
     if summary_parts:
         for part in summary_parts:
-            sys.stderr.write(f"[chat2cli] {part}\n")
-        sys.stderr.write(f"[chat2cli] 共执行 {len(responses)} 个工具调用。\n")
+            _write_stderr_summary(f"[chat2cli] {part}\n")
+        _write_stderr_summary(f"[chat2cli] 共执行 {len(responses)} 个工具调用。\n")
 
 
 if __name__ == "__main__":
