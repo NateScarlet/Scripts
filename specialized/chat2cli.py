@@ -21,6 +21,7 @@ import json
 import subprocess
 import threading
 import difflib
+import signal
 from datetime import date
 from typing import Any, Dict, List, Tuple, cast
 
@@ -31,8 +32,6 @@ try:
 except AttributeError:
     pass
 
-# 工具超时设置（秒）
-COMMAND_TIMEOUT = 30
 
 # 已发现的 skills 缓存（name -> 信息字典）
 _discovered_skills: Dict[str, Dict[str, Any]] = {}
@@ -210,7 +209,7 @@ def print_instruction():
   }},
   "id": 2
 }}
-- command 为通过 pwsh.exe 执行的命令，超时时间 {COMMAND_TIMEOUT} 秒。
+- command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
 - description 可选，用于执行汇总展示。
 
@@ -782,7 +781,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
-    # CI=true 让 vitest 等工具默认进入非交互模式而非 watch，避免超时；
+    # CI=true 让 vitest 等工具默认进入非交互模式而非 watch；
     # NO_COLOR=1 禁用彩色输出，避免转义码污染捕获的文本。
     env = os.environ.copy()
     env["CI"] = "true"
@@ -812,6 +811,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             bufsize=1,
             stdin=subprocess.DEVNULL,
             env=env,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,  # 允许独立进程组管理
         )
     except FileNotFoundError:
         return {
@@ -836,19 +836,44 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     t_out.start()
     t_err.start()
 
-    try:
-        returncode = proc.wait(timeout=COMMAND_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        t_out.join(timeout=5)
-        t_err.join(timeout=5)
-        return {
-            "success": False,
-            "message": f"错误：命令执行超时（超过 {COMMAND_TIMEOUT} 秒），已终止。",
-        }
+    # 设置信号处理器，在收到 SIGINT 时清理子进程
+    def _signal_handler(sig: int, frame: Any) -> None:
+        """处理 Ctrl+C 信号，清理子进程后退出"""
+        sys.stderr.write("\n[chat2cli] 收到中断信号，正在清理 pwsh 进程...\n")
+        sys.stderr.flush()
+        try:
+            # 终止进程组，确保所有子进程都被清理
+            proc.terminate()
+            # 等待一小段时间让进程优雅退出
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+        except Exception:
+            pass
+        sys.exit(1)
 
-    t_out.join()
-    t_err.join()
+    original_handler = signal.signal(signal.SIGINT, _signal_handler)
+
+    try:
+        # 无限等待，让命令自然结束
+        returncode = proc.wait()
+    except Exception as e:
+        # 如果发生异常，确保清理进程
+        try:
+            proc.terminate()
+            proc.wait(timeout=2)
+        except Exception:
+            proc.kill()
+            proc.wait()
+        raise
+    finally:
+        # 恢复原始信号处理器
+        signal.signal(signal.SIGINT, original_handler)
+
+    t_out.join(timeout=5)
+    t_err.join(timeout=5)
 
     stdout = "".join(stdout_lines).rstrip("\n")
     stderr = "".join(stderr_lines).rstrip("\n")
