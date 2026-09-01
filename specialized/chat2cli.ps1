@@ -41,7 +41,7 @@ function Set-Chat2CLIClipboard {
     $data.SetText($Text)
     $data.SetData('HTML Format', $html)
 
-    [System.Windows.Clipboard]::SetDataObject($data, $true)
+    [System.Windows.Clipboard]::SetDataObject($data)
 }
 
 function Test-Chat2CLIClipboardGenerated {
