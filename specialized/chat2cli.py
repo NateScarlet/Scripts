@@ -716,6 +716,13 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
         f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {command}"
     )
     try:
+        # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
+        # CI=true 让 vitest 等工具默认进入非交互模式而非 watch，避免超时；
+        # NO_COLOR=1 禁用彩色输出，避免转义码污染捕获的文本。
+        env = os.environ.copy()
+        env["CI"] = "true"
+        env["NO_COLOR"] = "1"
+
         result = subprocess.run(
             ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
             capture_output=True,
@@ -724,6 +731,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             encoding="utf-8",
             errors="replace",
             stdin=subprocess.DEVNULL,
+            env=env,
         )
     except FileNotFoundError:
         return {
