@@ -204,22 +204,24 @@ function Watch-Chat2CLI {
     Write-Host '[Watch-Chat2CLI] 已启动，等待新的 ```tool 调用...'
 
     try {
-        $lastClipboard = ""
-
         # 启动时处理当前剪贴板：无 tool 请求时由 chat2cli.py 生成初始指令
         Invoke-Chat2CLIProcess
-        # 记录 chat2cli 自己生成的结果，避免将初始指令再次执行
-        $lastClipboard = Get-Clipboard -Raw
+        # 跳过本次初始化产生的剪贴板内容，避免自生成指令触发执行
+        $skipClipboardCheck = $true
 
         while ($true) {
             $current = Get-Clipboard -Raw
 
-            # 必须匹配完整的 ```tool fenced block，避免误触发 ```tool-result
-            $hasToolBlock = $current -match '(?ms)^```tool\s*$.*?^```\s*$'
+            if ($skipClipboardCheck) {
+                $skipClipboardCheck = $false
+            }
+            else {
+                # 必须匹配完整的 ```tool fenced block，避免误触发 ```tool-result
+                $hasToolBlock = $current -match '(?ms)^```tool\s*$.*?^```\s*$'
 
-            if ($current -ne $lastClipboard -and $hasToolBlock) {
-                $lastClipboard = $current
-                Invoke-Chat2CLIProcess
+                if ($hasToolBlock) {
+                    Invoke-Chat2CLIProcess
+                }
             }
 
             Start-Sleep -Milliseconds $IntervalMilliseconds
