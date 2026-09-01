@@ -487,6 +487,9 @@ def _restore_newlines(text: str, newline_style: str) -> str:
 
 def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     """执行文件替换，返回 JSON-RPC result 字典"""
+    import difflib
+    import sys
+
     path = params.get("path")
     old = params.get("old")
     new = params.get("new")
@@ -539,6 +542,22 @@ def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             "message": f"错误：检测到 {count} 处匹配，无法唯一确定替换位置。请提供更长的 old 字符串。",
         }
 
+    abs_path = os.path.abspath(path)
+    old_lines = old_normalized.split("\n")
+    new_lines = new_normalized.split("\n")
+
+    # 检查 old 和 new 是否相同
+    if old_normalized == new_normalized:
+        sys.stderr.write(f"\033[33m⚠️  str_replace: old 和 new 内容相同，文件未修改: {abs_path}\033[0m\n")
+        sys.stderr.flush()
+        return {
+            "success": True,
+            "path": abs_path,
+            "deleted_lines": 0,
+            "added_lines": 0,
+            "message": f"文件未修改（old 和 new 相同）: {abs_path}",
+        }
+
     new_content_normalized = content.replace(old_normalized, new_normalized, 1)
     new_content = _restore_newlines(new_content_normalized, newline_style)
     try:
@@ -547,9 +566,35 @@ def execute_str_replace(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
-    abs_path = os.path.abspath(path)
-    deleted_lines = old_normalized.count("\n")
-    added_lines = new_normalized.count("\n")
+    # 生成彩色 diff 输出到 stderr
+    diff = difflib.unified_diff(
+        old_lines,
+        new_lines,
+        fromfile=f"a/{path}",
+        tofile=f"b/{path}",
+        lineterm=""
+    )
+    diff_output = list(diff)
+
+    if diff_output:
+        sys.stderr.write(f"\033[36m📝 str_replace 修改 {path}:\033[0m\n")
+        for line in diff_output:
+            if line.startswith("---") or line.startswith("+++"):
+                sys.stderr.write(f"\033[36m{line}\033[0m\n")
+            elif line.startswith("@@"):
+                sys.stderr.write(f"\033[35m{line}\033[0m\n")
+            elif line.startswith("-"):
+                sys.stderr.write(f"\033[31m{line}\033[0m\n")
+            elif line.startswith("+"):
+                sys.stderr.write(f"\033[32m{line}\033[0m\n")
+            else:
+                sys.stderr.write(f"{line}\n")
+        sys.stderr.flush()
+
+    # 计算实际行数变化
+    deleted_lines = max(0, old_normalized.count("\n"))
+    added_lines = max(0, new_normalized.count("\n"))
+
     return {
         "success": True,
         "path": abs_path,
