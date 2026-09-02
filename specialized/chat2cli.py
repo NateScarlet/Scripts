@@ -248,6 +248,20 @@ console.log("Hello");
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
 - 响应过长时会被截断存至临时文件供 str_replace_editor view 子命令查看，连续内容优先使用 view 命令, view 的支持更高长度的内容并且格式更高效
+- 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
+  示例：
+  <data.file_path>C:\\Program Files\\App\\config.json</data.file_path>
+
+  ```localrpc
+  {{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "pwsh",
+    "params": {{
+      "command": "Get-Content $env:DATA_file_path"
+    }}
+  }}
+  ```
 
 3. skill - 激活指定 skill：
 {{
@@ -1057,7 +1071,7 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
 
 
 
-def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> Dict[str, Any]:
     """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
     command = params.get("command")
 
@@ -1077,6 +1091,12 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     env = os.environ.copy()
     env["CI"] = "true"
     env["NO_COLOR"] = "1"
+
+    # 将 <data.xxx> 数据块注入为 $env:DATA_xxx 环境变量。
+    # 数据块 id 原样拼接为环境变量名。
+    for ref_id, ref_content in data_map.items():
+        env_name = "DATA_" + ref_id
+        env[env_name] = ref_content
 
     def _stream_reader(stream: Any, stream_name: str, lines_list: List[str]) -> None:
         """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
@@ -1374,7 +1394,7 @@ def dispatch_request(
 
         elif method == "pwsh":
             logging.debug(f"  执行 PowerShell 命令: {params.get('command', '')[:200]}...")
-            result = execute_pwsh(req_id, params)
+            result = execute_pwsh(req_id, params, data_map)
             if result.get("success"):
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
                 logging.debug(f"  执行结果: 成功, exit_code={result.get('exit_code')}")
