@@ -26,9 +26,9 @@ class TestExtractDataBlocks(unittest.TestCase):
         text = (
             "<data.a>hello</data.a>\n"
             "```chat2cli\n"
-            "<localrpc>\n"
+            "<request>\n"
             '{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
-            "</localrpc>\n"
+            "</request>\n"
             "```"
         )
         self.assertEqual(chat2cli.extract_data_blocks(text), {})
@@ -47,7 +47,7 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0]["method"], "skill")
 
-    def test_skips_localrpc_inside_data_block(self):
+    def test_skips_request_inside_data_block(self):
         text = (
             "```chat2cli\n"
             "<data.example>\n"
@@ -107,7 +107,7 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(blocks, [])
 
-    def test_ignores_localrpc_outside_chat2cli_block(self):
+    def test_ignores_request_outside_chat2cli_block(self):
         text = (
             "<request>\n"
             '{"method":"pwsh"}\n'
@@ -135,7 +135,7 @@ class TestHasTruncatedFence(unittest.TestCase):
             '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
-        self.assertTrue(chat2cli._has_truncated_fence(text))
+        self.assertTrue(chat2cli.has_truncated_fence(text))
 
     def test_no_truncation_with_longer_outer_fence(self):
         # 外层四反引号，可以正常容纳内层 ``` 围栏
@@ -149,11 +149,11 @@ class TestHasTruncatedFence(unittest.TestCase):
             '<request>\n{"method":"skill"}\n</request>\n'
             "````"
         )
-        self.assertFalse(chat2cli._has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text))
 
     def test_no_fence_at_all(self):
         text = "no fence here"
-        self.assertFalse(chat2cli._has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text))
 
     def test_valid_three_backtick_fence(self):
         # 正常的三反引号围栏，无截断
@@ -162,7 +162,7 @@ class TestHasTruncatedFence(unittest.TestCase):
             '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
-        self.assertFalse(chat2cli._has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text))
 
 
 class TestViewOobId(unittest.TestCase):

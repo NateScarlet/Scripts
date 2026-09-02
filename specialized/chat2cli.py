@@ -20,6 +20,8 @@ chat2cli.py - chat2cli 语言执行器
 
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
+
+每个版本的 chat2cli 不互相兼容，同一个会话应该固定用同一个版本
 """
 
 from __future__ import annotations
@@ -229,7 +231,7 @@ Closes #42
   "id": 1,
   "method": "pwsh",
   "params": {{
-    "command": "gh issue create --title 'fix(chat2cli): should skip localrpc inside data blocks' --body '## Problem\\n\\nA data block''s localrpc fence is literal content, not a request.\\n\\nCloses #42'"
+    "command": "gh issue create --title 'fix(chat2cli): should skip request inside data blocks' --body '## Problem\\n\\nA data block''s request fence is literal content, not a request.\\n\\nCloses #42'"
   }}
 }}
 </request>
@@ -345,7 +347,7 @@ A skill is a reusable set of task-specific instructions. The following skills ar
 </available_skills>
 
 If the user names a skill, or the task clearly matches a skill's description, call the `skill` method in a chat2cli <request> tag with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
-A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` method in a chat2cli <localrpc> tag again for that skill.
+A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` method in a chat2cli <request> tag again for that skill.
 </system-reminder>""".format(entries="\n".join(skill_entries))
         print(skills_reminder)
 
@@ -1290,19 +1292,19 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     return blocks
 
 
-def _has_bare_localrpc(text: str) -> bool:
-    """检测文本中是否存在代码块外的裸 <localrpc> 标签。
+def _has_bare_request(text: str) -> bool:
+    """检测文本中是否存在代码块外的裸 <request> 标签。
 
-    先移除所有 ```chat2cli 代码块，然后在剩余文本中搜索 <localrpc> 标签。
+    先移除所有 ```chat2cli 代码块，然后在剩余文本中搜索 <request> 标签。
     """
     # 移除 chat2cli 代码块（包括标签内的全部内容），围栏长度与开头一致
     pattern = re.compile(r"(`{3,})chat2cli[ \t]*\n.*?\n\1", re.DOTALL)
     text_without_blocks = re.sub(pattern, "", text)
-    # 检查剩余文本中是否包含 <request> 或 <localrpc> 标签（兼容过渡）
-    return bool(re.search(r"<(?:request|localrpc)>", text_without_blocks, re.IGNORECASE))
+    # 检查剩余文本中是否包含 <request> 标签
+    return bool(re.search(r"<(?:request)>", text_without_blocks, re.IGNORECASE))
 
 
-def _has_truncated_fence(text: str) -> bool:
+def has_truncated_fence(text: str) -> bool:
     """检测是否存在未闭合或提前截断的 chat2cli 围栏。
 
     当输入包含 ```chat2cli 围栏开头，但完整围栏解析器
@@ -1637,7 +1639,7 @@ def main():
         # 检测存在 chat2cli 围栏但未提取到 request 的情况，
         # 通常是 data 块内字面反引号围栏导致外层围栏被提前截断。
         # 需要优先于裸 request 检测，因为截断会让 request 落到代码块外。
-        if _has_truncated_fence(input_text):
+        if has_truncated_fence(input_text):
             error_msg = (
                 "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
                 "如果 data 块内容包含字面的 ``` 围栏，请使用更长（四个或更多）\n"
@@ -1658,9 +1660,9 @@ def main():
             return
 
         # 检测是否有裸 request 标签（在 chat2cli 代码块外）
-        if _has_bare_localrpc(input_text):
+        if _has_bare_request(input_text):
             error_msg = (
-                "错误：检测到 <request> 或 <localrpc> 标签未包裹在 ```chat2cli 代码块中。\n"
+                "错误：检测到 <request> 标签未包裹在 ```chat2cli 代码块中。\n"
                 "请将 <request> 标签放在 ```chat2cli 代码块内，例如：\n"
                 "\n"
                 "```chat2cli\n"
