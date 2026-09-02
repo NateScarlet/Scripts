@@ -166,8 +166,8 @@ def print_instruction():
 将所有 RPC 调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
 支持单个对象或对象数组（批处理，按顺序执行）。不支持 localrpc 以外的代码块语言标识。
 
-执行 localrpc R调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
-按以下 response_template 输出R调用：
+执行 localrpc 调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
+按以下 response_template 输出调用请求：
 
 <response_template>
 {{此处替换为你的操作意图}}：
