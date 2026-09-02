@@ -3,6 +3,9 @@ function Invoke-Chat2CLI {
     if ($LASTEXITCODE -ne 0) {
         throw "chat2cli process failed with exit code $LASTEXITCODE"
     }
+    if ($output -is [array]) {
+        $output = $output -join "`n"
+    }
     Set-Chat2CLIClipboard $output
 }
 
