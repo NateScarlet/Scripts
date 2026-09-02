@@ -348,6 +348,8 @@ def _colorize_ignored_path(path: str) -> str:
             if normal:
                 return f"{normal}{os.sep}\033[38;5;208m{ignored}\033[0m"
             return f"\033[38;5;208m{ignored}\033[0m"
+        # 路径不在当前工作目录内，直接返回带颜色的原始路径
+        return f"\033[38;5;208m{path}\033[0m"
     except Exception:
         # 路径处理过程中出现异常时返回普通格式
         return f"\033[38;5;208m{path}\033[0m"
