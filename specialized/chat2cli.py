@@ -1243,7 +1243,21 @@ def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
             else:
                 blocks.append({"_parse_error": "请求必须是 JSON 对象"})
         except json.JSONDecodeError as e:
-            blocks.append({"_parse_error": f"JSON 解析失败：{e}"})
+            # 构建带上下文的错误信息（不重复行号列号，只保留错误描述和上下文）
+            pos = e.pos
+            start = max(0, pos - 30)
+            end = min(len(content), pos + 30)
+            context_before = content[start:pos]
+            # 取出错误位置的字符（若 pos 超出长度则用空格代替）
+            error_char = content[pos] if pos < len(content) else " "
+            context_after = content[pos+1:end]
+            context_msg = f"{context_before}**{error_char}**{context_after}"
+            if start > 0:
+                context_msg = "..." + context_msg
+            if end < len(content):
+                context_msg = context_msg + "..."
+            error_msg = f"JSON 解析失败：{e.msg}。附近内容：{context_msg}"
+            blocks.append({"_parse_error": error_msg})
     return blocks
 
 
