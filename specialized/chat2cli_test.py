@@ -75,6 +75,38 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(blocks, [])
 
+    def test_data_block_can_contain_literal_fence(self):
+        # data 块内容包含字面的 ``` 围栏时，外层使用四个反引号
+        text = (
+            "````chat2cli\n"
+            "<data.code>\n"
+            "```\n"
+            "literal fence content\n"
+            "```\n"
+            "</data.code>\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
+            "````"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+        data = chat2cli.extract_data_blocks(text)
+        self.assertEqual(data["code"], "\n```\nliteral fence content\n```\n")
+
+    def test_shorter_outer_fence_does_not_match_longer_close(self):
+        # 外层围栏是三个反引号，内容包含四个反引号围栏时不应误解析
+        text = (
+            "```chat2cli\n"
+            "<data.code>\n"
+            "````\n"
+            "literal fence content\n"
+            "````\n"
+            "</data.code>\n"
+            "```"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(blocks, [])
+
     def test_ignores_localrpc_outside_chat2cli_block(self):
         text = (
             "<request>\n"

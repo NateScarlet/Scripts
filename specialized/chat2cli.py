@@ -196,6 +196,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 - 在 chat2cli 代码块内用数据标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
 - 在 <request> 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
 - 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
+- data 块内容需要包含字面的反引号围栏（如 ``` 或 ``````）时，外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列。例如内容包含 ``` 时，外层用 ````chat2cli ... ````；解析器会按围栏长度精确匹配闭合。
 
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
@@ -1274,11 +1275,16 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
 
 
 def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
-    """提取所有 ```chat2cli 围栏代码块的内容。"""
+    """提取所有 chat2cli 围栏代码块的内容。
+
+    开头与闭合围栏的反引号数量必须一致。当 data 块内容需要包含
+    字面反引号围栏时，使用更长（四个或更多）的外层围栏，避免内容
+    中的反引号围栏被误识别为外层围栏的闭合。
+    """
     blocks: List[str] = []
-    pattern = re.compile(r"```chat2cli\s*\n(.*?)\n```", re.DOTALL)
+    pattern = re.compile(r"(`{3,})chat2cli[ \t]*\n(.*?)\n\1", re.DOTALL)
     for match in pattern.finditer(text):
-        content = match.group(1)
+        content = match.group(2)
         if content is not None:
             blocks.append(content)
     return blocks
@@ -1289,8 +1295,8 @@ def _has_bare_localrpc(text: str) -> bool:
 
     先移除所有 ```chat2cli 代码块，然后在剩余文本中搜索 <localrpc> 标签。
     """
-    # 移除 chat2cli 代码块（包括标签内的全部内容）
-    pattern = re.compile(r"```chat2cli\s*\n.*?\n```", re.DOTALL)
+    # 移除 chat2cli 代码块（包括标签内的全部内容），围栏长度与开头一致
+    pattern = re.compile(r"(`{3,})chat2cli[ \t]*\n.*?\n\1", re.DOTALL)
     text_without_blocks = re.sub(pattern, "", text)
     # 检查剩余文本中是否包含 <request> 或 <localrpc> 标签（兼容过渡）
     return bool(re.search(r"<(?:request|localrpc)>", text_without_blocks, re.IGNORECASE))

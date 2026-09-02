@@ -239,8 +239,9 @@ function Watch-Chat2CLI {
                 $containsInitial = -not [string]::IsNullOrEmpty($initialInstruction) -and $current.Contains($initialInstruction)
 
                 if (-not $containsInitial) {
-                    # 必须匹配完整的 ```chat2cli fenced block
-                    $hasToolBlock = $current -match '(?ms)^```chat2cli\s*$.*?^```\s*$'
+                    # 必须匹配完整的 chat2cli fenced block（三个或更多反引号）。
+                    # 这里只做粗筛触发，围栏长度一致性由 chat2cli.py 精确解析。
+                    $hasToolBlock = $current -match '(?ms)^`{3,}chat2cli\s*$.*?^`{3,}\s*$'
 
                     if ($hasToolBlock) {
                         Invoke-Chat2CLIProcess -InputText $current
