@@ -1056,15 +1056,14 @@ def _truncate_output(
     id_: Any,
     stdout: str,
     stderr: str,
-    max_lines: int = 200,
+    max_chars: int = 8000,
 ) -> Tuple[str, str]:
-    """对过长输出进行截断，完整内容写入 scratch 文件。"""
+    """对过长输出按字符长度截断，保留头尾，完整内容写入 scratch 文件。"""
 
     def _process(stream_name: str, text: str) -> str:
         if not text:
             return text
-        line_count = text.count("\n") + 1
-        if line_count <= max_lines:
+        if len(text) <= max_chars:
             return text
 
         scratch_dir = os.path.join(
@@ -1081,16 +1080,18 @@ def _truncate_output(
                 counter += 1
             with open(filepath, "w", encoding="utf-8", newline="") as f:
                 f.write(text)
-            rel_path = os.path.abspath(filepath)
+            abs_path = os.path.abspath(filepath)
         except Exception:
             return text
 
-        lines_list = text.split("\n")
-        head = "\n".join(lines_list[:100])
-        tail = "\n".join(lines_list[-100:])
+        # 保留头部和尾部各一半的允许长度
+        keep = max_chars // 2
+        head = text[:keep]
+        tail = text[-keep:]
+        omitted = len(text) - keep * 2
         truncated = (
-            f"{head}\n...[截断 {line_count - 200} 行]...\n{tail}\n"
-            f"[完整输出已保存至: {rel_path}]"
+            f"{head}\n...[截断 {omitted} 个字符]...\n{tail}\n"
+            f"[完整输出已保存至: {abs_path}]"
         )
         return truncated
 
