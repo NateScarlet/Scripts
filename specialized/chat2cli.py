@@ -11,12 +11,12 @@
 chat2cli.py - chat2cli 语言执行器
 
 从 stdin 读取文本，提取 ```chat2cli 代码块，在代码块内解析
-<data.xxx> 数据标签和 <localrpc> RPC 请求标签，解析 JSON-RPC 2.0 请求，
+<data.xxx> 数据标签和 <request> RPC 请求标签，解析 JSON-RPC 2.0 请求，
 执行本地操作（文件替换或 PowerShell 命令），并将结果以 JSON-RPC 2.0
 响应格式（同样用 chat2cli 代码块承载）输出到 stdout。
 输入为空或无 chat2cli 代码块时，输出初始指令。
 
-代码块之外的 <data.xxx> / <localrpc> 等标签一律视为一般对话文本。
+代码块之外的 <data.xxx> / <request> 等标签一律视为一般对话文本。
 
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
@@ -161,13 +161,13 @@ chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 <data.数据块id>
 作为字面文本的数据内容
 </data.数据块id>
-<localrpc>
+<request>
 JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
-</localrpc>
+</request>
 ```
 
-系统将只识别并处理 ```chat2cli 代码块内的 <data.xxx> 数据标签和 <localrpc> RPC 请求标签。
-代码块之外出现的 <data.xxx>、<localrpc> 等标签一律只视为一般对话文本，不会被解析或执行。
+系统将只识别并处理 ```chat2cli 代码块内的 <data.xxx> 数据标签和 <request> RPC 请求标签。
+代码块之外出现的 <data.xxx>、<request> 等标签一律只视为一般对话文本，不会被解析或执行。
 如果你需要调用工具，请务必将标签放在该代码块中，否则任务将无法完成。
 
 执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
@@ -176,7 +176,7 @@ JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
 <response_template>
 {{此处替换为你的操作意图}}：
 ```chat2cli
-<localrpc>
+<request>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -185,7 +185,7 @@ JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
     "command": "在此填写要执行的命令"
   }}
 }}
-</localrpc>
+</request>
 ```
 </response_template>
 
@@ -194,7 +194,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 
 带外数据（OOB）引用规则：
 - 在 chat2cli 代码块内用数据标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
-- 在 <localrpc> 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
+- 在 <request> 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
 - 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
 
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
@@ -208,7 +208,7 @@ A data block's localrpc fence is literal content, not a request.
 
 Closes #42
 </data.issue_body>
-<localrpc>
+<request>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -217,12 +217,12 @@ Closes #42
     "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
   }}
 }}
-</localrpc>
+</request>
 ```
 
 同一内容若不用环境变量和 data 块，需要把 PowerShell 字符串和 JSON 各转义一层：
 ```chat2cli
-<localrpc>
+<request>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -231,8 +231,7 @@ Closes #42
     "command": "gh issue create --title 'fix(chat2cli): should skip localrpc inside data blocks' --body '## Problem\\n\\nA data block''s localrpc fence is literal content, not a request.\\n\\nCloses #42'"
   }}
 }}
-</localrpc>
-```
+</request>
 
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
 - 响应中的大段内容也会以 <data.{{ref_id}}>...</data.{{ref_id}}> 块返回，并在 JSON 中给出 {{"ref": "ref_id"}} 引用。
@@ -303,7 +302,7 @@ Closes #42
 
 当前工作目录：{cwd}
 
-请根据用户需求，在 chat2cli 代码块中生成包含 JSON-RPC 请求的 <localrpc> 标签。
+请根据用户需求，在 chat2cli 代码块中生成包含 JSON-RPC 请求的 <request> 标签。
 </chat2cli_instruction>"""
     print(instruction)
 
@@ -344,7 +343,7 @@ A skill is a reusable set of task-specific instructions. The following skills ar
 {entries}
 </available_skills>
 
-If the user names a skill, or the task clearly matches a skill's description, call the `skill` method in a chat2cli <localrpc> tag with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
+If the user names a skill, or the task clearly matches a skill's description, call the `skill` method in a chat2cli <request> tag with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
 A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` method in a chat2cli <localrpc> tag again for that skill.
 </system-reminder>""".format(entries="\n".join(skill_entries))
         print(skills_reminder)
@@ -1237,8 +1236,8 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
     }
 
 
-def _parse_localrpc_payload(content: str) -> List[Dict[str, Any]]:
-    """解析单个 <localrpc> 标签内的 JSON-RPC 内容，返回请求列表。
+def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
+    """解析单个 <request> 标签内的 JSON-RPC 内容，返回请求列表。
 
     JSON 解析失败时返回带上下文的错误项。
     """
@@ -1293,24 +1292,24 @@ def _has_bare_localrpc(text: str) -> bool:
     # 移除 chat2cli 代码块（包括标签内的全部内容）
     pattern = re.compile(r"```chat2cli\s*\n.*?\n```", re.DOTALL)
     text_without_blocks = re.sub(pattern, "", text)
-    # 检查剩余文本中是否包含 <localrpc> 标签
-    return bool(re.search(r"<localrpc>", text_without_blocks, re.IGNORECASE))
+    # 检查剩余文本中是否包含 <request> 或 <localrpc> 标签（兼容过渡）
+    return bool(re.search(r"<(?:request|localrpc)>", text_without_blocks, re.IGNORECASE))
 
 
 def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
-    """解析单个 chat2cli 代码块内容，提取 data 标签和 localrpc 标签。
+    """解析单个 chat2cli 代码块内容，提取 data 标签和 request 标签。
 
-    data 标签优先级高于 localrpc：data 块内部的 <localrpc>
+    data 标签优先级高于 request：data 块内部的 <request>
     属于字面内容，不会被当作 RPC 请求解析。
     """
     data_map: Dict[str, str] = {}
     blocks: List[Dict[str, Any]] = []
 
-    # 左侧 data 分支优先匹配，整个 data 块（含其中 localrpc）被吞掉，
-    # 因此其中的 localrpc 不会作为独立 token 被提取。
+    # 左侧 data 分支优先匹配，整个 data 块（含其中 request）被吞掉，
+    # 因此其中的 request 不会作为独立 token 被提取。
     pattern = re.compile(
         r"<data\.([^>\s]+)>(.*?)</data\.\1>"
-        r"|<localrpc>\s*(.*?)</localrpc>",
+        r"|<request>\s*(.*?)</request>",
         re.DOTALL,
     )
 
@@ -1327,13 +1326,13 @@ def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str
         rpc_content = content_raw.strip()
         if not rpc_content:
             continue
-        blocks.extend(_parse_localrpc_payload(rpc_content))
+        blocks.extend(_parse_request_payload(rpc_content))
 
     return data_map, blocks
 
 
 def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
-    """单次扫描文本：先提取 chat2cli 代码块，再在其中提取 data 和 localrpc 标签。
+    """单次扫描文本：先提取 chat2cli 代码块，再在其中提取 data 和 request 标签。
 
     仅代码块内的标签会被识别；代码块之外的标签一律视为一般对话文本。
     """
@@ -1381,9 +1380,9 @@ def resolve_data_refs(node: Any, data_map: Dict[str, str]) -> Any:
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
-    """提取所有 chat2cli 代码块中的 <localrpc> 标签并解析 JSON。
+    """提取所有 chat2cli 代码块中的 <request> 标签并解析 JSON。
 
-    代码块外的 localrpc 标签视为一般文本；data 块内部的 localrpc
+    代码块外的 request 标签视为一般文本；data 块内部的 request
     属于字面内容，会被跳过。
     """
     _, blocks = _scan_blocks(text)
@@ -1612,23 +1611,23 @@ def main():
     logging.debug("=" * 60)
 
     if not requests:
-        # 检测是否有裸 localrpc 标签（在 chat2cli 代码块外）
+        # 检测是否有裸 request 标签（在 chat2cli 代码块外）
         if _has_bare_localrpc(input_text):
             error_msg = (
-                "错误：检测到 <localrpc> 标签未包裹在 ```chat2cli 代码块中。\n"
-                "请将 <localrpc> 标签放在 ```chat2cli 代码块内，例如：\n"
+                "错误：检测到 <request> 或 <localrpc> 标签未包裹在 ```chat2cli 代码块中。\n"
+                "请将 <request> 标签放在 ```chat2cli 代码块内，例如：\n"
                 "\n"
                 "```chat2cli\n"
-                "<localrpc>\n"
+                "<request>\n"
                 '{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
-                "</localrpc>\n"
+                "</request>\n"
                 "```\n"
             )
             sys.stderr.write(error_msg)
             sys.stderr.flush()
             return
 
-        sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 localrpc 标签，已输出初始指令。\n")
+        sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 request 标签，已输出初始指令。\n")
         print_instruction()
         return
 
@@ -1683,10 +1682,10 @@ def main():
     # 输出附加内容块（view 结果）
     if content_blocks:
         print("\n".join(content_blocks))
-    # 用 localrpc-result 标签区分机器反馈
-    print("<localrpc-result>")
+    # 用 response 标签区分机器反馈
+    print("<response>")
     print(json_resp)
-    print("</localrpc-result>")
+    print("</response>")
     print("```")
 
     # stderr 汇总

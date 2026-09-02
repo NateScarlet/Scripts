@@ -1,8 +1,8 @@
 """chat2cli.py 的提取逻辑单元测试。
 
-重点覆盖：仅在 ```chat2cli 代码块内识别 <data.xxx> 和 <localrpc> 标签；
+重点覆盖：仅在 ```chat2cli 代码块内识别 <data.xxx> 和 <request> 标签；
 代码块外的同名标签一律视为一般对话文本。
-data 块内部的 <localrpc> 属于字面内容，不应被当作 RPC 请求执行。
+data 块内部的 <request> 属于字面内容，不应被当作 RPC 请求执行。
 """
 import tempfile
 import unittest
@@ -38,9 +38,9 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
     def test_normal_block(self):
         text = (
             "```chat2cli\n"
-            "<localrpc>\n"
+            "<request>\n"
             '{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
-            "</localrpc>\n"
+            "</request>\n"
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
@@ -51,9 +51,9 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         text = (
             "```chat2cli\n"
             "<data.example>\n"
-            '<localrpc>\n{"method":"pwsh"}\n</localrpc>\n'
+            '<request>\n{"method":"pwsh"}\n</request>\n'
             "</data.example>\n"
-            '<localrpc>\n{"method":"skill"}\n</localrpc>\n'
+            '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
@@ -61,14 +61,14 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(blocks[0]["method"], "skill")
 
     def test_update_initial_example_scenario(self):
-        # data 块内容包含完整 localrpc 示例，字面内容不应被当作请求执行
+        # data 块内容包含完整 request 示例，字面内容不应被当作请求执行
         text = (
             "```chat2cli\n"
             "<data.example>\n"
-            "<localrpc>\n"
+            "<request>\n"
             '{"jsonrpc":"2.0","id":1,"method":"pwsh",'
             '"params":{"command":"Write-Output hi"}}\n'
-            "</localrpc>\n"
+            "</request>\n"
             "</data.example>\n"
             "```"
         )
@@ -77,11 +77,11 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
 
     def test_ignores_localrpc_outside_chat2cli_block(self):
         text = (
-            "<localrpc>\n"
+            "<request>\n"
             '{"method":"pwsh"}\n'
-            "</localrpc>\n"
+            "</request>\n"
             "```chat2cli\n"
-            '<localrpc>\n{"method":"skill"}\n</localrpc>\n'
+            '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
