@@ -218,7 +218,7 @@ function Watch-Chat2CLI {
         $ownsMutex = $true
         $stopEvent.Reset() | Out-Null
 
-        Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 localrpc 调用...'
+        Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 chat2cli 调用...'
 
         # 忽略开始前剪贴板的内容：用空字符串生成初始指令并记录
         $initialInstruction = Invoke-Chat2CLIProcess -InputText "" -SuppressToast
@@ -239,8 +239,8 @@ function Watch-Chat2CLI {
                 $containsInitial = -not [string]::IsNullOrEmpty($initialInstruction) -and $current.Contains($initialInstruction)
 
                 if (-not $containsInitial) {
-                    # 必须匹配完整的 ```localrpc fenced block，避免误触发 ```localrpc-result
-                    $hasToolBlock = $current -match '(?ms)^```localrpc\s*$.*?^```\s*$'
+                    # 必须匹配完整的 ```chat2cli fenced block
+                    $hasToolBlock = $current -match '(?ms)^```chat2cli\s*$.*?^```\s*$'
 
                     if ($hasToolBlock) {
                         Invoke-Chat2CLIProcess -InputText $current

@@ -1,7 +1,8 @@
 """chat2cli.py 的提取逻辑单元测试。
 
-重点覆盖：识别 ```localrpc 代码块时应排除 <data.xxx> 块内部，
-因为 data 块内容是字面文本，不应被当作 RPC 请求执行。
+重点覆盖：仅在 ```chat2cli 代码块内识别 <data.xxx> 和 <localrpc> 标签；
+代码块外的同名标签一律视为一般对话文本。
+data 块内部的 <localrpc> 属于字面内容，不应被当作 RPC 请求执行。
 """
 import tempfile
 import unittest
@@ -12,22 +13,35 @@ import chat2cli
 
 class TestExtractDataBlocks(unittest.TestCase):
     def test_simple(self):
-        text = "<data.a>hello</data.a>"
+        text = "```chat2cli\n<data.a>hello</data.a>\n```"
         self.assertEqual(chat2cli.extract_data_blocks(text), {"a": "hello"})
 
     def test_multiline(self):
-        text = "<data.code>\nline1\nline2\n</data.code>"
+        text = "```chat2cli\n<data.code>\nline1\nline2\n</data.code>\n```"
         self.assertEqual(
             chat2cli.extract_data_blocks(text), {"code": "\nline1\nline2\n"}
         )
+
+    def test_ignores_data_outside_chat2cli_block(self):
+        text = (
+            "<data.a>hello</data.a>\n"
+            "```chat2cli\n"
+            "<localrpc>\n"
+            '{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
+            "</localrpc>\n"
+            "```"
+        )
+        self.assertEqual(chat2cli.extract_data_blocks(text), {})
 
 
 class TestExtractChat2cliBlocks(unittest.TestCase):
     def test_normal_block(self):
         text = (
-            '```localrpc\n'
+            "```chat2cli\n"
+            "<localrpc>\n"
             '{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
-            '```'
+            "</localrpc>\n"
+            "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(len(blocks), 1)
@@ -35,10 +49,12 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
 
     def test_skips_localrpc_inside_data_block(self):
         text = (
+            "```chat2cli\n"
             "<data.example>\n"
-            '```localrpc\n{"method":"pwsh"}\n```\n'
+            '<localrpc>\n{"method":"pwsh"}\n</localrpc>\n'
             "</data.example>\n"
-            '```localrpc\n{"method":"skill"}\n```'
+            '<localrpc>\n{"method":"skill"}\n</localrpc>\n'
+            "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(len(blocks), 1)
@@ -47,15 +63,30 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
     def test_update_initial_example_scenario(self):
         # data 块内容包含完整 localrpc 示例，字面内容不应被当作请求执行
         text = (
+            "```chat2cli\n"
             "<data.example>\n"
-            "```localrpc\n"
+            "<localrpc>\n"
             '{"jsonrpc":"2.0","id":1,"method":"pwsh",'
             '"params":{"command":"Write-Output hi"}}\n'
-            "```\n"
-            "</data.example>"
+            "</localrpc>\n"
+            "</data.example>\n"
+            "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(blocks, [])
+
+    def test_ignores_localrpc_outside_chat2cli_block(self):
+        text = (
+            "<localrpc>\n"
+            '{"method":"pwsh"}\n'
+            "</localrpc>\n"
+            "```chat2cli\n"
+            '<localrpc>\n{"method":"skill"}\n</localrpc>\n'
+            "```"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
 
 
 class TestViewOobId(unittest.TestCase):

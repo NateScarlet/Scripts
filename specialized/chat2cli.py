@@ -8,11 +8,15 @@
 # pyright: strict
 
 """
-chat2cli.py - JSON-RPC RPC调用助手（代码块标识为 localrpc）
+chat2cli.py - chat2cli 语言执行器
 
-从 stdin 读取文本，提取 ```localrpc 代码块，解析 JSON-RPC 2.0 请求，
+从 stdin 读取文本，提取 ```chat2cli 代码块，在代码块内解析
+<data.xxx> 数据标签和 <localrpc> RPC 请求标签，解析 JSON-RPC 2.0 请求，
 执行本地操作（文件替换或 PowerShell 命令），并将结果以 JSON-RPC 2.0
-响应格式输出到 stdout。输入为空或无 localrpc 代码块时，输出初始指令。
+响应格式（同样用 chat2cli 代码块承载）输出到 stdout。
+输入为空或无 chat2cli 代码块时，输出初始指令。
+
+代码块之外的 <data.xxx> / <localrpc> 等标签一律视为一般对话文本。
 
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
@@ -148,18 +152,31 @@ def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
     instruction = f"""<chat2cli_instruction>
-你是一个通过在正文提供 RPC 请求代码块调用用户本地 RPC 方法辅助工作的助手，不依赖于工具注册即可操作用户环境。
+你是一个通过在正文提供 chat2cli 代码块调用用户本地 RPC 方法辅助工作的助手，不依赖于工具注册即可操作用户环境。
 
-将所有 RPC 调用放在一个语言标记为 localrpc 的**代码块**之中。代码块内是 JSON-RPC 请求，
-支持单个对象或对象数组（批处理，按顺序执行）。
-系统将只识别并处理 localrpc 代码块中的内容。如果你需要调用工具，请务必将请求放在该代码块中，否则任务将无法完成。
+chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
+它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
 
-执行 localrpc 调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
+```chat2cli
+<data.数据块id>
+作为字面文本的数据内容
+</data.数据块id>
+<localrpc>
+JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
+</localrpc>
+```
+
+系统将只识别并处理 ```chat2cli 代码块内的 <data.xxx> 数据标签和 <localrpc> RPC 请求标签。
+代码块之外出现的 <data.xxx>、<localrpc> 等标签一律只视为一般对话文本，不会被解析或执行。
+如果你需要调用工具，请务必将标签放在该代码块中，否则任务将无法完成。
+
+执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
 按以下 response_template 输出调用请求：
 
 <response_template>
 {{此处替换为你的操作意图}}：
-```localrpc
+```chat2cli
+<localrpc>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -168,19 +185,21 @@ def print_instruction():
     "command": "在此填写要执行的命令"
   }}
 }}
+</localrpc>
 ```
 </response_template>
 
-localrpc 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
+chat2cli 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
 
 带外数据（OOB）引用规则：
-- 定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
-- 在 localrpc 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
+- 在 chat2cli 代码块内用数据标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
+- 在 <localrpc> 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
 - 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
 
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
+```chat2cli
 <data.issue_title>fix(chat2cli): should skip localrpc inside data blocks</data.issue_title>
 <data.issue_body>
 ## Problem
@@ -189,8 +208,7 @@ A data block's localrpc fence is literal content, not a request.
 
 Closes #42
 </data.issue_body>
-
-```localrpc
+<localrpc>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -199,10 +217,12 @@ Closes #42
     "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
   }}
 }}
+</localrpc>
 ```
 
 同一内容若不用环境变量和 data 块，需要把 PowerShell 字符串和 JSON 各转义一层：
-```localrpc
+```chat2cli
+<localrpc>
 {{
   "jsonrpc": "2.0",
   "id": 1,
@@ -211,6 +231,7 @@ Closes #42
     "command": "gh issue create --title 'fix(chat2cli): should skip localrpc inside data blocks' --body '## Problem\\n\\nA data block''s localrpc fence is literal content, not a request.\\n\\nCloses #42'"
   }}
 }}
+</localrpc>
 ```
 
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
@@ -282,7 +303,7 @@ Closes #42
 
 当前工作目录：{cwd}
 
-请根据用户需求，生成包含 JSON-RPC 请求的 localrpc 代码块。
+请根据用户需求，在 chat2cli 代码块中生成包含 JSON-RPC 请求的 <localrpc> 标签。
 </chat2cli_instruction>"""
     print(instruction)
 
@@ -323,8 +344,8 @@ A skill is a reusable set of task-specific instructions. The following skills ar
 {entries}
 </available_skills>
 
-If the user names a skill, or the task clearly matches a skill's description, call the `skill` localrpc method with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
-A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` localrpc method again for that skill.
+If the user names a skill, or the task clearly matches a skill's description, call the `skill` method in a chat2cli <localrpc> tag with the exact skill name before taking task actions. Load all applicable skills, then follow their full instructions. This catalog contains summaries only; do not infer or follow a skill's instructions until it has been loaded.
+A user may also invoke a skill directly; its <skill_content> block then appears in this conversation. Follow it, and do not call the `skill` method in a chat2cli <localrpc> tag again for that skill.
 </system-reminder>""".format(entries="\n".join(skill_entries))
         print(skills_reminder)
 
@@ -1217,7 +1238,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
 
 
 def _parse_localrpc_payload(content: str) -> List[Dict[str, Any]]:
-    """解析单个 localrpc 代码块内容，返回请求列表。
+    """解析单个 <localrpc> 标签内的 JSON-RPC 内容，返回请求列表。
 
     JSON 解析失败时返回带上下文的错误项。
     """
@@ -1253,10 +1274,21 @@ def _parse_localrpc_payload(content: str) -> List[Dict[str, Any]]:
     return blocks
 
 
-def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
-    """单次扫描文本，同时提取 data 块和 localrpc 块。
+def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
+    """提取所有 ```chat2cli 围栏代码块的内容。"""
+    blocks: List[str] = []
+    pattern = re.compile(r"```chat2cli\s*\n(.*?)\n```", re.DOTALL)
+    for match in pattern.finditer(text):
+        content = match.group(1)
+        if content is not None:
+            blocks.append(content)
+    return blocks
 
-    data 块优先级高于 localrpc：data 块内部出现的 ```localrpc
+
+def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
+    """解析单个 chat2cli 代码块内容，提取 data 标签和 localrpc 标签。
+
+    data 标签优先级高于 localrpc：data 块内部的 <localrpc>
     属于字面内容，不会被当作 RPC 请求解析。
     """
     data_map: Dict[str, str] = {}
@@ -1266,11 +1298,11 @@ def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
     # 因此其中的 localrpc 不会作为独立 token 被提取。
     pattern = re.compile(
         r"<data\.([^>\s]+)>(.*?)</data\.\1>"
-        r"|```localrpc\s*\n(.*?)\n```",
+        r"|<localrpc>\s*(.*?)</localrpc>",
         re.DOTALL,
     )
 
-    for match in pattern.finditer(text):
+    for match in pattern.finditer(content):
         if match.group(1) is not None:
             data_content = match.group(2)
             if data_content is not None:
@@ -1280,17 +1312,34 @@ def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
         content_raw = match.group(3)
         if content_raw is None:
             continue
-        content = content_raw.strip()
-        if not content:
+        rpc_content = content_raw.strip()
+        if not rpc_content:
             continue
-        blocks.extend(_parse_localrpc_payload(content))
+        blocks.extend(_parse_localrpc_payload(rpc_content))
+
+    return data_map, blocks
+
+
+def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
+    """单次扫描文本：先提取 chat2cli 代码块，再在其中提取 data 和 localrpc 标签。
+
+    仅代码块内的标签会被识别；代码块之外的标签一律视为一般对话文本。
+    """
+    data_map: Dict[str, str] = {}
+    blocks: List[Dict[str, Any]] = []
+
+    for content in _extract_chat2cli_fence_blocks(text):
+        d_map, rpc_blocks = _parse_chat2cli_content(content)
+        data_map.update(d_map)
+        blocks.extend(rpc_blocks)
 
     return data_map, blocks
 
 
 def extract_data_blocks(text: str) -> Dict[str, str]:
-    """提取 <data.{id}>...</data.{id}> 块，返回 id -> 内容 映射。
+    """提取 chat2cli 代码块中的 <data.{id}>...</data.{id}> 块，返回 id -> 内容 映射。
 
+    仅识别 chat2cli 代码块内的标签；代码块外的同名标签视为一般文本。
     块内容原样保留，不做任何转义，也不剥离任何包裹。
     """
     data_map, _ = _scan_blocks(text)
@@ -1320,9 +1369,10 @@ def resolve_data_refs(node: Any, data_map: Dict[str, str]) -> Any:
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
-    """提取所有 ```localrpc 代码块并解析 JSON。
+    """提取所有 chat2cli 代码块中的 <localrpc> 标签并解析 JSON。
 
-    data 块内部的 localrpc 属于字面内容，会被跳过。
+    代码块外的 localrpc 标签视为一般文本；data 块内部的 localrpc
+    属于字面内容，会被跳过。
     """
     _, blocks = _scan_blocks(text)
     return blocks
@@ -1504,7 +1554,7 @@ def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
 
 def main():
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="JSON-RPC RPC 调用助手")
+    parser = argparse.ArgumentParser(description="chat2cli 语言执行器")
     parser.add_argument(
         "--debug",
         action="store_true",
@@ -1540,7 +1590,7 @@ def main():
         print_instruction()
         return
 
-    logging.debug("【2. 提取 localrpc 代码块】")
+    logging.debug("【2. 提取 chat2cli 代码块】")
     data_map, requests = _scan_blocks(input_text)
     logging.debug(f"提取到 {len(data_map)} 个数据块: {sorted(data_map.keys())}")
     logging.debug(f"提取到 {len(requests)} 个请求")
@@ -1550,7 +1600,7 @@ def main():
     logging.debug("=" * 60)
 
     if not requests:
-        sys.stderr.write("[chat2cli] 未检测到 localrpc 代码块，已输出初始指令。\n")
+        sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 localrpc 标签，已输出初始指令。\n")
         print_instruction()
         return
 
@@ -1591,24 +1641,24 @@ def main():
                 logging.debug(f"  请求 #{idx+1}: skill 成功")
     logging.debug("=" * 60)
 
-    # 输出带外数据块（OOB 引用内容，按注册顺序）
-    if _pending_oob_data:
-        for ref_id, ref_content in _pending_oob_data.items():
-            print(_data_block_text(ref_id, ref_content))
-        print()
-
-    # 输出附加内容块（view 结果）
-    if content_blocks:
-        print("\n".join(content_blocks))
-
-    # 输出 JSON-RPC 响应，包裹在 chat2cli 代码块中
+    # 输出 JSON-RPC 响应，统一包裹在 chat2cli 代码块中
     json_resp = (
         json.dumps(responses[0], ensure_ascii=False, indent=2)
         if len(responses) == 1
         else json.dumps(responses, ensure_ascii=False, indent=2)
     )
-    print("```localrpc-result")
+    print("```chat2cli")
+    # 输出带外数据块（OOB 引用内容，按注册顺序）
+    if _pending_oob_data:
+        for ref_id, ref_content in _pending_oob_data.items():
+            print(_data_block_text(ref_id, ref_content))
+    # 输出附加内容块（view 结果）
+    if content_blocks:
+        print("\n".join(content_blocks))
+    # 用 localrpc-result 标签区分机器反馈
+    print("<localrpc-result>")
     print(json_resp)
+    print("</localrpc-result>")
     print("```")
 
     # stderr 汇总
