@@ -1285,6 +1285,18 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     return blocks
 
 
+def _has_bare_localrpc(text: str) -> bool:
+    """检测文本中是否存在代码块外的裸 <localrpc> 标签。
+
+    先移除所有 ```chat2cli 代码块，然后在剩余文本中搜索 <localrpc> 标签。
+    """
+    # 移除 chat2cli 代码块（包括标签内的全部内容）
+    pattern = re.compile(r"```chat2cli\s*\n.*?\n```", re.DOTALL)
+    text_without_blocks = re.sub(pattern, "", text)
+    # 检查剩余文本中是否包含 <localrpc> 标签
+    return bool(re.search(r"<localrpc>", text_without_blocks, re.IGNORECASE))
+
+
 def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
     """解析单个 chat2cli 代码块内容，提取 data 标签和 localrpc 标签。
 
@@ -1600,6 +1612,22 @@ def main():
     logging.debug("=" * 60)
 
     if not requests:
+        # 检测是否有裸 localrpc 标签（在 chat2cli 代码块外）
+        if _has_bare_localrpc(input_text):
+            error_msg = (
+                "错误：检测到 <localrpc> 标签未包裹在 ```chat2cli 代码块中。\n"
+                "请将 <localrpc> 标签放在 ```chat2cli 代码块内，例如：\n"
+                "\n"
+                "```chat2cli\n"
+                "<localrpc>\n"
+                '{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
+                "</localrpc>\n"
+                "```\n"
+            )
+            sys.stderr.write(error_msg)
+            sys.stderr.flush()
+            return
+
         sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 localrpc 标签，已输出初始指令。\n")
         print_instruction()
         return
