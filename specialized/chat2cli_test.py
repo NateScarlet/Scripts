@@ -96,7 +96,7 @@ class TestViewOobId(unittest.TestCase):
             target = tmp / "example.txt"
             target.write_text("line1\nline2\n", encoding="utf-8")
 
-            meta, content_block = chat2cli._view_file("42", str(target), {})
+            meta, content_block = chat2cli.view_file("42", str(target), {})
 
         self.assertTrue(meta["success"])
         self.assertEqual(meta["content"]["ref"], "view_42")
@@ -107,7 +107,7 @@ class TestViewOobId(unittest.TestCase):
             tmp = Path(tmpdir)
             (tmp / "file.txt").write_text("x", encoding="utf-8")
 
-            meta, content_block = chat2cli._view_directory("7", tmpdir)
+            meta, content_block = chat2cli.view_directory("7", tmpdir)
 
         self.assertTrue(meta["success"])
         self.assertEqual(meta["content"]["ref"], "view_7")

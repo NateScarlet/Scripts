@@ -729,9 +729,9 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
 
     if command == "view":
         if os.path.isdir(path):
-            return _view_directory(id_, path)
+            return view_directory(id_, path)
         elif os.path.isfile(path):
-            return _view_file(id_, path, params)
+            return view_file(id_, path, params)
         else:
             return {"success": False, "message": f"错误：路径不存在：{path}"}, ""
 
@@ -784,7 +784,7 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
     return {"success": False, "message": "未知错误。"}, ""
 
 
-def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+def view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """查看文件内容，返回 (元数据, 行号化内容)"""
     offset_param = params.get("offset", 1)
     limit_param = params.get("limit", 2000)
@@ -860,7 +860,7 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
     return meta, content_block
 
 
-def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
+def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
     """列出目录内容（非隐藏项，最多 2 层），返回 (元数据, 目录列表)"""
     try:
         entries = sorted(os.listdir(path))
