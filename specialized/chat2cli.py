@@ -62,8 +62,6 @@ _discovered_skills: Dict[str, Dict[str, Any]] = {}
 
 # 输出超过该长度（字符数）时，写入 scratch 文件返回路径提示，不再走 OOB 块
 _FILE_THRESHOLD = 8000
-# OOB 数据块（<data.{id}>...</data.{id}>）与 ref 返回值的近似总开销（字符数）
-_OOB_OVERHEAD_ESTIMATE = 80
 # 待输出的带外数据（ref_id -> 内容），由 main 循环在 stdout 统一输出
 _pending_oob_data: Dict[str, str] = {}
 
@@ -1082,7 +1080,7 @@ def _format_viewed(text: str, start_line: int = 1) -> str:
 def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     """三层策略输出结果文本：
     1. 超长（>= _FILE_THRESHOLD）：写 scratch 文件，返回截断说明 + head/tail 引用
-    2. JSON 编码膨胀显著（> OOB 开销估算）：返回 {"ref": ref_id}，内容进入 OOB 块
+    2. OOB 数据块总长度更短：返回 {"ref": ref_id}，内容进入 OOB 块
     3. 其余：直接内联字符串
     """
     if not text:
@@ -1126,12 +1124,17 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
             "tail": {"ref": tail_ref},
         }
 
-    # 计算 JSON 编码膨胀（ensure_ascii=False 下主要来自引号、反斜杠、控制字符转义）
+    # JSON 内联的总长度 = 原文长度 + 编码膨胀（引号、反斜杠、控制字符转义）。
+    # OOB 方案的总长度 = 原文长度 + 固定开销（标签 + ref 引用，约 50 字符）。
+    # 因此只需比较编码膨胀与固定开销：膨胀更大时 OOB 更短。
+    ref_id = f"{stream_name}_{id_}"
     json_encoded_len = len(json.dumps(text, ensure_ascii=False))
     encoding_overhead = json_encoded_len - len(text)
+    # ref 每多一个字符，标签和 JSON 引用共多 3 字符。
+    # 实测 stdout_1（长度 8）约 50 字符，stdout_1234（长度 11）约 59 字符。
+    oob_fixed_overhead = 26 + 3 * len(ref_id)
 
-    if encoding_overhead > _OOB_OVERHEAD_ESTIMATE:
-        ref_id = f"{stream_name}_{id_}"
+    if encoding_overhead > oob_fixed_overhead:
         _register_oob_data(ref_id, text)
         return {"ref": ref_id}
 

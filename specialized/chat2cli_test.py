@@ -315,5 +315,38 @@ class TestErrorInstructionWrapping(unittest.TestCase):
         self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
 
 
+class TestEmitResultTextOobSelection(unittest.TestCase):
+    """覆盖 OOB vs JSON 内联选择的阈值判断"""
+
+    def setUp(self):
+        chat2cli._pending_oob_data.clear()
+
+    def _overhead(self, text: str, ref_id: str) -> int:
+        """计算 JSON 编码膨胀量与 OOB 固定开销"""
+        import json
+        json_len = len(json.dumps(text, ensure_ascii=False))
+        return json_len - len(text), 26 + 3 * len(ref_id)
+
+    def test_uses_oob_when_escaping_overhead_exceeds_fixed_cost(self):
+        # 大量换行导致 JSON 膨胀，超过 OOB 固定开销
+        text = "\n".join(str(i) for i in range(200))
+        overhead, fixed = self._overhead(text, "stdout_1")
+        self.assertGreater(overhead, fixed)
+
+        result = chat2cli._emit_result_text(1, "stdout", text)
+        self.assertEqual(result, {"ref": "stdout_1"})
+        self.assertIn("stdout_1", chat2cli._pending_oob_data)
+
+    def test_uses_inline_when_escaping_overhead_below_fixed_cost(self):
+        # 纯文本无转义，JSON 膨胀小，内联更短
+        text = "plain text without special characters"
+        overhead, fixed = self._overhead(text, "stdout_1")
+        self.assertLess(overhead, fixed)
+
+        result = chat2cli._emit_result_text(1, "stdout", text)
+        self.assertEqual(result, text)
+        self.assertNotIn("stdout_1", chat2cli._pending_oob_data)
+
+
 if __name__ == "__main__":
     unittest.main()
