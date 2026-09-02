@@ -827,7 +827,7 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
     else:
         content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
 
-    ref_id = _gen_oob_id()
+    ref_id = _gen_view_oob_id(id_)
     content_block = _data_block_text(
         ref_id, f'{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}'
     ) + "\n"
@@ -870,7 +870,7 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
         else:
             lines.append(entry)
 
-    ref_id = _gen_oob_id()
+    ref_id = _gen_view_oob_id(id_)
     dir_content = f"{os.path.abspath(path)}\n" + "\n".join(lines)
     content_block = _data_block_text(ref_id, dir_content) + "\n"
     # stderr 显示目录读取路径（gitignore 部分橙色高亮）
@@ -1017,6 +1017,14 @@ def _gen_oob_id() -> str:
     global _oob_counter
     _oob_counter += 1
     return f"oob_{_oob_counter}"
+
+
+def _gen_view_oob_id(id_: Any) -> str:
+    """生成 view 命令的带外数据引用 ID。
+
+    view 响应总对应一个带 id 的请求，因此 id 一定存在。
+    """
+    return f"view_{id_}"
 
 
 def _register_oob_data(ref_id: str, content: str) -> None:
