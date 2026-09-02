@@ -1,5 +1,5 @@
 function Invoke-Chat2CLI {
-    $output = Get-Clipboard | uv run $PSScriptRoot/chat2cli.py
+    $output = Get-Clipboard | uv run $PSScriptRoot/chat2cli.py @args
     if ($LASTEXITCODE -ne 0) {
         throw "chat2cli process failed with exit code $LASTEXITCODE"
     }
