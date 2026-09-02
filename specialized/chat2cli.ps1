@@ -244,7 +244,7 @@ function Watch-Chat2CLI {
                     $hasToolBlock = $current -match '(?ms)^`{3,}chat2cli\s*$.*?^`{3,}\s*$'
 
                     if ($hasToolBlock) {
-                        Invoke-Chat2CLIProcess -InputText $current
+                        Invoke-Chat2CLIProcess -InputText $current | Out-Null
                     }
                 }
             }
