@@ -54,6 +54,15 @@ except AttributeError:
 # 已发现的 skills 缓存（name -> 信息字典）
 _discovered_skills: Dict[str, Dict[str, Any]] = {}
 
+# 输出超过该长度（字符数）时，写入 scratch 文件返回路径提示，不再走 OOB 块
+_FILE_THRESHOLD = 8000
+# OOB 数据块（<data.{id}>...</data.{id}>）与 ref 返回值的近似总开销（字符数）
+_OOB_OVERHEAD_ESTIMATE = 80
+# 待输出的带外数据（ref_id -> 内容），由 main 循环在 stdout 统一输出
+_pending_oob_data: Dict[str, str] = {}
+# 带外数据引用 ID 计数器，保证每次生成唯一的 ref id
+_oob_counter = 0
+
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)。"""
@@ -135,28 +144,6 @@ def discover_skills() -> Dict[str, Dict[str, Any]]:
     return skills
 
 
-def _resolve_read_path(path: str) -> str:
-    """解析 read 路径，支持合法相对路径和已发现 skill 目录下的绝对路径/~路径"""
-    # 确保 skills 缓存已填充
-    if not _discovered_skills:
-        discover_skills()
-
-    # 1. 合法相对路径直接返回
-    if validate_path(path):
-        return path
-
-    # 2. 展开 ~ 并检查是否是 skill 目录下的文件
-    expanded = os.path.expanduser(path)
-    if os.path.isabs(expanded):
-        abs_path = os.path.abspath(expanded)
-        for skill_info in _discovered_skills.values():
-            skill_dir = os.path.abspath(skill_info["path"])
-            if abs_path == skill_dir or abs_path.startswith(skill_dir + os.sep):
-                return abs_path
-
-    return ""
-
-
 def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
@@ -186,6 +173,31 @@ def print_instruction():
 
 localrpc 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
+
+带外数据（OOB）引用规则：
+- 定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
+- 在 localrpc 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
+- 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
+示例：
+<data.file_path>C:\\Program Files\\App\\config.json</data.file_path>
+<data.code>
+const API_KEY = "12345";
+console.log("Hello");
+</data.code>
+
+```localrpc
+{{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "str_replace_editor",
+  "params": {{
+    "command": "str_replace",
+    "path": {{"id": "file_path"}},
+    "old_str": {{"id": "code"}}
+  }}
+}}
+```
+- 响应中的大段内容也会以 <data.{{ref_id}}>...</data.{{ref_id}}> 块返回，并在 JSON 中给出 {{"ref": "ref_id"}} 引用。
 
 可用方法：
 
@@ -589,78 +601,6 @@ def _calculate_line_changes(before: str, after: str) -> Dict[str, int]:
 
 
 
-def execute_read(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
-    """读取文件内容，返回 (元数据, 行号化内容)"""
-    path_raw = params.get("file_path")
-    if not isinstance(path_raw, str):
-        return {
-            "success": False,
-            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，不能包含 .. 或绝对路径。",
-        }, ""
-    path = _resolve_read_path(path_raw)
-    if not path:
-        return {
-            "success": False,
-            "message": "错误：路径不合法。路径必须为当前目录下的相对路径，或已发现 skill 目录下的文件路径。",
-        }, ""
-    if not os.path.isfile(path):
-        return {"success": False, "message": "错误：文件不存在。"}, ""
-
-    offset_param = params.get("offset", 1)
-    limit_param = params.get("limit", 2000)
-    if not isinstance(offset_param, int) or isinstance(offset_param, bool) or offset_param < 1:
-        return {"success": False, "message": "错误：offset 必须是 >=1 的整数。"}, ""
-    if not isinstance(limit_param, int) or isinstance(limit_param, bool) or limit_param < 1:
-        return {"success": False, "message": "错误：limit 必须是 >=1 的整数。"}, ""
-
-    encoding_to_use = "utf-8"
-    try:
-        with open(path, "r", encoding=encoding_to_use, newline="") as f:
-            raw_content = f.read()
-    except UnicodeDecodeError:
-        import locale
-        encoding_to_use = locale.getpreferredencoding(False)
-        try:
-            with open(path, "r", encoding=encoding_to_use, newline="") as f:
-                raw_content = f.read()
-        except Exception as e:
-            return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}, ""
-    except Exception as e:
-        return {"success": False, "message": f"错误：读取文件失败：{str(e)}"}, ""
-
-    content = _normalize_newlines(raw_content)
-    all_lines = content.split("\n")
-    if all_lines and all_lines[-1] == "":
-        all_lines = all_lines[:-1]
-    total_lines = len(all_lines)
-
-    start_idx = offset_param - 1
-    end_idx = min(start_idx + limit_param, total_lines)
-    if start_idx >= total_lines:
-        selected: List[str] = []
-    else:
-        selected = all_lines[start_idx:end_idx]
-
-    output_lines: List[str] = []
-    for i, line in enumerate(selected):
-        line_num = offset_param + i
-        output_lines.append(f"{line_num}:{line}")
-    content_out = "\n".join(output_lines)
-
-    first_line = offset_param
-    last_line = offset_param + len(selected) - 1 if selected else offset_param - 1
-    meta = {
-        "success": True,
-        "path": os.path.abspath(path),
-        "total_lines": total_lines,
-        "returned_lines": len(selected),
-        "first_line": first_line,
-        "last_line": last_line,
-        "message": "Read completed.",
-    }
-    return meta, content_out
-
-
 def execute_skill(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """激活指定 skill，返回 (元数据, skill_content 内容块)"""
     name = params.get("name")
@@ -850,7 +790,7 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
 
     first_line = offset_param
     last_line = offset_param + len(selected) - 1 if selected else offset_param - 1
-    meta = {
+    meta: Dict[str, Any] = {
         "success": True,
         "path": os.path.abspath(path),
         "total_lines": total_lines,
@@ -869,7 +809,11 @@ def _view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, A
     else:
         content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
 
-    content_block = f'<content id="{id_}">\n{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}\n</content>\n'
+    ref_id = _gen_oob_id()
+    content_block = _data_block_text(
+        ref_id, f'{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}'
+    ) + "\n"
+    meta["content"] = {"ref": ref_id}
     # stderr 显示读取路径（gitignore 部分橙色高亮）
     sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n")
     sys.stderr.flush()
@@ -908,7 +852,9 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
         else:
             lines.append(entry)
 
-    content_block = f'<content id="{id_}">\n{os.path.abspath(path)}\n' + "\n".join(lines) + "\n</content>\n"
+    ref_id = _gen_oob_id()
+    dir_content = f"{os.path.abspath(path)}\n" + "\n".join(lines)
+    content_block = _data_block_text(ref_id, dir_content) + "\n"
     # stderr 显示目录读取路径（gitignore 部分橙色高亮）
     sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(os.path.abspath(path))}\n")
     sys.stderr.flush()
@@ -917,6 +863,7 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
         "success": True,
         "path": os.path.abspath(path),
         "entry_count": len(entries),
+        "content": {"ref": ref_id},
         "message": "Directory listed.",
     }
     return meta, content_block
@@ -1047,50 +994,67 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
     }
 
 
+def _gen_oob_id() -> str:
+    """生成唯一的带外数据引用 ID"""
+    global _oob_counter
+    _oob_counter += 1
+    return f"oob_{_oob_counter}"
 
-def _truncate_output(
-    id_: Any,
-    stdout: str,
-    stderr: str,
-    max_chars: int = 8000,
-) -> Tuple[str, str]:
-    """对过长输出按字符长度截断，保留头尾，完整内容写入 scratch 文件。"""
 
-    def _process(stream_name: str, text: str) -> str:
-        if not text:
-            return text
-        if len(text) <= max_chars:
-            return text
+def _register_oob_data(ref_id: str, content: str) -> None:
+    """注册带外数据，供 main 循环统一输出"""
+    _pending_oob_data[ref_id] = content
 
-        scratch_dir = os.path.join(
-            os.getcwd(), ".scratch", f"{date.today().isoformat()}-chat2cli"
-        )
-        os.makedirs(scratch_dir, exist_ok=True)
-        safe_id = re.sub(r"[^\w\-.]", "_", str(id_))
-        base_name = f"{safe_id}-{stream_name}"
-        filepath = os.path.join(scratch_dir, f"{base_name}.txt")
-        counter = 1
-        while os.path.exists(filepath):
-            filepath = os.path.join(scratch_dir, f"{base_name}_{counter}.txt")
-            counter += 1
-        with open(filepath, "w", encoding="utf-8", newline="") as f:
-            f.write(text)
-        abs_path = os.path.abspath(filepath)
 
-        # 保留头部和尾部各一半的允许长度
-        keep = max_chars // 2
-        head = text[:keep]
-        tail = text[-keep:]
-        omitted = len(text) - keep * 2
-        truncated = (
-            f"{head}\n...[截断 {omitted} 个字符]...\n{tail}\n"
-            f"[完整输出已保存至: {abs_path}]"
-        )
-        return truncated
+def _data_block_text(ref_id: str, content: str) -> str:
+    """生成带外数据块文本（使用 data.{id} 标签，原样保留内容，无包裹换行）"""
+    return f"<data.{ref_id}>{content}</data.{ref_id}>"
 
-    stdout_display = _process("stdout", stdout)
-    stderr_display = _process("stderr", stderr)
-    return stdout_display, stderr_display
+
+def _write_scratch_file(id_: Any, stream_name: str, text: str) -> str:
+    """将超长输出写入 scratch 文件，返回路径提示文本"""
+    scratch_dir = os.path.join(
+        os.getcwd(), ".scratch", f"{date.today().isoformat()}-chat2cli"
+    )
+    os.makedirs(scratch_dir, exist_ok=True)
+    safe_id = re.sub(r"[^\w\-.]", "_", str(id_))
+    base_name = f"{safe_id}-{stream_name}"
+    filepath = os.path.join(scratch_dir, f"{base_name}.txt")
+    counter = 1
+    while os.path.exists(filepath):
+        filepath = os.path.join(scratch_dir, f"{base_name}_{counter}.txt")
+        counter += 1
+    with open(filepath, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+    abs_path = os.path.abspath(filepath)
+    return f"[输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}]"
+
+
+def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
+    """三层策略输出结果文本：
+    1. 超长（>= _FILE_THRESHOLD）：写 scratch 文件，返回路径提示字符串
+    2. JSON 编码膨胀显著（> OOB 开销估算）：返回 {"ref": ref_id}，内容进入 OOB 块
+    3. 其余：直接内联字符串
+    """
+    if not text:
+        return text
+
+    # 超长：直接写文件，避免把几 MB 内容塞进剪贴板
+    if len(text) >= _FILE_THRESHOLD:
+        return _write_scratch_file(id_, stream_name, text)
+
+    # 计算 JSON 编码膨胀（ensure_ascii=False 下主要来自引号、反斜杠、控制字符转义）
+    json_encoded_len = len(json.dumps(text, ensure_ascii=False))
+    encoding_overhead = json_encoded_len - len(text)
+
+    if encoding_overhead > _OOB_OVERHEAD_ESTIMATE:
+        ref_id = _gen_oob_id()
+        _register_oob_data(ref_id, text)
+        return {"ref": ref_id}
+
+    return text
+
+
 
 
 def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -1212,14 +1176,47 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
     stdout = "".join(stdout_lines).rstrip("\n")
     stderr = "".join(stderr_lines).rstrip("\n")
 
-    stdout_display, stderr_display = _truncate_output(id_, stdout, stderr)
-
     return {
         "success": True,
         "exit_code": returncode,
-        "stdout": stdout_display,
-        "stderr": stderr_display,
+        "stdout": _emit_result_text(id_, "stdout", stdout),
+        "stderr": _emit_result_text(id_, "stderr", stderr),
     }
+
+
+def extract_data_blocks(text: str) -> Dict[str, str]:
+    """提取 <data.{id}>...</data.{id}> 块，返回 id -> 内容 映射。
+
+    块内容原样保留，不做任何转义，也不剥离任何包裹。
+    """
+    data_map: Dict[str, str] = {}
+    pattern = re.compile(r"<data\.([^>\s]+)>(.*?)</data\.\1>", re.DOTALL)
+    for match in pattern.finditer(text):
+        ref_id = match.group(1)
+        data_map[ref_id] = match.group(2)
+    return data_map
+
+
+def resolve_data_refs(node: Any, data_map: Dict[str, str]) -> Any:
+    """递归替换 params 中的 {"id": "..."} 引用为数据块内容。
+
+    仅当 dict 恰好只含一个 "id" 键且值能在 data_map 中找到时才替换，
+    避免把带 id 字段的普通对象误判为引用。引用不存在的 id 直接报错。
+    """
+    if isinstance(node, dict):
+        node_dict = cast(Dict[Any, Any], node)
+        if set(node_dict.keys()) == {"id"}:
+            ref_value = node_dict["id"]
+            if not isinstance(ref_value, str):
+                return node_dict
+            if ref_value not in data_map:
+                raise KeyError(f"未找到数据块 id：{ref_value}")
+            return data_map[ref_value]
+        return {k: resolve_data_refs(v, data_map) for k, v in node_dict.items()}
+    if isinstance(node, list):
+        node_list = cast(List[Any], node)
+        return [resolve_data_refs(item, data_map) for item in node_list]
+    return node
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
@@ -1296,7 +1293,9 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     return True, ""
 
 
-def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]]:
+def dispatch_request(
+    req: Dict[str, Any], data_map: Dict[str, str]
+) -> Optional[Tuple[Dict[str, Any], str]]:
     """分发执行单个请求。
 
     返回 (JSON-RPC response, 附加内容块)。
@@ -1323,6 +1322,21 @@ def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]
             "error": {"code": -32700, "message": req["_parse_error"]},
             "id": req.get("id"),  # 可能为 None
         }, ""
+
+    # 在校验前替换数据引用：{"id": "..."} 此时还是对象，校验无法识别
+    if isinstance(req.get("params"), dict):
+        try:
+            resolved_params = resolve_data_refs(req["params"], data_map)
+        except KeyError as e:
+            if not has_id:
+                return None
+            return {
+                "jsonrpc": "2.0",
+                "error": {"code": -32602, "message": str(e)},
+                "id": req_id,
+            }, ""
+        req = {**req, "params": resolved_params}
+        params = cast(Dict[str, Any], req.get("params"))
 
     valid, err_msg = validate_request(req)
     logging.debug(f"  校验结果: {'通过' if valid else '失败 - ' + err_msg}")
@@ -1437,6 +1451,11 @@ def main():
         stream=sys.stderr,
     )
 
+    # 重置带外数据全局状态，避免多次调用（如测试）串扰
+    global _pending_oob_data, _oob_counter
+    _pending_oob_data.clear()
+    _oob_counter = 0
+
     # 读取 stdin 全部内容
     input_text = sys.stdin.read()
     logging.debug("=" * 60)
@@ -1453,6 +1472,8 @@ def main():
         return
 
     logging.debug("【2. 提取 localrpc 代码块】")
+    data_map = extract_data_blocks(input_text)
+    logging.debug(f"提取到 {len(data_map)} 个数据块: {sorted(data_map.keys())}")
     requests = extract_chat2cli_blocks(input_text)
     logging.debug(f"提取到 {len(requests)} 个请求")
     for i, req in enumerate(requests):
@@ -1472,7 +1493,7 @@ def main():
     logging.debug("【3. 执行请求】")
     for idx, req in enumerate(requests):
         logging.debug(f"处理请求 #{idx+1}:")
-        result = dispatch_request(req)
+        result = dispatch_request(req, data_map)
         if result is None:
             logging.debug(f"  请求 #{idx+1}: 无响应（notification 或空）")
             continue
@@ -1502,7 +1523,13 @@ def main():
                 logging.debug(f"  请求 #{idx+1}: skill 成功")
     logging.debug("=" * 60)
 
-    # 输出附加内容块（read 结果）
+    # 输出带外数据块（OOB 引用内容，按注册顺序）
+    if _pending_oob_data:
+        for ref_id, ref_content in _pending_oob_data.items():
+            print(_data_block_text(ref_id, ref_content))
+        print()
+
+    # 输出附加内容块（view 结果）
     if content_blocks:
         print("\n".join(content_blocks))
 
