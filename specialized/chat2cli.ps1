@@ -92,20 +92,33 @@ function Show-Chat2CLIToast {
 
         $script:Chat2CLIToastBorder.Child = $script:Chat2CLIToastText
         $script:Chat2CLIToastWindow.Content = $script:Chat2CLIToastBorder
-        $script:Chat2CLIToastWindow.WindowStartupLocation = 'CenterScreen'
+        $script:Chat2CLIToastWindow.WindowStartupLocation = 'Manual'
     }
 
     $script:Chat2CLIToastText.Text = $Message
 
-    if ($script:Chat2CLIToastWindow.IsVisible) {
-        $script:Chat2CLIToastWindow.Hide()
+    if (-not $script:Chat2CLIToastWindow.IsVisible) {
+        $script:Chat2CLIToastWindow.Show()
     }
 
-    $script:Chat2CLIToastWindow.Show()
-    $script:Chat2CLIToastWindow.Top = [System.Windows.SystemParameters]::WorkArea.Top + ([System.Windows.SystemParameters]::WorkArea.Height * 0.12)
+    # 居中偏下：水平居中，垂直位于工作区底部上方约 180px
+    $workArea = [System.Windows.SystemParameters]::WorkArea
+    $script:Chat2CLIToastWindow.Left = $workArea.Left + [Math]::Max(0, ($workArea.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
+    $script:Chat2CLIToastWindow.Top = $workArea.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
+}
 
-    Start-Sleep -Milliseconds 1800
-    $script:Chat2CLIToastWindow.Hide()
+function Update-Chat2CLIToast {
+    param([string]$Message)
+
+    if ($null -ne $script:Chat2CLIToastWindow -and $null -ne $script:Chat2CLIToastText) {
+        $script:Chat2CLIToastText.Text = $Message
+    }
+}
+
+function Hide-Chat2CLIToast {
+    if ($null -ne $script:Chat2CLIToastWindow -and $script:Chat2CLIToastWindow.IsVisible) {
+        $script:Chat2CLIToastWindow.Hide()
+    }
 }
 
 function Watch-Chat2CLI {
@@ -116,9 +129,13 @@ function Watch-Chat2CLI {
     $scriptPath = "$PSScriptRoot/chat2cli.py"
 
     function Invoke-Chat2CLIProcess {
-        $clipboard = Get-Clipboard -Raw
-        if ($null -eq $clipboard) {
-            $clipboard = ""
+        param(
+            [string]$InputText,
+            [switch]$SuppressToast
+        )
+
+        if (-not $SuppressToast) {
+            Show-Chat2CLIToast -Message "正在处理..."
         }
 
         $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -138,7 +155,7 @@ function Watch-Chat2CLI {
         $process.Start() | Out-Null
 
         try {
-            $process.StandardInput.Write($clipboard)
+            $process.StandardInput.Write($InputText)
             $process.StandardInput.Close()
 
             $stdoutTask = $process.StandardOutput.ReadToEndAsync()
@@ -163,31 +180,68 @@ function Watch-Chat2CLI {
                 throw "chat2cli process failed with exit code $($process.ExitCode)"
             }
 
-            Show-Chat2CLIToast "Chat2CLI 执行完成"
+            if (-not $SuppressToast) {
+                Update-Chat2CLIToast -Message "Chat2CLI 执行完成"
+                Start-Sleep -Milliseconds 1800
+                Hide-Chat2CLIToast
+            }
+
+            return $output
         }
         finally {
             if (-not $process.HasExited) {
                 $process.Kill()
             }
             $process.Dispose()
+            Hide-Chat2CLIToast
         }
     }
 
-    Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 localrpc 调用...'
+    # 使用命名互斥体与停止事件，确保同一时间只有一个监听实例
+    $mutexName = "Global\Chat2CLI.Watch.Mutex"
+    $stopEventName = "Global\Chat2CLI.Watch.Stop"
+
+    $watchMutex = New-Object System.Threading.Mutex($false, $mutexName)
+    $stopEvent = New-Object System.Threading.EventWaitHandle($false, [System.Threading.EventResetMode]::ManualReset, $stopEventName)
+    $ownsMutex = $false
 
     try {
-        # 启动时处理当前剪贴板：无 localrpc 请求时由 chat2cli.py 生成初始指令
-        Invoke-Chat2CLIProcess
+        if (-not $watchMutex.WaitOne(0)) {
+            Write-Host "[Watch-Chat2CLI] 检测到已有监听实例，正在停止前一个实例..."
+            $stopEvent.Set() | Out-Null
+            $watchMutex.WaitOne() | Out-Null
+            Write-Host "[Watch-Chat2CLI] 前一个实例已停止"
+        }
+        $ownsMutex = $true
+        $stopEvent.Reset() | Out-Null
+
+        Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 localrpc 调用...'
+
+        # 忽略开始前剪贴板的内容：用空字符串生成初始指令并记录
+        $initialInstruction = Invoke-Chat2CLIProcess -InputText "" -SuppressToast
 
         while ($true) {
+            if ($stopEvent.WaitOne(0)) {
+                Write-Host "[Watch-Chat2CLI] 收到停止信号，正在退出..."
+                break
+            }
+
             $current = Get-Clipboard -Raw
+            if ($null -eq $current) {
+                $current = ""
+            }
 
             if (-not (Test-Chat2CLIClipboardGenerated)) {
-                # 必须匹配完整的 ```localrpc fenced block，避免误触发 ```localrpc-result
-                $hasToolBlock = $current -match '(?ms)^```localrpc\s*$.*?^```\s*$'
+                # 忽略包含初始指令的输入（用户可能重新复制初始指令用于其他会话）
+                $containsInitial = -not [string]::IsNullOrEmpty($initialInstruction) -and $current.Contains($initialInstruction)
 
-                if ($hasToolBlock) {
-                    Invoke-Chat2CLIProcess
+                if (-not $containsInitial) {
+                    # 必须匹配完整的 ```localrpc fenced block，避免误触发 ```localrpc-result
+                    $hasToolBlock = $current -match '(?ms)^```localrpc\s*$.*?^```\s*$'
+
+                    if ($hasToolBlock) {
+                        Invoke-Chat2CLIProcess -InputText $current
+                    }
                 }
             }
 
@@ -199,6 +253,14 @@ function Watch-Chat2CLI {
     }
     catch [System.OperationCanceledException] {
         Write-Host "[Watch-Chat2CLI] 已停止"
+    }
+    finally {
+        if ($ownsMutex) {
+            $watchMutex.ReleaseMutex()
+        }
+        $watchMutex.Dispose()
+        $stopEvent.Dispose()
+        Hide-Chat2CLIToast
     }
 }
 
