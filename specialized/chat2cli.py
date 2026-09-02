@@ -168,7 +168,7 @@ def print_instruction():
 按以下 response_template 输出R调用：
 
 <response_template>
-你的操作意图：
+{{此处替换为你的操作意图}}：
 ```localrpc
 {{
   "jsonrpc": "2.0",
