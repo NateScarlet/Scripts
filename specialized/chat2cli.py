@@ -1204,16 +1204,84 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
     }
 
 
+def _parse_localrpc_payload(content: str) -> List[Dict[str, Any]]:
+    """解析单个 localrpc 代码块内容，返回请求列表。
+
+    JSON 解析失败时返回带上下文的错误项。
+    """
+    blocks: List[Dict[str, Any]] = []
+    try:
+        parsed: Any = json.loads(content)
+        if isinstance(parsed, list):
+            for item in cast(List[Any], parsed):
+                if isinstance(item, dict):
+                    blocks.append(cast(Dict[str, Any], item))
+                else:
+                    blocks.append({"_parse_error": "请求必须是 JSON 对象"})
+        elif isinstance(parsed, dict):
+            blocks.append(cast(Dict[str, Any], parsed))
+        else:
+            blocks.append({"_parse_error": "请求必须是 JSON 对象"})
+    except json.JSONDecodeError as e:
+        # 构建带上下文的错误信息（不重复行号列号，只保留错误描述和上下文）
+        pos = e.pos
+        start = max(0, pos - 30)
+        end = min(len(content), pos + 30)
+        context_before = content[start:pos]
+        # 取出错误位置的字符（若 pos 超出长度则用空格代替）
+        error_char = content[pos] if pos < len(content) else " "
+        context_after = content[pos + 1 : end]
+        context_msg = f"{context_before}**{error_char}**{context_after}"
+        if start > 0:
+            context_msg = "..." + context_msg
+        if end < len(content):
+            context_msg = context_msg + "..."
+        error_msg = f"JSON 解析失败：{e.msg}。附近内容：{context_msg}"
+        blocks.append({"_parse_error": error_msg})
+    return blocks
+
+
+def _scan_blocks(text: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
+    """单次扫描文本，同时提取 data 块和 localrpc 块。
+
+    data 块优先级高于 localrpc：data 块内部出现的 ```localrpc
+    属于字面内容，不会被当作 RPC 请求解析。
+    """
+    data_map: Dict[str, str] = {}
+    blocks: List[Dict[str, Any]] = []
+
+    # 左侧 data 分支优先匹配，整个 data 块（含其中 localrpc）被吞掉，
+    # 因此其中的 localrpc 不会作为独立 token 被提取。
+    pattern = re.compile(
+        r"<data\.([^>\s]+)>(.*?)</data\.\1>"
+        r"|```localrpc\s*\n(.*?)\n```",
+        re.DOTALL,
+    )
+
+    for match in pattern.finditer(text):
+        if match.group(1) is not None:
+            data_content = match.group(2)
+            if data_content is not None:
+                data_map[match.group(1)] = data_content
+            continue
+
+        content_raw = match.group(3)
+        if content_raw is None:
+            continue
+        content = content_raw.strip()
+        if not content:
+            continue
+        blocks.extend(_parse_localrpc_payload(content))
+
+    return data_map, blocks
+
+
 def extract_data_blocks(text: str) -> Dict[str, str]:
     """提取 <data.{id}>...</data.{id}> 块，返回 id -> 内容 映射。
 
     块内容原样保留，不做任何转义，也不剥离任何包裹。
     """
-    data_map: Dict[str, str] = {}
-    pattern = re.compile(r"<data\.([^>\s]+)>(.*?)</data\.\1>", re.DOTALL)
-    for match in pattern.finditer(text):
-        ref_id = match.group(1)
-        data_map[ref_id] = match.group(2)
+    data_map, _ = _scan_blocks(text)
     return data_map
 
 
@@ -1240,42 +1308,11 @@ def resolve_data_refs(node: Any, data_map: Dict[str, str]) -> Any:
 
 
 def extract_chat2cli_blocks(text: str) -> List[Dict[str, Any]]:
-    """提取所有 ```localrpc 代码块并解析 JSON"""
-    blocks: List[Dict[str, Any]] = []
-    pattern = re.compile(r"```localrpc\s*\n(.*?)\n```", re.DOTALL)
-    for match in pattern.finditer(text):
-        content = match.group(1).strip()
-        if not content:
-            continue
-        try:
-            parsed: Any = json.loads(content)
-            if isinstance(parsed, list):
-                item_list: List[Any] = cast(List[Any], parsed)
-                for item in item_list:
-                    if isinstance(item, dict):
-                        blocks.append(cast(Dict[str, Any], item))
-                    else:
-                        blocks.append({"_parse_error": "请求必须是 JSON 对象"})
-            elif isinstance(parsed, dict):
-                blocks.append(cast(Dict[str, Any], parsed))
-            else:
-                blocks.append({"_parse_error": "请求必须是 JSON 对象"})
-        except json.JSONDecodeError as e:
-            # 构建带上下文的错误信息（不重复行号列号，只保留错误描述和上下文）
-            pos = e.pos
-            start = max(0, pos - 30)
-            end = min(len(content), pos + 30)
-            context_before = content[start:pos]
-            # 取出错误位置的字符（若 pos 超出长度则用空格代替）
-            error_char = content[pos] if pos < len(content) else " "
-            context_after = content[pos+1:end]
-            context_msg = f"{context_before}**{error_char}**{context_after}"
-            if start > 0:
-                context_msg = "..." + context_msg
-            if end < len(content):
-                context_msg = context_msg + "..."
-            error_msg = f"JSON 解析失败：{e.msg}。附近内容：{context_msg}"
-            blocks.append({"_parse_error": error_msg})
+    """提取所有 ```localrpc 代码块并解析 JSON。
+
+    data 块内部的 localrpc 属于字面内容，会被跳过。
+    """
+    _, blocks = _scan_blocks(text)
     return blocks
 
 
@@ -1492,9 +1529,8 @@ def main():
         return
 
     logging.debug("【2. 提取 localrpc 代码块】")
-    data_map = extract_data_blocks(input_text)
+    data_map, requests = _scan_blocks(input_text)
     logging.debug(f"提取到 {len(data_map)} 个数据块: {sorted(data_map.keys())}")
-    requests = extract_chat2cli_blocks(input_text)
     logging.debug(f"提取到 {len(requests)} 个请求")
     for i, req in enumerate(requests):
         req_preview = json.dumps(req, ensure_ascii=False, default=str, indent=2)
