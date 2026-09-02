@@ -20,6 +20,7 @@ chat2cli.py - JSON-RPC RPC调用助手（代码块标识为 localrpc）
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 
@@ -29,6 +30,7 @@ os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 import difflib
 import json
+import logging
 import re
 import signal
 import subprocess
@@ -1287,17 +1289,28 @@ def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]
     """
     has_id = "id" in req
     req_id: Any = req.get("id")
+    method: Optional[str] = req.get("method")
+    params: Optional[Dict[str, Any]] = req.get("params")
+
+    logging.debug("--- 分发请求 ---")
+    logging.debug(f"  method: {method}")
+    logging.debug(f"  params: {json.dumps(params, ensure_ascii=False, default=str)}")
+    logging.debug(f"  has_id: {has_id}, id: {req_id}")
 
     if "_parse_error" in req:
-        if not has_id:
-            return None
+        # 始终输出错误信息到 stderr，不依赖 debug 模式
+        sys.stderr.write(f"[chat2cli] JSON 解析错误: {req['_parse_error']}\n")
+        sys.stderr.flush()
+        logging.debug(f"  解析错误: {req['_parse_error']}")
+        # 返回错误响应，id 取请求中的 id（可能为 None）
         return {
             "jsonrpc": "2.0",
             "error": {"code": -32700, "message": req["_parse_error"]},
-            "id": None,
+            "id": req.get("id"),  # 可能为 None
         }, ""
 
     valid, err_msg = validate_request(req)
+    logging.debug(f"  校验结果: {'通过' if valid else '失败 - ' + err_msg}")
     if not valid:
         if not has_id:
             return None
@@ -1307,12 +1320,13 @@ def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]
             "id": req_id,
         }, ""
 
-    method: str = cast(str, req["method"])
-    params: Dict[str, Any] = cast(Dict[str, Any], req["params"])
+    method = cast(str, req["method"])
+    params = cast(Dict[str, Any], req["params"])
 
     try:
         response: Optional[Dict[str, Any]] = None
         content_block = ""
+        logging.debug(f"  执行 method: {method}")
 
         if method == "str_replace_editor":
             meta, content_block = execute_str_replace_editor(req_id, params)
@@ -1320,46 +1334,58 @@ def dispatch_request(req: Dict[str, Any]) -> Optional[Tuple[Dict[str, Any], str]
                 for key in ("total_lines", "returned_lines", "first_line", "last_line", "message"):
                     meta.pop(key, None)
                 response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
+                logging.debug(f"  执行结果: 成功 - {meta}")
             else:
                 response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
                 }
+                logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
 
         elif method == "pwsh":
+            logging.debug(f"  执行 PowerShell 命令: {params.get('command', '')[:200]}...")
             result = execute_pwsh(req_id, params)
             if result.get("success"):
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
+                logging.debug(f"  执行结果: 成功, exit_code={result.get('exit_code')}")
             else:
                 response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": result.get("message", "未知错误")},
                     "id": req_id,
                 }
+                logging.debug(f"  执行结果: 失败 - {result.get('message', '未知错误')}")
 
         elif method == "skill":
+            logging.debug(f"  激活 skill: {params.get('name', '')}")
             meta, content_block = execute_skill(req_id, params)
             if meta.get("success"):
                 meta.pop("message", None)
                 response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
+                logging.debug(f"  执行结果: 成功 - skill '{meta.get('name')}' 已激活")
             else:
                 response = {
                     "jsonrpc": "2.0",
                     "error": {"code": -32000, "message": meta.get("message", "未知错误")},
                     "id": req_id,
                 }
+                logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
 
         if not has_id:
+            logging.debug("  请求为 notification，不返回响应")
             return None
 
         if response is None:
+            logging.debug("  响应为空")
             return None
 
+        logging.debug(f"  响应已生成: id={response.get('id')}")
         return response, content_block
 
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
+        logging.debug(f"  执行异常: {e}")
         if not has_id:
             return None
         return {
@@ -1379,15 +1405,46 @@ def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
 
 
 def main():
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description="JSON-RPC RPC 调用助手")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="开启调试模式，回显输入、解析、提取和执行过程",
+    )
+    args = parser.parse_args()
+
+    # 配置 logging
+    log_level = logging.DEBUG if args.debug else logging.WARNING
+    logging.basicConfig(
+        level=log_level,
+        format="[%(levelname)s] %(message)s",
+        stream=sys.stderr,
+    )
+
     # 读取 stdin 全部内容
     input_text = sys.stdin.read()
+    logging.debug("=" * 60)
+    logging.debug("【1. 原始输入】")
+    if input_text:
+        logging.debug(input_text)
+    else:
+        logging.debug("（空输入）")
+    logging.debug("=" * 60)
 
     if not input_text.strip():
         sys.stderr.write("[chat2cli] 输入为空，已输出初始指令。\n")
         print_instruction()
         return
 
+    logging.debug("【2. 提取 localrpc 代码块】")
     requests = extract_chat2cli_blocks(input_text)
+    logging.debug(f"提取到 {len(requests)} 个请求")
+    for i, req in enumerate(requests):
+        req_preview = json.dumps(req, ensure_ascii=False, default=str, indent=2)
+        logging.debug(f"  请求 #{i+1}:\n{req_preview}")
+    logging.debug("=" * 60)
+
     if not requests:
         sys.stderr.write("[chat2cli] 未检测到 localrpc 代码块，已输出初始指令。\n")
         print_instruction()
@@ -1396,9 +1453,13 @@ def main():
     responses: List[Dict[str, Any]] = []
     content_blocks: List[str] = []
     summary_parts: List[str] = []
-    for req in requests:
+
+    logging.debug("【3. 执行请求】")
+    for idx, req in enumerate(requests):
+        logging.debug(f"处理请求 #{idx+1}:")
         result = dispatch_request(req)
         if result is None:
+            logging.debug(f"  请求 #{idx+1}: 无响应（notification 或空）")
             continue
         resp, content_block = result
         responses.append(resp)
@@ -1407,18 +1468,24 @@ def main():
         # 构建 stderr 汇总
         if "error" in resp:
             summary_parts.append(f"id={resp.get('id')}: 失败 - {resp['error']['message']}")
+            logging.debug(f"  请求 #{idx+1}: 响应错误 - {resp['error']['message']}")
         else:
             method: Any = req.get("method", "unknown")
             if method == "str_replace_editor":
                 summary_parts.append(
                     f"str_replace_editor id={resp.get('id')}: 完成操作"
                 )
+                logging.debug(f"  请求 #{idx+1}: str_replace_editor 成功")
             elif method == "pwsh":
                 params: Dict[str, Any] = cast(Dict[str, Any], req.get("params", {}))
                 cmd = params.get("command", "")
                 cmd_summary = cmd[:50] + "..." if len(cmd) > 50 else cmd
                 summary_parts.append(f"pwsh id={resp.get('id')}: {cmd_summary}")
-
+                logging.debug(f"  请求 #{idx+1}: pwsh 成功")
+            elif method == "skill":
+                summary_parts.append(f"skill id={resp.get('id')}: 已激活")
+                logging.debug(f"  请求 #{idx+1}: skill 成功")
+    logging.debug("=" * 60)
 
     # 输出附加内容块（read 结果）
     if content_blocks:
