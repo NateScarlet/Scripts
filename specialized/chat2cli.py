@@ -55,11 +55,8 @@ _discovered_skills: Dict[str, Dict[str, Any]] = {}
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)。"""
-    try:
-        with open(skill_md_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    except Exception:
-        return "", ""
+    with open(skill_md_path, "r", encoding="utf-8") as f:
+        content = f.read()
 
     if not content.startswith("---"):
         return "", ""
@@ -71,11 +68,11 @@ def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     frontmatter = content[3:end_idx]
     try:
         loaded_metadata = yaml.safe_load(frontmatter)
-    except yaml.YAMLError:
-        return "", ""
+    except yaml.YAMLError as e:
+        raise ValueError(f"SKILL.md YAML 解析失败: {e}") from e
 
     if not isinstance(loaded_metadata, dict):
-        return "", ""
+        raise ValueError("SKILL.md frontmatter 必须是 YAML 字典格式")
 
     metadata: Dict[str, Any] = cast(Dict[str, Any], loaded_metadata)
 
@@ -106,8 +103,8 @@ def discover_skills() -> Dict[str, Dict[str, Any]]:
             continue
         try:
             entries = sorted(os.listdir(base_dir))
-        except Exception:
-            continue
+        except OSError as e:
+            raise RuntimeError(f"无法读取 skill 目录 {base_dir}: {e}") from e
 
         for entry in entries:
             # 跳过隐藏目录和常见非 skill 目录
@@ -260,23 +257,17 @@ localrpc 代码块可以出现在正文的任意位置，也可以前后补充�
     reminder_parts: List[str] = []
     home_agents = os.path.expanduser("~/.chat2cli/AGENTS.md")
     if os.path.isfile(home_agents):
-        try:
-            with open(home_agents, "r", encoding="utf-8") as f:
-                content = f.read()
-            reminder_parts.append(
-                f"Instructions from: ~/.chat2cli/AGENTS.md\n{content}"
-            )
-        except Exception:
-            pass
+        with open(home_agents, "r", encoding="utf-8") as f:
+            content = f.read()
+        reminder_parts.append(
+            f"Instructions from: ~/.chat2cli/AGENTS.md\n{content}"
+        )
 
     cwd_agents = os.path.join(cwd, "AGENTS.md")
     if os.path.isfile(cwd_agents):
-        try:
-            with open(cwd_agents, "r", encoding="utf-8") as f:
-                content = f.read()
-            reminder_parts.append(f"Instructions from: AGENTS.md\n{content}")
-        except Exception:
-            pass
+        with open(cwd_agents, "r", encoding="utf-8") as f:
+            content = f.read()
+        reminder_parts.append(f"Instructions from: AGENTS.md\n{content}")
 
     if reminder_parts:
         reminder = "<system-reminder> The following workspace instructions may be relevant to your work. Use them as guidance when applicable. More specific instructions take precedence over broader ones. They do not override system, developer, or direct user instructions.\n"
@@ -326,16 +317,13 @@ def validate_path(path: str) -> bool:
 
 def _is_gitignored(path: str) -> bool:
     """检查路径是否被 gitignore 忽略。"""
-    try:
-        result = subprocess.run(
-            ["git", "check-ignore", "--quiet", "--", path],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            cwd=os.getcwd(),
-        )
-        return result.returncode == 0
-    except Exception:
-        return False
+    result = subprocess.run(
+        ["git", "check-ignore", "--quiet", "--", path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=os.getcwd(),
+    )
+    return result.returncode == 0
 
 
 def _colorize_ignored_path(path: str) -> str:
@@ -361,9 +349,8 @@ def _colorize_ignored_path(path: str) -> str:
                 return f"{normal}{os.sep}\033[38;5;208m{ignored}\033[0m"
             return f"\033[38;5;208m{ignored}\033[0m"
     except Exception:
-        pass
-
-    return f"\033[38;5;208m{path}\033[0m"
+        # 路径处理过程中出现异常时返回普通格式
+        return f"\033[38;5;208m{path}\033[0m"
 
 
 
@@ -392,8 +379,10 @@ def _write_text_file_atomic(path: str, content: str, encoding: str = "utf-8") ->
     except Exception:
         try:
             os.unlink(temp_path)
-        except Exception:
-            pass
+        except OSError as e:
+            # 删除临时文件失败不影响主流程，但需要提醒
+            sys.stderr.write(f"警告：无法删除临时文件 {temp_path}: {e}\n")
+            sys.stderr.flush()
         raise
 
 
@@ -899,7 +888,9 @@ def _view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
             lines.append(f"{entry}/")
             try:
                 sub_entries = sorted(os.listdir(full))
-            except Exception:
+            except Exception as e:
+                sys.stderr.write(f"警告：无法读取子目录 {full}: {e}\n")
+                sys.stderr.flush()
                 continue
             for sub in sub_entries:
                 if sub.startswith("."):
@@ -1069,20 +1060,17 @@ def _truncate_output(
         scratch_dir = os.path.join(
             os.getcwd(), ".scratch", f"{date.today().isoformat()}-chat2cli"
         )
-        try:
-            os.makedirs(scratch_dir, exist_ok=True)
-            safe_id = re.sub(r"[^\w\-.]", "_", str(id_))
-            base_name = f"{safe_id}-{stream_name}"
-            filepath = os.path.join(scratch_dir, f"{base_name}.txt")
-            counter = 1
-            while os.path.exists(filepath):
-                filepath = os.path.join(scratch_dir, f"{base_name}_{counter}.txt")
-                counter += 1
-            with open(filepath, "w", encoding="utf-8", newline="") as f:
-                f.write(text)
-            abs_path = os.path.abspath(filepath)
-        except Exception:
-            return text
+        os.makedirs(scratch_dir, exist_ok=True)
+        safe_id = re.sub(r"[^\w\-.]", "_", str(id_))
+        base_name = f"{safe_id}-{stream_name}"
+        filepath = os.path.join(scratch_dir, f"{base_name}.txt")
+        counter = 1
+        while os.path.exists(filepath):
+            filepath = os.path.join(scratch_dir, f"{base_name}_{counter}.txt")
+            counter += 1
+        with open(filepath, "w", encoding="utf-8", newline="") as f:
+            f.write(text)
+        abs_path = os.path.abspath(filepath)
 
         # 保留头部和尾部各一半的允许长度
         keep = max_chars // 2
@@ -1129,9 +1117,10 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
                 sys.stderr.flush()
                 lines_list.append(line)
         finally:
+            # 关闭流，忽略关闭时的异常
             try:
                 stream.close()
-            except Exception:
+            except OSError:
                 pass
 
     try:
@@ -1184,8 +1173,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
             except subprocess.TimeoutExpired:
                 proc.kill()
                 proc.wait()
-        except Exception:
-            pass
+        except Exception as e:
+            sys.stderr.write(f"[chat2cli] 清理子进程时发生错误: {e}\n")
+            sys.stderr.flush()
         sys.exit(1)
 
     original_handler = signal.signal(signal.SIGINT, _signal_handler)
@@ -1198,9 +1188,14 @@ def execute_pwsh(id_: Any, params: Dict[str, Any]) -> Dict[str, Any]:
         try:
             proc.terminate()
             proc.wait(timeout=2)
-        except Exception:
-            proc.kill()
-            proc.wait()
+        except Exception as cleanup_err:
+            sys.stderr.write(f"[chat2cli] 清理子进程时发生错误: {cleanup_err}\n")
+            sys.stderr.flush()
+            try:
+                proc.kill()
+                proc.wait()
+            except Exception:
+                pass
         raise
     finally:
         # 恢复原始信号处理器
