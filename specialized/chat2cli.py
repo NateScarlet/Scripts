@@ -1302,6 +1302,23 @@ def _has_bare_localrpc(text: str) -> bool:
     return bool(re.search(r"<(?:request|localrpc)>", text_without_blocks, re.IGNORECASE))
 
 
+def _has_truncated_fence(text: str) -> bool:
+    """检测是否存在未闭合或提前截断的 chat2cli 围栏。
+
+    当输入包含 ```chat2cli 围栏开头，但完整围栏解析器
+    _extract_chat2cli_fence_blocks 提取到的块都没有 <request> 时，
+    很可能是因为 data 块内的字面反引号围栏被误当成外层围栏的闭合。
+    此时应提示使用更长的外层围栏。
+    """
+    if not re.search(r"`{3,}chat2cli", text):
+        return False
+    blocks = _extract_chat2cli_fence_blocks(text)
+    if not blocks:
+        return True
+    # 提取到块但没有任何 <request>，说明块被提前截断
+    return all("<request>" not in block for block in blocks)
+
+
 def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
     """解析单个 chat2cli 代码块内容，提取 data 标签和 request 标签。
 
@@ -1617,6 +1634,29 @@ def main():
     logging.debug("=" * 60)
 
     if not requests:
+        # 检测存在 chat2cli 围栏但未提取到 request 的情况，
+        # 通常是 data 块内字面反引号围栏导致外层围栏被提前截断。
+        # 需要优先于裸 request 检测，因为截断会让 request 落到代码块外。
+        if _has_truncated_fence(input_text):
+            error_msg = (
+                "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
+                "如果 data 块内容包含字面的 ``` 围栏，请使用更长（四个或更多）\n"
+                "反引号的外层围栏，例如：\n"
+                "\n"
+                "````chat2cli\n"
+                "<data.code>\n"
+                "```\n"
+                "字面围栏内容\n"
+                "```\n"
+                "</data.code>\n"
+                "<request>\n"
+                '{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
+                "</request>\n"
+                "````\n"
+            )
+            print(error_msg)
+            return
+
         # 检测是否有裸 request 标签（在 chat2cli 代码块外）
         if _has_bare_localrpc(input_text):
             error_msg = (

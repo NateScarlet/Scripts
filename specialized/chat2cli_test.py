@@ -121,6 +121,50 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(blocks[0]["method"], "skill")
 
 
+
+class TestHasTruncatedFence(unittest.TestCase):
+    def test_detects_truncated_fence_with_literal_inner_fence(self):
+        # 外层三反引号，data 块内含字面 ``` 围栏，导致外层围栏被提前截断
+        text = (
+            "```chat2cli\n"
+            "<data.code>\n"
+            "```\n"
+            "literal fence content\n"
+            "```\n"
+            "</data.code>\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
+            "```"
+        )
+        self.assertTrue(chat2cli._has_truncated_fence(text))
+
+    def test_no_truncation_with_longer_outer_fence(self):
+        # 外层四反引号，可以正常容纳内层 ``` 围栏
+        text = (
+            "````chat2cli\n"
+            "<data.code>\n"
+            "```\n"
+            "literal fence content\n"
+            "```\n"
+            "</data.code>\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
+            "````"
+        )
+        self.assertFalse(chat2cli._has_truncated_fence(text))
+
+    def test_no_fence_at_all(self):
+        text = "no fence here"
+        self.assertFalse(chat2cli._has_truncated_fence(text))
+
+    def test_valid_three_backtick_fence(self):
+        # 正常的三反引号围栏，无截断
+        text = (
+            "```chat2cli\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
+            "```"
+        )
+        self.assertFalse(chat2cli._has_truncated_fence(text))
+
+
 class TestViewOobId(unittest.TestCase):
     def test_view_file_ref_id_uses_rpc_id(self):
         with tempfile.TemporaryDirectory() as tmpdir:
