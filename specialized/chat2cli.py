@@ -66,8 +66,6 @@ _FILE_THRESHOLD = 8000
 _OOB_OVERHEAD_ESTIMATE = 80
 # 待输出的带外数据（ref_id -> 内容），由 main 循环在 stdout 统一输出
 _pending_oob_data: Dict[str, str] = {}
-# 带外数据引用 ID 计数器，保证每次生成唯一的 ref id
-_oob_counter = 0
 
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
@@ -1035,13 +1033,6 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
     }
 
 
-def _gen_oob_id() -> str:
-    """生成唯一的带外数据引用 ID"""
-    global _oob_counter
-    _oob_counter += 1
-    return f"oob_{_oob_counter}"
-
-
 def _gen_view_oob_id(id_: Any) -> str:
     """生成 view 命令的带外数据引用 ID。
 
@@ -1060,14 +1051,14 @@ def _data_block_text(ref_id: str, content: str) -> str:
     return f"<data.{ref_id}>{content}</data.{ref_id}>"
 
 
-def _write_scratch_file(id_: Any, stream_name: str, text: str) -> str:
-    """将超长输出写入 scratch 文件，返回路径提示文本"""
+def _scratch_filepath(id_: Any, stream_name: str, text: str) -> str:
+    """将超长输出写入 scratch 文件，返回绝对路径"""
     scratch_dir = os.path.join(
         os.getcwd(), ".scratch", f"{date.today().isoformat()}-chat2cli"
     )
     os.makedirs(scratch_dir, exist_ok=True)
     safe_id = re.sub(r"[^\w\-.]", "_", str(id_))
-    base_name = f"{safe_id}-{stream_name}"
+    base_name = f"{stream_name}_{safe_id}"
     filepath = os.path.join(scratch_dir, f"{base_name}.txt")
     counter = 1
     while os.path.exists(filepath):
@@ -1075,13 +1066,22 @@ def _write_scratch_file(id_: Any, stream_name: str, text: str) -> str:
         counter += 1
     with open(filepath, "w", encoding="utf-8", newline="") as f:
         f.write(text)
-    abs_path = os.path.abspath(filepath)
-    return f"[输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}]"
+    return os.path.abspath(filepath)
+
+
+def _format_viewed(text: str, start_line: int = 1) -> str:
+    """以 view 相同格式渲染文本：每行前置行号，行号从 start_line 开始"""
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines = lines[:-1]
+    return "\n".join(
+        f"{start_line + i}:{line}" for i, line in enumerate(lines)
+    )
 
 
 def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     """三层策略输出结果文本：
-    1. 超长（>= _FILE_THRESHOLD）：写 scratch 文件，返回路径提示字符串
+    1. 超长（>= _FILE_THRESHOLD）：写 scratch 文件，返回截断说明 + head/tail 引用
     2. JSON 编码膨胀显著（> OOB 开销估算）：返回 {"ref": ref_id}，内容进入 OOB 块
     3. 其余：直接内联字符串
     """
@@ -1090,14 +1090,48 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
 
     # 超长：直接写文件，避免把几 MB 内容塞进剪贴板
     if len(text) >= _FILE_THRESHOLD:
-        return _write_scratch_file(id_, stream_name, text)
+        abs_path = _scratch_filepath(id_, stream_name, text)
+        head_ref = f"{stream_name}_{id_}_head"
+        tail_ref = f"{stream_name}_{id_}_tail"
+
+        # 开头和结尾各取约内联最大长度的一半，按 view 格式（带行号）提供。
+        # 截取边界按行对齐，保证 head 和 tail 都从完整行开始。
+        half = _FILE_THRESHOLD // 2
+
+        # head：从头取约 half 字符后，回溯到最近的换行处，只保留完整行
+        head_raw = text[:half]
+        head_cut = head_raw.rfind("\n")
+        if head_cut != -1:
+            head_raw = head_raw[:head_cut]
+        head_text = _format_viewed(head_raw)
+
+        # tail：从尾取约 half 字符后，前进到最近的换行处，只保留完整行
+        tail_raw = text[-half:]
+        tail_cut = tail_raw.find("\n")
+        if tail_cut != -1:
+            tail_raw = tail_raw[tail_cut + 1:]
+        # tail 首行在全文中的行号：截取位置之前的换行数 + 1
+        tail_start_char = len(text) - half + (tail_cut + 1 if tail_cut != -1 else 0)
+        preceding_lines = text[:tail_start_char].count("\n")
+        tail_text = _format_viewed(tail_raw, start_line=preceding_lines + 1)
+        _register_oob_data(head_ref, head_text)
+        _register_oob_data(tail_ref, tail_text)
+
+        return {
+            "message": (
+                f"输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}"
+            ),
+            "path": abs_path,
+            "head": {"ref": head_ref},
+            "tail": {"ref": tail_ref},
+        }
 
     # 计算 JSON 编码膨胀（ensure_ascii=False 下主要来自引号、反斜杠、控制字符转义）
     json_encoded_len = len(json.dumps(text, ensure_ascii=False))
     encoding_overhead = json_encoded_len - len(text)
 
     if encoding_overhead > _OOB_OVERHEAD_ESTIMATE:
-        ref_id = _gen_oob_id()
+        ref_id = f"{stream_name}_{id_}"
         _register_oob_data(ref_id, text)
         return {"ref": ref_id}
 
@@ -1607,9 +1641,8 @@ def main():
     )
 
     # 重置带外数据全局状态，避免多次调用（如测试）串扰
-    global _pending_oob_data, _oob_counter
+    global _pending_oob_data
     _pending_oob_data.clear()
-    _oob_counter = 0
 
     # 读取 stdin 全部内容
     input_text = sys.stdin.read()

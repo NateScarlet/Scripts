@@ -4,6 +4,7 @@
 代码块外的同名标签一律视为一般对话文本。
 data 块内部的 <request> 属于字面内容，不应被当作 RPC 请求执行。
 """
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -188,6 +189,82 @@ class TestViewOobId(unittest.TestCase):
         self.assertTrue(meta["success"])
         self.assertEqual(meta["content"]["ref"], "view_7")
         self.assertTrue(content_block.startswith("<data.view_7>"))
+
+
+class TestEmitResultTextOverlong(unittest.TestCase):
+    """覆盖 _emit_result_text 超长输出落盘与 head/tail 引用行为"""
+
+    def setUp(self):
+        # 清空模块全局 pending，避免测试间串扰
+        chat2cli._pending_oob_data.clear()
+
+    def _make_overlong_text(self, lines: int = 100) -> str:
+        """构造超过 _FILE_THRESHOLD 的多行文本，每行内容可识别行号"""
+        line = "x" * 200
+        parts = [f"{i:04d}:{line}" for i in range(1, lines + 1)]
+        text = "\n".join(parts)
+        self.assertGreaterEqual(len(text), chat2cli._FILE_THRESHOLD)
+        return text
+
+    def test_overlong_returns_dict_with_path_and_refs(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                result = chat2cli._emit_result_text(
+                    "42", "stdout", self._make_overlong_text()
+                )
+            finally:
+                os.chdir(old_cwd)
+
+        self.assertIsInstance(result, dict)
+        self.assertIn("message", result)
+        self.assertIn("path", result)
+        self.assertEqual(result["head"], {"ref": "stdout_42_head"})
+        self.assertEqual(result["tail"], {"ref": "stdout_42_tail"})
+
+    def test_overlong_head_starts_at_line_one(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                chat2cli._emit_result_text("1", "stderr", self._make_overlong_text())
+            finally:
+                os.chdir(old_cwd)
+
+        head = chat2cli._pending_oob_data["stderr_1_head"]
+        self.assertTrue(head.startswith("1:0001:"))
+
+    def test_overlong_tail_preserves_real_line_numbers(self):
+        text = self._make_overlong_text(lines=100)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                chat2cli._emit_result_text("7", "stdout", text)
+            finally:
+                os.chdir(old_cwd)
+
+        tail = chat2cli._pending_oob_data["stdout_7_tail"]
+        # 最后一行是第 100 行，行号必须正确保留
+        self.assertTrue(tail.endswith("100:0100:" + "x" * 200))
+        # tail 首行必须是完整行，以行号开头，不出现半行内容
+        first_line = tail.splitlines()[0]
+        self.assertRegex(first_line, r"^\d+:\d{4}:x{200}$")
+
+    def test_overlong_scratch_file_uses_stream_id_naming(self):
+        text = self._make_overlong_text()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                result = chat2cli._emit_result_text("abc-1", "stdout", text)
+                path = Path(result["path"])
+                self.assertTrue(path.exists())
+                self.assertEqual(path.name, "stdout_abc-1.txt")
+                self.assertEqual(path.read_text(encoding="utf-8"), text)
+            finally:
+                os.chdir(old_cwd)
 
 
 if __name__ == "__main__":
