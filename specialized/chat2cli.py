@@ -1689,7 +1689,7 @@ def main():
                 "</request>\n"
                 "````\n"
             )
-            print(error_msg)
+            print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
         # 检测是否有裸 request 标签（在 chat2cli 代码块外）
@@ -1704,7 +1704,7 @@ def main():
                 "</request>\n"
                 "```\n"
             )
-            print(error_msg)
+            print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
         sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 request 标签，已输出初始指令。\n")

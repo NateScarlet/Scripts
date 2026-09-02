@@ -267,5 +267,53 @@ class TestEmitResultTextOverlong(unittest.TestCase):
                 os.chdir(old_cwd)
 
 
+class TestErrorInstructionWrapping(unittest.TestCase):
+    """错误提示应包裹在 <chat2cli_instruction> 标签内，而不是直接作为正文返回"""
+
+    def _run_chat2cli(self, input_text: str) -> str:
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = subprocess.run(
+                [sys.executable, str(script)],
+                input=input_text,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                cwd=tmpdir,
+                check=False,
+            )
+        return result.stdout
+
+    def test_truncated_fence_error_wrapped_in_instruction_tag(self):
+        text = (
+            "```chat2cli\n"
+            "<data.code>\n"
+            "```\n"
+            "literal fence\n"
+            "```\n"
+            "</data.code>\n"
+            "<request>\n"
+            '{"method":"pwsh"}\n'
+            "</request>\n"
+            "```"
+        )
+        output = self._run_chat2cli(text)
+        self.assertTrue(output.startswith("<chat2cli_instruction>\n"))
+        self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
+
+    def test_bare_request_error_wrapped_in_instruction_tag(self):
+        text = (
+            "<request>\n"
+            '{"method":"pwsh"}\n'
+            "</request>\n"
+        )
+        output = self._run_chat2cli(text)
+        self.assertTrue(output.startswith("<chat2cli_instruction>\n"))
+        self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
+
+
 if __name__ == "__main__":
     unittest.main()

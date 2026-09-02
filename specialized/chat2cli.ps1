@@ -220,8 +220,8 @@ function Watch-Chat2CLI {
 
         Write-Host '[Watch-Chat2CLI] 已启动，监听剪贴板等待新的 chat2cli 调用...'
 
-        # 忽略开始前剪贴板的内容：用空字符串生成初始指令并记录
-        $initialInstruction = Invoke-Chat2CLIProcess -InputText "" -SuppressToast
+        # 忽略开始前剪贴板的内容：用空字符串生成初始指令
+        Invoke-Chat2CLIProcess -InputText "" -SuppressToast | Out-Null
 
         while ($true) {
             if ($stopEvent.WaitOne(0)) {
@@ -235,10 +235,11 @@ function Watch-Chat2CLI {
             }
 
             if (-not (Test-Chat2CLIClipboardGenerated)) {
-                # 忽略包含初始指令的输入（用户可能重新复制初始指令用于其他会话）
-                $containsInitial = -not [string]::IsNullOrEmpty($initialInstruction) -and $current.Contains($initialInstruction)
+                # 忽略包含指令提示的输入（初始指令和错误指令都包裹在
+                # <chat2cli_instruction> 标签内，其中的示例不应触发执行）
+                $isInstruction = $current.Contains('<chat2cli_instruction>')
 
-                if (-not $containsInitial) {
+                if (-not $isInstruction) {
                     # 必须匹配完整的 chat2cli fenced block（三个或更多反引号）。
                     # 这里只做粗筛触发，围栏长度一致性由 chat2cli.py 精确解析。
                     $hasToolBlock = $current -match '(?ms)^`{3,}chat2cli\s*$.*?^`{3,}\s*$'
