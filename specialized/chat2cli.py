@@ -201,11 +201,11 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
 ```chat2cli
-<data.issue_title>fix(chat2cli): should skip localrpc inside data blocks</data.issue_title>
+<data.issue_title>fix(chat2cli): should skip chat2rpc inside data blocks</data.issue_title>
 <data.issue_body>
 ## Problem
 
-A data block's localrpc fence is literal content, not a request.
+A data block's chat2cli fence is literal content, not a request.
 
 Closes #42
 </data.issue_body>
