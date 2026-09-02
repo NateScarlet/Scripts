@@ -178,25 +178,42 @@ localrpc 代码块可以出现在正文的任意位置，也可以前后补充�
 - 定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
 - 在 localrpc 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
 - 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
-示例：
-<data.file_path>C:\\Program Files\\App\\config.json</data.file_path>
-<data.code>
-const API_KEY = "12345";
-console.log("Hello");
-</data.code>
+
+示例：用 gh 创建 issue，标题和正文通过 data 块传入。
+推荐优先使用 data 块，内容零转义：
+<data.issue_title>fix(chat2cli): should skip localrpc inside data blocks</data.issue_title>
+<data.issue_body>
+## Problem
+
+A data block's localrpc fence is literal content, not a request.
+
+Closes #42
+</data.issue_body>
 
 ```localrpc
 {{
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "str_replace_editor",
+  "method": "pwsh",
   "params": {{
-    "command": "str_replace",
-    "path": {{"id": "file_path"}},
-    "old_str": {{"id": "code"}}
+    "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
   }}
 }}
 ```
+
+同一内容若不用环境变量和 data 块，需要把 PowerShell 字符串和 JSON 各转义一层：
+```localrpc
+{{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "pwsh",
+  "params": {{
+    "command": "gh issue create --title 'fix(chat2cli): should skip localrpc inside data blocks' --body '## Problem\\n\\nA data block''s localrpc fence is literal content, not a request.\\n\\nCloses #42'"
+  }}
+}}
+```
+
+- 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
 - 响应中的大段内容也会以 <data.{{ref_id}}>...</data.{{ref_id}}> 块返回，并在 JSON 中给出 {{"ref": "ref_id"}} 引用。
 
 可用方法：
@@ -249,19 +266,6 @@ console.log("Hello");
 - 仅支持非交互式命令。
 - 响应过长时会被截断存至临时文件供 str_replace_editor view 子命令查看，连续内容优先使用 view 命令, view 的支持更高长度的内容并且格式更高效
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
-  示例：
-  <data.file_path>C:\\Program Files\\App\\config.json</data.file_path>
-
-  ```localrpc
-  {{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "pwsh",
-    "params": {{
-      "command": "Get-Content $env:DATA_file_path"
-    }}
-  }}
-  ```
 
 3. skill - 激活指定 skill：
 {{
