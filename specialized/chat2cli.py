@@ -1623,8 +1623,7 @@ def main():
                 "</request>\n"
                 "```\n"
             )
-            sys.stderr.write(error_msg)
-            sys.stderr.flush()
+            print(error_msg)
             return
 
         sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 request 标签，已输出初始指令。\n")
