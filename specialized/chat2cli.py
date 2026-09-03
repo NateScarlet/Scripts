@@ -150,9 +150,6 @@ def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
     instruction = f"""<chat2cli_instruction>
-你是一个通过在正文提供 chat2cli 代码块调用用户本地 RPC 方法辅助工作的助手，不依赖于工具注册即可操作用户环境。
-你总是先收集够足够信息（发送RPC请求，如果依旧不清楚则询问用户）再回答问题，从不在第一轮就给出回答。
-
 chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
 
@@ -165,20 +162,86 @@ JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
 </request>
 ```
 
-系统将只识别并处理 ```chat2cli 代码块内的 <data.xxx> 数据标签和 <request> RPC 请求标签。
+解析器将只识别并处理 chat2cli 代码块中的内容。
 代码块之外出现的 <data.xxx>、<request> 等标签一律只视为一般对话文本，不会被解析或执行。
-如果你需要调用 RPC 方法，请务必将标签放在该代码块中，否则任务将无法完成。
-
-执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明。
 
 chat2cli 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
 
-带外数据（OOB）引用规则：
-- 在 chat2cli 代码块内用数据标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
-- 在 <request> 的 params 中用对象引用：{{"id": "数据块id"}}，执行时会被替换为对应块内容。
-- 字符串参数字面量不做替换，普通文本（即使以 # 开头）保持不变。
-- data 块内容需要包含字面的反引号围栏（如 ``` 或 ``````）时，外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列。例如内容包含 ``` 时，外层用 ````chat2cli ... ````；解析器会按围栏长度精确匹配闭合。
+代码块内容需要包含字面的反引号围栏时，外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列（4个或更长）。
+
+## 可用 JSON-RPC 方法
+
+1. str_replace_editor - 自定义编辑RPC（查看、创建、编辑文件）：
+{{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "str_replace_editor",
+  "params": {{
+    "command": "view",
+    "path": "文件或目录的绝对路径"
+  }}
+}}
+- path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
+- command 支持四种子命令，各子命令所需字段如下：
+
+  1) view — 查看文件或目录
+     必填：command, path
+     可选：offset（起始行号，1 起）、limit（最大行数，默认 2000）
+     · path 指向文件：显示带行号的内容（cat -n 效果）
+     · path 指向目录：列出非隐藏项，最多 2 层
+
+  2) create — 创建新文件（path 已存在时报错）
+     必填：command, path, file_text
+     · file_text：要写入的文件内容
+
+  3) str_replace — 替换文件中的文本
+     必填：command, path, old_str
+     可选：new_str（缺省表示删除 old_str）
+     · old_str 必须在文件中唯一匹配，建议包含上下文
+
+  4) insert — 在指定行后插入文本
+     必填：command, path, insert_line, new_str
+     · insert_line：目标行号（1 起），new_str 插入到该行之后
+
+- 状态在多次调用间保持持久。
+
+2. pwsh - 执行 PowerShell 命令：
+{{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "pwsh",
+  "params": {{
+    "command": "要执行的命令"
+  }}
+}}
+- command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
+- 仅支持非交互式命令。
+- 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
+- 长输出会被自动转存为可后续访问的临时文件，只在响应中只提供开头和结尾内容。
+
+3. skill - 激活指定 skill：
+{{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "skill",
+  "params": {{
+    "name": "skill 名称"
+  }}
+}}
+- name 必须是 available_skills 中列出的精确名称。
+- 激活后返回 <skill_content> 块，包含该 skill 的完整指令。
+- 仅在用户点名 skill，或任务明显匹配 skill 描述时调用，且每个 skill 只激活一次。
+
+当前工作目录：{cwd}
+
+## 数据块
+
+chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
+
+- <request> params 中所有字符串参数可以用对象引用：{{"id": "数据块id"}}代替，执行时会被替换为对应块内容。
+- 数据块会注入为真实环境变量 `$env:DATA_{{id}}`，可在 pwsh 命令中直接引用。
+- 响应中的特定内容也会以 <data.{{ref_id}}>...</data.{{ref_id}}> 块返回，并在 JSON 中给出 {{"ref": "ref_id"}} 引用。
 
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
@@ -215,77 +278,15 @@ Closes #42
   }}
 }}
 </request>
+```
 
-- 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
-- 响应中的大段内容也会以 <data.{{ref_id}}>...</data.{{ref_id}}> 块返回，并在 JSON 中给出 {{"ref": "ref_id"}} 引用。
+## 沟通要求
 
-可用方法：
+请根据用户需求，在回复中提供 chat2cli 代码块获取相关信息或执行操作。
 
-1. str_replace_editor - 自定义编辑RPC（查看、创建、编辑文件）：
-{{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "str_replace_editor",
-  "params": {{
-    "command": "view",
-    "path": "文件或目录的绝对路径"
-  }}
-}}
-- path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
-- command 支持四种子命令，各子命令所需字段如下：
+总是先收集够足够信息（优先通过RPC请求获取，如果依旧不清楚则询问用户）再回答问题，从不在信息不足时就给出一般性回答。
 
-  1) view — 查看文件或目录
-     必填：command, path
-     可选：offset（起始行号，1 起）、limit（最大行数，默认 2000）
-     · path 指向文件：显示带行号的内容（cat -n 效果）
-     · path 指向目录：列出非隐藏项，最多 2 层
-
-  2) create — 创建新文件（path 已存在时报错）
-     必填：command, path, file_text
-     · file_text：要写入的文件内容
-
-  3) str_replace — 替换文件中的文本
-     必填：command, path, old_str
-     可选：new_str（缺省表示删除 old_str）
-     · old_str 必须在文件中唯一匹配，建议包含上下文
-
-  4) insert — 在指定行后插入文本
-     必填：command, path, insert_line, new_str
-     · insert_line：目标行号（1 起），new_str 插入到该行之后
-
-- 状态在多次调用间保持持久。
-- 长输出会截断并标记 <response clipped>。
-
-2. pwsh - 执行 PowerShell 命令：
-{{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "pwsh",
-  "params": {{
-    "command": "要执行的命令"
-  }}
-}}
-- command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
-- 仅支持非交互式命令。
-- 响应过长时会被截断存至临时文件供 str_replace_editor view 子命令查看，连续内容优先使用 view 命令, view 的支持更高长度的内容并且格式更高效
-- 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
-
-3. skill - 激活指定 skill：
-{{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "skill",
-  "params": {{
-    "name": "skill 名称"
-  }}
-}}
-- name 必须是 available_skills 中列出的精确名称。
-- 激活后返回 <skill_content> 块，包含该 skill 的完整指令。
-- 仅在用户点名 skill，或任务明显匹配 skill 描述时调用，且每个 skill 只激活一次。
-
-当前工作目录：{cwd}
-
-请根据用户需求，在 chat2cli 代码块中生成包含 JSON-RPC 请求的 <request> 标签。
+执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明。
 </chat2cli_instruction>"""
     print(instruction)
 
