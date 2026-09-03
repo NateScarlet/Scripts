@@ -1182,6 +1182,10 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
             except OSError:
                 pass
 
+    # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
+    sys.stderr.write(f"[pwsh:cmd] {command}\n")
+    sys.stderr.flush()
+
     try:
         proc = subprocess.Popen(
             ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
