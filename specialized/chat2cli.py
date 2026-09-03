@@ -1469,16 +1469,22 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
 
                     # 所有非空行必须遵守同样的前缀规则
                     stripped_lines: List[str] = []
+                    error_line_idx = -1
+                    error_line_content = ""
                     for i, cl in enumerate(content_lines):
                         if cl.strip() == "":
                             stripped_lines.append("")
                             continue
                         if prefix:
                             if not cl.startswith(":"):
+                                error_line_idx = start_idx + i + 2
+                                error_line_content = cl
                                 raise ValueError(
-                                    f"chat2cli 代码块缩进非法：第 {start_idx + i + 2} 行"
-                                    f"（{cl!r}）没有以 ':' 开头。"
-                                    f"使用 ':' 缩进时每个非空行必须以一个 ':' 开头"
+                                    f"chat2cli 代码块缩进非法：第 {error_line_idx} 行"
+                                    f"（{error_line_content!r}）没有以 ':' 开头。"
+                                    f"使用 ':' 缩进时每个非空行必须以一个 ':' 开头。"
+                                    f"提示：代码块第一行是 {first_line!r}，"
+                                    f"以 ':' 开头表示整个代码块采用 ':' 缩进模式。"
                                 )
                             stripped_lines.append(cl[1:])
                         else:
@@ -1888,9 +1894,14 @@ def main():
     logging.debug("【2. 提取 chat2cli 代码块】")
     try:
         data_map, requests = _scan_blocks(input_text)
-    except ValueError:
-        # 缩进非法等输入格式问题，走下方的 has_truncated_fence 错误提示路径
-        data_map, requests = {}, []
+    except ValueError as e:
+        # 缩进非法等输入格式问题，输出具体错误信息到 stderr
+        error_msg = str(e)
+        sys.stderr.write(f"[chat2cli] 解析错误：{error_msg}\n")
+        sys.stderr.flush()
+        # 同时输出一个简短的指导信息
+        print(f"<chat2cli_instruction>\n错误：{error_msg}\n\n请检查 chat2cli 代码块的缩进格式。\n</chat2cli_instruction>")
+        return
     logging.debug(f"提取到 {len(data_map)} 个数据块: {sorted(data_map.keys())}")
     logging.debug(f"提取到 {len(requests)} 个请求")
     for i, req in enumerate(requests):
