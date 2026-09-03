@@ -197,6 +197,11 @@ function Watch-Chat2CLI {
             # 顺序由读取时机保证，不会像事件队列那样乱序。
             $stderrLineTask = $process.StandardError.ReadLineAsync()
 
+            # 注册异步任务到脚本作用域，供 finally 块在异常时清理。
+            # Ctrl+C 中断时这些任务可能仍在管道上等待读取，
+            # 必须在释放进程前等待它们结束，否则句柄残留。
+            $script:Chat2CLIAsyncTasks = @($stdoutTask, $stderrLineTask)
+
             while (-not $process.HasExited) {
                 if ($stderrLineTask.IsCompleted) {
                     $stderrLine = $stderrLineTask.Result
@@ -245,9 +250,38 @@ function Watch-Chat2CLI {
             return $output
         }
         finally {
-            if (-not $process.HasExited) {
-                $process.Kill()
+            # Ctrl+C 可能中断在异步读取途中，必须显式取消并等待，
+            # 否则底层管道句柄会残留，导致后续进程报"Read 被占用"。
+
+            # 先等待异步读取任务结束。进程被 Kill 后，管道会收到 EOF，
+            # 任务自然完成；此处设置超时避免极端情况下无限等待。
+            if ($null -ne $script:Chat2CLIAsyncTasks) {
+                foreach ($asyncTask in $script:Chat2CLIAsyncTasks) {
+                    if ($null -ne $asyncTask -and -not $asyncTask.IsCompleted) {
+                        try {
+                            $asyncTask.Wait(2000) | Out-Null
+                        }
+                        catch {
+                            # 任务可能因进程被杀而抛出异常，忽略即可
+                        }
+                    }
+                }
+                $script:Chat2CLIAsyncTasks = $null
             }
+
+            if (-not $process.HasExited) {
+                try {
+                    $process.Kill()
+                }
+                catch {
+                    # 进程可能已自然退出，Kill 抛出的异常可以忽略
+                }
+            }
+            # 等待进程完全退出，确保所有句柄释放
+            if (-not $process.WaitForExit(5000)) {
+                Write-Warning "[Watch-Chat2CLI] 子进程未在 5 秒内退出，强制终止可能不完整"
+            }
+
             $process.Dispose()
             Hide-Chat2CLIToast
         }
