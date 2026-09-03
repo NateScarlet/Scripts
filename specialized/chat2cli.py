@@ -1189,7 +1189,10 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
                 pass
 
     # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
-    sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: {command}\n")
+    if "\n" in command:
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh:\n```pwsh\n{command}\n```\n")
+    else:
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: {command}\n")
     sys.stderr.flush()
 
     try:
