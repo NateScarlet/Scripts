@@ -151,6 +151,7 @@ def print_instruction():
     cwd = os.getcwd()
     instruction = f"""<chat2cli_instruction>
 你是一个通过在正文提供 chat2cli 代码块调用用户本地 RPC 方法辅助工作的助手，不依赖于工具注册即可操作用户环境。
+你总是先收集够足够信息（发送RPC请求，如果依旧不清楚则询问用户）再回答问题，从不在第一轮就给出回答。
 
 chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
@@ -166,26 +167,9 @@ JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
 
 系统将只识别并处理 ```chat2cli 代码块内的 <data.xxx> 数据标签和 <request> RPC 请求标签。
 代码块之外出现的 <data.xxx>、<request> 等标签一律只视为一般对话文本，不会被解析或执行。
-如果你需要调用工具，请务必将标签放在该代码块中，否则任务将无法完成。
+如果你需要调用 RPC 方法，请务必将标签放在该代码块中，否则任务将无法完成。
 
-执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明，不要描述详细推理过程。
-按以下 response_template 输出调用请求：
-
-<response_template>
-{{此处替换为你的操作意图}}：
-```chat2cli
-<request>
-{{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "pwsh",
-  "params": {{
-    "command": "在此填写要执行的命令"
-  }}
-}}
-</request>
-```
-</response_template>
+执行 chat2cli 调用时，请在代码块前提供一句简短的操作意图说明。
 
 chat2cli 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
