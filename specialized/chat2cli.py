@@ -849,7 +849,7 @@ def view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, An
     ) + "\n"
     meta["content"] = {"ref": ref_id}
     # stderr 显示读取路径（gitignore 部分橙色高亮）
-    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n")
+    sys.stderr.write(f"[request#{id_}] 👁️ view: {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n")
     sys.stderr.flush()
 
     return meta, content_block
@@ -890,7 +890,7 @@ def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
     dir_content = f"{os.path.abspath(path)}\n" + "\n".join(lines)
     content_block = _data_block_text(ref_id, dir_content) + "\n"
     # stderr 显示目录读取路径（gitignore 部分橙色高亮）
-    sys.stderr.write(f"[chat2cli] view {_colorize_ignored_path(os.path.abspath(path))}\n")
+    sys.stderr.write(f"[request#{id_}] 👁️ view: {_colorize_ignored_path(os.path.abspath(path))}\n")
     sys.stderr.flush()
 
     meta = {
@@ -957,7 +957,7 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
     )
     diff_output = list(diff)
     if diff_output:
-        sys.stderr.write(f"\033[36m📝 str_replace_editor 修改 {path}:\033[0m\n")
+        sys.stderr.write(f"[request#{id_}] ✏️ str_replace: {path}\n")
         for line in diff_output:
             if line.startswith("---") or line.startswith("+++"):
                 sys.stderr.write(f"\033[36m{line}\033[0m\n")
@@ -1011,7 +1011,7 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
     abs_path = os.path.abspath(path)
-    sys.stderr.write(f"\033[36m📝 str_replace_editor insert {abs_path}: 在第 {insert_line} 行后插入\033[0m\n")
+    sys.stderr.write(f"[request#{id_}] ➕ insert: {abs_path}: 在第 {insert_line} 行后插入\n")
     sys.stderr.write("\033[32m+++ 插入内容:\033[0m\n")
     sys.stderr.write(new_str)
     if not new_str.endswith("\n"):
@@ -1171,7 +1171,10 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
         """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
         try:
             for line in iter(stream.readline, ""):
-                sys.stderr.write(f"[pwsh:{stream_name}] {line}")
+                if stream_name == "err":
+                    sys.stderr.write(f"\033[31m{line}\033[0m")
+                else:
+                    sys.stderr.write(f"\033[37m{line}\033[0m")
                 sys.stderr.flush()
                 lines_list.append(line)
         finally:
@@ -1182,7 +1185,7 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
                 pass
 
     # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
-    sys.stderr.write(f"[pwsh:cmd] {command}\n")
+    sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: {command}\n")
     sys.stderr.flush()
 
     try:
