@@ -309,8 +309,10 @@ function Watch-Chat2CLI {
             # 使用带重试的原生方法避免其他进程占用剪贴板导致的瞬时失败
             $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
             $current = ""
-            if ($null -ne $data -and $data.GetDataPresent([System.Windows.DataFormats]::Text)) {
-                $current = [string]$data.GetData([System.Windows.DataFormats]::Text)
+            # 使用 UnicodeText 而不是 Text：Text 是 ANSI 格式（CF_TEXT），
+            # 中文会乱码；UnicodeText（CF_UNICODETEXT）与 Get-Clipboard 一致。
+            if ($null -ne $data -and $data.GetDataPresent([System.Windows.DataFormats]::UnicodeText)) {
+                $current = [string]$data.GetData([System.Windows.DataFormats]::UnicodeText)
             }
 
             # 检查是否有其他 chat2cli 监控进程的占位文本
