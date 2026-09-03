@@ -1537,24 +1537,22 @@ def _has_bare_request(text: str) -> bool:
     return bool(re.search(r"<(?:request)>", text_without_blocks, re.IGNORECASE))
 
 
-def has_truncated_fence(text: str) -> bool:
+def has_truncated_fence(text: str) -> Tuple[bool, Optional[str]]:
     """检测是否存在未闭合的 chat2cli 围栏。
 
-    当输入包含 ```chat2cli 围栏开头，但完整围栏解析器
-    _extract_chat2cli_fence_blocks 提取到的块都没有 <request> 时，
-    视为围栏未正确闭合。
+    返回 (是否截断, 错误信息)，当缩进非法时错误信息包含具体原因。
     """
     if not re.search(r"`{3,}chat2cli", text):
-        return False
+        return False, None
     try:
         blocks = _extract_chat2cli_fence_blocks(text)
-    except ValueError:
-        # 缩进非法也属于输入格式问题
-        return True
+    except ValueError as e:
+        # 缩进非法也属于输入格式问题，传递具体错误信息
+        return True, str(e)
     if not blocks:
-        return True
+        return True, None
     # 提取到块但没有任何 <request>，说明块被提前截断
-    return all("<request>" not in block for block in blocks)
+    return all("<request>" not in block for block in blocks), None
 
 
 def _parse_chat2cli_content(
@@ -1913,24 +1911,31 @@ def main():
         # 检测存在 chat2cli 围栏但未提取到 request 的情况，
         # 通常是 data 块内字面反引号围栏导致外层围栏被提前截断。
         # 需要优先于裸 request 检测，因为截断会让 request 落到代码块外。
-        if has_truncated_fence(input_text):
-            error_msg = (
-                "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
-                "如果代码块内容包含字面的 ``` 围栏，请给所有行添加 ':' 缩进，\n"
-                "解析器会移除行首的 ':'。例如：\n"
-                "\n"
-                "```chat2cli\n"
-                ":<data.code>\n"
-                ":```\n"
-                ":字面围栏内容\n"
-                ":```\n"
-                ":</data.code>\n"
-                ":<request>\n"
-                ':{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
-                ":</request>\n"
-                "```\n"
-            )
-            print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
+        truncated, err_detail = has_truncated_fence(input_text)
+        if truncated:
+            if err_detail:
+                # 缩进非法等具体错误，直接输出错误详情
+                error_msg = f"错误：{err_detail}"
+                print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
+            else:
+                # 通用截断错误
+                error_msg = (
+                    "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
+                    "如果代码块内容包含字面的 ``` 围栏，请给所有行添加 ':' 缩进，\n"
+                    "解析器会移除行首的 ':'。例如：\n"
+                    "\n"
+                    "```chat2cli\n"
+                    ":<data.code>\n"
+                    ":```\n"
+                    ":字面围栏内容\n"
+                    ":```\n"
+                    ":</data.code>\n"
+                    ":<request>\n"
+                    ':{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
+                    ":</request>\n"
+                    "```\n"
+                )
+                print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
         # 检测是否有裸 request 标签（在 chat2cli 代码块外）
