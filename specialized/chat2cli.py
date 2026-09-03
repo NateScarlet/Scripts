@@ -1600,6 +1600,15 @@ def dispatch_request(
             "id": req_id,
         }, ""
 
+def _fence_for_content(content: str) -> str:
+    """为包含指定内容的 chat2cli 代码块选择足够长的围栏。
+
+    围栏反引号数 = 内容中最长连续反引号序列 + 1，且至少为 3。
+    """
+    longest_run = max((len(m) for m in re.findall(r"`+", content)), default=0)
+    return "`" * max(3, longest_run + 1)
+
+
 def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
     """输出 stderr 汇总，过长内容在展示层截断并提示。"""
     if len(text) <= max_chars:
@@ -1742,19 +1751,27 @@ def main():
         if len(responses) == 1
         else json.dumps(responses, ensure_ascii=False, indent=2)
     )
-    print("```chat2cli")
+    # 组装代码块主体，再据此计算围栏长度。
+    # 围栏必须比内容中出现的最长反引号序列更长，避免内容中的
+    # 字面反引号围栏被误识别为外层围栏的闭合。
+    body_parts: List[str] = []
     # 输出带外数据块（OOB 引用内容，按注册顺序）
     if _pending_oob_data:
         for ref_id, ref_content in _pending_oob_data.items():
-            print(_data_block_text(ref_id, ref_content))
+            body_parts.append(_data_block_text(ref_id, ref_content))
     # 输出附加内容块（view 结果）
     if content_blocks:
-        print("\n".join(content_blocks))
+        body_parts.append("\n".join(content_blocks))
     # 用 response 标签区分机器反馈
-    print("<response>")
-    print(json_resp)
-    print("</response>")
-    print("```")
+    body_parts.append("<response>")
+    body_parts.append(json_resp)
+    body_parts.append("</response>")
+
+    body = "\n".join(part for part in body_parts if part)
+    fence = _fence_for_content(body)
+    print(f"{fence}chat2cli")
+    print(body)
+    print(fence)
 
     # stderr 汇总
     if summary_parts:

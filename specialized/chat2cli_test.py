@@ -166,6 +166,36 @@ class TestHasTruncatedFence(unittest.TestCase):
         self.assertFalse(chat2cli.has_truncated_fence(text))
 
 
+class TestFenceForContent(unittest.TestCase):
+    def test_no_backticks_uses_minimum_three(self):
+        self.assertEqual(chat2cli._fence_for_content("plain text"), "```")
+
+    def test_empty_content_uses_minimum_three(self):
+        self.assertEqual(chat2cli._fence_for_content(""), "```")
+
+    def test_three_backticks_requires_four(self):
+        self.assertEqual(chat2cli._fence_for_content("```code```"), "````")
+
+    def test_four_backticks_requires_five(self):
+        self.assertEqual(chat2cli._fence_for_content("````code````"), "`````")
+
+    def test_longest_run_across_multiline_content(self):
+        # 多个围栏中取最长，散落在多行内容中
+        content = "line1\n```\nline2\n`````\nline3"
+        self.assertEqual(chat2cli._fence_for_content(content), "``````")
+
+    def test_resulting_fence_is_always_longer_than_longest_run(self):
+        # 对多种输入验证围栏反引号数 > 内容最长反引号序列
+        for content in ["", "x", "`", "```", "a```b````c", "\n`````\n"]:
+            fence = chat2cli._fence_for_content(content)
+            longest_run = max(
+                (len(m) for m in __import__("re").findall(r"`+", content)),
+                default=0,
+            )
+            self.assertGreater(len(fence), longest_run, content)
+            self.assertGreaterEqual(len(fence), 3, content)
+
+
 class TestViewOobId(unittest.TestCase):
     def test_view_file_ref_id_uses_rpc_id(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -265,6 +295,95 @@ class TestEmitResultTextOverlong(unittest.TestCase):
                 self.assertEqual(path.read_text(encoding="utf-8"), text)
             finally:
                 os.chdir(old_cwd)
+
+
+class TestOutputFenceLength(unittest.TestCase):
+    """stdout 输出的 chat2cli 代码块围栏必须比内容中最长反引号序列更长"""
+
+    def _run_chat2cli(self, input_text: str) -> str:
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = subprocess.run(
+                [sys.executable, str(script)],
+                input=input_text,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                cwd=tmpdir,
+                check=False,
+            )
+        return result.stdout
+
+    def _longest_backtick_run(self, text: str) -> int:
+        import re
+        return max((len(m) for m in re.findall(r"`+", text)), default=0)
+
+    def test_output_fence_longer_than_content_backticks(self):
+        # pwsh 输出包含 ``` 内容时，外层围栏必须更长为 ````
+        command = "Write-Output '```inner```'"
+        input_text = (
+            "```chat2cli\n"
+            "<request>\n"
+            f'{{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{{"command":"{command}"}}}}\n'
+            "</request>\n"
+            "```"
+        )
+        output = self._run_chat2cli(input_text)
+
+        # 提取 stdout 输出 chat2cli 代码块的开头围栏
+        fence_match = __import__("re").match(r"(`+)chat2cli", output)
+        self.assertIsNotNone(fence_match, "输出应以 chat2cli 围栏开头")
+        fence = fence_match.group(1)
+
+        # 只检查围栏内部内容的最长反引号序列（排除外层围栏本身）
+        block_start = len(fence) + len("chat2cli")
+        block_end = output.rstrip().rfind(fence)
+        inner = output[block_start:block_end]
+        inner_longest = self._longest_backtick_run(inner)
+        self.assertGreater(len(fence), inner_longest)
+        # 内容包含 ```，围栏必须至少为 ````
+        self.assertGreaterEqual(len(fence), 4)
+
+    def test_output_fence_longer_when_oob_data_contains_long_fence(self):
+        # 构造超长 stdout，内容中含有 ````，触发 OOB 数据块
+        long_text = "````" + ("x" * (chat2cli._FILE_THRESHOLD + 100))
+        command = f"Write-Output '{long_text}'"
+        input_text = (
+            "```chat2cli\n"
+            "<request>\n"
+            f'{{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{{"command":"{command}"}}}}\n'
+            "</request>\n"
+            "```"
+        )
+        output = self._run_chat2cli(input_text)
+
+        fence_match = __import__("re").match(r"(`+)chat2cli", output)
+        self.assertIsNotNone(fence_match, "输出应以 chat2cli 围栏开头")
+        fence = fence_match.group(1)
+
+        # 只检查围栏内部内容的最长反引号序列（排除外层围栏本身）
+        block_start = len(fence) + len("chat2cli")
+        block_end = output.rstrip().rfind(fence)
+        inner = output[block_start:block_end]
+        inner_longest = self._longest_backtick_run(inner)
+        self.assertGreater(len(fence), inner_longest)
+        # 内容含 ````，围栏至少为 `````
+        self.assertGreaterEqual(len(fence), 5)
+
+    def test_normal_output_uses_three_backtick_fence(self):
+        # 内容不含反引号时，围栏保持三个反引号
+        input_text = (
+            "```chat2cli\n"
+            "<request>\n"
+            '{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"Write-Output hello"}}\n'
+            "</request>\n"
+            "```"
+        )
+        output = self._run_chat2cli(input_text)
+        self.assertTrue(output.startswith("```chat2cli\n"))
 
 
 class TestErrorInstructionWrapping(unittest.TestCase):
