@@ -133,6 +133,7 @@ function Watch-Chat2CLI {
     )
 
     $scriptPath = "$PSScriptRoot/chat2cli.py"
+    $currentPid = $PID
 
     function Invoke-Chat2CLIProcess {
         param(
@@ -221,6 +222,30 @@ function Watch-Chat2CLI {
         }
     }
 
+    # 检查剪贴板是否被其他进程占用
+    function Test-Chat2CLIConflict {
+        param([string]$ClipboardText)
+
+        if ([string]::IsNullOrEmpty($ClipboardText)) {
+            return $false
+        }
+
+        # 匹配格式: [<进程ID>] chat2cli: ...
+        if ($ClipboardText -match '^\[(\d+)\] chat2cli:') {
+            $otherPid = [int]$Matches[1]
+            # 如果是其他进程（不是当前进程），则存在冲突
+            return $otherPid -ne $currentPid
+        }
+
+        return $false
+    }
+
+    # 设置占位文本
+    function Set-Chat2CLIPlaceholder {
+        $placeholder = "[$currentPid] chat2cli: 正在处理中..."
+        Set-Chat2CLIClipboard $placeholder
+    }
+
     # 使用命名互斥体与停止事件，确保同一时间只有一个监听实例
     $mutexName = "Global\Chat2CLI.Watch.Mutex"
     $stopEventName = "Global\Chat2CLI.Watch.Stop"
@@ -255,6 +280,12 @@ function Watch-Chat2CLI {
                 $current = ""
             }
 
+            # 检查是否有其他 chat2cli 监控进程的占位文本
+            if (Test-Chat2CLIConflict -ClipboardText $current) {
+                Write-Host "[Watch-Chat2CLI] 检测到其他监控进程正在处理，为避免冲突自动退出"
+                break
+            }
+
             if (-not (Test-Chat2CLIClipboardGenerated)) {
                 # 忽略包含指令提示的输入（初始指令和错误指令都包裹在
                 # <chat2cli_instruction> 标签内，其中的示例不应触发执行）
@@ -266,6 +297,9 @@ function Watch-Chat2CLI {
                     $hasToolBlock = $current -match '(?ms)^`{3,}chat2cli\s*$.*?^`{3,}\s*$'
 
                     if ($hasToolBlock) {
+                        # 发现新的 chat2cli 内容，先设置占位文本
+                        Set-Chat2CLIPlaceholder
+                        # 然后执行处理
                         Invoke-Chat2CLIProcess -InputText $current | Out-Null
                     }
                 }
