@@ -1428,6 +1428,10 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     """
     blocks: List[str] = []
 
+    # 移除 UTF-8 BOM（U+FEFF），避免正则 ^ 匹配失败
+    if text.startswith("\ufeff"):
+        text = text[1:]
+
     # 首先定位所有 chat2cli 围栏的开头行，然后逐行扫描到匹配的闭合围栏。
     fence_open_pattern = re.compile(r"^(`{3,})chat2cli[ \t]*$", re.MULTILINE)
     fence_close_pattern = re.compile(r"^(`{3,})[ \t]*$", re.MULTILINE)
@@ -1550,7 +1554,8 @@ def has_truncated_fence(text: str) -> Tuple[bool, Optional[str]]:
         # 缩进非法也属于输入格式问题，传递具体错误信息
         return True, str(e)
     if not blocks:
-        return True, None
+        # 存在 chat2cli 围栏开头但解析不出任何块，说明围栏未正确闭合
+        return True, "检测到 chat2cli 围栏代码块开头，但未找到匹配的闭合围栏。请确保代码块正确闭合。"
     # 提取到块但没有任何 <request>，说明块被提前截断
     return all("<request>" not in block for block in blocks), None
 
