@@ -156,6 +156,11 @@ function Show-Chat2CLIToast {
 
     $script:Chat2CLIToastWindow.Left = $workAreaDip.Left + [Math]::Max(0, ($workAreaDip.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
     $script:Chat2CLIToastWindow.Top = $workAreaDip.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
+
+    # 强制 WPF 同步完成布局与渲染，确保"正在处理..."等初始文本立即显示。
+    # 否则后续处理逻辑（启动进程、轮询）会与异步渲染竞争，
+    # 文本可能还没画出来就被后续更新覆盖。
+    $script:Chat2CLIToastWindow.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 }
 
 function Update-Chat2CLIToast {
