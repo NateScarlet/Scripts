@@ -160,26 +160,39 @@ function Watch-Chat2CLI {
         $process.StartInfo = $psi
         $process.Start() | Out-Null
 
+        $stderrEvent = $null
+
         try {
+            # stderr 通过事件实时输出，不缓冲到进程结束
+            $stderrEvent = Register-ObjectEvent -InputObject $process -EventName ErrorDataReceived -Action {
+                try {
+                    $data = $Event.SourceEventArgs.Data
+                    if ($data) {
+                        Write-Host $data -ForegroundColor Red
+                    }
+                }
+                catch {
+                    Write-Host "STDERR 事件回调出错: $_" -ForegroundColor Yellow
+                }
+            }
+            $process.BeginErrorReadLine()
+
             $process.StandardInput.Write($InputText)
             $process.StandardInput.Close()
 
             $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-            $stderrTask = $process.StandardError.ReadToEndAsync()
 
             while (-not $process.HasExited) {
                 Start-Sleep -Milliseconds 100
             }
 
+            # 确保所有异步 stderr 事件都已派发完毕
+            $process.WaitForExit()
+
             $output = $stdoutTask.Result
-            $errorOutput = $stderrTask.Result
 
             if ($output) {
                 Set-Chat2CLIClipboard $output
-            }
-
-            if ($errorOutput) {
-                Write-Host $errorOutput -ForegroundColor Red
             }
 
             if ($process.ExitCode -ne 0) {
@@ -197,6 +210,9 @@ function Watch-Chat2CLI {
         finally {
             if (-not $process.HasExited) {
                 $process.Kill()
+            }
+            if ($null -ne $stderrEvent) {
+                Unregister-Event -SourceIdentifier $stderrEvent.Name -ErrorAction SilentlyContinue
             }
             $process.Dispose()
             Hide-Chat2CLIToast
