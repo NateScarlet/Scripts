@@ -178,6 +178,7 @@ function Watch-Chat2CLI {
         # 可靠流回当前终端，导致实时日志丢失。
         $psi.RedirectStandardError = $true
         $psi.UseShellExecute = $false
+        $psi.StandardInputEncoding = [System.Text.Encoding]::UTF8
         $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
         $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
         $psi.CreateNoWindow = $true
