@@ -21,6 +21,10 @@ chat2cli.py - chat2cli 语言执行器
 典型用法（PowerShell）:
     Get-Clipboard | python chat2cli.py | Set-Clipboard
 
+配套文件：
+    - chat2cli_test.py: 单元测试
+    - chat2cli.ps1: PowerShell 包装脚本（提供 clipboard 和 toast 功能）
+
 每个版本的 chat2cli 不互相兼容，同一个会话应该固定用同一个版本
 """
 
