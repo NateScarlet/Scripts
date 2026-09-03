@@ -1171,14 +1171,16 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
         env_name = "DATA_" + ref_id
         env[env_name] = ref_content
 
-    def _stream_reader(stream: Any, stream_name: str, lines_list: List[str]) -> None:
+    def _stream_reader(stream: Any, stream_name: str, lines_list: List[str], pid: int) -> None:
         """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
         try:
             for line in iter(stream.readline, ""):
+                # 构建前缀：灰色显示的 [<PID>]
+                prefix = f"\033[90m[{pid}]\033[0m "
                 if stream_name == "err":
-                    sys.stderr.write(f"\033[31m{line}\033[0m")
+                    sys.stderr.write(f"{prefix}\033[31m{line}\033[0m")
                 else:
-                    sys.stderr.write(f"\033[37m{line}\033[0m")
+                    sys.stderr.write(f"{prefix}\033[37m{line}\033[0m")
                 sys.stderr.flush()
                 lines_list.append(line)
         finally:
@@ -1222,12 +1224,12 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
     stderr_lines: List[str] = []
     t_out = threading.Thread(
         target=_stream_reader,
-        args=(proc.stdout, "out", stdout_lines),
+        args=(proc.stdout, "out", stdout_lines, proc.pid),
         daemon=True,
     )
     t_err = threading.Thread(
         target=_stream_reader,
-        args=(proc.stderr, "err", stderr_lines),
+        args=(proc.stderr, "err", stderr_lines, proc.pid),
         daemon=True,
     )
     t_out.start()
