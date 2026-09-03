@@ -1288,7 +1288,7 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
         # 取出错误位置的字符（若 pos 超出长度则用空格代替）
         error_char = content[pos] if pos < len(content) else " "
         context_after = content[pos + 1 : end]
-        context_msg = f"{context_before}**{error_char}**{context_after}"
+        context_msg = f"{context_before}<mark>{error_char}</mark>{context_after}"
         if start > 0:
             context_msg = "..." + context_msg
         if end < len(content):
