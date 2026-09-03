@@ -207,7 +207,14 @@ function Watch-Chat2CLI {
                 Start-Sleep -Milliseconds 20
             }
 
-            # 进程退出后，把 stderr 剩余的行全部读出
+            # 进程退出后，把 stderr 剩余的行全部读出。
+            # 最后一个异步读可能仍占用流，先等它完成，避免同步 ReadLine 抛异常。
+            if (-not $stderrLineTask.IsCompleted) {
+                $stderrLineTask.Wait()
+            }
+            if ($null -ne $stderrLineTask.Result) {
+                Write-Host $stderrLineTask.Result
+            }
             while (-not $process.StandardError.EndOfStream) {
                 $remainingLine = $process.StandardError.ReadLine()
                 if ($null -ne $remainingLine) {
