@@ -39,25 +39,7 @@ CycleWindows(winTitle, createAction := unset) {
     WinActivate windows[nextIndex]
 }
 
-; 1. Chrome 窗口切换
-$#1:: {
-    if WinExist("ahk_exe chrome.exe") {
-        WinActivate
-    } else {
-        Run A_Programs "\Google Chrome.lnk"
-    }
-}
-
-; 2. 启动 Obsidian
-$#2:: {
-    create() {
-        Run A_Programs "\Obsidian.lnk"
-    }
-
-    CycleWindows("ahk_exe Obsidian.exe", create)
-}
-
-; 3. VS Code 窗口循环切换
+; VS Code 窗口循环切换
 $#3:: {
     create() {
         Run "code"
@@ -66,10 +48,10 @@ $#3:: {
     CycleWindows("ahk_exe Code.exe", create)
 }
 
-; 4. 启动 Everything
+; 启动 Everything
 $#f:: Run A_ProgramFiles "\Everything\Everything.exe"
 
-; 5. 资源管理器窗口循环切换
+; 资源管理器窗口循环切换
 $#e:: {
     create() {
         Run A_WinDir "\explorer.exe"
@@ -77,13 +59,4 @@ $#e:: {
     }
 
     CycleWindows("ahk_class CabinetWClass ahk_exe explorer.exe", create)
-}
-
-; 6. ConEmu 终端切换
-~!^t:: {
-    if WinExist("ahk_exe WindowsTerminal.exe") {
-        WinActivate
-    } else {
-        Run "wt"
-    }
 }
