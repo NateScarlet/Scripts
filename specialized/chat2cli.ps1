@@ -168,7 +168,9 @@ function Watch-Chat2CLI {
                 try {
                     $data = $Event.SourceEventArgs.Data
                     if ($data) {
-                        Write-Host $data -ForegroundColor Red
+                        # 内层 stderr 可能已带 ANSI 颜色（如 diff 红绿标记），
+                        # 这里原样转发，避免外层强制红色破坏内层颜色语义
+                        Write-Host $data
                     }
                 }
                 catch {
