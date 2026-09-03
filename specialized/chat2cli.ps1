@@ -234,12 +234,21 @@ function Watch-Chat2CLI {
             $script:Chat2CLIAsyncTasks = @($stdoutTask, $stderrLineTask)
 
             while (-not $process.HasExited) {
-                if ($stderrLineTask.IsCompleted) {
+                # 持续读取直到当前没有可用的行，避免每次只读一行后固定睡眠，
+                # 输出量大时被 20ms 睡眠严重拖慢吞吐。
+                while ($stderrLineTask.IsCompleted) {
                     $stderrLine = $stderrLineTask.Result
                     if ($null -ne $stderrLine) {
                         Write-Host $stderrLine
                         $stderrLineTask = $process.StandardError.ReadLineAsync()
                     }
+                    else {
+                        # ReadLineAsync 返回 null 表示已到流末尾
+                        break
+                    }
+                }
+                if ($process.HasExited) {
+                    break
                 }
                 Start-Sleep -Milliseconds 20
             }
