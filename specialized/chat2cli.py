@@ -669,16 +669,29 @@ Resolve relative paths mentioned by this skill against the base directory before
     return meta, content_block
 
 def _resolve_editor_path(path_raw: str) -> str:
-    """解析 str_replace_editor 的 path：必须为绝对路径且位于当前工作目录内"""
+    """解析 str_replace_editor 的 path。
+
+    允许两类路径：
+    1. 当前工作目录内的绝对路径
+    2. ~/.agents/skills 目录内的绝对路径（供 skills_resource 引用的资源读取）
+    """
     expanded = os.path.expanduser(path_raw)
     if not os.path.isabs(expanded):
         return ""
     abs_path = os.path.abspath(expanded)
+
     cwd = os.path.abspath(os.getcwd())
     if abs_path == cwd:
         return abs_path
     if abs_path.startswith(cwd + os.sep):
         return abs_path
+
+    skills_dir = os.path.abspath(os.path.expanduser("~/.agents/skills"))
+    if abs_path == skills_dir:
+        return abs_path
+    if abs_path.startswith(skills_dir + os.sep):
+        return abs_path
+
     return ""
 
 
@@ -700,14 +713,14 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
     path = _resolve_editor_path(path_raw)
     if not path:
         sys.stderr.write(
-            "\n[chat2cli] 路径校验失败：操作范围仅限当前工作目录（cwd）。\n"
+            "\n[chat2cli] 路径校验失败：操作范围仅限当前工作目录（cwd）或 ~/.agents/skills 目录。\n"
             f"[chat2cli] 您请求的路径：{path_raw}\n"
             f"[chat2cli] 请用户切换到对应目录（{os.path.dirname(path_raw)}）后再执行此方法。\n\n"
         )
         sys.stderr.flush()
         return {
             "success": False,
-            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。如需操作目录外的文件，请提示用户在对应目录下重新运行此方法。",
+            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
         }, ""
 
     if command == "view":
