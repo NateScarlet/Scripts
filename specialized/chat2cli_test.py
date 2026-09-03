@@ -77,15 +77,15 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(blocks, [])
 
     def test_data_block_can_contain_literal_fence(self):
-        # data 块内容包含字面的 ``` 围栏时，通过缩进避免误识别
+        # data 块内容包含字面的 ``` 围栏时，通过 ':' 缩进避免误识别
         text = (
             "```chat2cli\n"
-            "  <data.code>\n"
-            "  ```\n"
-            "  literal fence content\n"
-            "  ```\n"
-            "  </data.code>\n"
-            '  <request>\n  {"method":"skill"}\n  </request>\n'
+            ":<data.code>\n"
+            ":```\n"
+            ":literal fence content\n"
+            ":```\n"
+            ":</data.code>\n"
+            ':<request>\n:{"method":"skill"}\n:</request>\n'
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
@@ -94,13 +94,13 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         data = chat2cli.extract_data_blocks(text)
         self.assertEqual(data["code"], "\n```\nliteral fence content\n```\n")
 
-    def test_less_indented_line_raises_error(self):
-        # 后续行缩进小于首行时，视为非法输入
+    def test_line_missing_colon_raises_error(self):
+        # 后续行没有 ':' 开头时，视为非法输入
         text = (
             "```chat2cli\n"
-            "  <request>\n"
+            ":<request>\n"
             '{"method":"skill"}\n'
-            "  </request>\n"
+            ":</request>\n"
             "```"
         )
         with self.assertRaises(ValueError):
@@ -116,6 +116,18 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0]["method"], "skill")
+
+    def test_double_colon_produces_literal_colon(self):
+        # ':' 缩进只移除一个 ':'，'::' 行剥掉后保留一个字面 ':'
+        text = (
+            "```chat2cli\n"
+            ":<data.code>\n"
+            "::literal\n"
+            ":</data.code>\n"
+            "```"
+        )
+        data = chat2cli.extract_data_blocks(text)
+        self.assertEqual(data["code"], "\n:literal\n")
 
     def test_ignores_request_outside_chat2cli_block(self):
         text = (
@@ -133,16 +145,16 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
 
 
 class TestHasTruncatedFence(unittest.TestCase):
-    def test_does_not_detect_truncation_with_indented_literal_inner_fence(self):
-        # 使用缩进处理含字面 ``` 围栏的 data 块，不应误判为截断
+    def test_does_not_detect_truncation_with_colon_literal_inner_fence(self):
+        # 使用 ':' 缩进处理含字面 ``` 围栏的 data 块，不应误判为截断
         text = (
             "```chat2cli\n"
-            "  <data.code>\n"
-            "  ```\n"
-            "  literal fence content\n"
-            "  ```\n"
-            "  </data.code>\n"
-            '  <request>\n  {"method":"skill"}\n  </request>\n'
+            ":<data.code>\n"
+            ":```\n"
+            ":literal fence content\n"
+            ":```\n"
+            ":</data.code>\n"
+            ':<request>\n:{"method":"skill"}\n:</request>\n'
             "```"
         )
         self.assertFalse(chat2cli.has_truncated_fence(text))
@@ -404,9 +416,9 @@ class TestErrorInstructionWrapping(unittest.TestCase):
     def test_invalid_indent_error_wrapped_in_instruction_tag(self):
         text = (
             "```chat2cli\n"
-            "  <request>\n"
+            ":<request>\n"
             '{"method":"pwsh"}\n'
-            "  </request>\n"
+            ":</request>\n"
             "```"
         )
         output = self._run_chat2cli(text)
@@ -430,7 +442,7 @@ class TestEmitResultTextOobSelection(unittest.TestCase):
     def setUp(self):
         chat2cli._pending_oob_data.clear()
 
-    def _overhead(self, text: str, ref_id: str) -> int:
+    def _overhead(self, text: str, ref_id: str) -> tuple[int, int]:
         """计算 JSON 编码膨胀量与 OOB 固定开销"""
         import json
         json_len = len(json.dumps(text, ensure_ascii=False))

@@ -285,39 +285,39 @@ Closes #42
 
 ### 嵌套代码块处理
 
-chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），通过给所有行添加空格缩进来避免数据中的围栏被识别成 chat2cli 代码块结束围栏。
+chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），通过给所有行添加 ':' 缩进来避免数据中的围栏被识别成 chat2cli 代码块结束围栏。
 
 此示例演示替换一个包含三引号代码块的文本：
 
 ```chat2cli
-  <data.old_code>
-  ```python
-  def old():
-      return "legacy"
-  ```
-  </data.old_code>
-  <data.new_code>
-  ```python
-  def new():
-      return "modern"
-  ```
-  </data.new_code>
-  <request>
-  {{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "str_replace_editor",
-    "params": {{
-      "command": "str_replace",
-      "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
-      "old_str": {{"id": "old_code"}},
-      "new_str": {{"id": "new_code"}}
-    }}
-  }}
-  </request>
+:<data.old_code>
+:```python
+:def old():
+:    return "legacy"
+:```
+:</data.old_code>
+:<data.new_code>
+:```python
+:def new():
+:    return "modern"
+:```
+:</data.new_code>
+:<request>
+:{{
+:  "jsonrpc": "2.0",
+:  "id": 1,
+:  "method": "str_replace_editor",
+:  "params": {{
+:    "command": "str_replace",
+:    "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
+:    "old_str": {{"id": "old_code"}},
+:    "new_str": {{"id": "new_code"}}
+:  }}
+:}}
+:</request>
 ````
 
-解析器会基于 chat2cli 代码块中的首行缩进决定预处理的缩进移除，后续行必须要有和首行相同缩进或更多缩进，否则视为非法输入。
+解析器会基于 chat2cli 代码块中首个非空行是否以 ':' 开头决定是否使用 ':' 缩进。使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除第一个 ':'；'::' 开头的行剥掉一个 ':' 后保留一个 ':' 作为字面内容。
 
 ## 沟通要求
 
@@ -1420,9 +1420,11 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
 def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     """提取所有 chat2cli 围栏代码块的内容。
 
-    解析器基于 chat2cli 代码块中的首行缩进决定预处理的缩进移除，
-    后续行必须要有和首行相同缩进或更多缩进，否则视为非法输入。
-    这样可以避免 data 块中的字面围栏被误识别为外层围栏的闭合。
+    解析器基于 chat2cli 代码块中首个非空行是否以 ':' 开头决定是否使用
+    ':' 缩进。使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除第
+    一个 ':' 得到实际内容；'::' 开头的行剥掉一个 ':' 后保留一个 ':' 作
+    为字面内容。空行原样保留。这样可以避免 data 块中的字面围栏被渲染器
+    压扁空格后误识别为外层围栏的闭合。
     """
     blocks: List[str] = []
 
@@ -1454,31 +1456,33 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                     # 内容为空：跳过
                     if not any(line.strip() for line in content_lines):
                         continue
-                    # 基于首行缩进做预处理移除
+                    # 基于首个非空行决定是否使用 ':' 缩进。
+                    # 使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除
+                    # 第一个 ':'；'::' 行剥掉一个 ':' 后保留一个 ':' 作为字面内容。
                     first_nonblank_idx = next(
                         i
                         for i, l in enumerate(content_lines)
                         if l.strip() != ""
                     )
                     first_line = content_lines[first_nonblank_idx]
-                    indent_match = re.match(r"^[ \t]*", first_line)
-                    assert indent_match is not None
-                    indent = indent_match.group(0)
+                    prefix = ":" if first_line.startswith(":") else ""
 
-                    # 所有非空行必须有相同或更多的缩进
-                    stripped_lines = []
+                    # 所有非空行必须遵守同样的前缀规则
+                    stripped_lines: List[str] = []
                     for i, cl in enumerate(content_lines):
                         if cl.strip() == "":
                             stripped_lines.append("")
                             continue
-                        if indent and not cl.startswith(indent):
-                            raise ValueError(
-                                f"chat2cli 代码块缩进非法：第 {start_idx + i + 2} 行"
-                                f"（{cl!r}）缩进少于首行缩进 {indent!r}"
-                            )
-                        stripped_lines.append(
-                            cl[len(indent) :] if indent else cl
-                        )
+                        if prefix:
+                            if not cl.startswith(":"):
+                                raise ValueError(
+                                    f"chat2cli 代码块缩进非法：第 {start_idx + i + 2} 行"
+                                    f"（{cl!r}）没有以 ':' 开头。"
+                                    f"使用 ':' 缩进时每个非空行必须以一个 ':' 开头"
+                                )
+                            stripped_lines.append(cl[1:])
+                        else:
+                            stripped_lines.append(cl)
                     # 去掉首尾因围栏产生的空行
                     while stripped_lines and stripped_lines[0] == "":
                         stripped_lines.pop(0)
@@ -1901,19 +1905,18 @@ def main():
         if has_truncated_fence(input_text):
             error_msg = (
                 "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
-                "如果代码块内容包含字面的 ``` 围栏，请给所有行添加空格缩进，\n"
-                "解析器会基于首行缩进自动移除。后续行必须和首行缩进相同或更多，\n"
-                "否则视为非法输入。例如：\n"
+                "如果代码块内容包含字面的 ``` 围栏，请给所有行添加 ':' 缩进，\n"
+                "解析器会移除行首的 ':'。例如：\n"
                 "\n"
                 "```chat2cli\n"
-                "  <data.code>\n"
-                "  ```\n"
-                "  字面围栏内容\n"
-                "  ```\n"
-                "  </data.code>\n"
-                "  <request>\n"
-                '  {"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
-                "  </request>\n"
+                ":<data.code>\n"
+                ":```\n"
+                ":字面围栏内容\n"
+                ":```\n"
+                ":</data.code>\n"
+                ":<request>\n"
+                ':{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
+                ":</request>\n"
                 "```\n"
             )
             print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
@@ -1988,6 +1991,7 @@ def main():
     stripped_input = input_text.strip()
     # 移除所有chat2cli代码块
     no_blocks = _remove_chat2cli_blocks(stripped_input)
+    reminder_text = ""
     if not no_blocks.strip() and requests:
         # 只有代码块且有请求，输出提醒（在代码块之后，不影响代码块本身作为开头的输出）
         sys.stderr.write(
