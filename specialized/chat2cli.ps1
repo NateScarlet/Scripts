@@ -73,6 +73,7 @@ function Show-Chat2CLIToast {
     Add-Type -AssemblyName PresentationFramework
     Add-Type -AssemblyName PresentationCore
     Add-Type -AssemblyName WindowsBase
+    Add-Type -AssemblyName System.Windows.Forms
 
     if ($null -eq $script:Chat2CLIToastWindow) {
         $script:Chat2CLIToastWindow = New-Object System.Windows.Window
@@ -104,8 +105,10 @@ function Show-Chat2CLIToast {
         $script:Chat2CLIToastWindow.Show()
     }
 
-    # 居中偏下：水平居中，垂直位于工作区底部上方约 180px
-    $workArea = [System.Windows.SystemParameters]::WorkArea
+    # 居中偏下：水平居中，垂直位于用户当前鼠标所在屏幕的工作区底部上方约 180px
+    $mousePosition = [System.Windows.Forms.Cursor]::Position
+    $currentScreen = [System.Windows.Forms.Screen]::FromPoint($mousePosition)
+    $workArea = $currentScreen.WorkingArea
     $script:Chat2CLIToastWindow.Left = $workArea.Left + [Math]::Max(0, ($workArea.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
     $script:Chat2CLIToastWindow.Top = $workArea.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
 }
