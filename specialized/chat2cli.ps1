@@ -12,6 +12,28 @@ function Invoke-Chat2CLI {
 Set-Alias "chat2cli" Invoke-Chat2CLI
 
 
+# 剪贴板被其他进程占用时，Win32 剪贴板 API 会返回 CLIPBRD_E_CANT_OPEN。
+# 通过带退避的重试循环获取剪贴板访问权，而不是直接失败。
+function Invoke-Chat2CLIClipboardWithRetry {
+    param(
+        [scriptblock]$Action,
+        [int]$MaxAttempts = 10,
+        [int]$RetryDelayMilliseconds = 100
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            return & $Action
+        }
+        catch [System.Runtime.InteropServices.COMException] {
+            if ($attempt -eq $MaxAttempts) {
+                throw
+            }
+            Start-Sleep -Milliseconds $RetryDelayMilliseconds
+        }
+    }
+}
+
 function Set-Chat2CLIClipboard {
     param([string]$Text)
 
@@ -44,13 +66,13 @@ function Set-Chat2CLIClipboard {
     $data.SetText($Text)
     $data.SetData('HTML Format', $html)
 
-    [System.Windows.Clipboard]::SetDataObject($data)
+    Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::SetDataObject($data) }
 }
 
 function Test-Chat2CLIClipboardGenerated {
     Add-Type -AssemblyName PresentationCore
 
-    $data = [System.Windows.Clipboard]::GetDataObject()
+    $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
     if ($null -eq $data) {
         return $false
     }
@@ -276,9 +298,11 @@ function Watch-Chat2CLI {
                 break
             }
 
-            $current = Get-Clipboard -Raw
-            if ($null -eq $current) {
-                $current = ""
+            # 使用带重试的原生方法避免其他进程占用剪贴板导致的瞬时失败
+            $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
+            $current = ""
+            if ($null -ne $data -and $data.GetDataPresent([System.Windows.DataFormats]::Text)) {
+                $current = [string]$data.GetData([System.Windows.DataFormats]::Text)
             }
 
             # 检查是否有其他 chat2cli 监控进程的占位文本
