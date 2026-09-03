@@ -151,6 +151,9 @@ function Watch-Chat2CLI {
         $psi.WorkingDirectory = (Get-Location).Path
         $psi.RedirectStandardInput = $true
         $psi.RedirectStandardOutput = $true
+        # 重定向 stderr，由主线程轮询逐行读取并原样输出。
+        # 不重定向时 .NET 在交互式 PowerShell 中不会把子进程 stderr
+        # 可靠流回当前终端，导致实时日志丢失。
         $psi.RedirectStandardError = $true
         $psi.UseShellExecute = $false
         $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
@@ -161,35 +164,36 @@ function Watch-Chat2CLI {
         $process.StartInfo = $psi
         $process.Start() | Out-Null
 
-        $stderrEvent = $null
-
         try {
-            # stderr 通过事件实时输出，不缓冲到进程结束
-            $stderrEvent = Register-ObjectEvent -InputObject $process -EventName ErrorDataReceived -Action {
-                try {
-                    $data = $Event.SourceEventArgs.Data
-                    if ($data) {
-                        # 内层 stderr 可能已带 ANSI 颜色（如 diff 红绿标记），
-                        # 这里原样转发，避免外层强制红色破坏内层颜色语义
-                        Write-Host $data
-                    }
-                }
-                catch {
-                    Write-Host "STDERR 事件回调出错: $_" -ForegroundColor Yellow
-                }
-            }
-            $process.BeginErrorReadLine()
-
             $process.StandardInput.Write($InputText)
             $process.StandardInput.Close()
 
             $stdoutTask = $process.StandardOutput.ReadToEndAsync()
 
+            # stderr 在主线程轮询逐行读取，原样输出，保留 ANSI 颜色。
+            # 顺序由读取时机保证，不会像事件队列那样乱序。
+            $stderrLineTask = $process.StandardError.ReadLineAsync()
+
             while (-not $process.HasExited) {
-                Start-Sleep -Milliseconds 100
+                if ($stderrLineTask.IsCompleted) {
+                    $stderrLine = $stderrLineTask.Result
+                    if ($null -ne $stderrLine) {
+                        Write-Host $stderrLine
+                        $stderrLineTask = $process.StandardError.ReadLineAsync()
+                    }
+                }
+                Start-Sleep -Milliseconds 20
             }
 
-            # 确保所有异步 stderr 事件都已派发完毕
+            # 进程退出后，把 stderr 剩余的行全部读出
+            while (-not $process.StandardError.EndOfStream) {
+                $remainingLine = $process.StandardError.ReadLine()
+                if ($null -ne $remainingLine) {
+                    Write-Host $remainingLine
+                }
+            }
+
+            # 确保子进程完全退出后再读取 stdout 结果
             $process.WaitForExit()
 
             $output = $stdoutTask.Result
@@ -213,9 +217,6 @@ function Watch-Chat2CLI {
         finally {
             if (-not $process.HasExited) {
                 $process.Kill()
-            }
-            if ($null -ne $stderrEvent) {
-                Unregister-Event -SourceIdentifier $stderrEvent.Name -ErrorAction SilentlyContinue
             }
             $process.Dispose()
             Hide-Chat2CLIToast
