@@ -1190,9 +1190,11 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
 
     # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
     if "\n" in command:
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh:\n```pwsh\n{command}\n```\n")
+        # 对多行命令，逐行着色以保持颜色在换行后延续
+        colored_lines = "\n".join(f"\033[33m{line}\033[0m" for line in command.split("\n"))
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh:\n```pwsh\n{colored_lines}\n```\n")
     else:
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: {command}\n")
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: \033[33m{command}\033[0m\n")
     sys.stderr.flush()
 
     try:
