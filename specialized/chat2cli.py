@@ -302,9 +302,7 @@ Closes #42
     if os.path.isfile(home_agents):
         with open(home_agents, "r", encoding="utf-8") as f:
             content = f.read()
-        reminder_parts.append(
-            f"Instructions from: ~/.chat2cli/AGENTS.md\n{content}"
-        )
+        reminder_parts.append(f"Instructions from: ~/.chat2cli/AGENTS.md\n{content}")
 
     cwd_agents = os.path.join(cwd, "AGENTS.md")
     if os.path.isfile(cwd_agents):
@@ -357,7 +355,6 @@ def validate_path(path: str) -> bool:
     return True
 
 
-
 def _is_gitignored(path: str) -> bool:
     """检查路径是否被 gitignore 忽略。"""
     result = subprocess.run(
@@ -398,7 +395,6 @@ def _colorize_ignored_path(path: str) -> str:
         return f"\033[38;5;208m{path}\033[0m"
 
 
-
 def _read_text_file(path: str) -> Tuple[str, str]:
     """读取文本文件，返回 (内容, 使用的编码)。"""
     try:
@@ -406,6 +402,7 @@ def _read_text_file(path: str) -> Tuple[str, str]:
             return f.read(), "utf-8"
     except UnicodeDecodeError:
         import locale
+
         encoding = locale.getpreferredencoding(False)
         with open(path, "r", encoding=encoding, newline="") as f:
             return f.read(), encoding
@@ -429,7 +426,6 @@ def _write_text_file_atomic(path: str, content: str, encoding: str = "utf-8") ->
             sys.stderr.write(f"警告：无法删除临时文件 {temp_path}: {e}\n")
             sys.stderr.flush()
         raise
-
 
 
 def _normalize_newlines(text: str) -> str:
@@ -503,24 +499,36 @@ def _find_closest_line(content: str, old_normalized: str) -> str:
         # 窗口内所有行都匹配，检查行数差异
         window_len = min(len(old_lines), len(content_lines) - best_window_idx)
         if len(old_lines) > window_len:
-            extra = old_lines[window_len:window_len + 3]
+            extra = old_lines[window_len : window_len + 3]
             return (
                 f"old 在文件第 {best_window_idx + 1} 行处匹配了前 {window_len} 行，"
                 f"但 old 还有 {len(old_lines) - window_len} 行，文件此处已结束。\n"
                 f"  old 多出的行：\n"
-                + "\n".join(f"    {i + window_len + 1}: {line!r}" for i, line in enumerate(extra))
+                + "\n".join(
+                    f"    {i + window_len + 1}: {line!r}"
+                    for i, line in enumerate(extra)
+                )
             )
         elif len(old_lines) < window_len:
-            extra = content_lines[best_window_idx + len(old_lines):best_window_idx + len(old_lines) + 3]
+            extra = content_lines[
+                best_window_idx + len(old_lines) : best_window_idx + len(old_lines) + 3
+            ]
             return (
                 f"old 在文件第 {best_window_idx + 1} 行处匹配了前 {len(old_lines)} 行，"
                 f"但文件此处后续还有 {window_len - len(old_lines)} 行 old 没有包含。\n"
                 f"  文件多出的行：\n"
-                + "\n".join(f"    {i + len(old_lines) + 1}: {line!r}" for i, line in enumerate(extra))
+                + "\n".join(
+                    f"    {i + len(old_lines) + 1}: {line!r}"
+                    for i, line in enumerate(extra)
+                )
             )
         return ""
 
-    file_line = content_lines[first_bad_file_idx] if first_bad_file_idx < len(content_lines) else ""
+    file_line = (
+        content_lines[first_bad_file_idx]
+        if first_bad_file_idx < len(content_lines)
+        else ""
+    )
     old_line = old_lines[first_bad_old_idx]
 
     # 生成该行的逐字符 diff
@@ -628,7 +636,6 @@ def _calculate_line_changes(before: str, after: str) -> Dict[str, int]:
     }
 
 
-
 def execute_skill(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
     """激活指定 skill，返回 (元数据, skill_content 内容块)"""
     name = params.get("name")
@@ -674,6 +681,7 @@ Resolve relative paths mentioned by this skill against the base directory before
     }
     return meta, content_block
 
+
 def _resolve_editor_path(path_raw: str) -> str:
     """解析 str_replace_editor 的 path。
 
@@ -701,14 +709,21 @@ def _resolve_editor_path(path_raw: str) -> str:
     return ""
 
 
-def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+def execute_str_replace_editor(
+    id_: Any, params: Dict[str, Any]
+) -> Tuple[Dict[str, Any], str]:
     """执行 str_replace_editor 命令（view/create/str_replace/insert），返回 (元数据, 内容块)"""
     import sys
 
     command = params.get("command")
     path_raw = params.get("path")
 
-    if not isinstance(command, str) or command not in ("view", "create", "str_replace", "insert"):
+    if not isinstance(command, str) or command not in (
+        "view",
+        "create",
+        "str_replace",
+        "insert",
+    ):
         return {
             "success": False,
             "message": "错误：command 必须是 view、create、str_replace 或 insert。",
@@ -719,6 +734,7 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
     path = _resolve_editor_path(path_raw)
     if not path:
         import socket
+
         hostname = socket.gethostname()
         cwd = os.getcwd()
         return {
@@ -739,7 +755,10 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
             return {"success": False, "message": f"错误：文件已存在：{path}"}, ""
         file_text = params.get("file_text")
         if not isinstance(file_text, str):
-            return {"success": False, "message": "错误：create 命令需要 file_text 参数（字符串）。"}, ""
+            return {
+                "success": False,
+                "message": "错误：create 命令需要 file_text 参数（字符串）。",
+            }, ""
         try:
             _write_text_file_atomic(path, file_text, "utf-8")
         except Exception as e:
@@ -774,8 +793,15 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
             return {"success": False, "message": "错误：文件不存在。"}, ""
         insert_line = params.get("insert_line")
         new_str = params.get("new_str")
-        if not isinstance(insert_line, int) or isinstance(insert_line, bool) or insert_line < 1:
-            return {"success": False, "message": "错误：insert_line 必须是 >=1 的整数。"}, ""
+        if (
+            not isinstance(insert_line, int)
+            or isinstance(insert_line, bool)
+            or insert_line < 1
+        ):
+            return {
+                "success": False,
+                "message": "错误：insert_line 必须是 >=1 的整数。",
+            }, ""
         if not isinstance(new_str, str):
             return {"success": False, "message": "错误：new_str 必须是字符串。"}, ""
         return _insert_in_file(id_, path, insert_line, new_str), ""
@@ -783,13 +809,23 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
     return {"success": False, "message": "未知错误。"}, ""
 
 
-def view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+def view_file(
+    id_: Any, path: str, params: Dict[str, Any]
+) -> Tuple[Dict[str, Any], str]:
     """查看文件内容，返回 (元数据, 行号化内容)"""
     offset_param = params.get("offset", 1)
     limit_param = params.get("limit", 2000)
-    if not isinstance(offset_param, int) or isinstance(offset_param, bool) or offset_param < 1:
+    if (
+        not isinstance(offset_param, int)
+        or isinstance(offset_param, bool)
+        or offset_param < 1
+    ):
         return {"success": False, "message": "错误：offset 必须是 >=1 的整数。"}, ""
-    if not isinstance(limit_param, int) or isinstance(limit_param, bool) or limit_param < 1:
+    if (
+        not isinstance(limit_param, int)
+        or isinstance(limit_param, bool)
+        or limit_param < 1
+    ):
         return {"success": False, "message": "错误：limit 必须是 >=1 的整数。"}, ""
 
     encoding_to_use = "utf-8"
@@ -798,6 +834,7 @@ def view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, An
             raw_content = f.read()
     except UnicodeDecodeError:
         import locale
+
         encoding_to_use = locale.getpreferredencoding(False)
         try:
             with open(path, "r", encoding=encoding_to_use, newline="") as f:
@@ -845,15 +882,22 @@ def view_file(id_: Any, path: str, params: Dict[str, Any]) -> Tuple[Dict[str, An
             footer = f"\n(End of file - total {total_lines} lines)"
         content_with_footer = content_out + footer
     else:
-        content_with_footer = f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
+        content_with_footer = (
+            f"(Showing lines {first_line}-{last_line} of {total_lines}.)"
+        )
 
     ref_id = _gen_view_oob_id(id_)
-    content_block = _data_block_text(
-        ref_id, f'{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}'
-    ) + "\n"
+    content_block = (
+        _data_block_text(
+            ref_id, f'{meta["path"]}:L{first_line}-{last_line}\n{content_with_footer}'
+        )
+        + "\n"
+    )
     meta["content"] = {"ref": ref_id}
     # stderr 显示读取路径（gitignore 部分橙色高亮）
-    sys.stderr.write(f"[request#{id_}] 👁️ view: {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n")
+    sys.stderr.write(
+        f"[request#{id_}] 👁️ view: {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n"
+    )
     sys.stderr.flush()
 
     return meta, content_block
@@ -894,7 +938,9 @@ def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
     dir_content = f"{os.path.abspath(path)}\n" + "\n".join(lines)
     content_block = _data_block_text(ref_id, dir_content) + "\n"
     # stderr 显示目录读取路径（gitignore 部分橙色高亮）
-    sys.stderr.write(f"[request#{id_}] 👁️ view: {_colorize_ignored_path(os.path.abspath(path))}\n")
+    sys.stderr.write(
+        f"[request#{id_}] 👁️ view: {_colorize_ignored_path(os.path.abspath(path))}\n"
+    )
     sys.stderr.flush()
 
     meta = {
@@ -907,7 +953,9 @@ def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
     return meta, content_block
 
 
-def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[str, Any]:
+def _str_replace_file(
+    id_: Any, path: str, old_str: str, new_str: str
+) -> Dict[str, Any]:
     """替换文件中的文本，返回 result 字典"""
     try:
         raw_content, encoding_to_use = _read_text_file(path)
@@ -939,7 +987,9 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
     new_lines = new_normalized.split("\n")
 
     if old_normalized == new_normalized:
-        sys.stderr.write(f"\033[33m⚠️  str_replace_editor: old_str 和 new_str 内容相同，文件未修改: {abs_path}\033[0m\n")
+        sys.stderr.write(
+            f"\033[33m⚠️  str_replace_editor: old_str 和 new_str 内容相同，文件未修改: {abs_path}\033[0m\n"
+        )
         sys.stderr.flush()
         return {
             "success": False,
@@ -984,7 +1034,9 @@ def _str_replace_file(id_: Any, path: str, old_str: str, new_str: str) -> Dict[s
     }
 
 
-def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict[str, Any]:
+def _insert_in_file(
+    id_: Any, path: str, insert_line: int, new_str: str
+) -> Dict[str, Any]:
     """在指定行后插入文本，返回 result 字典"""
     try:
         raw_content, encoding_to_use = _read_text_file(path)
@@ -1015,7 +1067,9 @@ def _insert_in_file(id_: Any, path: str, insert_line: int, new_str: str) -> Dict
         return {"success": False, "message": f"错误：写入文件失败：{str(e)}"}
 
     abs_path = os.path.abspath(path)
-    sys.stderr.write(f"[request#{id_}] ➕ insert: {abs_path}: 在第 {insert_line} 行后插入\n")
+    sys.stderr.write(
+        f"[request#{id_}] ➕ insert: {abs_path}: 在第 {insert_line} 行后插入\n"
+    )
     sys.stderr.write("\033[32m+++ 插入内容:\033[0m\n")
     sys.stderr.write(new_str)
     if not new_str.endswith("\n"):
@@ -1073,9 +1127,7 @@ def _format_viewed(text: str, start_line: int = 1) -> str:
     lines = text.split("\n")
     if lines and lines[-1] == "":
         lines = lines[:-1]
-    return "\n".join(
-        f"{start_line + i}:{line}" for i, line in enumerate(lines)
-    )
+    return "\n".join(f"{start_line + i}:{line}" for i, line in enumerate(lines))
 
 
 def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
@@ -1108,7 +1160,7 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
         tail_raw = text[-half:]
         tail_cut = tail_raw.find("\n")
         if tail_cut != -1:
-            tail_raw = tail_raw[tail_cut + 1:]
+            tail_raw = tail_raw[tail_cut + 1 :]
         # tail 首行在全文中的行号：截取位置之前的换行数 + 1
         tail_start_char = len(text) - half + (tail_cut + 1 if tail_cut != -1 else 0)
         preceding_lines = text[:tail_start_char].count("\n")
@@ -1117,9 +1169,7 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
         _register_oob_data(tail_ref, tail_text)
 
         return {
-            "message": (
-                f"输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}"
-            ),
+            "message": (f"输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}"),
             "path": abs_path,
             "head": {"ref": head_ref},
             "tail": {"ref": tail_ref},
@@ -1142,9 +1192,9 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     return text
 
 
-
-
-def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> Dict[str, Any]:
+def execute_pwsh(
+    id_: Any, params: Dict[str, Any], data_map: Dict[str, str]
+) -> Dict[str, Any]:
     """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
     command = params.get("command")
 
@@ -1171,7 +1221,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
         env_name = "DATA_" + ref_id
         env[env_name] = ref_content
 
-    def _stream_reader(stream: Any, stream_name: str, lines_list: List[str], pid: int) -> None:
+    def _stream_reader(
+        stream: Any, stream_name: str, lines_list: List[str], pid: int
+    ) -> None:
         """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
         try:
             for line in iter(stream.readline, ""):
@@ -1193,7 +1245,9 @@ def execute_pwsh(id_: Any, params: Dict[str, Any], data_map: Dict[str, str]) -> 
     # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
     if "\n" in command:
         # 对多行命令，逐行着色以保持颜色在换行后延续
-        colored_lines = "\n".join(f"\033[33m{line}\033[0m" for line in command.split("\n"))
+        colored_lines = "\n".join(
+            f"\033[33m{line}\033[0m" for line in command.split("\n")
+        )
         sys.stderr.write(f"[request#{id_}] 🖥️ pwsh:\n```pwsh\n{colored_lines}\n```\n")
     else:
         sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: \033[33m{command}\033[0m\n")
@@ -1373,7 +1427,9 @@ def has_truncated_fence(text: str) -> bool:
     return all("<request>" not in block for block in blocks)
 
 
-def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
+def _parse_chat2cli_content(
+    content: str,
+) -> Tuple[Dict[str, str], List[Dict[str, Any]]]:
     """解析单个 chat2cli 代码块内容，提取 data 标签和 request 标签。
 
     data 标签优先级高于 request：data 块内部的 <request>
@@ -1385,8 +1441,7 @@ def _parse_chat2cli_content(content: str) -> Tuple[Dict[str, str], List[Dict[str
     # 左侧 data 分支优先匹配，整个 data 块（含其中 request）被吞掉，
     # 因此其中的 request 不会作为独立 token 被提取。
     pattern = re.compile(
-        r"<data\.([^>\s]+)>(.*?)</data\.\1>"
-        r"|<request>\s*(.*?)</request>",
+        r"<data\.([^>\s]+)>(.*?)</data\.\1>" r"|<request>\s*(.*?)</request>",
         re.DOTALL,
     )
 
@@ -1485,7 +1540,16 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
 
     # 各 method 允许的 params key（不含 id，id 必须在顶层）
     allowed_params = {
-        "str_replace_editor": {"command", "path", "file_text", "old_str", "new_str", "insert_line", "offset", "limit"},
+        "str_replace_editor": {
+            "command",
+            "path",
+            "file_text",
+            "old_str",
+            "new_str",
+            "insert_line",
+            "offset",
+            "limit",
+        },
         "pwsh": {"command"},
         "skill": {"name"},
     }
@@ -1495,7 +1559,10 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
         hint = ""
         if "id" in unknown_params:
             hint = "注意：id 必须放在顶层，不能放在 params 内。"
-        return False, f"params 中存在未知字段：{sorted(unknown_params)}，method={method} 允许的字段：{sorted(allowed)}。{hint}"
+        return (
+            False,
+            f"params 中存在未知字段：{sorted(unknown_params)}，method={method} 允许的字段：{sorted(allowed)}。{hint}",
+        )
 
     return True, ""
 
@@ -1567,20 +1634,31 @@ def dispatch_request(
         if method == "str_replace_editor":
             meta, content_block = execute_str_replace_editor(req_id, params)
             if meta.get("success"):
-                for key in ("total_lines", "returned_lines", "first_line", "last_line", "message"):
+                for key in (
+                    "total_lines",
+                    "returned_lines",
+                    "first_line",
+                    "last_line",
+                    "message",
+                ):
                     meta.pop(key, None)
                 response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
                 logging.debug(f"  执行结果: 成功 - {meta}")
             else:
                 response = {
                     "jsonrpc": "2.0",
-                    "error": {"code": -32000, "message": meta.get("message", "未知错误")},
+                    "error": {
+                        "code": -32000,
+                        "message": meta.get("message", "未知错误"),
+                    },
                     "id": req_id,
                 }
                 logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
 
         elif method == "pwsh":
-            logging.debug(f"  执行 PowerShell 命令: {params.get('command', '')[:200]}...")
+            logging.debug(
+                f"  执行 PowerShell 命令: {params.get('command', '')[:200]}..."
+            )
             result = execute_pwsh(req_id, params, data_map)
             if result.get("success"):
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
@@ -1588,7 +1666,10 @@ def dispatch_request(
             else:
                 response = {
                     "jsonrpc": "2.0",
-                    "error": {"code": -32000, "message": result.get("message", "未知错误")},
+                    "error": {
+                        "code": -32000,
+                        "message": result.get("message", "未知错误"),
+                    },
                     "id": req_id,
                 }
                 logging.debug(f"  执行结果: 失败 - {result.get('message', '未知错误')}")
@@ -1603,7 +1684,10 @@ def dispatch_request(
             else:
                 response = {
                     "jsonrpc": "2.0",
-                    "error": {"code": -32000, "message": meta.get("message", "未知错误")},
+                    "error": {
+                        "code": -32000,
+                        "message": meta.get("message", "未知错误"),
+                    },
                     "id": req_id,
                 }
                 logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
@@ -1630,6 +1714,7 @@ def dispatch_request(
             "id": req_id,
         }, ""
 
+
 def _fence_for_content(content: str) -> str:
     """为包含指定内容的 chat2cli 代码块选择足够长的围栏。
 
@@ -1637,16 +1722,6 @@ def _fence_for_content(content: str) -> str:
     """
     longest_run = max((len(m) for m in re.findall(r"`+", content)), default=0)
     return "`" * max(3, longest_run + 1)
-
-
-def _write_stderr_summary(text: str, max_chars: int = 200) -> None:
-    """输出 stderr 汇总，过长内容在展示层截断并提示。"""
-    if len(text) <= max_chars:
-        sys.stderr.write(text)
-        return
-
-    truncated = len(text) - max_chars
-    sys.stderr.write(f"{text[:max_chars]} ({truncated} more chars)\n")
 
 
 def main():
@@ -1734,7 +1809,9 @@ def main():
             print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
-        sys.stderr.write("[chat2cli] 未检测到 chat2cli 代码块或 request 标签，已输出初始指令。\n")
+        sys.stderr.write(
+            "[chat2cli] 未检测到 chat2cli 代码块或 request 标签，已输出初始指令。\n"
+        )
         print_instruction()
         return
 
@@ -1785,11 +1862,17 @@ def main():
     # 检查输入是否只包含chat2cli代码块
     stripped_input = input_text.strip()
     # 移除所有chat2cli代码块
-    no_blocks = re.sub(r'(`{3,})chat2cli[ \t]*\n.*?\n\1', '', stripped_input, flags=re.DOTALL)
+    no_blocks = re.sub(
+        r"(`{3,})chat2cli[ \t]*\n.*?\n\1", "", stripped_input, flags=re.DOTALL
+    )
     if not no_blocks.strip() and requests:
         # 只有代码块且有请求，输出提醒
-        sys.stderr.write("[chat2cli] 输入仅包含代码块，缺少意图说明，已添加system-reminder提醒。\n")
-        print("<system-reminder>检测到输出仅包含chat2cli代码块，未提供任何操作意图说明。根据沟通要求，执行chat2cli调用时请在代码块前提供一句简短的操作意图说明。</system-reminder>")
+        sys.stderr.write(
+            "[chat2cli] 输入仅包含代码块，缺少意图说明，已添加system-reminder提醒。\n"
+        )
+        print(
+            "<system-reminder>检测到输出仅包含chat2cli代码块，未提供任何操作意图说明。根据沟通要求，执行chat2cli调用时请在代码块前提供一句简短的操作意图说明。</system-reminder>"
+        )
 
     body = "\n".join(part for part in body_parts if part)
     fence = _fence_for_content(body)
