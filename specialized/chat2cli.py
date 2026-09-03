@@ -285,37 +285,39 @@ Closes #42
 
 ### 嵌套代码块处理
 
-chat2cli代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列（4个或更长），或者使用JSON字符串传递。
+chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），通过给所有行添加空格缩进来避免数据中的围栏被识别成 chat2cli 代码块结束围栏。
 
 此示例演示替换一个包含三引号代码块的文本：
 
-````chat2cli
-<data.old_code>
-```python
-def old():
-    return "legacy"
-```
-</data.old_code>
-<data.new_code>
-```python
-def new():
-    return "modern"
-```
-</data.new_code>
-<request>
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "str_replace_editor",
-  "params": {
-    "command": "str_replace",
-    "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
-    "old_str": {"id": "old_code"},
-    "new_str": {"id": "new_code"}
-  }
-}
-</request>
+```chat2cli
+  <data.old_code>
+  ```python
+  def old():
+      return "legacy"
+  ```
+  </data.old_code>
+  <data.new_code>
+  ```python
+  def new():
+      return "modern"
+  ```
+  </data.new_code>
+  <request>
+  {{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "str_replace_editor",
+    "params": {{
+      "command": "str_replace",
+      "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
+      "old_str": {{"id": "old_code"}},
+      "new_str": {{"id": "new_code"}}
+    }}
+  }}
+  </request>
 ````
+
+解析器会基于 chat2cli 代码块中的首行缩进决定预处理的缩进移除，后续行必须要有和首行相同缩进或更多缩进，否则视为非法输入。
 
 ## 沟通要求
 
@@ -1418,17 +1420,101 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
 def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     """提取所有 chat2cli 围栏代码块的内容。
 
-    开头与闭合围栏的反引号数量必须一致。当 data 块内容需要包含
-    字面反引号围栏时，使用更长（四个或更多）的外层围栏，避免内容
-    中的反引号围栏被误识别为外层围栏的闭合。
+    解析器基于 chat2cli 代码块中的首行缩进决定预处理的缩进移除，
+    后续行必须要有和首行相同缩进或更多缩进，否则视为非法输入。
+    这样可以避免 data 块中的字面围栏被误识别为外层围栏的闭合。
     """
     blocks: List[str] = []
-    pattern = re.compile(r"(`{3,})chat2cli[ \t]*\n(.*?)\n\1", re.DOTALL)
-    for match in pattern.finditer(text):
-        content = match.group(2)
-        if content is not None:
-            blocks.append(content)
+
+    # 首先定位所有 chat2cli 围栏的开头行，然后逐行扫描到匹配的闭合围栏。
+    fence_open_pattern = re.compile(r"^(`{3,})chat2cli[ \t]*$", re.MULTILINE)
+    fence_close_pattern = re.compile(r"^(`{3,})[ \t]*$", re.MULTILINE)
+
+    # 按行处理，跟踪当前打开的围栏
+    lines = text.split("\n")
+    # 用栈跟踪打开围栏 (反引号数量, 起始行索引)
+    open_fences: List[Tuple[int, int]] = []
+
+    for line_idx, line in enumerate(lines):
+        stripped = line.rstrip("\r")
+
+        open_match = fence_open_pattern.match(stripped)
+        if open_match:
+            open_fences.append((len(open_match.group(1)), line_idx))
+            continue
+
+        if open_fences:
+            close_match = fence_close_pattern.match(stripped)
+            if close_match:
+                fence_len, start_idx = open_fences[-1]
+                if len(close_match.group(1)) == fence_len:
+                    # 找到匹配的闭合围栏
+                    open_fences.pop()
+                    content_lines = lines[start_idx + 1 : line_idx]
+                    # 内容为空：跳过
+                    if not any(line.strip() for line in content_lines):
+                        continue
+                    # 基于首行缩进做预处理移除
+                    first_nonblank_idx = next(
+                        i
+                        for i, l in enumerate(content_lines)
+                        if l.strip() != ""
+                    )
+                    first_line = content_lines[first_nonblank_idx]
+                    indent_match = re.match(r"^[ \t]*", first_line)
+                    assert indent_match is not None
+                    indent = indent_match.group(0)
+
+                    # 所有非空行必须有相同或更多的缩进
+                    stripped_lines = []
+                    for i, cl in enumerate(content_lines):
+                        if cl.strip() == "":
+                            stripped_lines.append("")
+                            continue
+                        if indent and not cl.startswith(indent):
+                            raise ValueError(
+                                f"chat2cli 代码块缩进非法：第 {start_idx + i + 2} 行"
+                                f"（{cl!r}）缩进少于首行缩进 {indent!r}"
+                            )
+                        stripped_lines.append(
+                            cl[len(indent) :] if indent else cl
+                        )
+                    # 去掉首尾因围栏产生的空行
+                    while stripped_lines and stripped_lines[0] == "":
+                        stripped_lines.pop(0)
+                    while stripped_lines and stripped_lines[-1] == "":
+                        stripped_lines.pop()
+                    blocks.append("\n".join(stripped_lines))
+
     return blocks
+
+
+
+def _remove_chat2cli_blocks(text: str) -> str:
+    """移除文本中所有 ```chat2cli 围栏代码块（含围栏行）。
+
+    逐行扫描：遇到 chat2cli 围栏开头时跳过后续所有行，直到匹配的
+    闭合围栏为止。
+    """
+    lines = text.split("\n")
+    output_lines: List[str] = []
+    open_fence_len: Optional[int] = None
+
+    for line in lines:
+        stripped = line.rstrip("\r")
+        if open_fence_len is None:
+            m = re.match(r"^(`{3,})chat2cli[ \t]*$", stripped)
+            if m:
+                open_fence_len = len(m.group(1))
+                continue
+            output_lines.append(line)
+        else:
+            m = re.match(r"^(`{3,})[ \t]*$", stripped)
+            if m and len(m.group(1)) == open_fence_len:
+                open_fence_len = None
+            # 围栏内所有行都跳过
+
+    return "\n".join(output_lines)
 
 
 def _has_bare_request(text: str) -> bool:
@@ -1436,24 +1522,25 @@ def _has_bare_request(text: str) -> bool:
 
     先移除所有 ```chat2cli 代码块，然后在剩余文本中搜索 <request> 标签。
     """
-    # 移除 chat2cli 代码块（包括标签内的全部内容），围栏长度与开头一致
-    pattern = re.compile(r"(`{3,})chat2cli[ \t]*\n.*?\n\1", re.DOTALL)
-    text_without_blocks = re.sub(pattern, "", text)
+    text_without_blocks = _remove_chat2cli_blocks(text)
     # 检查剩余文本中是否包含 <request> 标签
     return bool(re.search(r"<(?:request)>", text_without_blocks, re.IGNORECASE))
 
 
 def has_truncated_fence(text: str) -> bool:
-    """检测是否存在未闭合或提前截断的 chat2cli 围栏。
+    """检测是否存在未闭合的 chat2cli 围栏。
 
     当输入包含 ```chat2cli 围栏开头，但完整围栏解析器
     _extract_chat2cli_fence_blocks 提取到的块都没有 <request> 时，
-    很可能是因为 data 块内的字面反引号围栏被误当成外层围栏的闭合。
-    此时应提示使用更长的外层围栏。
+    视为围栏未正确闭合。
     """
     if not re.search(r"`{3,}chat2cli", text):
         return False
-    blocks = _extract_chat2cli_fence_blocks(text)
+    try:
+        blocks = _extract_chat2cli_fence_blocks(text)
+    except ValueError:
+        # 缩进非法也属于输入格式问题
+        return True
     if not blocks:
         return True
     # 提取到块但没有任何 <request>，说明块被提前截断
@@ -1795,7 +1882,11 @@ def main():
         return
 
     logging.debug("【2. 提取 chat2cli 代码块】")
-    data_map, requests = _scan_blocks(input_text)
+    try:
+        data_map, requests = _scan_blocks(input_text)
+    except ValueError:
+        # 缩进非法等输入格式问题，走下方的 has_truncated_fence 错误提示路径
+        data_map, requests = {}, []
     logging.debug(f"提取到 {len(data_map)} 个数据块: {sorted(data_map.keys())}")
     logging.debug(f"提取到 {len(requests)} 个请求")
     for i, req in enumerate(requests):
@@ -1810,19 +1901,20 @@ def main():
         if has_truncated_fence(input_text):
             error_msg = (
                 "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
-                "如果 data 块内容包含字面的 ``` 围栏，请使用更长（四个或更多）\n"
-                "反引号的外层围栏，例如：\n"
+                "如果代码块内容包含字面的 ``` 围栏，请给所有行添加空格缩进，\n"
+                "解析器会基于首行缩进自动移除。后续行必须和首行缩进相同或更多，\n"
+                "否则视为非法输入。例如：\n"
                 "\n"
-                "````chat2cli\n"
-                "<data.code>\n"
+                "```chat2cli\n"
+                "  <data.code>\n"
+                "  ```\n"
+                "  字面围栏内容\n"
+                "  ```\n"
+                "  </data.code>\n"
+                "  <request>\n"
+                '  {"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
+                "  </request>\n"
                 "```\n"
-                "字面围栏内容\n"
-                "```\n"
-                "</data.code>\n"
-                "<request>\n"
-                '{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
-                "</request>\n"
-                "````\n"
             )
             print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
@@ -1895,15 +1987,13 @@ def main():
     # 检查输入是否只包含chat2cli代码块
     stripped_input = input_text.strip()
     # 移除所有chat2cli代码块
-    no_blocks = re.sub(
-        r"(`{3,})chat2cli[ \t]*\n.*?\n\1", "", stripped_input, flags=re.DOTALL
-    )
+    no_blocks = _remove_chat2cli_blocks(stripped_input)
     if not no_blocks.strip() and requests:
-        # 只有代码块且有请求，输出提醒
+        # 只有代码块且有请求，输出提醒（在代码块之后，不影响代码块本身作为开头的输出）
         sys.stderr.write(
             "[chat2cli] 输入仅包含代码块，缺少意图说明，已添加system-reminder提醒。\n"
         )
-        print(
+        reminder_text = (
             "<system-reminder>检测到输出仅包含chat2cli代码块，未提供任何操作意图说明。根据沟通要求，执行chat2cli调用时请在代码块前提供一句简短的操作意图说明。</system-reminder>"
         )
 
@@ -1912,6 +2002,9 @@ def main():
     print(f"{fence}chat2cli")
     print(body)
     print(fence)
+
+    if not no_blocks.strip() and requests:
+        print(reminder_text)
 
 
 if __name__ == "__main__":

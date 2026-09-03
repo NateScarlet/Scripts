@@ -77,16 +77,16 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(blocks, [])
 
     def test_data_block_can_contain_literal_fence(self):
-        # data 块内容包含字面的 ``` 围栏时，外层使用四个反引号
+        # data 块内容包含字面的 ``` 围栏时，通过缩进避免误识别
         text = (
-            "````chat2cli\n"
-            "<data.code>\n"
-            "```\n"
-            "literal fence content\n"
-            "```\n"
-            "</data.code>\n"
-            '<request>\n{"method":"skill"}\n</request>\n'
-            "````"
+            "```chat2cli\n"
+            "  <data.code>\n"
+            "  ```\n"
+            "  literal fence content\n"
+            "  ```\n"
+            "  </data.code>\n"
+            '  <request>\n  {"method":"skill"}\n  </request>\n'
+            "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
         self.assertEqual(len(blocks), 1)
@@ -94,19 +94,28 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         data = chat2cli.extract_data_blocks(text)
         self.assertEqual(data["code"], "\n```\nliteral fence content\n```\n")
 
-    def test_shorter_outer_fence_does_not_match_longer_close(self):
-        # 外层围栏是三个反引号，内容包含四个反引号围栏时不应误解析
+    def test_less_indented_line_raises_error(self):
+        # 后续行缩进小于首行时，视为非法输入
         text = (
             "```chat2cli\n"
-            "<data.code>\n"
-            "````\n"
-            "literal fence content\n"
-            "````\n"
-            "</data.code>\n"
+            "  <request>\n"
+            '{"method":"skill"}\n'
+            "  </request>\n"
+            "```"
+        )
+        with self.assertRaises(ValueError):
+            chat2cli.extract_chat2cli_blocks(text)
+
+    def test_unindented_block_uses_empty_prefix(self):
+        # 首行无缩进时，内容原样返回
+        text = (
+            "```chat2cli\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
-        self.assertEqual(blocks, [])
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
 
     def test_ignores_request_outside_chat2cli_block(self):
         text = (
@@ -124,31 +133,17 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
 
 
 class TestHasTruncatedFence(unittest.TestCase):
-    def test_detects_truncated_fence_with_literal_inner_fence(self):
-        # 外层三反引号，data 块内含字面 ``` 围栏，导致外层围栏被提前截断
+    def test_does_not_detect_truncation_with_indented_literal_inner_fence(self):
+        # 使用缩进处理含字面 ``` 围栏的 data 块，不应误判为截断
         text = (
             "```chat2cli\n"
-            "<data.code>\n"
-            "```\n"
-            "literal fence content\n"
-            "```\n"
-            "</data.code>\n"
-            '<request>\n{"method":"skill"}\n</request>\n'
+            "  <data.code>\n"
+            "  ```\n"
+            "  literal fence content\n"
+            "  ```\n"
+            "  </data.code>\n"
+            '  <request>\n  {"method":"skill"}\n  </request>\n'
             "```"
-        )
-        self.assertTrue(chat2cli.has_truncated_fence(text))
-
-    def test_no_truncation_with_longer_outer_fence(self):
-        # 外层四反引号，可以正常容纳内层 ``` 围栏
-        text = (
-            "````chat2cli\n"
-            "<data.code>\n"
-            "```\n"
-            "literal fence content\n"
-            "```\n"
-            "</data.code>\n"
-            '<request>\n{"method":"skill"}\n</request>\n'
-            "````"
         )
         self.assertFalse(chat2cli.has_truncated_fence(text))
 
@@ -406,17 +401,12 @@ class TestErrorInstructionWrapping(unittest.TestCase):
             )
         return result.stdout
 
-    def test_truncated_fence_error_wrapped_in_instruction_tag(self):
+    def test_invalid_indent_error_wrapped_in_instruction_tag(self):
         text = (
             "```chat2cli\n"
-            "<data.code>\n"
-            "```\n"
-            "literal fence\n"
-            "```\n"
-            "</data.code>\n"
-            "<request>\n"
+            "  <request>\n"
             '{"method":"pwsh"}\n'
-            "</request>\n"
+            "  </request>\n"
             "```"
         )
         output = self._run_chat2cli(text)
