@@ -127,12 +127,35 @@ function Show-Chat2CLIToast {
         $script:Chat2CLIToastWindow.Show()
     }
 
-    # 居中偏下：水平居中，垂直位于用户当前鼠标所在屏幕的工作区底部上方约 180px
+    # 居中偏下：水平居中，垂直位于用户当前鼠标所在屏幕的工作区底部上方约 180px。
+    # 关键：Cursor.Position 和 Screen.WorkingArea 都基于物理像素，
+    # 而 WPF 的 Left/Top 基于 DIP（逻辑像素）。在高 DPI 缩放下两者不一致，
+    # 必须用 TransformFromDevice 把物理像素换算成 DIP，否则窗口会定位到屏幕外。
     $mousePosition = [System.Windows.Forms.Cursor]::Position
     $currentScreen = [System.Windows.Forms.Screen]::FromPoint($mousePosition)
     $workArea = $currentScreen.WorkingArea
-    $script:Chat2CLIToastWindow.Left = $workArea.Left + [Math]::Max(0, ($workArea.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
-    $script:Chat2CLIToastWindow.Top = $workArea.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
+
+    # 窗口显示后才存在 PresentationSource，用它做物理像素 -> DIP 的换算。
+    # 用左上角和右下角两个点分别转换，得到正确的 DIP 矩形（宽高随缩放自动调整）。
+    $source = [System.Windows.PresentationSource]::FromVisual($script:Chat2CLIToastWindow)
+    if ($null -ne $source) {
+        $transform = $source.CompositionTarget.TransformFromDevice
+        $topLeftDip = $transform.Transform([System.Windows.Point]::new($workArea.Left, $workArea.Top))
+        $bottomRightDip = $transform.Transform([System.Windows.Point]::new($workArea.Right, $workArea.Bottom))
+        $workAreaDip = [System.Windows.Rect]::new(
+            $topLeftDip.X,
+            $topLeftDip.Y,
+            $bottomRightDip.X - $topLeftDip.X,
+            $bottomRightDip.Y - $topLeftDip.Y
+        )
+    }
+    else {
+        # 兜底：拿不到 source 时直接当 DIP 用（通常发生在窗口尚未真正显示时）
+        $workAreaDip = [System.Windows.Rect]::new($workArea.X, $workArea.Y, $workArea.Width, $workArea.Height)
+    }
+
+    $script:Chat2CLIToastWindow.Left = $workAreaDip.Left + [Math]::Max(0, ($workAreaDip.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
+    $script:Chat2CLIToastWindow.Top = $workAreaDip.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
 }
 
 function Update-Chat2CLIToast {
