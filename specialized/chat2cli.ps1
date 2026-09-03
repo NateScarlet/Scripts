@@ -178,9 +178,12 @@ function Watch-Chat2CLI {
         # 可靠流回当前终端，导致实时日志丢失。
         $psi.RedirectStandardError = $true
         $psi.UseShellExecute = $false
-        $psi.StandardInputEncoding = [System.Text.Encoding]::UTF8
-        $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-        $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+        # 使用不带 BOM 的 UTF-8。Encoding.UTF8 自带 BOM，会往 stdin 写入
+        # EF BB BF 前缀，导致子进程收到多余的 U+FEFF。
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        $psi.StandardInputEncoding = $utf8NoBom
+        $psi.StandardOutputEncoding = $utf8NoBom
+        $psi.StandardErrorEncoding = $utf8NoBom
         $psi.CreateNoWindow = $true
 
         $process = New-Object System.Diagnostics.Process
