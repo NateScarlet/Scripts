@@ -172,7 +172,6 @@ JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
 chat2cli 代码块可以出现在正文的任意位置，也可以前后补充必要的说明文字，
 但代码块本身必须完整地出现在正文回复中，RPC 调用才可被用户复制执行。
 
-代码块内容需要包含字面的反引号围栏时，外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列（4个或更长）。
 
 ## 可用 JSON-RPC 方法
 
@@ -283,6 +282,40 @@ Closes #42
 }}
 </request>
 ```
+
+### 嵌套代码块处理
+
+chat2cli代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），外层 chat2cli 围栏应使用比内容中任何反引号围栏都更长的反引号序列（4个或更长），或者使用JSON字符串传递。
+
+此示例演示替换一个包含三引号代码块的文本：
+
+````chat2cli
+<data.old_code>
+```python
+def old():
+    return "legacy"
+```
+</data.old_code>
+<data.new_code>
+```python
+def new():
+    return "modern"
+```
+</data.new_code>
+<request>
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "str_replace_editor",
+  "params": {
+    "command": "str_replace",
+    "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
+    "old_str": {"id": "old_code"},
+    "new_str": {"id": "new_code"}
+  }
+}
+</request>
+````
 
 ## 沟通要求
 
