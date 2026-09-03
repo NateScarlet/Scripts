@@ -1783,6 +1783,15 @@ def main():
     body_parts.append(json_resp)
     body_parts.append("</response>")
 
+    # 检查输入是否只包含chat2cli代码块
+    stripped_input = input_text.strip()
+    # 移除所有chat2cli代码块
+    no_blocks = re.sub(r'(`{3,})chat2cli[ \t]*\n.*?\n\1', '', stripped_input, flags=re.DOTALL)
+    if not no_blocks.strip() and requests:
+        # 只有代码块且有请求，输出提醒
+        sys.stderr.write("[chat2cli] 输入仅包含代码块，缺少意图说明，已添加system-reminder提醒。\n")
+        print("<system-reminder>检测到输出仅包含chat2cli代码块，未提供任何操作意图说明。根据沟通要求，执行chat2cli调用时请在代码块前提供一句简短的操作意图说明。</system-reminder>")
+
     body = "\n".join(part for part in body_parts if part)
     fence = _fence_for_content(body)
     print(f"{fence}chat2cli")
