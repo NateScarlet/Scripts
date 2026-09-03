@@ -140,6 +140,11 @@ function Update-Chat2CLIToast {
 
     if ($null -ne $script:Chat2CLIToastWindow -and $null -ne $script:Chat2CLIToastText) {
         $script:Chat2CLIToastText.Text = $Message
+
+        # 强制 WPF 同步完成布局与渲染，确保文字立即显示。
+        # 否则紧随其后的 Start-Sleep 会阻塞 Dispatcher，
+        # 更新永远来不及绘制就被 Hide 了。
+        $script:Chat2CLIToastWindow.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
     }
 }
 
