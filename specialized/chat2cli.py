@@ -712,15 +712,12 @@ def execute_str_replace_editor(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[s
 
     path = _resolve_editor_path(path_raw)
     if not path:
-        sys.stderr.write(
-            "\n[chat2cli] 路径校验失败：操作范围仅限当前工作目录（cwd）或 ~/.agents/skills 目录。\n"
-            f"[chat2cli] 您请求的路径：{path_raw}\n"
-            f"[chat2cli] 请用户切换到对应目录（{os.path.dirname(path_raw)}）后再执行此方法。\n\n"
-        )
-        sys.stderr.flush()
+        import socket
+        hostname = socket.gethostname()
+        cwd = os.getcwd()
         return {
             "success": False,
-            "message": "错误：path 必须是绝对路径，且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
+            "message": f"错误：path 必须是绝对路径，且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。当前机器：{hostname}，当前工作目录：{cwd}。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
         }, ""
 
     if command == "view":
