@@ -1733,7 +1733,6 @@ def main():
 
     responses: List[Dict[str, Any]] = []
     content_blocks: List[str] = []
-    summary_parts: List[str] = []
 
     logging.debug("【3. 执行请求】")
     for idx, req in enumerate(requests):
@@ -1746,26 +1745,12 @@ def main():
         responses.append(resp)
         if content_block:
             content_blocks.append(content_block)
-        # 构建 stderr 汇总
+        # 记录响应状态到调试日志
         if "error" in resp:
-            summary_parts.append(f"id={resp.get('id')}: 失败 - {resp['error']['message']}")
             logging.debug(f"  请求 #{idx+1}: 响应错误 - {resp['error']['message']}")
         else:
             method: Any = req.get("method", "unknown")
-            if method == "str_replace_editor":
-                summary_parts.append(
-                    f"str_replace_editor id={resp.get('id')}: 完成操作"
-                )
-                logging.debug(f"  请求 #{idx+1}: str_replace_editor 成功")
-            elif method == "pwsh":
-                params: Dict[str, Any] = cast(Dict[str, Any], req.get("params", {}))
-                cmd = params.get("command", "")
-                cmd_summary = cmd[:50] + "..." if len(cmd) > 50 else cmd
-                summary_parts.append(f"pwsh id={resp.get('id')}: {cmd_summary}")
-                logging.debug(f"  请求 #{idx+1}: pwsh 成功")
-            elif method == "skill":
-                summary_parts.append(f"skill id={resp.get('id')}: 已激活")
-                logging.debug(f"  请求 #{idx+1}: skill 成功")
+            logging.debug(f"  请求 #{idx+1}: {method} 成功")
     logging.debug("=" * 60)
 
     # 输出 JSON-RPC 响应，统一包裹在 chat2cli 代码块中
@@ -1804,12 +1789,6 @@ def main():
     print(f"{fence}chat2cli")
     print(body)
     print(fence)
-
-    # stderr 汇总
-    if summary_parts:
-        for part in summary_parts:
-            _write_stderr_summary(f"[chat2cli] {part}\n")
-        _write_stderr_summary(f"[chat2cli] 共执行 {len(responses)} 个本地 RPC 调用。\n")
 
 
 if __name__ == "__main__":
