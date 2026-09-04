@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 import sys
 
 # 设置 PYTHONIOENCODING，确保子 Python 进程也以 UTF-8 输出，
@@ -1230,6 +1231,7 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
 def execute_pwsh(
     id_: Any, params: Dict[str, Any], data_map: Dict[str, str]
 ) -> Dict[str, Any]:
+    start = time.perf_counter()
     """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
     command = params.get("command")
 
@@ -1372,11 +1374,13 @@ def execute_pwsh(
     stdout = "".join(stdout_lines).rstrip("\n")
     stderr = "".join(stderr_lines).rstrip("\n")
 
+    elapsed = time.perf_counter() - start
     return {
         "success": True,
         "exit_code": returncode,
         "stdout": _emit_result_text(id_, "stdout", stdout),
         "stderr": _emit_result_text(id_, "stderr", stderr),
+        "duration": round(elapsed, 3),
     }
 
 
