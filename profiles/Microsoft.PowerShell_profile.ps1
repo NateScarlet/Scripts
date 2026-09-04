@@ -81,7 +81,7 @@ function New-FileByReplace {
 Set-Alias "generate:replace" New-FileByReplace
 
 function Start-WaitIdle {
-    py $ScriptLib/wait-idle.py $args
+    uv run --project $ScriptsRoot $ScriptLib/wait-idle.py $args
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code $LASTEXITCODE"
     }
