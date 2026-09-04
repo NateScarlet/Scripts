@@ -84,6 +84,36 @@ function Test-Chat2CLIClipboardGenerated {
     return $false
 }
 
+function Get-Chat2CLIClipboardText {
+    Add-Type -AssemblyName PresentationCore
+
+    $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
+    if ($null -eq $data) {
+        return ""
+    }
+
+    if ($data.GetDataPresent([System.Windows.DataFormats]::UnicodeText)) {
+        return [string]$data.GetData([System.Windows.DataFormats]::UnicodeText)
+    }
+
+    return ""
+}
+
+function Get-Chat2CLIPlaceholderPid {
+    param([string]$ClipboardText)
+
+    if ([string]::IsNullOrEmpty($ClipboardText)) {
+        return $null
+    }
+
+    # 匹配格式: [<进程ID>] chat2cli: ...
+    if ($ClipboardText -match '^\[(\d+)\] chat2cli:') {
+        return [int]$Matches[1]
+    }
+
+    return $null
+}
+
 
 
 
@@ -279,7 +309,24 @@ function Watch-Chat2CLI {
             $output = $stdoutTask.Result
 
             if ($output) {
-                Set-Chat2CLIClipboard $output
+                # 结果写入剪贴板后立即读回，确认占位符已被覆盖。
+                # 快速命令的结果写入可能尚未生效，占位符仍留在剪贴板，
+                # 导致主循环误判已处理、剪贴板永远停在"处理中"。
+                $writeVerified = $false
+                for ($writeAttempt = 0; $writeAttempt -lt 3 -and -not $writeVerified; $writeAttempt++) {
+                    Set-Chat2CLIClipboard $output
+                    Start-Sleep -Milliseconds 50
+                    $clipboardAfterWrite = Get-Chat2CLIClipboardText
+                    # 读回内容不再是占位符即认为写入成功；是占位符则重试
+                    $placeholderPid = Get-Chat2CLIPlaceholderPid -ClipboardText $clipboardAfterWrite
+                    if ($null -eq $placeholderPid) {
+                        $writeVerified = $true
+                    }
+                }
+
+                if (-not $writeVerified) {
+                    throw "chat2cli 结果写入剪贴板失败：多次尝试后占位符仍未被覆盖"
+                }
             }
 
             if ($process.ExitCode -ne 0) {
@@ -336,18 +383,13 @@ function Watch-Chat2CLI {
     function Test-Chat2CLIConflict {
         param([string]$ClipboardText)
 
-        if ([string]::IsNullOrEmpty($ClipboardText)) {
+        $otherPid = Get-Chat2CLIPlaceholderPid -ClipboardText $ClipboardText
+        if ($null -eq $otherPid) {
             return $false
         }
 
-        # 匹配格式: [<进程ID>] chat2cli: ...
-        if ($ClipboardText -match '^\[(\d+)\] chat2cli:') {
-            $otherPid = [int]$Matches[1]
-            # 如果是其他进程（不是当前进程），则存在冲突
-            return $otherPid -ne $currentPid
-        }
-
-        return $false
+        # 如果是其他进程（不是当前进程），则存在冲突
+        return $otherPid -ne $currentPid
     }
 
     # 设置占位文本
