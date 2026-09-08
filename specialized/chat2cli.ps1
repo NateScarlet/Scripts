@@ -117,99 +117,264 @@ function Get-Chat2CLIPlaceholderPid {
 
 
 
+# 跨线程共享状态：toast 在独立 STA Runspace 中运行 WPF 消息循环，
+# 主线程只写入命令和消息，由 Runspace 内的 DispatcherTimer 轮询消费。
+# 使用 ConcurrentDictionary 保证线程安全。
+$script:Chat2CLIToastState = $null
+
+function Start-Chat2CLIToastThread {
+    # Runspace 已存在且仍打开时直接返回
+    if ($null -ne $script:Chat2CLIToastState) {
+        $existingRs = $null
+        if ($script:Chat2CLIToastState.TryGetValue('Runspace', [ref]$existingRs)) {
+            if ($null -ne $existingRs -and $existingRs.RunspaceStateInfo.State -eq 'Opened') {
+                return
+            }
+        }
+    }
+
+    $state = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+    $script:Chat2CLIToastState = $state
+
+    # 主线程写入的命令和消息，Runspace 内轮询消费
+    $state['Command'] = 'none'
+    $state['Message'] = ''
+
+    # 创建独立 STA Runspace，避免与 PowerShell 主线程竞争 WPF Dispatcher，
+    # 从而消除 Ctrl+C 无响应和日志不刷新的问题。
+    $runspace = [runspacefactory]::CreateRunspace()
+    $runspace.ApartmentState = [System.Threading.ApartmentState]::STA
+    $runspace.ThreadOptions = 'ReuseThread'
+    $runspace.Open()
+
+    $ps = [powershell]::Create()
+    $ps.Runspace = $runspace
+
+    $state['PowerShell'] = $ps
+    $state['Runspace'] = $runspace
+
+    # 在 STA Runspace 中执行 WPF 设置并启动 DispatcherTimer 轮询命令。
+    # 脚本阻塞在 Dispatcher.Run()，直到收到 stop 命令后 BeginInvokeShutdown。
+    $null = $ps.AddScript({
+        param($st)
+
+        Add-Type -AssemblyName PresentationFramework
+        Add-Type -AssemblyName PresentationCore
+        Add-Type -AssemblyName WindowsBase
+        Add-Type -AssemblyName System.Windows.Forms
+
+        $window = [System.Windows.Window]::new()
+        $window.WindowStyle = 'None'
+        $window.AllowsTransparency = $true
+        $window.Background = [System.Windows.Media.Brushes]::Transparent
+        $window.ShowInTaskbar = $false
+        $window.Topmost = $true
+        $window.SizeToContent = 'WidthAndHeight'
+
+        $border = [System.Windows.Controls.Border]::new()
+        $border.Background = [System.Windows.Media.SolidColorBrush]::new(
+            [System.Windows.Media.Color]::FromArgb(220, 30, 30, 30)
+        )
+        $border.CornerRadius = [System.Windows.CornerRadius]::new(10)
+        $border.Padding = [System.Windows.Thickness]::new(24, 12, 24, 12)
+
+        $textBlock = [System.Windows.Controls.TextBlock]::new()
+        $textBlock.Foreground = [System.Windows.Media.Brushes]::White
+        $textBlock.FontSize = 16
+        $textBlock.FontFamily = 'Microsoft YaHei'
+
+        $border.Child = $textBlock
+        $window.Content = $border
+        $window.WindowStartupLocation = 'Manual'
+
+        $st['Window'] = $window
+        $st['Text'] = $textBlock
+        $st['Ready'] = $true
+
+        # 轮询主线程写入的命令。全部操作在 Runspace 的 STA 线程内执行，
+        # 不涉及跨线程 scriptblock 委托。
+        $timer = [System.Windows.Threading.DispatcherTimer]::new()
+        $timer.Interval = [TimeSpan]::FromMilliseconds(50)
+
+        $timer.Add_Tick({
+            $cmd = $null
+            if (-not $st.TryGetValue('Command', [ref]$cmd)) { return }
+            if ($null -eq $cmd -or $cmd -eq 'none') { return }
+
+            # 读取命令后立即复位，避免重复执行
+            $cmdValue = $cmd
+            $st['Command'] = 'none'
+
+            $win = $null
+            $txt = $null
+            if (-not $st.TryGetValue('Window', [ref]$win) -or $null -eq $win) { return }
+            if (-not $st.TryGetValue('Text', [ref]$txt) -or $null -eq $txt) { return }
+
+            switch ($cmdValue) {
+                'show' {
+                    $msg = $st['Message']
+                    $txt.Text = $msg
+
+                    if (-not $win.IsVisible) {
+                        $win.Show()
+                    }
+
+                    # 窗口定位必须在窗口所属线程内执行
+                    $mousePosition = [System.Windows.Forms.Cursor]::Position
+                    $currentScreen = [System.Windows.Forms.Screen]::FromPoint($mousePosition)
+                    $workArea = $currentScreen.WorkingArea
+
+                    $source = [System.Windows.PresentationSource]::FromVisual($win)
+                    if ($null -ne $source) {
+                        $transform = $source.CompositionTarget.TransformFromDevice
+                        $topLeftDip = $transform.Transform([System.Windows.Point]::new($workArea.Left, $workArea.Top))
+                        $bottomRightDip = $transform.Transform([System.Windows.Point]::new($workArea.Right, $workArea.Bottom))
+                        $workAreaDip = [System.Windows.Rect]::new(
+                            $topLeftDip.X,
+                            $topLeftDip.Y,
+                            $bottomRightDip.X - $topLeftDip.X,
+                            $bottomRightDip.Y - $topLeftDip.Y
+                        )
+                    }
+                    else {
+                        $workAreaDip = [System.Windows.Rect]::new($workArea.X, $workArea.Y, $workArea.Width, $workArea.Height)
+                    }
+
+                    $win.Left = $workAreaDip.Left + [Math]::Max(0, ($workAreaDip.Width - $win.ActualWidth) / 2)
+                    $win.Top = $workAreaDip.Bottom - 180 - $win.ActualHeight
+                }
+                'update' {
+                    $txt.Text = $st['Message']
+                }
+                'hide' {
+                    if ($win.IsVisible) {
+                        $win.Hide()
+                    }
+                }
+                'stop' {
+                    $timer.Stop()
+                    if ($win.IsVisible) {
+                        $win.Close()
+                    }
+                    # 关闭 Dispatcher 消息循环，使 Dispatcher.Run() 返回、
+                    # 脚本结束、BeginInvoke 完成。
+                    $currentDispatcher = [System.Windows.Threading.Dispatcher]::CurrentDispatcher
+                    $currentDispatcher.BeginInvokeShutdown([System.Windows.Threading.DispatcherPriority]::Send)
+                }
+            }
+        })
+
+        $timer.Start()
+
+        # 阻塞在消息循环，直到 stop 命令触发 BeginInvokeShutdown。
+        [System.Windows.Threading.Dispatcher]::Run()
+    })
+
+    $null = $ps.AddArgument($state)
+    $asyncResult = $ps.BeginInvoke()
+    $state['AsyncResult'] = $asyncResult
+
+    # 等待 Runspace 初始化 WPF 窗口（最多 5 秒）
+    $ready = $false
+    for ($i = 0; $i -lt 100 -and -not $ready; $i++) {
+        Start-Sleep -Milliseconds 50
+        $tmp = $null
+        if ($state.TryGetValue('Ready', [ref]$tmp) -and $tmp) {
+            $ready = $true
+        }
+    }
+    if (-not $ready) {
+        Write-Warning '[Toast] 等待 Toast 线程启动超时'
+    }
+}
+
 function Show-Chat2CLIToast {
     param(
         [string]$Message = "Chat2CLI 执行完成"
     )
 
-    Add-Type -AssemblyName PresentationFramework
-    Add-Type -AssemblyName PresentationCore
-    Add-Type -AssemblyName WindowsBase
-    Add-Type -AssemblyName System.Windows.Forms
+    Start-Chat2CLIToastThread
 
-    if ($null -eq $script:Chat2CLIToastWindow) {
-        $script:Chat2CLIToastWindow = New-Object System.Windows.Window
-        $script:Chat2CLIToastWindow.WindowStyle = 'None'
-        $script:Chat2CLIToastWindow.AllowsTransparency = $true
-        $script:Chat2CLIToastWindow.Background = [System.Windows.Media.Brushes]::Transparent
-        $script:Chat2CLIToastWindow.ShowInTaskbar = $false
-        $script:Chat2CLIToastWindow.Topmost = $true
-        $script:Chat2CLIToastWindow.SizeToContent = 'WidthAndHeight'
-
-        $script:Chat2CLIToastBorder = New-Object System.Windows.Controls.Border
-        $script:Chat2CLIToastBorder.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(220, 30, 30, 30))
-        $script:Chat2CLIToastBorder.CornerRadius = New-Object System.Windows.CornerRadius(10)
-        $script:Chat2CLIToastBorder.Padding = New-Object System.Windows.Thickness(24, 12, 24, 12)
-
-        $script:Chat2CLIToastText = New-Object System.Windows.Controls.TextBlock
-        $script:Chat2CLIToastText.Foreground = [System.Windows.Media.Brushes]::White
-        $script:Chat2CLIToastText.FontSize = 16
-        $script:Chat2CLIToastText.FontFamily = 'Microsoft YaHei'
-
-        $script:Chat2CLIToastBorder.Child = $script:Chat2CLIToastText
-        $script:Chat2CLIToastWindow.Content = $script:Chat2CLIToastBorder
-        $script:Chat2CLIToastWindow.WindowStartupLocation = 'Manual'
+    $state = $script:Chat2CLIToastState
+    if ($null -eq $state) {
+        return
     }
 
-    $script:Chat2CLIToastText.Text = $Message
-
-    if (-not $script:Chat2CLIToastWindow.IsVisible) {
-        $script:Chat2CLIToastWindow.Show()
-    }
-
-    # 居中偏下：水平居中，垂直位于用户当前鼠标所在屏幕的工作区底部上方约 180px。
-    # 关键：Cursor.Position 和 Screen.WorkingArea 都基于物理像素，
-    # 而 WPF 的 Left/Top 基于 DIP（逻辑像素）。在高 DPI 缩放下两者不一致，
-    # 必须用 TransformFromDevice 把物理像素换算成 DIP，否则窗口会定位到屏幕外。
-    $mousePosition = [System.Windows.Forms.Cursor]::Position
-    $currentScreen = [System.Windows.Forms.Screen]::FromPoint($mousePosition)
-    $workArea = $currentScreen.WorkingArea
-
-    # 窗口显示后才存在 PresentationSource，用它做物理像素 -> DIP 的换算。
-    # 用左上角和右下角两个点分别转换，得到正确的 DIP 矩形（宽高随缩放自动调整）。
-    $source = [System.Windows.PresentationSource]::FromVisual($script:Chat2CLIToastWindow)
-    if ($null -ne $source) {
-        $transform = $source.CompositionTarget.TransformFromDevice
-        $topLeftDip = $transform.Transform([System.Windows.Point]::new($workArea.Left, $workArea.Top))
-        $bottomRightDip = $transform.Transform([System.Windows.Point]::new($workArea.Right, $workArea.Bottom))
-        $workAreaDip = [System.Windows.Rect]::new(
-            $topLeftDip.X,
-            $topLeftDip.Y,
-            $bottomRightDip.X - $topLeftDip.X,
-            $bottomRightDip.Y - $topLeftDip.Y
-        )
-    }
-    else {
-        # 兜底：拿不到 source 时直接当 DIP 用（通常发生在窗口尚未真正显示时）
-        $workAreaDip = [System.Windows.Rect]::new($workArea.X, $workArea.Y, $workArea.Width, $workArea.Height)
-    }
-
-    $script:Chat2CLIToastWindow.Left = $workAreaDip.Left + [Math]::Max(0, ($workAreaDip.Width - $script:Chat2CLIToastWindow.ActualWidth) / 2)
-    $script:Chat2CLIToastWindow.Top = $workAreaDip.Bottom - 180 - $script:Chat2CLIToastWindow.ActualHeight
-
-    # 强制 WPF 同步完成布局与渲染，确保"正在处理..."等初始文本立即显示。
-    # 否则后续处理逻辑（启动进程、轮询）会与异步渲染竞争，
-    # 文本可能还没画出来就被后续更新覆盖。
-    $script:Chat2CLIToastWindow.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
+    # 只写入命令和消息，由 Runspace 内的 DispatcherTimer 轮询消费，
+    # 主线程完全不被 WPF 消息循环阻塞。
+    $state['Message'] = $Message
+    $state['Command'] = 'show'
 }
 
 function Update-Chat2CLIToast {
     param([string]$Message)
 
-    if ($null -ne $script:Chat2CLIToastWindow -and $null -ne $script:Chat2CLIToastText) {
-        $script:Chat2CLIToastText.Text = $Message
-
-        # 强制 WPF 同步完成布局与渲染，确保文字立即显示。
-        # 否则紧随其后的 Start-Sleep 会阻塞 Dispatcher，
-        # 更新永远来不及绘制就被 Hide 了。
-        $script:Chat2CLIToastWindow.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
+    $state = $script:Chat2CLIToastState
+    if ($null -eq $state) {
+        return
     }
+
+    $state['Message'] = $Message
+    $state['Command'] = 'update'
 }
 
 function Hide-Chat2CLIToast {
-    if ($null -ne $script:Chat2CLIToastWindow -and $script:Chat2CLIToastWindow.IsVisible) {
-        $script:Chat2CLIToastWindow.Hide()
+    $state = $script:Chat2CLIToastState
+    if ($null -eq $state) {
+        return
     }
+
+    $state['Command'] = 'hide'
+}
+
+function Stop-Chat2CLIToastThread {
+    $state = $script:Chat2CLIToastState
+    if ($null -eq $state) {
+        return
+    }
+
+    # 通知 Runspace 停止并等待其退出
+    $state['Command'] = 'stop'
+    Start-Sleep -Milliseconds 300
+
+    $async = $null
+    if ($state.TryGetValue('AsyncResult', [ref]$async) -and $null -ne $async) {
+        if ($async.AsyncWaitHandle.WaitOne(2000)) {
+            $ps = $null
+            if ($state.TryGetValue('PowerShell', [ref]$ps) -and $null -ne $ps) {
+                try {
+                    $ps.EndInvoke($async) | Out-Null
+                }
+                catch {
+                    # Runspace 关闭时可能抛出异常，忽略即可
+                }
+            }
+        }
+        else {
+            # 超时：强制停止管道
+            $ps = $null
+            if ($state.TryGetValue('PowerShell', [ref]$ps) -and $null -ne $ps) {
+                try {
+                    $ps.Stop() | Out-Null
+                }
+                catch {
+                    # 管道可能已经结束，忽略即可
+                }
+            }
+        }
+    }
+
+    $psToDispose = $null
+    if ($state.TryGetValue('PowerShell', [ref]$psToDispose) -and $null -ne $psToDispose) {
+        try { $psToDispose.Dispose() } catch { }
+    }
+
+    $rsToDispose = $null
+    if ($state.TryGetValue('Runspace', [ref]$rsToDispose) -and $null -ne $rsToDispose) {
+        try { $rsToDispose.Dispose() } catch { }
+    }
+
+    $script:Chat2CLIToastState = $null
 }
 
 function Watch-Chat2CLI {
@@ -476,7 +641,7 @@ function Watch-Chat2CLI {
         }
         $watchMutex.Dispose()
         $stopEvent.Dispose()
-        Hide-Chat2CLIToast
+        Stop-Chat2CLIToastThread
     }
 }
 
