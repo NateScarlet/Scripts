@@ -159,12 +159,12 @@ chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
 
 ```chat2cli
-<data.数据块id>
-作为字面文本的数据内容
-</data.数据块id>
-<request>
-JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
-</request>
+:<data.数据块id>
+:作为字面文本的数据内容
+:</data.数据块id>
+:<request>
+:JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
+:</request>
 ```
 
 解析器将只识别并处理 chat2cli 代码块中的内容。
@@ -241,7 +241,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 
 ## 数据块
 
-chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。
+chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。推荐总是给所有行添加 ':' 缩进（见下文“嵌套代码块处理”），避免数据内容中的反引号围栏提前闭合外层代码块。
 
 - <request> params 中所有字符串参数可以用对象引用：{{"id": "数据块id"}}代替，执行时会被替换为对应块内容。
 - 数据块会注入为真实环境变量 `$env:DATA_{{id}}`，可在 pwsh 命令中直接引用。
@@ -250,38 +250,38 @@ chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>.
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
 ```chat2cli
-<data.issue_title>fix(chat2cli): should skip chat2rpc inside data blocks</data.issue_title>
-<data.issue_body>
-## Problem
-
-A data block's chat2cli fence is literal content, not a request.
-
-Closes #42
-</data.issue_body>
-<request>
-{{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "pwsh",
-  "params": {{
-    "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
-  }}
-}}
-</request>
+:<data.issue_title>fix(chat2cli): should skip chat2rpc inside data blocks</data.issue_title>
+:<data.issue_body>
+:## Problem
+:
+:A data block's chat2cli fence is literal content, not a request.
+:
+:Closes #42
+:</data.issue_body>
+:<request>
+:{{
+:  "jsonrpc": "2.0",
+:  "id": 1,
+:  "method": "pwsh",
+:  "params": {{
+:    "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
+:  }}
+:}}
+:</request>
 ```
 
 同一内容若不用环境变量和 data 块，需要把 PowerShell 字符串和 JSON 各转义一层：
 ```chat2cli
-<request>
-{{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "pwsh",
-  "params": {{
-    "command": "gh issue create --title 'fix(chat2cli): should skip request inside data blocks' --body '## Problem\\n\\nA data block''s request fence is literal content, not a request.\\n\\nCloses #42'"
-  }}
-}}
-</request>
+:<request>
+:{{
+:  "jsonrpc": "2.0",
+:  "id": 1,
+:  "method": "pwsh",
+:  "params": {{
+:    "command": "gh issue create --title 'fix(chat2cli): should skip request inside data blocks' --body '## Problem\\n\\nA data block''s request fence is literal content, not a request.\\n\\nCloses #42'"
+:  }}
+:}}
+:</request>
 ```
 
 ### 嵌套代码块处理
