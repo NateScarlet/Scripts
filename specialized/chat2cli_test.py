@@ -157,11 +157,11 @@ class TestHasTruncatedFence(unittest.TestCase):
             ':<request>\n:{"method":"skill"}\n:</request>\n'
             "```"
         )
-        self.assertFalse(chat2cli.has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text)[0])
 
     def test_no_fence_at_all(self):
         text = "no fence here"
-        self.assertFalse(chat2cli.has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text)[0])
 
     def test_valid_three_backtick_fence(self):
         # 正常的三反引号围栏，无截断
@@ -170,7 +170,7 @@ class TestHasTruncatedFence(unittest.TestCase):
             '<request>\n{"method":"skill"}\n</request>\n'
             "```"
         )
-        self.assertFalse(chat2cli.has_truncated_fence(text))
+        self.assertFalse(chat2cli.has_truncated_fence(text)[0])
 
 
 class TestFenceForContent(unittest.TestCase):
@@ -467,6 +467,204 @@ class TestEmitResultTextOobSelection(unittest.TestCase):
         result = chat2cli._emit_result_text(1, "stdout", text)
         self.assertEqual(result, text)
         self.assertNotIn("stdout_1", chat2cli._pending_oob_data)
+
+
+
+class TestPreprocessCommonMistakes(unittest.TestCase):
+    """常见错误格式预处理：冒号缩进缺围栏、XML 风格 tool call"""
+
+    def test_valid_chat2cli_block_is_unchanged(self):
+        text = (
+            "```chat2cli\n"
+            '<request>\n{"method":"skill"}\n</request>\n'
+            "```"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertEqual(processed, text)
+        self.assertEqual(reminders, [])
+
+    def test_colon_indented_without_fence_is_wrapped(self):
+        text = (
+            ':<request>\n'
+            ':{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
+            ':</request>\n'
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(processed.startswith("```chat2cli\n"))
+        self.assertTrue(processed.rstrip().endswith("```"))
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+
+    def test_anthropic_tool_call_is_converted(self):
+        text = (
+            '<invoke name="str_replace_editor">\n'
+            '<parameter name="command">view</parameter>\n'
+            '<parameter name="path">C:\\x\\file.py</parameter>\n'
+            "</invoke>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "str_replace_editor")
+        self.assertEqual(blocks[0]["params"]["command"], "view")
+        self.assertEqual(blocks[0]["params"]["path"], "C:\\x\\file.py")
+
+    def test_openai_tool_calls_are_converted(self):
+        text = (
+            "<|tool_calls>\n"
+            '<|invoke name="str_replace_editor">\n'
+            '<|parameter name="command" string="true">view</|parameter>\n'
+            '<|parameter name="path" string="true">C:\\x\\file.py</|parameter>\n'
+            "</|invoke>\n"
+            '<|invoke name="pwsh">\n'
+            '<|parameter name="command" string="true">echo hi</|parameter>\n'
+            "</|invoke>\n"
+            "</|tool_calls>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 2)
+        self.assertEqual(blocks[0]["method"], "str_replace_editor")
+        self.assertEqual(blocks[0]["params"]["command"], "view")
+        self.assertEqual(blocks[1]["method"], "pwsh")
+        self.assertEqual(blocks[1]["params"]["command"], "echo hi")
+
+    def test_tool_call_string_true_keeps_string_type(self):
+        text = (
+            "<|tool_calls>\n"
+            '<|invoke name="str_replace_editor">\n'
+            '<|parameter name="insert_line" string="true">5</|parameter>\n'
+            "</|invoke>\n"
+            "</|tool_calls>\n"
+        )
+        processed, _ = chat2cli.preprocess_common_mistakes(text)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(blocks[0]["params"]["insert_line"], "5")
+
+    def test_tool_call_without_string_parses_json_value(self):
+        text = (
+            '<invoke name="str_replace_editor">\n'
+            '<parameter name="insert_line">5</parameter>\n'
+            "</invoke>\n"
+        )
+        processed, _ = chat2cli.preprocess_common_mistakes(text)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(blocks[0]["params"]["insert_line"], 5)
+
+
+
+    def test_fenced_block_with_toolcall_literal_is_unchanged(self):
+        # 已含合法 chat2cli 围栏时，data 块内的字面 tool call 不应被转换
+        text = (
+            "```chat2cli\n"
+            ":<data.example>\n"
+            ':<|tool_calls><|invoke name="pwsh"><|parameter name="command" string="true">echo hi</|parameter></|invoke></|tool_calls>\n'
+            ":</data.example>\n"
+            ':<request>\n:{"method":"skill"}\n:</request>\n'
+            "```"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertEqual(processed, text)
+        self.assertEqual(reminders, [])
+
+    def test_fenced_block_anywhere_skips_preprocessing(self):
+        # 只要出现 chat2cli 围栏，就不再尝试任何预处理
+        text = (
+            "前言\n"
+            '<invoke name="pwsh"><parameter name="command">echo hi</parameter></invoke>\n'
+            "```chat2cli\n"
+            ':<request>\n:{"method":"skill"}\n:</request>\n'
+            "```"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertEqual(processed, text)
+        self.assertEqual(reminders, [])
+
+    def test_unknown_format_returns_unchanged(self):
+        text = "just a normal conversation without any special format"
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertEqual(processed, text)
+        self.assertEqual(reminders, [])
+
+
+
+    def test_bom_before_colon_indented_input_is_stripped(self):
+        text = (
+            "\ufeff"
+            ':<request>\n'
+            ':{"method":"skill"}\n'
+            ':</request>\n'
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(processed.startswith("```chat2cli\n"))
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+
+
+
+
+
+class TestInputNeedsProcessing(unittest.TestCase):
+    """--check 模式分类：判断输入是否需要 chat2cli 处理（而非输出初始指令）"""
+
+    def test_empty_input_returns_false(self):
+        self.assertFalse(chat2cli.input_needs_processing(""))
+        self.assertFalse(chat2cli.input_needs_processing("   \n  "))
+
+    def test_unrecognized_text_returns_false(self):
+        self.assertFalse(
+            chat2cli.input_needs_processing("just a normal conversation")
+        )
+
+    def test_valid_request_returns_true(self):
+        text = (
+            "```chat2cli\n"
+            '<request>\n{"method":"pwsh","params":{"command":"echo hi"}}\n</request>\n'
+            "```"
+        )
+        self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_colon_indented_without_fence_returns_true(self):
+        text = (
+            ':<request>\n'
+            ':{"method":"pwsh","params":{"command":"echo hi"}}\n'
+            ':</request>\n'
+        )
+        self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_toolcall_returns_true(self):
+        text = (
+            '<invoke name="pwsh">\n'
+            '<parameter name="command">echo hi</parameter>\n'
+            "</invoke>\n"
+        )
+        self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_truncated_fence_returns_true(self):
+        # 围栏未闭合属于格式错误，需要提示
+        text = '```chat2cli\n:<request>\n:{"method":"pwsh"}\n'
+        self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_bare_request_returns_true(self):
+        text = '<request>\n{"method":"pwsh"}\n</request>\n'
+        self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_invalid_indent_returns_true(self):
+        # 缩进非法属于格式错误，需要提示
+        text = (
+            "```chat2cli\n"
+            ":<request>\n"
+            '{"method":"pwsh"}\n'
+            ":</request>\n"
+            "```"
+        )
+        self.assertTrue(chat2cli.input_needs_processing(text))
 
 
 if __name__ == "__main__":

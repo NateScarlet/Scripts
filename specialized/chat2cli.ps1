@@ -377,7 +377,89 @@ function Stop-Chat2CLIToastThread {
     $script:Chat2CLIToastState = $null
 }
 
+
+# 通过 chat2cli.py --check 判断输入是否需要处理。格式识别（含常见错误
+# 格式的预处理）全部由 py 侧实现，.ps1 只消费退出码：0 表示需要处理。
+function Test-Chat2CLIInputNeedsProcessing {
+    param([string]$InputText)
+
+    $scriptPath = "$PSScriptRoot/chat2cli.py"
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "uv"
+    $psi.Arguments = "run `"$scriptPath`" --check"
+    $psi.WorkingDirectory = (Get-Location).Path
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    # 与 Invoke-Chat2CLIProcess 一致：使用不带 BOM 的 UTF-8，避免 stdin
+    # 收到多余的 U+FEFF 前缀干扰格式识别。
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $psi.StandardInputEncoding = $utf8NoBom
+    $psi.StandardOutputEncoding = $utf8NoBom
+    $psi.StandardErrorEncoding = $utf8NoBom
+    $psi.CreateNoWindow = $true
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $psi
+    $process.Start() | Out-Null
+
+    try {
+        # 异步读取两个输出流，避免管道缓冲区填满导致子进程阻塞。
+        # --check 模式不输出内容，读取结果可忽略。
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+
+        $process.StandardInput.Write($InputText)
+        $process.StandardInput.Close()
+
+        $process.WaitForExit()
+        $stdoutTask.Wait() | Out-Null
+        $stderrTask.Wait() | Out-Null
+
+        return $process.ExitCode -eq 0
+    }
+    finally {
+        $process.Dispose()
+    }
+}
+
+
+# watch 循环的决策核心：给定当前状态，决定是否需要处理，并给出下一轮的
+# “已处理输入”标记。提取为纯函数以便测试，不直接读写剪贴板。
+# CheckNeedsProcessing 为注入的判断委托，生产环境传入 --check 调用。
+function Get-Chat2CLIWatchDecision {
+    param(
+        [string]$Current,
+        [string]$LastCheckedText,
+        [bool]$IsGenerated,
+        [bool]$IsInstruction,
+        [scriptblock]$CheckNeedsProcessing
+    )
+
+    # 内容与上一轮相同：整轮跳过，既不启动 --check 也不重复处理
+    if ($Current -eq $LastCheckedText) {
+        return @{ ShouldProcess = $false; NextLastCheckedText = $LastCheckedText }
+    }
+
+    # 生成内容或指令提示：记录后跳过，其中的示例不应触发执行
+    if ($IsGenerated -or $IsInstruction) {
+        return @{ ShouldProcess = $false; NextLastCheckedText = $Current }
+    }
+
+    # 新内容：调用 --check 判断是否需要处理
+    if (& $CheckNeedsProcessing $Current) {
+        # 处理后清空标记，允许用户重新复制同一请求再次执行
+        return @{ ShouldProcess = $true; NextLastCheckedText = $null }
+    }
+
+    return @{ ShouldProcess = $false; NextLastCheckedText = $Current }
+}
+
+
 function Watch-Chat2CLI {
+
     param(
         [int]$IntervalMilliseconds = 500
     )
@@ -586,6 +668,10 @@ function Watch-Chat2CLI {
         # 忽略开始前剪贴板的内容：用空字符串生成初始指令
         Invoke-Chat2CLIProcess -InputText "" -SuppressToast | Out-Null
 
+        # 缓存上一轮看到的剪贴板内容。内容未变时整轮跳过，
+        # 避免每轮循环都启动一次 uv 子进程检查。
+        $lastCheckedText = $null
+
         while ($true) {
             if ($stopEvent.WaitOne(0)) {
                 Write-Host "[Watch-Chat2CLI] 收到停止信号，正在退出..."
@@ -607,23 +693,22 @@ function Watch-Chat2CLI {
                 break
             }
 
-            if (-not (Test-Chat2CLIClipboardGenerated)) {
-                # 忽略包含指令提示的输入（初始指令和错误指令都包裹在
-                # <chat2cli_instruction> 标签内，其中的示例不应触发执行）
-                $isInstruction = $current.Contains('<chat2cli_instruction>')
+            # 决策逻辑集中在 Get-Chat2CLIWatchDecision，循环本身只负责
+            # 采集状态、执行决策、更新“已处理输入”标记。
+            $decision = Get-Chat2CLIWatchDecision `
+                -Current $current `
+                -LastCheckedText $lastCheckedText `
+                -IsGenerated (Test-Chat2CLIClipboardGenerated) `
+                -IsInstruction ($current.Contains('<chat2cli_instruction>')) `
+                -CheckNeedsProcessing { param($text) Test-Chat2CLIInputNeedsProcessing -InputText $text }
 
-                if (-not $isInstruction) {
-                    # 必须匹配完整的 chat2cli fenced block（三个或更多反引号）。
-                    # 这里只做粗筛触发，围栏长度一致性由 chat2cli.py 精确解析。
-                    $hasToolBlock = $current -match '(?ms)^`{3,}chat2cli\s*$.*?^`{3,}\s*$'
+            $lastCheckedText = $decision.NextLastCheckedText
 
-                    if ($hasToolBlock) {
-                        # 发现新的 chat2cli 内容，先设置占位文本
-                        Set-Chat2CLIPlaceholder
-                        # 然后执行处理
-                        Invoke-Chat2CLIProcess -InputText $current | Out-Null
-                    }
-                }
+            if ($decision.ShouldProcess) {
+                # 发现需要处理的 chat2cli 内容，先设置占位文本
+                Set-Chat2CLIPlaceholder
+                # 然后执行处理
+                Invoke-Chat2CLIProcess -InputText $current | Out-Null
             }
 
             Start-Sleep -Milliseconds $IntervalMilliseconds

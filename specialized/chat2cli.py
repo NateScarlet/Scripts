@@ -1545,6 +1545,178 @@ def _has_bare_request(text: str) -> bool:
     return bool(re.search(r"<(?:request)>", text_without_blocks, re.IGNORECASE))
 
 
+_TOOL_CALL_PARAM_PATTERN = re.compile(
+    r'<\|?parameter\s+name="([^"]+)"'
+    r'(?:\s+string="(true|false)")?\s*>(.*?)</\|?parameter>',
+    re.DOTALL,
+)
+
+_TOOL_CALL_INVOKE_PATTERN = re.compile(
+    r'<\|?invoke\s+name="([^"]+)"\s*>(.*?)</\|?invoke>',
+    re.DOTALL,
+)
+
+_TOOL_CALL_CONTAINER_PATTERN = re.compile(
+    r'<\|tool_calls>|</\|tool_calls>',
+    re.IGNORECASE,
+)
+
+
+def _parse_tool_call_parameters(inner: str) -> Dict[str, Any]:
+    """从 invoke 内容中提取 parameter 列表，返回 params 字典。
+
+    若 parameter 带 string="true" 则保留字符串；否则尝试按 JSON 字面量
+    解析，失败时回退为字符串。
+    """
+    params: Dict[str, Any] = {}
+    for match in _TOOL_CALL_PARAM_PATTERN.finditer(inner):
+        name = match.group(1)
+        string_attr = match.group(2)
+        raw_value = match.group(3)
+
+        if string_attr == "true":
+            value: Any = raw_value
+        else:
+            try:
+                value = json.loads(raw_value)
+            except json.JSONDecodeError:
+                value = raw_value
+        params[name] = value
+    return params
+
+
+def _build_request_json(method: str, params: Dict[str, Any], request_id: int) -> str:
+    """构造单个 JSON-RPC 请求字符串（带缩进）"""
+    request = {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "method": method,
+        "params": params,
+    }
+    return json.dumps(request, ensure_ascii=False, indent=2)
+
+
+def _wrap_in_chat2cli(request_json: str) -> str:
+    """把请求 JSON 包裹进 chat2cli 代码块"""
+    return f"```chat2cli\n<request>\n{request_json}\n</request>\n```"
+
+
+def _preprocess_tool_calls(text: str) -> Tuple[str, List[str]]:
+    """识别并转换常见 XML 风格 tool call 输入。
+
+    支持 Anthropic 风格 `<invoke name="...">...` 与 OpenAI 风格
+    `<|tool_calls><|invoke name="...">...`。转换后每个 invoke 生成一个
+    独立的 chat2cli 代码块，其余文本原样保留。
+
+    返回 (处理后的文本, 提醒列表)。
+    """
+    # 先移除 OpenAI 的 tool_calls 容器标签，统一为裸 invoke 块
+    cleaned = _TOOL_CALL_CONTAINER_PATTERN.sub("", text)
+
+    request_id = 0
+    reminders: List[str] = []
+
+    def replace_invoke(match: re.Match[str]) -> str:
+        nonlocal request_id
+        method = match.group(1)
+        inner = match.group(2)
+        params = _parse_tool_call_parameters(inner)
+        request_id += 1
+        request_json = _build_request_json(method, params, request_id)
+        return _wrap_in_chat2cli(request_json)
+
+    processed, count = _TOOL_CALL_INVOKE_PATTERN.subn(replace_invoke, cleaned)
+    if count == 0:
+        return text, []
+
+    reminders.append(
+        '<system-reminder>检测到 XML 风格的 tool call 格式，已尝试转换为 chat2cli 代码块。'
+        '请使用 ```chat2cli 代码块包裹 <request> 标签，并在其中写入 JSON-RPC 2.0 请求：'
+        '例如 ```chat2cli\n<request>\n{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+        '"params":{"command":"echo hi"}}\n</request>\n```。'
+        '后续请直接输出标准 chat2cli 格式。</system-reminder>'
+    )
+    return processed, reminders
+
+
+def _is_colon_indented_without_fence(text: str) -> bool:
+    """检测文本是否为纯 ':' 缩进的请求而缺少 chat2cli 围栏"""
+    lines = [line for line in text.splitlines() if line.strip()]
+    if not lines:
+        return False
+    if not all(line.startswith(":") for line in lines):
+        return False
+    if not re.search(r"^:<(?:request|data\.[^>]+)>", text, re.MULTILINE):
+        return False
+    return True
+
+
+def preprocess_common_mistakes(text: str) -> Tuple[str, List[str]]:
+    """对常见错误格式做预处理，返回 (处理后的文本, 提醒列表)。
+
+    当前支持：
+    - 纯 ':' 缩进但缺少 chat2cli 代码围栏
+    - Anthropic / OpenAI 风格的 XML tool call
+
+    不识别任何模式时原样返回。
+    """
+    # 移除 UTF-8 BOM，避免其干扰后续以 ':' 或 '<' 开头的模式检测
+    if text.startswith("\ufeff"):
+        text = text[1:]
+
+    # 已出现 chat2cli 围栏说明使用了标准语法，此时不做任何预处理：
+    # 围栏内（尤其是 data 块）的字面 tool call 文本不应被转换。
+    if re.search(r"`{3,}chat2cli", text):
+        return text, []
+
+    processed, reminders = _preprocess_tool_calls(text)
+    if reminders:
+        return processed, reminders
+
+    if _is_colon_indented_without_fence(text):
+        wrapped = f"```chat2cli\n{text.rstrip()}\n```"
+        reminder = (
+            '<system-reminder>检测到使用 : 缩进的请求，但缺少 chat2cli 代码围栏。'
+            '已尝试自动包裹。请始终把 <data> 和 <request> 标签放在 ```chat2cli 代码块内，'
+            '格式：```chat2cli\n:<request>\n:{"jsonrpc":"2.0",...}\n:</request>\n```。'
+            '后续请直接输出标准 chat2cli 格式。</system-reminder>'
+        )
+        return wrapped, [reminder]
+
+    return text, []
+
+
+def input_needs_processing(text: str) -> bool:
+    """判断输入是否需要 chat2cli 处理，而不是回退到初始指令。
+
+    --check 模式以此为退出码：需要处理返回 True（exit 0），
+    否则返回 False（exit 1）。判定逻辑与 main() 的实际分支保持一致，
+    使调用方无需了解具体支持哪些格式。
+    """
+    if not text.strip():
+        return False
+
+    processed_text, _ = preprocess_common_mistakes(text)
+
+    try:
+        _, requests = _scan_blocks(processed_text)
+    except ValueError:
+        # 缩进非法等格式错误需要向用户提示，属于需要处理
+        return True
+
+    if requests:
+        return True
+
+    # 无请求但有围栏截断或裸 request 时，同样需要输出错误提示
+    truncated, _ = has_truncated_fence(processed_text)
+    if truncated:
+        return True
+    if _has_bare_request(processed_text):
+        return True
+
+    return False
+
+
 def has_truncated_fence(text: str) -> Tuple[bool, Optional[str]]:
     """检测是否存在未闭合的 chat2cli 围栏。
 
@@ -1869,6 +2041,11 @@ def main():
         action="store_true",
         help="开启调试模式，回显输入、解析、提取和执行过程",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="仅检查输入是否需要处理：需要返回退出码 0，否则返回 1，不输出任何内容",
+    )
     args = parser.parse_args()
 
     # 配置 logging
@@ -1893,10 +2070,27 @@ def main():
         logging.debug("（空输入）")
     logging.debug("=" * 60)
 
+    # --check 模式：只回退出码，不输出任何内容，供外部判断是否值得处理
+    if args.check:
+        sys.exit(0 if input_needs_processing(input_text) else 1)
+
     if not input_text.strip():
         sys.stderr.write("[chat2cli] 输入为空，已输出初始指令。\n")
         print_instruction()
         return
+
+    processed_text, preprocess_reminders = preprocess_common_mistakes(input_text)
+    logging.debug(
+        "预处理结果：提醒 %d 条，文本是否变化：%s",
+        len(preprocess_reminders),
+        processed_text != input_text,
+    )
+    if preprocess_reminders:
+        logging.debug("预处理后文本:\n%s", processed_text)
+        sys.stderr.write(
+            "[chat2cli] 检测到常见错误格式，已尝试预处理并附加格式提醒。\n"
+        )
+        input_text = processed_text
 
     logging.debug("【2. 提取 chat2cli 代码块】")
     try:
@@ -2034,6 +2228,11 @@ def main():
 
     if not no_blocks.strip() and requests:
         print(reminder_text)
+
+
+    for reminder in preprocess_reminders:
+        print(reminder)
+
 
 
 if __name__ == "__main__":
