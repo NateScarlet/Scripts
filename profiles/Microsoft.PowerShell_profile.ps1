@@ -135,3 +135,12 @@ function Remove-Empty-Dir {
 
 . "$ScriptLib/New-GitWorkspace.ps1"
 
+function dsh () {
+    & pnpx `
+        --allow-build='@deepseek-ai/dsh-subprocess-local' `
+        --allow-build='@google/genai' `
+        --allow-build='koffi' `
+        --allow-build='node-pty' `
+        --allow-build='protobufjs' `
+        '@deepseek-ai/dsh@latest' @args
+}
