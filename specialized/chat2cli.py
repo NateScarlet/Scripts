@@ -839,6 +839,15 @@ def execute_str_replace_editor(
                 "success": False,
                 "message": "错误：create 命令需要 file_text 参数（字符串）。",
             }, ""
+        # 自动创建缺失的父级目录，避免因目录不存在导致创建失败
+        parent_dir = os.path.dirname(os.path.abspath(path))
+        try:
+            os.makedirs(parent_dir, exist_ok=True)
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"错误：创建父级目录失败：{str(e)}",
+            }, ""
         try:
             _write_text_file_atomic(path, file_text, "utf-8")
         except Exception as e:

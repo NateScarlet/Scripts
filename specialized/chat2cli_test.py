@@ -709,5 +709,58 @@ class TestInputNeedsProcessing(unittest.TestCase):
         self.assertTrue(chat2cli.input_needs_processing(text))
 
 
+
+class TestCreateCommandAutoParentDir(unittest.TestCase):
+    """create 命令应自动创建缺失的父级目录"""
+
+    def _create_in_tmpdir(self, rel_path: str, file_text: str):
+        """在临时目录内执行 create，返回 (meta, 目标文件内容或 None)"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                target = os.path.join(tmpdir, *rel_path.split("/"))
+                meta, _ = chat2cli.execute_str_replace_editor(
+                    "1",
+                    {
+                        "command": "create",
+                        "path": target,
+                        "file_text": file_text,
+                    },
+                )
+                content = None
+                if os.path.isfile(target):
+                    content = Path(target).read_text(encoding="utf-8")
+            finally:
+                os.chdir(old_cwd)
+        return meta, content
+
+    def test_creates_missing_parent_directories(self):
+        meta, content = self._create_in_tmpdir("a/b/c/file.txt", "hello")
+        self.assertTrue(meta["success"])
+        self.assertEqual(content, "hello")
+
+    def test_fails_when_file_already_exists(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                target = os.path.join(tmpdir, "exists.txt")
+                Path(target).write_text("old", encoding="utf-8")
+                meta, _ = chat2cli.execute_str_replace_editor(
+                    "1",
+                    {
+                        "command": "create",
+                        "path": target,
+                        "file_text": "new",
+                    },
+                )
+                content = Path(target).read_text(encoding="utf-8")
+            finally:
+                os.chdir(old_cwd)
+        self.assertFalse(meta["success"])
+        self.assertEqual(content, "old")
+
+
 if __name__ == "__main__":
     unittest.main()
