@@ -151,9 +151,53 @@ def discover_skills() -> Dict[str, Dict[str, Any]]:
     return skills
 
 
+def _git_worktree_root(cwd: str) -> Optional[str]:
+    """返回 cwd 所属 git 仓库的根目录；不在仓库内或 git 不可用时返回 None。"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+    except OSError:
+        # git 未安装或不可执行，无法判断，跳过提示
+        return None
+    if result.returncode != 0:
+        return None
+    root = result.stdout.strip()
+    return root or None
+
+
+def _git_root_mismatch_hint(cwd: str) -> Optional[str]:
+    """cwd 在 git 仓库内但不是仓库根目录时，返回提示文本；否则返回 None。
+
+    项目级 skill 扫描 <cwd>/.agents/skills，cwd 落到子目录会导致项目级
+    skill 缺失，因此在初始指令触发时提醒用户切回仓库根目录。
+    """
+    root = _git_worktree_root(cwd)
+    if not root:
+        return None
+    if os.path.normcase(os.path.abspath(root)) == os.path.normcase(
+        os.path.abspath(cwd)
+    ):
+        return None
+    return (
+        f"[chat2cli] 当前工作目录 {cwd} 位于 git 仓库内，但不是 git 仓库根目录"
+        f"（根目录：{root}）。项目级 .agents/skills 按当前工作目录解析，"
+        "可能导致项目级 skill 无法加载，建议在仓库根目录下重新运行。\n"
+    )
+
+
 def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
+
+    hint = _git_root_mismatch_hint(cwd)
+    if hint:
+        sys.stderr.write(hint)
     instruction = f"""<chat2cli_instruction>
 chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：

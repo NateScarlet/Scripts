@@ -436,6 +436,48 @@ class TestErrorInstructionWrapping(unittest.TestCase):
         self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
 
 
+class TestGitRootHint(unittest.TestCase):
+    """初始指令触发时，若 cwd 位于 git 仓库内但不是仓库根目录，应在 stderr 提醒"""
+
+    def _run_chat2cli(self, cwd: str):
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        return subprocess.run(
+            [sys.executable, str(script)],
+            input="",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=cwd,
+            check=False,
+        )
+
+    def test_warns_when_cwd_is_subdirectory_of_git_root(self):
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q", tmpdir], check=True)
+            subdir = os.path.join(tmpdir, "sub")
+            os.makedirs(subdir)
+            result = self._run_chat2cli(subdir)
+        self.assertIn("不是 git 仓库根目录", result.stderr)
+
+    def test_no_warning_when_cwd_is_git_root(self):
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q", tmpdir], check=True)
+            result = self._run_chat2cli(tmpdir)
+        self.assertNotIn("不是 git 仓库根目录", result.stderr)
+
+    def test_no_warning_outside_git_repo(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self._run_chat2cli(tmpdir)
+        self.assertNotIn("不是 git 仓库根目录", result.stderr)
+
+
 class TestEmitResultTextOobSelection(unittest.TestCase):
     """覆盖 OOB vs JSON 内联选择的阈值判断"""
 
