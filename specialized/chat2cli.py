@@ -1374,57 +1374,115 @@ _REDACT_PATTERNS: List[str] = [
 ]
 
 
-def _redact_text(
+def _find_redaction_spans(
     text: str, secret_values: Dict[str, str]
-) -> Tuple[str, Dict[str, int]]:
-    """对单个字符串脱敏，返回 (脱敏后文本, {类别: 命中次数})。
+) -> List[Tuple[int, int, str]]:
+    """找出文本中所有需要脱敏的区间，返回 [(start, end, category)]。
 
-    值驱动先于模式驱动：已知值替换为可重新执行的 $env: 引用后，
-    模式驱动再扫描剩余文本，避免模式先命中导致原值定位失败。
+    区间按位置排序且互不重叠。值驱动优先于模式驱动：已知值必须还原为
+    可重新执行的 ${env:NAME} 引用，不能让模式规则抢先替换成不可还原的标签。
     """
     if not text:
-        return text, {}
+        return []
 
-    hits: Dict[str, int] = {}
-    result = text
+    # (start, end, category, priority)；priority 越小越优先
+    candidates: List[Tuple[int, int, str, int]] = []
 
     # 值驱动：按值长度降序，避免短值恰好是长值子串时被先切断
     for name, value in sorted(
         secret_values.items(), key=lambda item: len(item[1]), reverse=True
     ):
-        if value not in result:
-            continue
         if name in _STRUCTURAL_VARIABLE_NAMES:
             # 短值加词边界，避免切断粘连文本
-            word_pattern = re.compile(r"\b" + re.escape(value) + r"\b")
-            count = len(word_pattern.findall(result))
-            if count:
-                hits[name] = count
-                result = word_pattern.sub(f"${{env:{name}}}", result)
+            for match in re.finditer(r"\b" + re.escape(value) + r"\b", text):
+                candidates.append((match.start(), match.end(), name, 0))
         else:
-            hits[name] = result.count(value)
-            result = result.replace(value, f"${{env:{name}}}")
+            start = 0
+            while True:
+                index = text.find(value, start)
+                if index == -1:
+                    break
+                candidates.append((index, index + len(value), name, 0))
+                start = index + len(value)
 
-    # 键值对形式：只替换值部分
-    key_value_re = re.compile(_KEY_VALUE_SECRET_PATTERN, re.DOTALL)
-    result, count = key_value_re.subn(
-        lambda m: m.group(1)
-        + m.group(2)
-        + _redaction_label(_KEY_VALUE_SECRET_LABEL),
-        result,
-    )
-    if count:
-        hits[_KEY_VALUE_SECRET_LABEL] = count
+    # 键值对形式：只替换值部分，保留字段名
+    for match in re.finditer(_KEY_VALUE_SECRET_PATTERN, text, re.DOTALL):
+        candidates.append((match.start(3), match.end(3), _KEY_VALUE_SECRET_LABEL, 1))
 
     # 其余高置信度模式：整体替换
     for pattern_src in _REDACT_PATTERNS:
-        pattern = re.compile(pattern_src, re.DOTALL)
-        label = _redaction_label(pattern_src)
-        result, count = pattern.subn(lambda m: label, result)
-        if count:
-            hits[pattern_src] = count
+        for match in re.finditer(pattern_src, text, re.DOTALL):
+            candidates.append((match.start(), match.end(), pattern_src, 2))
 
-    return result, hits
+    # 同起点时先按优先级，再按区间长度降序
+    candidates.sort(key=lambda item: (item[0], item[3], -(item[1] - item[0])))
+
+    spans: List[Tuple[int, int, str]] = []
+    last_end = 0
+    for start, end, category, _priority in candidates:
+        if start < last_end:
+            continue
+        spans.append((start, end, category))
+        last_end = end
+
+    return spans
+
+
+def _redaction_replacement(category: str, secret_values: Dict[str, str]) -> str:
+    """返回某类别对应的替换文本。
+
+    值驱动类别用 ${env:NAME}，保留调用能力；其余类别用正则原文标签。
+    """
+    if category in secret_values:
+        return f"${{env:{category}}}"
+    return _redaction_label(category)
+
+
+def _colorize_redacted_spans(
+    line: str, secret_values: Dict[str, str], base_color: str
+) -> str:
+    """给单行中命中脱敏规则的片段着灰色。
+
+    跨行匹配无法在单行内判定，不在此标记；调用方在执行结束后统一说明。
+    """
+    spans = _find_redaction_spans(line, secret_values)
+    if not spans:
+        return f"{base_color}{line}\033[0m"
+
+    parts: List[str] = []
+    position = 0
+    for start, end, _category in spans:
+        if start > position:
+            parts.append(f"{base_color}{line[position:start]}")
+        parts.append(f"\033[90m{line[start:end]}")
+        position = end
+    parts.append(f"{base_color}{line[position:]}\033[0m")
+
+    return "".join(parts)
+
+
+def _redact_text(
+    text: str, secret_values: Dict[str, str]
+) -> Tuple[str, Dict[str, int]]:
+    """对单个字符串脱敏，返回 (脱敏后文本, {类别: 命中次数})。"""
+    if not text:
+        return text, {}
+
+    spans = _find_redaction_spans(text, secret_values)
+    if not spans:
+        return text, {}
+
+    hits: Dict[str, int] = {}
+    parts: List[str] = []
+    position = 0
+    for start, end, category in spans:
+        parts.append(text[position:start])
+        parts.append(_redaction_replacement(category, secret_values))
+        hits[category] = hits.get(category, 0) + 1
+        position = end
+    parts.append(text[position:])
+
+    return "".join(parts), hits
 
 
 def _redact_node(
@@ -1480,7 +1538,7 @@ def _format_redaction_reminder(hits: Dict[str, Dict[str, int]]) -> str:
         categories = hits[where]
         for category in sorted(categories.keys()):
             lines.append(f"- {category} ×{categories[category]}（{where}）")
-    lines.append("原始内容仍可在终端查看。</system-reminder>")
+    lines.append("这些内容不会出现在本通道中。</system-reminder>")
     return "\n".join(lines)
 
 
@@ -1526,19 +1584,21 @@ def execute_pwsh(
     )
 
     env = _build_pwsh_env(data_map)
+    # 实时流标记与末尾汇总共用的敏感值集合
+    secret_values = _collect_secret_values()
 
     def _stream_reader(
         stream: Any, stream_name: str, lines_list: List[str], pid: int
     ) -> None:
         """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
+        base_color = "\033[31m" if stream_name == "err" else "\033[37m"
         try:
             for line in iter(stream.readline, ""):
                 # 构建前缀：灰色显示的 [<PID>]
                 prefix = f"\033[90m[{pid}]\033[0m "
-                if stream_name == "err":
-                    sys.stderr.write(f"{prefix}\033[31m{line}\033[0m")
-                else:
-                    sys.stderr.write(f"{prefix}\033[37m{line}\033[0m")
+                # 行内命中脱敏规则的片段着灰色，标记该内容进入响应时会被脱敏
+                colored = _colorize_redacted_spans(line, secret_values, base_color)
+                sys.stderr.write(f"{prefix}{colored}")
                 sys.stderr.flush()
                 lines_list.append(line)
         finally:
@@ -1639,6 +1699,18 @@ def execute_pwsh(
 
     t_out.join(timeout=5)
     t_err.join(timeout=5)
+
+    # 汇总本次输出中会被脱敏的内容。实时流只标记单行内可判定的片段，
+    # 这里对完整输出再检测一次，覆盖跨行匹配（如私钥块）。
+    combined_output = "".join(stdout_lines) + "".join(stderr_lines)
+    _, summary_hits = _redact_text(combined_output, secret_values)
+    if summary_hits:
+        sys.stderr.write("\033[90m[chat2cli] 以下内容在响应中已脱敏：\033[0m\n")
+        for category in sorted(summary_hits):
+            sys.stderr.write(
+                f"\033[90m  - {category} ×{summary_hits[category]}\033[0m\n"
+            )
+        sys.stderr.flush()
 
     stdout = "".join(stdout_lines).rstrip("\n")
     stderr = "".join(stderr_lines).rstrip("\n")

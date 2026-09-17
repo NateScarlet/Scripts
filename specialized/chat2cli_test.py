@@ -1093,6 +1093,50 @@ class TestStructuralValueRedaction(unittest.TestCase):
         self.assertEqual(hits, {"USERNAME": 1})
 
 
+
+
+
+class TestColorizeRedactedSpans(unittest.TestCase):
+    """stderr 实时流：单行内命中脱敏规则的片段着灰色"""
+
+    def test_marks_matched_span_grey(self):
+        colored = chat2cli._colorize_redacted_spans(
+            "x supersecretvalue y", {"SECRET_FOO": "supersecretvalue"}, "\033[37m"
+        )
+        # 命中片段前缀灰色，且原文仍保留（终端只有用户可见）
+        self.assertIn("\033[90msupersecretvalue", colored)
+        self.assertIn("supersecretvalue", colored)
+
+    def test_no_match_keeps_base_color_only(self):
+        colored = chat2cli._colorize_redacted_spans("plain", {}, "\033[31m")
+        self.assertEqual(colored, "\033[31mplain\033[0m")
+
+    def test_pattern_match_is_marked(self):
+        colored = chat2cli._colorize_redacted_spans(
+            "key sk-abcdefghijklmnopqrstuvwx", {}, "\033[37m"
+        )
+        self.assertIn("\033[90msk-abcdefghijklmnopqrstuvwx", colored)
+
+
+class TestFindRedactionSpans(unittest.TestCase):
+    """span 检测：值驱动优先，区间不重叠"""
+
+    def test_value_driven_span_wins_over_pattern(self):
+        # 已知值优先还原为可重新执行的引用，不让模式规则抢先
+        spans = chat2cli._find_redaction_spans(
+            "supersecretvalue", {"SECRET_FOO": "supersecretvalue"}
+        )
+        self.assertEqual(spans, [(0, 16, "SECRET_FOO")])
+
+    def test_spans_are_non_overlapping(self):
+        spans = chat2cli._find_redaction_spans(
+            "abcdefghijklmnop",
+            {"SECRET_A": "abcdefghijklmnop", "SECRET_B": "abcdefghijkl"},
+        )
+        self.assertEqual(spans, [(0, 16, "SECRET_A")])
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
