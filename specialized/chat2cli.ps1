@@ -34,11 +34,31 @@ function Invoke-Chat2CLIClipboardWithRetry {
     }
 }
 
+
+function Protect-Chat2CLIClipboardText {
+    param([string]$Text)
+
+    if ([string]::IsNullOrEmpty($Text)) {
+        return $Text
+    }
+
+    # 剪贴板文本净化：CF_UNICODETEXT 是 NUL 结尾的宽字符串，文本中出现 U+0000
+    # 会导致读回时从该处截断，后续内容（含 data 块闭合标签与外层围栏）全部丢失。
+    # 把 NUL 及会显示为乱码的其他 C0 控制字符（保留 \t \n \r）转义为可见形式。
+    return [regex]::Replace($Text, '[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]', {
+        param($match)
+        '\u{0:x4}' -f [int][char]$match.Value
+    })
+}
+
 function Set-Chat2CLIClipboard {
     param([string]$Text)
 
+    $Text = Protect-Chat2CLIClipboardText -Text $Text
+
     Add-Type -AssemblyName PresentationCore
     Add-Type -AssemblyName System.Web
+
 
     $encoded = [System.Web.HttpUtility]::HtmlEncode($Text)
     $htmlBody = "<html><body><!-- chat2cli-generated --><!--StartFragment--><pre>$encoded</pre><!--EndFragment--></body></html>"

@@ -1281,6 +1281,31 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     return text
 
 
+
+def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
+    """构建 pwsh 子进程的环境变量。
+
+    统一注入 UTF-8 相关变量，避免子工具在 Windows 代码页下产生乱码：
+    - PYTHONIOENCODING / PYTHONUTF8：Python 解释器及其子进程
+    - WSL_UTF8：wsl.exe 直接输出 UTF-8（否则输出 UTF-16LE，被按 UTF-8
+      解码后混入 U+0000，导致剪贴板文本在首个 NUL 处被截断）
+    - LANG / LC_ALL：POSIX 工具链（Git for Windows、MSYS2 等）的 UTF-8 约定
+    - CI / NO_COLOR：非交互执行、禁用彩色转义码
+    另将 <data.xxx> 数据块注入为 $env:DATA_xxx。
+    """
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    env["WSL_UTF8"] = "1"
+    env["LANG"] = "C.UTF-8"
+    env["LC_ALL"] = "C.UTF-8"
+    env["CI"] = "true"
+    env["NO_COLOR"] = "1"
+    for ref_id, ref_content in data_map.items():
+        env["DATA_" + ref_id] = ref_content
+    return env
+
+
 def execute_pwsh(
     id_: Any, params: Dict[str, Any], data_map: Dict[str, str]
 ) -> Dict[str, Any]:
@@ -1295,21 +1320,10 @@ def execute_pwsh(
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
         f"$OutputEncoding = [System.Text.Encoding]::UTF8; "
         f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
-        f"$env:PYTHONIOENCODING = 'utf-8'; {command}"
+        f"{command}"
     )
 
-    # 为子进程补充 CI 环境变量：执行者始终是 agent，无交互终端，
-    # CI=true 让 vitest 等工具默认进入非交互模式而非 watch；
-    # NO_COLOR=1 禁用彩色输出，避免转义码污染捕获的文本。
-    env = os.environ.copy()
-    env["CI"] = "true"
-    env["NO_COLOR"] = "1"
-
-    # 将 <data.xxx> 数据块注入为 $env:DATA_xxx 环境变量。
-    # 数据块 id 原样拼接为环境变量名。
-    for ref_id, ref_content in data_map.items():
-        env_name = "DATA_" + ref_id
-        env[env_name] = ref_content
+    env = _build_pwsh_env(data_map)
 
     def _stream_reader(
         stream: Any, stream_name: str, lines_list: List[str], pid: int

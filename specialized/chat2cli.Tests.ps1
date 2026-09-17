@@ -11,6 +11,34 @@ BeforeAll {
     . "$PSScriptRoot/chat2cli.ps1"
 }
 
+
+Describe 'Protect-Chat2CLIClipboardText' {
+    It 'U+0000 被转义，避免剪贴板读回时截断' {
+        $text = "AAA$([char]0)BBB"
+        $result = Protect-Chat2CLIClipboardText -Text $text
+        $result.Contains([char]0) | Should -BeFalse
+        $result | Should -Be 'AAA\u0000BBB'
+    }
+
+    It '保留换行、制表、回车' {
+        $text = "A`nB`tC`rD"
+        $result = Protect-Chat2CLIClipboardText -Text $text
+        $result | Should -Be $text
+    }
+
+    It '其他 C0 控制字符与 DEL 也转义' {
+        $text = "A$([char]6)B$([char]0x7F)C"
+        $result = Protect-Chat2CLIClipboardText -Text $text
+        $result | Should -Be 'A\u0006B\u007fC'
+    }
+
+    It '空字符串原样返回' {
+        Protect-Chat2CLIClipboardText -Text '' | Should -Be ''
+    }
+}
+
+
+
 Describe 'Get-Chat2CLIWatchDecision' {
     BeforeAll {
         # 测试用委托：指定是否需要处理。

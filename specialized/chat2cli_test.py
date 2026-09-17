@@ -762,5 +762,38 @@ class TestCreateCommandAutoParentDir(unittest.TestCase):
         self.assertEqual(content, "old")
 
 
+
+
+class TestBuildPwshEnv(unittest.TestCase):
+    """execute_pwsh 为子进程构建的环境变量"""
+
+    def test_injects_utf8_env_vars_for_common_tools(self):
+        # Python / WSL / POSIX 工具的 UTF-8 环境变量
+        env = chat2cli._build_pwsh_env({})
+        self.assertEqual(env["PYTHONUTF8"], "1")
+        self.assertEqual(env["PYTHONIOENCODING"], "utf-8")
+        self.assertEqual(env["WSL_UTF8"], "1")
+        self.assertEqual(env["LANG"], "C.UTF-8")
+        self.assertEqual(env["LC_ALL"], "C.UTF-8")
+
+    def test_injects_ci_and_no_color(self):
+        env = chat2cli._build_pwsh_env({})
+        self.assertEqual(env["CI"], "true")
+        self.assertEqual(env["NO_COLOR"], "1")
+
+    def test_injects_data_blocks_as_env(self):
+        env = chat2cli._build_pwsh_env({"foo": "bar"})
+        self.assertEqual(env["DATA_foo"], "bar")
+
+    def test_returns_copy_without_mutating_os_environ(self):
+        saved = os.environ.pop("WSL_UTF8", None)
+        try:
+            chat2cli._build_pwsh_env({})
+            self.assertNotIn("WSL_UTF8", os.environ)
+        finally:
+            if saved is not None:
+                os.environ["WSL_UTF8"] = saved
+
+
 if __name__ == "__main__":
     unittest.main()
