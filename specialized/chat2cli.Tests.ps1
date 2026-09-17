@@ -110,3 +110,85 @@ Describe 'Get-Chat2CLIWatchDecision' {
         $script:called | Should -BeFalse
     }
 }
+
+
+
+Describe 'Test-Chat2CLIResponseText' {
+    It '识别 py 产出的响应块' {
+        $text = @'
+```chat2cli
+<response>
+{"jsonrpc":"2.0","id":1,"result":{}}
+</response>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeTrue
+    }
+
+    It '识别带 data 块与冒号缩进的响应块' {
+        $text = @'
+```chat2cli
+:<data.view_1>hello</data.view_1>
+:<response>
+:{"jsonrpc":"2.0","id":1,"result":{}}
+:</response>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeTrue
+    }
+
+    It '识别四反引号围栏的响应块' {
+        $text = @'
+````chat2cli
+<response>
+{"jsonrpc":"2.0","id":1,"result":{}}
+</response>
+````
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeTrue
+    }
+
+    It '请求块不视为响应' {
+        $text = @'
+```chat2cli
+<request>
+{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hi"}}
+</request>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeFalse
+    }
+
+    It 'data 块内的字面 response 标签不视为响应' {
+        $text = @'
+```chat2cli
+<data.sample>
+<response>literal example</response>
+</data.sample>
+<request>
+{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hi"}}
+</request>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeFalse
+    }
+
+    It '代码块之外的 response 标签不视为响应' {
+        Test-Chat2CLIResponseText -Text '<response>plain talk</response>' | Should -BeFalse
+    }
+
+    It '空文本不视为响应' {
+        Test-Chat2CLIResponseText -Text '' | Should -BeFalse
+    }
+}
+
+
+Describe 'Get-Chat2CLIWatchDecision 响应识别' {
+    It '响应内容跳过，并记录为已处理输入' {
+        $needs = { param($t) $true }
+        $d = Get-Chat2CLIWatchDecision -Current 'RESP' -LastCheckedText $null `
+            -IsGenerated $false -IsInstruction $false -IsResponse $true -CheckNeedsProcessing $needs
+        $d.ShouldProcess | Should -BeFalse
+        $d.NextLastCheckedText | Should -Be 'RESP'
+    }
+}

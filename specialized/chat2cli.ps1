@@ -446,6 +446,55 @@ function Test-Chat2CLIInputNeedsProcessing {
 }
 
 
+
+function Test-Chat2CLIResponseText {
+    param([string]$Text)
+
+    if ([string]::IsNullOrEmpty($Text)) {
+        return $false
+    }
+
+    # 提取 chat2cli 围栏块内容，围栏长度必须匹配，与 chat2cli.py 解析规则一致
+    $blocks = @()
+    $openFenceLen = $null
+    $blockLines = @()
+
+    foreach ($rawLine in ($Text -split "`n")) {
+        $line = $rawLine.TrimEnd("`r")
+        if ($null -eq $openFenceLen) {
+            $openMatch = [regex]::Match($line, '^(`{3,})chat2cli[ \t]*$')
+            if ($openMatch.Success) {
+                $openFenceLen = $openMatch.Groups[1].Value.Length
+                $blockLines = @()
+            }
+            continue
+        }
+        $closeMatch = [regex]::Match($line, '^(`{3,})[ \t]*$')
+        if ($closeMatch.Success -and $closeMatch.Groups[1].Value.Length -eq $openFenceLen) {
+            $openFenceLen = $null
+            $blocks += ,($blockLines -join "`n")
+            continue
+        }
+        $blockLines += $line
+    }
+
+    foreach ($block in $blocks) {
+        # data 块内部的 <response> 属于字面内容，先整体移除再检测
+        $withoutData = [regex]::Replace(
+            $block,
+            '<data\.([^>\s]+)>.*?</data\.\1>',
+            '',
+            [System.Text.RegularExpressions.RegexOptions]::Singleline
+        )
+        if ($withoutData -match '<response>') {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+
 # watch 循环的决策核心：给定当前状态，决定是否需要处理，并给出下一轮的
 # “已处理输入”标记。提取为纯函数以便测试，不直接读写剪贴板。
 # CheckNeedsProcessing 为注入的判断委托，生产环境传入 --check 调用。
@@ -455,6 +504,7 @@ function Get-Chat2CLIWatchDecision {
         [string]$LastCheckedText,
         [bool]$IsGenerated,
         [bool]$IsInstruction,
+        [bool]$IsResponse,
         [scriptblock]$CheckNeedsProcessing
     )
 
@@ -463,8 +513,8 @@ function Get-Chat2CLIWatchDecision {
         return @{ ShouldProcess = $false; NextLastCheckedText = $LastCheckedText }
     }
 
-    # 生成内容或指令提示：记录后跳过，其中的示例不应触发执行
-    if ($IsGenerated -or $IsInstruction) {
+    # 生成内容、指令提示或 py 产出的响应：记录后跳过，其中的示例不应触发执行
+    if ($IsGenerated -or $IsInstruction -or $IsResponse) {
         return @{ ShouldProcess = $false; NextLastCheckedText = $Current }
     }
 
@@ -720,6 +770,7 @@ function Watch-Chat2CLI {
                 -LastCheckedText $lastCheckedText `
                 -IsGenerated (Test-Chat2CLIClipboardGenerated) `
                 -IsInstruction ($current.Contains('<chat2cli_instruction>')) `
+                -IsResponse (Test-Chat2CLIResponseText -Text $current) `
                 -CheckNeedsProcessing { param($text) Test-Chat2CLIInputNeedsProcessing -InputText $text }
 
             $lastCheckedText = $decision.NextLastCheckedText
