@@ -795,5 +795,304 @@ class TestBuildPwshEnv(unittest.TestCase):
                 os.environ["WSL_UTF8"] = saved
 
 
+
+class TestCollectSecretValues(unittest.TestCase):
+    """从环境映射收集敏感值用于值驱动脱敏。
+
+    全部通过注入的普通 dict 完成，既不读取也不改写真实 os.environ，
+    避免真实密钥出现在断言输出中。
+    """
+
+    def test_collects_secret_prefixed_values(self):
+        self.assertEqual(
+            chat2cli._collect_secret_values({"SECRET_FOO": "supersecretvalue"}),
+            {"SECRET_FOO": "supersecretvalue"},
+        )
+
+    def test_ignores_other_variables(self):
+        self.assertEqual(
+            chat2cli._collect_secret_values({"HARMLESS_VARIABLE": "supersecretvalue"}),
+            {},
+        )
+
+    def test_ignores_values_shorter_than_threshold(self):
+        self.assertEqual(chat2cli._collect_secret_values({"SECRET_SHORT": "abc"}), {})
+
+    def test_collects_token_suffix_and_structural_names(self):
+        env = {
+            "SOME_TOKEN": "tokenvalue123",
+            "USERNAME": "abcde",
+            "COMPUTERNAME": "DESKTOP-XYZ",
+        }
+        self.assertEqual(
+            chat2cli._collect_secret_values(env),
+            {
+                "SOME_TOKEN": "tokenvalue123",
+                "USERNAME": "abcde",
+                "COMPUTERNAME": "DESKTOP-XYZ",
+            },
+        )
+
+    def test_structural_name_below_threshold_is_ignored(self):
+        # 结构性变量阈值 4，低于阈值的值不参与替换
+        self.assertEqual(chat2cli._collect_secret_values({"USERNAME": "abc"}), {})
+
+
+class TestRedactText(unittest.TestCase):
+    """值驱动 + 模式驱动的文本脱敏"""
+
+    def test_replaces_known_value_with_env_reference(self):
+        redacted, hits = chat2cli._redact_text(
+            "token supersecretvalue end", {"SECRET_FOO": "supersecretvalue"}
+        )
+        self.assertEqual(redacted, "token ${env:SECRET_FOO} end")
+        self.assertEqual(hits, {"SECRET_FOO": 1})
+
+    def test_longer_value_replaced_before_shorter_substring(self):
+        # 短值恰好是长值子串时，必须先替换长值，否则长值被切断
+        redacted, _ = chat2cli._redact_text(
+            "abcdefghijklmnop",
+            {"SECRET_A": "abcdefghijklmnop", "SECRET_B": "abcdefghijkl"},
+        )
+        self.assertEqual(redacted, "${env:SECRET_A}")
+
+    def test_counts_all_occurrences(self):
+        _, hits = chat2cli._redact_text(
+            "supersecret supersecret", {"SECRET_FOO": "supersecret"}
+        )
+        self.assertEqual(hits, {"SECRET_FOO": 2})
+
+    def test_no_match_returns_original(self):
+        redacted, hits = chat2cli._redact_text("plain", {"SECRET_FOO": "zzzzzz"})
+        self.assertEqual(redacted, "plain")
+        self.assertEqual(hits, {})
+
+    def test_redacts_sk_token_with_regex_label(self):
+        redacted, hits = chat2cli._redact_text(
+            "key sk-abcdefghijklmnopqrstuvwx end", {}
+        )
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", redacted)
+        self.assertIn("sk-[A-Za-z0-9_-]{20,}", redacted)
+        self.assertEqual(hits, {"sk-[A-Za-z0-9_-]{20,}": 1})
+
+    def test_redacts_github_token(self):
+        token = "ghp_" + "a" * 36
+        redacted, hits = chat2cli._redact_text(f"x {token} y", {})
+        self.assertNotIn(token, redacted)
+        self.assertEqual(hits, {"gh[pousr]_[A-Za-z0-9]{36,}": 1})
+
+    def test_redacts_aws_access_key(self):
+        redacted, hits = chat2cli._redact_text("AKIAABCDEFGHIJKLMNOP", {})
+        self.assertNotIn("AKIAABCDEFGHIJKLMNOP", redacted)
+        self.assertEqual(hits, {"AKIA[0-9A-Z]{16}": 1})
+
+    def test_redacts_private_key_block(self):
+        text = (
+            "-----BEGIN RSA PRIVATE KEY-----\n"
+            "SECRETBODY\n"
+            "-----END RSA PRIVATE KEY-----"
+        )
+        redacted, hits = chat2cli._redact_text(text, {})
+        self.assertNotIn("SECRETBODY", redacted)
+        self.assertEqual(len(hits), 1)
+
+    def test_redacts_password_value_keeping_key_name(self):
+        redacted, hits = chat2cli._redact_text('password: "hunter2secret"', {})
+        self.assertIn("password", redacted)
+        self.assertNotIn("hunter2secret", redacted)
+        self.assertEqual(hits, {"key-value-secret": 1})
+
+    def test_value_driven_runs_before_pattern_driven(self):
+        redacted, hits = chat2cli._redact_text(
+            "supersecretvalue", {"SECRET_FOO": "supersecretvalue"}
+        )
+        self.assertEqual(redacted, "${env:SECRET_FOO}")
+        self.assertEqual(hits, {"SECRET_FOO": 1})
+
+
+class TestRedactNode(unittest.TestCase):
+    """递归脱敏结构中的所有字符串字段"""
+
+    def test_redacts_nested_string_fields(self):
+        node = {"result": {"stdout": "sk-abcdefghijklmnopqrstuvwx", "path": "C:/x"}}
+        redacted, hits = chat2cli._redact_node(node, {})
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", redacted["result"]["stdout"])
+        self.assertEqual(redacted["result"]["path"], "C:/x")
+        self.assertEqual(hits, {"result.stdout": {"sk-[A-Za-z0-9_-]{20,}": 1}})
+
+    def test_redacts_error_message(self):
+        node = {"error": {"message": "failed sk-abcdefghijklmnopqrstuvwx"}}
+        redacted, _ = chat2cli._redact_node(node, {})
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", redacted["error"]["message"])
+
+    def test_preserves_non_string_values(self):
+        node = {"exit_code": 1, "success": True, "none": None}
+        redacted, hits = chat2cli._redact_node(node, {})
+        self.assertEqual(redacted, {"exit_code": 1, "success": True, "none": None})
+        self.assertEqual(hits, {})
+
+    def test_redacts_strings_inside_lists(self):
+        node = {"items": ["sk-abcdefghijklmnopqrstuvwx"]}
+        redacted, _ = chat2cli._redact_node(node, {})
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", redacted["items"][0])
+
+    def test_does_not_mutate_input(self):
+        node = {"stdout": "sk-abcdefghijklmnopqrstuvwx"}
+        chat2cli._redact_node(node, {})
+        self.assertEqual(node["stdout"], "sk-abcdefghijklmnopqrstuvwx")
+
+
+class TestFormatRedactionReminder(unittest.TestCase):
+    def test_lists_category_count_and_where(self):
+        hits = {"request#1.result.stdout": {"sk-token": 2}}
+        reminder = chat2cli._format_redaction_reminder(hits)
+        self.assertIn("<system-reminder>", reminder)
+        self.assertIn("sk-token", reminder)
+        self.assertIn("request#1.result.stdout", reminder)
+        self.assertIn("2", reminder)
+
+    def test_empty_hits_returns_empty_string(self):
+        self.assertEqual(chat2cli._format_redaction_reminder({}), "")
+
+
+class TestRedactionEndToEnd(unittest.TestCase):
+    """端到端：密钥在响应中被脱敏，并附带 system-reminder"""
+
+    def _run_chat2cli(self, input_text: str, cwd: str, env_extra=None):
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        # 从干净基线构建子进程环境：剔除所有敏感命名变量，只注入测试
+        # 显式提供的值，避免真实密钥进入子进程输出或断言。
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if not chat2cli._is_secret_variable_name(key)
+        }
+        if env_extra:
+            env.update(env_extra)
+        return subprocess.run(
+            [sys.executable, str(script)],
+            input=input_text,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=cwd,
+            env=env,
+            check=False,
+        )
+
+    def _request(self, request_obj) -> str:
+        import json
+
+        return (
+            "```chat2cli\n<request>\n"
+            + json.dumps(request_obj)
+            + "\n</request>\n```"
+        )
+
+    def test_secret_env_value_redacted_in_response(self):
+        request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "pwsh",
+            "params": {"command": "Write-Output $env:SECRET_TEST"},
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self._run_chat2cli(
+                self._request(request), tmpdir, {"SECRET_TEST": "supersecretvalue"}
+            )
+        self.assertNotIn("supersecretvalue", result.stdout)
+        self.assertIn("${env:SECRET_TEST}", result.stdout)
+        self.assertIn("<system-reminder>", result.stdout)
+
+    def test_pattern_token_redacted_in_response(self):
+        request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "pwsh",
+            "params": {"command": "Write-Output sk-abcdefghijklmnopqrstuvwx"},
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self._run_chat2cli(self._request(request), tmpdir)
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", result.stdout)
+        self.assertIn("<system-reminder>", result.stdout)
+
+    def test_view_output_redacted_in_response(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "secret.txt"
+            target.write_text("token=sk-abcdefghijklmnopqrstuvwx\n", encoding="utf-8")
+            request = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "str_replace_editor",
+                "params": {"command": "view", "path": str(target)},
+            }
+            result = self._run_chat2cli(self._request(request), tmpdir)
+        self.assertNotIn("sk-abcdefghijklmnopqrstuvwx", result.stdout)
+
+    def test_scratch_file_keeps_raw_content(self):
+        token = "sk-" + "a" * 100
+        command = f"1..500 | ForEach-Object {{ Write-Output '{token}' }}"
+        request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "pwsh",
+            "params": {"command": command},
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self._run_chat2cli(self._request(request), tmpdir)
+            self.assertNotIn(token, result.stdout)
+            scratch_files = list(Path(tmpdir).glob(".scratch/**/stdout_1.txt"))
+            self.assertEqual(len(scratch_files), 1)
+            self.assertIn(token, scratch_files[0].read_text(encoding="utf-8"))
+
+
+
+class TestSecretVariableNames(unittest.TestCase):
+    """敏感变量名识别：按名称形状，不假设固定环境"""
+
+    def test_secret_prefix_is_recognized(self):
+        self.assertTrue(chat2cli._is_secret_variable_name("SECRET_FOO"))
+
+    def test_token_suffix_is_recognized(self):
+        self.assertTrue(chat2cli._is_secret_variable_name("GOTIFY_TOKEN"))
+
+    def test_api_key_suffix_is_recognized(self):
+        self.assertTrue(chat2cli._is_secret_variable_name("OPENAI_API_KEY"))
+
+    def test_password_variants_are_recognized(self):
+        for name in ("DB_PASSWORD", "DB_PASSWD", "MYSQL_PWD", "APP_SECRET"):
+            self.assertTrue(chat2cli._is_secret_variable_name(name), name)
+
+    def test_structural_names_are_recognized(self):
+        for name in ("USERNAME", "USER", "LOGNAME", "COMPUTERNAME", "HOSTNAME"):
+            self.assertTrue(chat2cli._is_secret_variable_name(name), name)
+
+    def test_unrelated_name_is_not_recognized(self):
+        self.assertFalse(chat2cli._is_secret_variable_name("PATH"))
+        self.assertFalse(chat2cli._is_secret_variable_name("TEMP"))
+
+
+class TestStructuralValueRedaction(unittest.TestCase):
+    """结构性短值（用户名、机器名）的阈值与词边界行为"""
+
+    def test_structural_short_value_is_collected(self):
+        self.assertEqual(
+            chat2cli._collect_secret_values({"USERNAME": "abcde"}).get("USERNAME"),
+            "abcde",
+        )
+
+    def test_structural_value_uses_word_boundary(self):
+        # 短值仅在词边界处替换，避免切断粘连文本
+        redacted, hits = chat2cli._redact_text(
+            "abcde123abcde abcde", {"USERNAME": "abcde"}
+        )
+        self.assertEqual(redacted, "abcde123abcde ${env:USERNAME}")
+        self.assertEqual(hits, {"USERNAME": 1})
+
+
 if __name__ == "__main__":
     unittest.main()
+

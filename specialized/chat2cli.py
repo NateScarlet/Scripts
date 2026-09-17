@@ -51,7 +51,7 @@ import traceback
 from datetime import date
 
 import yaml
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
 # 确保输入输出使用 UTF-8（避免 Windows 默认编码问题）
 try:
@@ -1284,6 +1284,205 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     return text
 
 
+# 值驱动脱敏：把环境中已知的敏感值替换为可重新执行的 ${env:NAME} 引用。
+# 用花括号包裹变量名，否则 ${NAME} 后面紧跟字母数字时 PowerShell 会把
+# 后续字符并入变量名，展开成错误的变量。
+# 短值（如 "1"、"true"）作为子串几乎必然误伤无关文本，因此设最小长度。
+_SECRET_MIN_LENGTH = 8
+
+# 结构性变量（用户名、机器名）本身不是密钥，但会暴露本地环境，
+# 阈值更低；配合词边界替换，避免切断粘连文本。
+_STRUCTURAL_MIN_LENGTH = 4
+
+_STRUCTURAL_VARIABLE_NAMES = frozenset(
+    {
+        "USERNAME",
+        "USER",
+        "LOGNAME",
+        "COMPUTERNAME",
+        "HOSTNAME",
+    }
+)
+
+# 敏感变量名模式：不假设固定环境，按名称形状识别
+_SECRET_NAME_PATTERNS: List[str] = [
+    r"^SECRET_",
+    r"_TOKEN$",
+    r"_KEY$",
+    r"_API_KEY$",
+    r"_PASSWORD$",
+    r"_PASSWD$",
+    r"_PWD$",
+    r"_SECRET$",
+    r"_CREDENTIAL",
+]
+
+
+def _is_secret_variable_name(name: str) -> bool:
+    """变量名是否应视为敏感，用于值驱动脱敏。"""
+    if name in _STRUCTURAL_VARIABLE_NAMES:
+        return True
+    return any(re.search(pattern, name) for pattern in _SECRET_NAME_PATTERNS)
+
+
+def _collect_secret_values(
+    env: Optional[Mapping[str, str]] = None,
+) -> Dict[str, str]:
+    """收集环境中的敏感变量值，供值驱动脱敏使用。
+
+    env 默认取 os.environ；显式传入映射便于测试，使测试不读取也不改写
+    真实环境。变量名本身不是秘密，可出现在输出中（LLM 正需要它来复用
+    变量）；需要替换的是值本身。
+    """
+    source = os.environ if env is None else env
+    values: Dict[str, str] = {}
+    for name, value in source.items():
+        if not _is_secret_variable_name(name):
+            continue
+        min_length = (
+            _STRUCTURAL_MIN_LENGTH
+            if name in _STRUCTURAL_VARIABLE_NAMES
+            else _SECRET_MIN_LENGTH
+        )
+        if len(value) < min_length:
+            continue
+        values[name] = value
+    return values
+
+
+def _redaction_label(pattern_src: str) -> str:
+    """模式驱动脱敏的占位符：反引号包裹的正则原文，便于定位命中的规则。"""
+    return f"`[REDACTED: {pattern_src}]`"
+
+
+# 键值对形式：只替换值、保留字段名，让 LLM 仍能看出这里原本是什么字段
+_KEY_VALUE_SECRET_PATTERN = (
+    r"(?i)(password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key)"
+    r"(\s*[:=]\s*[\"']?)([^\s\"']{6,})"
+)
+_KEY_VALUE_SECRET_LABEL = "key-value-secret"
+
+# 高置信度模式：整体替换，标签直接使用正则原文
+_REDACT_PATTERNS: List[str] = [
+    r"sk-[A-Za-z0-9_-]{20,}",
+    r"gh[pousr]_[A-Za-z0-9]{36,}",
+    r"github_pat_[A-Za-z0-9_]{22,}",
+    r"AKIA[0-9A-Z]{16}",
+    r"xox[baprs]-[A-Za-z0-9-]{10,}",
+    r"[sr]k_(?:live|test)_[A-Za-z0-9]{20,}",
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+]
+
+
+def _redact_text(
+    text: str, secret_values: Dict[str, str]
+) -> Tuple[str, Dict[str, int]]:
+    """对单个字符串脱敏，返回 (脱敏后文本, {类别: 命中次数})。
+
+    值驱动先于模式驱动：已知值替换为可重新执行的 $env: 引用后，
+    模式驱动再扫描剩余文本，避免模式先命中导致原值定位失败。
+    """
+    if not text:
+        return text, {}
+
+    hits: Dict[str, int] = {}
+    result = text
+
+    # 值驱动：按值长度降序，避免短值恰好是长值子串时被先切断
+    for name, value in sorted(
+        secret_values.items(), key=lambda item: len(item[1]), reverse=True
+    ):
+        if value not in result:
+            continue
+        if name in _STRUCTURAL_VARIABLE_NAMES:
+            # 短值加词边界，避免切断粘连文本
+            word_pattern = re.compile(r"\b" + re.escape(value) + r"\b")
+            count = len(word_pattern.findall(result))
+            if count:
+                hits[name] = count
+                result = word_pattern.sub(f"${{env:{name}}}", result)
+        else:
+            hits[name] = result.count(value)
+            result = result.replace(value, f"${{env:{name}}}")
+
+    # 键值对形式：只替换值部分
+    key_value_re = re.compile(_KEY_VALUE_SECRET_PATTERN, re.DOTALL)
+    result, count = key_value_re.subn(
+        lambda m: m.group(1)
+        + m.group(2)
+        + _redaction_label(_KEY_VALUE_SECRET_LABEL),
+        result,
+    )
+    if count:
+        hits[_KEY_VALUE_SECRET_LABEL] = count
+
+    # 其余高置信度模式：整体替换
+    for pattern_src in _REDACT_PATTERNS:
+        pattern = re.compile(pattern_src, re.DOTALL)
+        label = _redaction_label(pattern_src)
+        result, count = pattern.subn(lambda m: label, result)
+        if count:
+            hits[pattern_src] = count
+
+    return result, hits
+
+
+def _redact_node(
+    node: Any, secret_values: Dict[str, str], path: str = ""
+) -> Tuple[Any, Dict[str, Dict[str, int]]]:
+    """递归脱敏结构中的所有字符串字段。
+
+    返回 (脱敏后结构, {字段路径: {类别: 命中次数}})。非字符串叶子原样返回，
+    不修改输入结构。
+    """
+    if isinstance(node, str):
+        redacted, hits = _redact_text(node, secret_values)
+        if not hits:
+            return redacted, {}
+        return redacted, {path or "<root>": hits}
+
+    if isinstance(node, dict):
+        node_dict = cast(Dict[Any, Any], node)
+        dict_result: Dict[Any, Any] = {}
+        dict_hits: Dict[str, Dict[str, int]] = {}
+        for key, value in node_dict.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            redacted_value, child_hits = _redact_node(
+                value, secret_values, child_path
+            )
+            dict_result[key] = redacted_value
+            dict_hits.update(child_hits)
+        return dict_result, dict_hits
+
+    if isinstance(node, list):
+        node_list = cast(List[Any], node)
+        list_result: List[Any] = []
+        list_hits: Dict[str, Dict[str, int]] = {}
+        for index, item in enumerate(node_list):
+            child_path = f"{path}[{index}]"
+            redacted_item, child_hits = _redact_node(
+                item, secret_values, child_path
+            )
+            list_result.append(redacted_item)
+            list_hits.update(child_hits)
+        return list_result, list_hits
+
+    return node, {}
+
+
+def _format_redaction_reminder(hits: Dict[str, Dict[str, int]]) -> str:
+    """生成脱敏提示的 system-reminder；无命中时返回空串。"""
+    if not hits:
+        return ""
+
+    lines: List[str] = ["<system-reminder>输出中发现疑似敏感信息，已脱敏："]
+    for where in sorted(hits.keys()):
+        categories = hits[where]
+        for category in sorted(categories.keys()):
+            lines.append(f"- {category} ×{categories[category]}（{where}）")
+    lines.append("原始内容仍可在终端查看。</system-reminder>")
+    return "\n".join(lines)
+
 
 def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     """构建 pwsh 子进程的环境变量。
@@ -2234,6 +2433,10 @@ def main():
 
     responses: List[Dict[str, Any]] = []
     content_blocks: List[str] = []
+    # 脱敏只作用于流向 response 的数据：终端 stderr 与 scratch 文件保持原文，
+    # 便于用户自行排查；response 的所有字段（含 error）都经 _redact_node。
+    secret_values = _collect_secret_values()
+    redaction_hits: Dict[str, Dict[str, int]] = {}
 
     logging.debug("【3. 执行请求】")
     for idx, req in enumerate(requests):
@@ -2243,9 +2446,19 @@ def main():
             logging.debug(f"  请求 #{idx+1}: 无响应（notification 或空）")
             continue
         resp, content_block = result
-        responses.append(resp)
+        redacted_resp, resp_hits = _redact_node(resp, secret_values)
+        for where, categories in resp_hits.items():
+            redaction_hits[f"request#{idx+1}.{where}"] = categories
+        responses.append(redacted_resp)
         if content_block:
-            content_blocks.append(content_block)
+            redacted_block, block_hits = _redact_text(content_block, secret_values)
+            if block_hits:
+                ref_match = re.match(r"<data\.([^>\s]+)>", redacted_block)
+                where = (
+                    ref_match.group(1) if ref_match else f"request#{idx+1}.content"
+                )
+                redaction_hits[where] = block_hits
+            content_blocks.append(redacted_block)
         # 记录响应状态到调试日志
         if "error" in resp:
             logging.debug(f"  请求 #{idx+1}: 响应错误 - {resp['error']['message']}")
@@ -2267,7 +2480,10 @@ def main():
     # 输出带外数据块（OOB 引用内容，按注册顺序）
     if _pending_oob_data:
         for ref_id, ref_content in _pending_oob_data.items():
-            body_parts.append(_data_block_text(ref_id, ref_content))
+            redacted_content, oob_hits = _redact_text(ref_content, secret_values)
+            if oob_hits:
+                redaction_hits[ref_id] = oob_hits
+            body_parts.append(_data_block_text(ref_id, redacted_content))
     # 输出附加内容块（view 结果）
     if content_blocks:
         body_parts.append("\n".join(content_blocks))
@@ -2302,6 +2518,11 @@ def main():
 
     for reminder in preprocess_reminders:
         print(reminder)
+
+    # 脱敏提示放在代码块之后，避免干扰可复制执行的代码块
+    redaction_reminder = _format_redaction_reminder(redaction_hits)
+    if redaction_reminder:
+        print(redaction_reminder)
 
 
 
