@@ -1149,7 +1149,57 @@ class TestFindRedactionSpans(unittest.TestCase):
         self.assertEqual(spans, [(0, 16, "SECRET_A")])
 
 
+
+class TestDisplayPath(unittest.TestCase):
+    """路径显示：home 目录内的路径显示为 ~/ 形式，便于在 JSON 中直接复用"""
+
+    def test_path_inside_home_uses_tilde(self):
+        home = os.path.expanduser("~")
+        target = os.path.join(home, "Documents", "foo.txt")
+        self.assertEqual(chat2cli._display_path(target), "~/Documents/foo.txt")
+
+    def test_home_itself_is_tilde(self):
+        self.assertEqual(chat2cli._display_path(os.path.expanduser("~")), "~")
+
+    def test_path_outside_home_stays_absolute(self):
+        # 驱动器根目录必不在 home 内
+        outside = os.path.abspath(os.sep)
+        self.assertEqual(chat2cli._display_path(outside), outside)
+
+    def test_nested_path_uses_forward_slashes(self):
+        home = os.path.expanduser("~")
+        target = os.path.join(home, ".chat2cli", "AGENTS.md")
+        self.assertEqual(chat2cli._display_path(target), "~/.chat2cli/AGENTS.md")
+
+
+class TestInstructionShowsTildeCwd(unittest.TestCase):
+    """初始指令中，home 目录内的工作目录显示为 ~/ 形式"""
+
+    def _render_instruction(self, cwd: str) -> str:
+        import io
+        from contextlib import redirect_stdout
+        from unittest.mock import patch
+
+        buf = io.StringIO()
+        with patch("chat2cli.os.getcwd", return_value=cwd), patch(
+            "chat2cli._git_root_mismatch_hint", return_value=None
+        ), patch("chat2cli.discover_skills", return_value={}):
+            with redirect_stdout(buf):
+                chat2cli.print_instruction()
+        return buf.getvalue()
+
+    def test_home_cwd_shows_tilde(self):
+        output = self._render_instruction(os.path.expanduser("~"))
+        self.assertIn("当前工作目录：~", output)
+
+    def test_outside_cwd_shows_absolute(self):
+        outside = os.path.abspath(os.sep)
+        output = self._render_instruction(outside)
+        self.assertIn(f"当前工作目录：{outside}", output)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 

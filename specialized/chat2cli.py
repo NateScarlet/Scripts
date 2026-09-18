@@ -151,6 +151,23 @@ def discover_skills() -> Dict[str, Dict[str, Any]]:
     return skills
 
 
+def _display_path(path: str) -> str:
+    """把 home 目录内的路径显示为 ~/ 形式，其余保持绝对路径。
+
+    LLM 在 JSON 中写路径时，~ 形式比带用户名的绝对路径更简洁，也避免把
+    本地用户名带进会话。home 内路径统一用正斜杠，与 ~/ 语法一致。
+    """
+    abs_path = os.path.abspath(path)
+    home = os.path.abspath(os.path.expanduser("~"))
+
+    if abs_path == home:
+        return "~"
+    if abs_path.startswith(home + os.sep):
+        rel = os.path.relpath(abs_path, home)
+        return "~/" + rel.replace(os.sep, "/")
+    return abs_path
+
+
 def _git_worktree_root(cwd: str) -> Optional[str]:
     """返回 cwd 所属 git 仓库的根目录；不在仓库内或 git 不可用时返回 None。"""
     try:
@@ -185,8 +202,8 @@ def _git_root_mismatch_hint(cwd: str) -> Optional[str]:
     ):
         return None
     return (
-        f"[chat2cli] 当前工作目录 {cwd} 位于 git 仓库内，但不是 git 仓库根目录"
-        f"（根目录：{root}）。项目级 .agents/skills 按当前工作目录解析，"
+        f"[chat2cli] 当前工作目录 {_display_path(cwd)} 位于 git 仓库内，但不是 git 仓库根目录"
+        f"（根目录：{_display_path(root)}）。项目级 .agents/skills 按当前工作目录解析，"
         "可能导致项目级 skill 无法加载，建议在仓库根目录下重新运行。\n"
     )
 
@@ -230,7 +247,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
     "path": "文件或目录的绝对路径"
   }}
 }}
-- path 必须是绝对路径，且只能指向当前工作目录内的文件或目录。
+- path 必须是绝对路径（~ 会被展开为 home 目录），且只能指向当前工作目录内的文件或目录。
 - command 支持四种子命令，各子命令所需字段如下：
 
   1) view — 查看文件或目录
@@ -281,7 +298,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 - 激活后返回 <skill_content> 块，包含该 skill 的完整指令。
 - 仅在用户点名 skill，或任务明显匹配 skill 描述时调用，且每个 skill 只激活一次。
 
-当前工作目录：{cwd}
+当前工作目录：{_display_path(cwd)}
 
 ## 数据块
 
@@ -822,7 +839,7 @@ def execute_str_replace_editor(
         cwd = os.getcwd()
         return {
             "success": False,
-            "message": f"错误：path 必须是绝对路径，且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。当前机器：{hostname}，当前工作目录：{cwd}。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
+            "message": f"错误：path 必须是绝对路径（~ 会被展开为 home 目录），且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。当前机器：{hostname}，当前工作目录：{_display_path(cwd)}。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
         }, ""
 
     if command == "view":
