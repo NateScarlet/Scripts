@@ -1284,9 +1284,8 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
     return text
 
 
-# 值驱动脱敏：把环境中已知的敏感值替换为可重新执行的 ${env:NAME} 引用。
-# 用花括号包裹变量名，否则 ${NAME} 后面紧跟字母数字时 PowerShell 会把
-# 后续字符并入变量名，展开成错误的变量。
+# 值驱动脱敏：把环境中已知的敏感值替换为 <redacted env="NAME"> 占位符。
+# 不用 $env:NAME 形式，否则 LLM 会以为配置里存在字面的 $env:NAME 变量。
 # 长度门槛只作用于自动识别的变量名：短值（如 "1"、"true"）作为子串几乎
 # 必然误伤无关文本。SECRET_ 前缀是用户显式声明，不受门槛限制。
 _SECRET_MIN_LENGTH = 8
@@ -1354,8 +1353,8 @@ def _collect_secret_values(
 
 
 def _redaction_label(pattern_src: str) -> str:
-    """模式驱动脱敏的占位符：反引号包裹的正则原文，便于定位命中的规则。"""
-    return f"`[REDACTED: {pattern_src}]`"
+    """模式驱动脱敏的占位符：带正则原文的标签，便于定位命中的规则。"""
+    return f'<redacted regex="{pattern_src}">'
 
 
 # 键值对形式：只替换值、保留字段名，让 LLM 仍能看出这里原本是什么字段
@@ -1434,10 +1433,10 @@ def _find_redaction_spans(
 def _redaction_replacement(category: str, secret_values: Dict[str, str]) -> str:
     """返回某类别对应的替换文本。
 
-    值驱动类别用 ${env:NAME}，保留调用能力；其余类别用正则原文标签。
+    值驱动类别用 <redacted env="NAME">，其余类别用 <redacted regex="REGEX">。
     """
     if category in secret_values:
-        return f"${{env:{category}}}"
+        return f'<redacted env="{category}">'
     return _redaction_label(category)
 
 

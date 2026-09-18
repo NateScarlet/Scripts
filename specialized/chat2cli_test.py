@@ -857,7 +857,7 @@ class TestRedactText(unittest.TestCase):
         redacted, hits = chat2cli._redact_text(
             "token supersecretvalue end", {"SECRET_FOO": "supersecretvalue"}
         )
-        self.assertEqual(redacted, "token ${env:SECRET_FOO} end")
+        self.assertEqual(redacted, 'token <redacted env="SECRET_FOO"> end')
         self.assertEqual(hits, {"SECRET_FOO": 1})
 
     def test_longer_value_replaced_before_shorter_substring(self):
@@ -866,7 +866,7 @@ class TestRedactText(unittest.TestCase):
             "abcdefghijklmnop",
             {"SECRET_A": "abcdefghijklmnop", "SECRET_B": "abcdefghijkl"},
         )
-        self.assertEqual(redacted, "${env:SECRET_A}")
+        self.assertEqual(redacted, '<redacted env="SECRET_A">')
 
     def test_counts_all_occurrences(self):
         _, hits = chat2cli._redact_text(
@@ -918,7 +918,7 @@ class TestRedactText(unittest.TestCase):
         redacted, hits = chat2cli._redact_text(
             "supersecretvalue", {"SECRET_FOO": "supersecretvalue"}
         )
-        self.assertEqual(redacted, "${env:SECRET_FOO}")
+        self.assertEqual(redacted, '<redacted env="SECRET_FOO">')
         self.assertEqual(hits, {"SECRET_FOO": 1})
 
 
@@ -1016,7 +1016,8 @@ class TestRedactionEndToEnd(unittest.TestCase):
                 self._request(request), tmpdir, {"SECRET_TEST": "supersecretvalue"}
             )
         self.assertNotIn("supersecretvalue", result.stdout)
-        self.assertIn("${env:SECRET_TEST}", result.stdout)
+        # 响应里是 JSON，引号会被转义
+        self.assertIn('<redacted env=\\"SECRET_TEST\\">', result.stdout)
         self.assertIn("<system-reminder>", result.stdout)
 
     def test_pattern_token_redacted_in_response(self):
@@ -1101,7 +1102,7 @@ class TestStructuralValueRedaction(unittest.TestCase):
         redacted, hits = chat2cli._redact_text(
             "abcde123abcde abcde", {"USERNAME": "abcde"}
         )
-        self.assertEqual(redacted, "abcde123abcde ${env:USERNAME}")
+        self.assertEqual(redacted, 'abcde123abcde <redacted env="USERNAME">')
         self.assertEqual(hits, {"USERNAME": 1})
 
 
