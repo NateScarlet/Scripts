@@ -1287,7 +1287,8 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
 # 值驱动脱敏：把环境中已知的敏感值替换为可重新执行的 ${env:NAME} 引用。
 # 用花括号包裹变量名，否则 ${NAME} 后面紧跟字母数字时 PowerShell 会把
 # 后续字符并入变量名，展开成错误的变量。
-# 短值（如 "1"、"true"）作为子串几乎必然误伤无关文本，因此设最小长度。
+# 长度门槛只作用于自动识别的变量名：短值（如 "1"、"true"）作为子串几乎
+# 必然误伤无关文本。SECRET_ 前缀是用户显式声明，不受门槛限制。
 _SECRET_MIN_LENGTH = 8
 
 # 结构性变量（用户名、机器名）本身不是密钥，但会暴露本地环境，
@@ -1339,11 +1340,13 @@ def _collect_secret_values(
     for name, value in source.items():
         if not _is_secret_variable_name(name):
             continue
-        min_length = (
-            _STRUCTURAL_MIN_LENGTH
-            if name in _STRUCTURAL_VARIABLE_NAMES
-            else _SECRET_MIN_LENGTH
-        )
+        if name.startswith("SECRET_"):
+            # 显式声明为秘密，不设长度门槛，仅排除空值
+            min_length = 1
+        elif name in _STRUCTURAL_VARIABLE_NAMES:
+            min_length = _STRUCTURAL_MIN_LENGTH
+        else:
+            min_length = _SECRET_MIN_LENGTH
         if len(value) < min_length:
             continue
         values[name] = value

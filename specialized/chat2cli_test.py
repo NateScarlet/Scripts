@@ -815,8 +815,20 @@ class TestCollectSecretValues(unittest.TestCase):
             {},
         )
 
-    def test_ignores_values_shorter_than_threshold(self):
-        self.assertEqual(chat2cli._collect_secret_values({"SECRET_SHORT": "abc"}), {})
+    def test_ignores_auto_detected_values_shorter_than_threshold(self):
+        # 自动识别（非显式 SECRET_ 前缀）的短值仍受阈值保护
+        self.assertEqual(chat2cli._collect_secret_values({"SOME_TOKEN": "abc"}), {})
+
+    def test_secret_prefix_has_no_length_threshold(self):
+        # SECRET_ 前缀是用户显式声明，短值也必须脱敏
+        self.assertEqual(
+            chat2cli._collect_secret_values({"SECRET_DOMAIN": "abc.com"}),
+            {"SECRET_DOMAIN": "abc.com"},
+        )
+
+    def test_secret_prefix_empty_value_is_ignored(self):
+        # 空值会在任意位置匹配，必须排除
+        self.assertEqual(chat2cli._collect_secret_values({"SECRET_EMPTY": ""}), {})
 
     def test_collects_token_suffix_and_structural_names(self):
         env = {
