@@ -1,7 +1,14 @@
 
 # -*- coding: utf-8 -*-
 """
-Krita 脚本：导出保留透明区域 RGB 的 PNG 并复制文件到剪贴板
+Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
+
+用途：
+  ComfyUI 自带的 Mask Editor 不好用，也无法吸色。在 Krita 里画好内容后，
+  用本脚本一键导出并复制，切到 ComfyUI 直接粘贴。
+
+  内容可以是 mask，也可以是普通彩图——后者没有需要保留的透明区域，
+  导出结果同样正确。
 
 用法（二选一）：
   1. 工具 > 脚本 > 常用脚本快捷键（Ten Scripts）：把本 .py 绑定到某个槽位，
@@ -9,19 +16,23 @@ Krita 脚本：导出保留透明区域 RGB 的 PNG 并复制文件到剪贴板
   2. 工具 > 脚本 > 脚本调试工具（Scripter）中：
        import sys
        sys.path.append(r"C:\\Workspaces\\scripts\\specialized\\krita")
-       from export_preserve_alpha_to_clipboard import export_and_copy
+       from export_for_comfyui import export_and_copy
        export_and_copy()
 
-关键原理：
-  Krita 的合成/导出流程会把完全透明区域的 RGB 清零，这是其合成引擎的既定行为，
-  任何依赖 rootNode().save() 或 exportImage() 的路径都无法绕开。
+导出完成后会尝试自动切回 ComfyUI 窗口，成功则不再打扰；找不到窗口或切换
+失败时才弹框提示。
 
-  本脚本完全绕过 Krita 的合成与 PNG 编码：
+关键原理：
+  遮罩类内容的有效数据常常落在完全透明区域（例如整幅图只有一小块不透明，
+  其余是 alpha=0 的纯色）。而 Krita 的合成/导出流程会把完全透明区域的 RGB
+  清零，这是其合成引擎的既定行为，任何依赖 rootNode().save() 或
+  exportImage() 的路径都无法绕开，导致这些数据丢失。
+
+  本脚本完全绕过 Krita 的合成与编码：
     1. 直接读颜料层的 pixelData()——图层自身的原始像素，不受蒙版/合成影响，
        透明区域的 RGB 依然存在于此。
     2. 直接读透明蒙版的 pixelData()——1 字节/像素的 Alpha。
-    3. 用 Python 拼出 RGBA，再用 zlib + CRC32 手写 PNG。
-       透明区域的 RGB 原样写入，不被清零。
+    3. 用 Python 拼出 RGBA 后自行写出文件。透明区域的 RGB 原样保留，不被清零。
 
 适用范围：
   单个颜料层 + 可选一个透明度蒙版子节点，颜色模型 RGBA、深度 U8（8 位/通道）。
@@ -459,8 +470,8 @@ class ExportPreserveAlphaExtension(Extension):
 
     def createActions(self, window):
         action = window.createAction(
-            "export_preserve_alpha_to_clipboard",
-            "导出并复制到剪贴板（保留透明区 RGB）",
+            "export_for_comfyui",
+            "导出并复制到剪贴板（供 ComfyUI 使用）",
             "tools/scripts",
         )
         action.triggered.connect(export_and_copy)
