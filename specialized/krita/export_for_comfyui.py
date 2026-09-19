@@ -48,7 +48,7 @@ import tempfile
 
 from ctypes import wintypes
 
-from krita import Krita, Extension
+from krita import Krita
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
 
@@ -453,32 +453,3 @@ def main():
     Ten Scripts 通过 importlib 加载本文件后，会查找并调用名为 main 的可调用对象。
     """
     return export_and_copy()
-
-
-# ---------------------------------------------------------------------------
-# Krita 插件入口
-# ---------------------------------------------------------------------------
-
-class ExportPreserveAlphaExtension(Extension):
-    """在 Tools > Scripts 中添加菜单项。"""
-
-    def __init__(self, parent):
-        super().__init__(parent)
-
-    def setup(self):
-        pass
-
-    def createActions(self, window):
-        action = window.createAction(
-            "export_for_comfyui",
-            "导出并复制到剪贴板（供 ComfyUI 使用）",
-            "tools/scripts",
-        )
-        action.triggered.connect(export_and_copy)
-
-
-# 仅当作为 Krita 插件（pykrita 目录）加载时注册扩展。
-# Ten Scripts 以固定模块名 "users_script" 加载本文件，此时不注册，
-# 避免每次触发快捷键都重复添加一次扩展。
-if __name__ != "users_script":
-    Krita.instance().addExtension(ExportPreserveAlphaExtension(Krita.instance()))
