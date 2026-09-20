@@ -127,7 +127,9 @@ def discover_skills() -> Dict[str, Dict[str, Any]]:
         try:
             entries = sorted(os.listdir(base_dir))
         except OSError as e:
-            raise RuntimeError(f"无法读取 skill 目录 {base_dir}: {e}") from e
+            raise RuntimeError(
+                f"无法读取 skill 目录 {_display_path(base_dir)}: {e}"
+            ) from e
 
         for entry in entries:
             # 跳过隐藏目录和常见非 skill 目录
@@ -774,7 +776,7 @@ def execute_skill(id_: Any, params: Dict[str, Any]) -> Tuple[Dict[str, Any], str
 
     content_block = f"""<skill_content name="{name}">
 <skill_resources>
-Base directory for this skill: {skill_dir}
+Base directory for this skill: {_display_path(skill_dir)}
 Resolve relative paths mentioned by this skill against the base directory before using them. Load referenced resources only as needed.
 </skill_resources>
 
@@ -787,7 +789,7 @@ Resolve relative paths mentioned by this skill against the base directory before
     meta = {
         "success": True,
         "name": name,
-        "path": skill_dir,
+        "path": _display_path(skill_dir),
         "message": "Skill activated.",
     }
     return meta, content_block
@@ -859,11 +861,17 @@ def execute_str_replace_editor(
         elif os.path.isfile(path):
             return view_file(id_, path, params)
         else:
-            return {"success": False, "message": f"错误：路径不存在：{path}"}, ""
+            return {
+                "success": False,
+                "message": f"错误：路径不存在：{_display_path(path)}",
+            }, ""
 
     elif command == "create":
         if os.path.exists(path):
-            return {"success": False, "message": f"错误：文件已存在：{path}"}, ""
+            return {
+                "success": False,
+                "message": f"错误：文件已存在：{_display_path(path)}",
+            }, ""
         file_text = params.get("file_text")
         if not isinstance(file_text, str):
             return {
@@ -893,8 +901,8 @@ def execute_str_replace_editor(
         sys.stderr.flush()
         return {
             "success": True,
-            "path": abs_path,
-            "message": f"文件已创建：{abs_path}",
+            "path": _display_path(abs_path),
+            "message": f"文件已创建：{_display_path(abs_path)}",
         }, ""
 
     elif command == "str_replace":
@@ -987,7 +995,7 @@ def view_file(
     last_line = offset_param + len(selected) - 1 if selected else offset_param - 1
     meta: Dict[str, Any] = {
         "success": True,
-        "path": os.path.abspath(path),
+        "path": _display_path(path),
         "total_lines": total_lines,
         "returned_lines": len(selected),
         "first_line": first_line,
@@ -1016,7 +1024,7 @@ def view_file(
     meta["content"] = {"ref": ref_id}
     # stderr 显示读取路径（gitignore 部分橙色高亮）
     sys.stderr.write(
-        f"[request#{id_}] 👁️ view: {_colorize_ignored_path(cast(str, meta['path']))}:L{first_line}-{last_line}\n"
+        f"[request#{id_}] 👁️ view: {_colorize_ignored_path(os.path.abspath(path))}:L{first_line}-{last_line}\n"
     )
     sys.stderr.flush()
 
@@ -1055,7 +1063,7 @@ def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
             lines.append(entry)
 
     ref_id = _gen_view_oob_id(id_)
-    dir_content = f"{os.path.abspath(path)}\n" + "\n".join(lines)
+    dir_content = f"{_display_path(path)}\n" + "\n".join(lines)
     content_block = _data_block_text(ref_id, dir_content) + "\n"
     # stderr 显示目录读取路径（gitignore 部分橙色高亮）
     sys.stderr.write(
@@ -1065,7 +1073,7 @@ def view_directory(id_: Any, path: str) -> Tuple[Dict[str, Any], str]:
 
     meta = {
         "success": True,
-        "path": os.path.abspath(path),
+        "path": _display_path(path),
         "entry_count": len(entries),
         "content": {"ref": ref_id},
         "message": "Directory listed.",
@@ -1113,10 +1121,10 @@ def _str_replace_file(
         sys.stderr.flush()
         return {
             "success": False,
-            "path": abs_path,
+            "path": _display_path(abs_path),
             "deleted_lines": 0,
             "added_lines": 0,
-            "message": f"错误：old_str 和 new_str 内容相同，拒绝执行无效替换: {abs_path}",
+            "message": f"错误：old_str 和 new_str 内容相同，拒绝执行无效替换: {_display_path(abs_path)}",
         }
 
     new_content_normalized = content.replace(old_normalized, new_normalized, 1)
@@ -1148,9 +1156,9 @@ def _str_replace_file(
     changes = _calculate_line_changes(content, new_content_normalized)
     return {
         "success": True,
-        "path": abs_path,
+        "path": _display_path(abs_path),
         "changes": changes,
-        "message": f"The file {abs_path} has been updated successfully.",
+        "message": f"The file {_display_path(abs_path)} has been updated successfully.",
     }
 
 
@@ -1198,11 +1206,11 @@ def _insert_in_file(
     sys.stderr.flush()
     return {
         "success": True,
-        "path": abs_path,
+        "path": _display_path(abs_path),
         "insert_after_line": insert_line,
         "inserted_start_line": insert_line + 1,
         "inserted_end_line": insert_line + new_str_normalized.count("\n") + 1,
-        "message": f"The file {abs_path} has been updated successfully.",
+        "message": f"The file {_display_path(abs_path)} has been updated successfully.",
     }
 
 
@@ -1289,8 +1297,10 @@ def _emit_result_text(id_: Any, stream_name: str, text: str) -> Any:
         _register_oob_data(tail_ref, tail_text)
 
         return {
-            "message": (f"输出过长（{len(text)} 字符），完整内容已保存至: {abs_path}"),
-            "path": abs_path,
+            "message": (
+                f"输出过长（{len(text)} 字符），完整内容已保存至: {_display_path(abs_path)}"
+            ),
+            "path": _display_path(abs_path),
             "head": {"ref": head_ref},
             "tail": {"ref": tail_ref},
         }

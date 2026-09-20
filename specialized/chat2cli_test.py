@@ -296,7 +296,7 @@ class TestEmitResultTextOverlong(unittest.TestCase):
             os.chdir(tmpdir)
             try:
                 result = chat2cli._emit_result_text("abc-1", "stdout", text)
-                path = Path(result["path"])
+                path = Path(os.path.expanduser(result["path"]))
                 self.assertTrue(path.exists())
                 self.assertEqual(path.name, "stdout_abc-1.txt")
                 self.assertEqual(path.read_text(encoding="utf-8"), text)
@@ -1195,6 +1195,41 @@ class TestDisplayPath(unittest.TestCase):
         home = os.path.expanduser("~")
         target = os.path.join(home, ".chat2cli", "AGENTS.md")
         self.assertEqual(chat2cli._display_path(target), "~/.chat2cli/AGENTS.md")
+
+
+class TestSkillContentUsesTilde(unittest.TestCase):
+    """skill 提示词与 meta 中的路径显示为 ~/ 形式
+
+    home 内路径若原样输出，会带出本地用户名，随后被值驱动脱敏
+    替换成 <redacted env="USERNAME">，导致路径不可用。
+    """
+
+    def test_skill_dir_under_home_shows_tilde(self):
+        from unittest.mock import mock_open, patch
+
+        home = os.path.expanduser("~")
+        skill_dir = os.path.join(home, ".agents", "skills", "demo")
+        saved = chat2cli._discovered_skills
+        chat2cli._discovered_skills = {
+            "demo": {
+                "name": "demo",
+                "description": "d",
+                "path": skill_dir,
+                "scope": "user",
+            }
+        }
+        try:
+            with patch("builtins.open", mock_open(read_data="body")):
+                meta, content_block = chat2cli.execute_skill(1, {"name": "demo"})
+        finally:
+            chat2cli._discovered_skills = saved
+
+        self.assertTrue(meta["success"])
+        self.assertEqual(meta["path"], "~/.agents/skills/demo")
+        self.assertIn(
+            "Base directory for this skill: ~/.agents/skills/demo", content_block
+        )
+        self.assertNotIn(home, content_block)
 
 
 class TestInstructionShowsTildeCwd(unittest.TestCase):
