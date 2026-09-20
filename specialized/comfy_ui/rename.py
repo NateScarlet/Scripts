@@ -48,7 +48,6 @@ import os
 import re
 import json
 import argparse
-import hashlib
 import logging
 import datetime as dt
 import random
@@ -57,7 +56,6 @@ from typing import (
     Dict,
     List,
     Optional,
-    Set,
     Tuple,
     TypedDict,
     Iterator,
@@ -253,7 +251,8 @@ def generate_filename(
 
     try:
         min_time = min(stat.st_birthtime, stat.st_mtime)
-    except:
+    except AttributeError:
+        # 非 Windows 平台没有 st_birthtime，退回使用修改时间
         min_time = stat.st_mtime
     date_str = dt.datetime.fromtimestamp(min_time).strftime("%Y%m%d_%H%M%S")
     size_str = hex(stat.st_size)[2:]

@@ -24,10 +24,12 @@ import sys
 import time
 import logging
 import argparse
-from typing import Iterator, Optional, Callable
-from tqdm import tqdm
 import ctypes
+from abc import ABC, abstractmethod
 from contextlib import ExitStack
+from typing import Iterator, Optional, Callable
+
+from tqdm import tqdm
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +42,6 @@ except ImportError:
     win32api = None
     win32pdh = None
     pythoncom = None
-
-from abc import ABC, abstractmethod
 
 class BaseChecker(ABC):
     """
@@ -233,7 +233,7 @@ class CPUMonitor:
             try:
                 assert win32pdh
                 win32pdh.RemoveCounter(self._counter_handle)
-            except:
+            except Exception:
                 pass
             self._counter_handle = None
 
@@ -241,7 +241,7 @@ class CPUMonitor:
             try:
                 assert win32pdh
                 win32pdh.CloseQuery(self._query_handle)
-            except:
+            except Exception:
                 pass
             self._query_handle = None
 
@@ -249,7 +249,7 @@ class CPUMonitor:
             try:
                 assert pythoncom
                 pythoncom.CoUninitialize()
-            except:
+            except Exception:
                 pass
             self._com_initialized = False
 
@@ -328,7 +328,7 @@ class GPUMonitor:
             if query_handle:
                 try:
                     win32pdh.CloseQuery(query_handle)
-                except:
+                except Exception:
                     pass
             _LOGGER.debug(f"GPU 计数器 {counter_path} 不可用: {e}")
             return False
@@ -429,7 +429,7 @@ class GPUMonitor:
             try:
                 assert win32pdh
                 win32pdh.CloseQuery(self._query_handle)
-            except:
+            except Exception:
                 pass
             self._query_handle = None
             self._counter_handle = None
@@ -438,7 +438,7 @@ class GPUMonitor:
             try:
                 assert pythoncom
                 pythoncom.CoUninitialize()
-            except:
+            except Exception:
                 pass
             self._com_initialized = False
 
@@ -515,7 +515,7 @@ class VRAMMonitor:
                     total += float(line.strip())
             if total > 0:
                 return total
-        except:
+        except Exception:
             pass
 
         # 2. 尝试使用 PowerShell (兼容性更好，但大显存可能被截断为 4GB)
@@ -528,12 +528,13 @@ class VRAMMonitor:
                 try:
                     val = int(line)
                     # 处理可能的 32 位符号溢出
-                    if val < 0: val += 2 ** 32
+                    if val < 0:
+                        val += 2 ** 32
                     total_bytes += val
-                except:
+                except ValueError:
                     continue
             return total_bytes / (1024 * 1024)
-        except:
+        except Exception:
             return 0.0
 
     def cleanup(self):
@@ -542,7 +543,7 @@ class VRAMMonitor:
             try:
                 assert win32pdh
                 win32pdh.RemoveCounter(self._counter_handle)
-            except:
+            except Exception:
                 pass
             self._counter_handle = None
 
@@ -550,7 +551,7 @@ class VRAMMonitor:
             try:
                 assert win32pdh
                 win32pdh.CloseQuery(self._query_handle)
-            except:
+            except Exception:
                 pass
             self._query_handle = None
 
@@ -558,7 +559,7 @@ class VRAMMonitor:
             try:
                 assert pythoncom
                 pythoncom.CoUninitialize()
-            except:
+            except Exception:
                 pass
             self._com_initialized = False
 
@@ -762,12 +763,15 @@ def main():
         checkers.append(ThresholdChecker("VRAM", _get_vram, vram_threshold, unit="MB"))
 
     # 4. 用户输入检查器
+    def _no_input():
+        return None
+
     _get_input = get_since_last_input_ns
     if ignore_user_input:
-        _get_input = lambda: None
+        _get_input = _no_input
     elif get_since_last_input_ns() is None:
         _LOGGER.warning("未检测到用户输入检测支持，将忽略用户输入 (需 win32api)")
-        _get_input = lambda: None
+        _get_input = _no_input
     
     if not ignore_user_input and _get_input() is not None:
         checkers.append(InputChecker(_get_input))
@@ -836,7 +840,7 @@ def main():
                     idle_start = None
                 last_tick = now
         if target_duration_ns == 0:
-            _LOGGER.info(f"🎉系统空闲，退出等待")
+            _LOGGER.info("🎉系统空闲，退出等待")
         else:
             _LOGGER.info(f"🎉达到目标空闲时间 {target_duration_ns/1e9} 秒，退出等待")
         _LOGGER.info(f"⏱️ 总等待时间: {(last_tick - start_at)/1e9:.1f} 秒")

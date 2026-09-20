@@ -2,7 +2,6 @@
 # script that returns the center point of selected polygon faces. 
 # owen burgess 2009
 import maya.OpenMaya as om
-import math
 
 def faceCenter():
     selection = om.MSelectionList()
@@ -15,8 +14,6 @@ def faceCenter():
         iter.getDagPath(dagPath,component)
         polyIter = om.MItMeshPolygon(dagPath,component)
         while not polyIter.isDone():
-            i = 0
-            i = polyIter.index()
             center = om.MPoint
             center = polyIter.center(om.MSpace.kWorld)
             point = [0.0,0.0,0.0]

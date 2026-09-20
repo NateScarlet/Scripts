@@ -97,7 +97,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     print(
         prompt(
-            f"""\
+            """\
 <h1>test</h1>
 <form method="POST">
 <input name="value" />

@@ -3,18 +3,16 @@
 # Version 0.41
 
 from PIL import Image, ImageStat, ImageOps, ImageFile
-import os, sys
-print(sys.version)
-import statistics
+import os
+import sys
 import colorsys
-from shutil import move, copy2
+from shutil import copy2
 from subprocess import call, Popen
 import zipfile
-import io
 import datetime
 import locale
-import codecs
 
+print(sys.version)
 SYS_CODEC = locale.getdefaultlocale()[1]
 
 prompt_codec = 'GBK'
@@ -140,9 +138,11 @@ class MangaProcessing(CommandLineUI):
         pass
 
     def grade(self, image, blackpoint, whitepoint):
+        def _grade(value):
+            return (value / 255.0) * (whitepoint - blackpoint) + blackpoint
+
         with Image.open(image) as image_object:
-            grade_ = lambda value: (value / 255.0) * (whitepoint - blackpoint) + blackpoint
-            image_object = Image.eval(image_object, grade_)
+            image_object = Image.eval(image_object, _grade)
             image_object.save(image)
     
     def filtering(self):
@@ -233,10 +233,12 @@ class MangaProcessing(CommandLineUI):
         self.image_list = list(filter(lambda i: i, self.image_list))
     
     def avoidSmartcrop(self):
-        avoid_smartcrop = lambda value : 254 if value == 255 else value
+        def _avoid_smartcrop(value):
+            return 254 if value == 255 else value
+
         for image in self.image_list:
             with Image.open(image) as image_object:
-                Image.eval(image_object, avoid_smartcrop).save(image)
+                Image.eval(image_object, _avoid_smartcrop).save(image)
             print('{}: 255白设为254白(用于智能裁剪检测)'.format(image))
     
     def getSartuation(self, image):

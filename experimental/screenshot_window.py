@@ -1,4 +1,5 @@
 import argparse
+import sys
 from ctypes import windll
 
 import cv2
@@ -32,7 +33,6 @@ def screenshot_bitblt(h_wnd):
 
 
 PW_CLIENT_ONLY = 1 << 0
-import sys
 
 # https://docs.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers
 _WIN32_WINNT_WINBLUE = 0x0603

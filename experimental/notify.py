@@ -107,7 +107,6 @@ class Notify(QQuickView):
 
 if __name__ == "__main__":
     import os
-    import time
     import random
     app = QApplication(sys.argv)
     all_msg = [

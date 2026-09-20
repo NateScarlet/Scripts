@@ -1792,7 +1792,7 @@ def execute_pwsh(
     try:
         # 无限等待，让命令自然结束
         returncode = proc.wait()
-    except Exception as e:
+    except Exception:
         # 如果发生异常，确保清理进程
         try:
             proc.terminate()
@@ -2027,8 +2027,8 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                     # 第一个 ':'；'::' 行剥掉一个 ':' 后保留一个 ':' 作为字面内容。
                     first_nonblank_idx = next(
                         i
-                        for i, l in enumerate(content_lines)
-                        if l.strip() != ""
+                        for i, line in enumerate(content_lines)
+                        if line.strip() != ""
                     )
                     first_line = content_lines[first_nonblank_idx]
                     prefix = ":" if first_line.startswith(":") else ""

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import locale
 import logging
 import os
 import sys
@@ -12,7 +11,7 @@ try:
     _file = __file__
     _args = sys.argv
     import nuke
-except:
+except Exception:
     raise
 
 
@@ -34,7 +33,8 @@ def autoplace_all():
 
 def get_files(dir_):
     ret = os.listdir(dir_)
-    ret = [unicode(i, sys.getfilesystemencoding()) for i in ret]
+    # Nuke 内置 Python 2 环境，unicode 是其内建名
+    ret = [unicode(i, sys.getfilesystemencoding()) for i in ret]  # noqa: F821
     ret = [i for i in ret if i.lower().endswith(('.jpg', '.png'))]
     return ret
 
@@ -107,6 +107,6 @@ if __name__ == '__main__':
         main()
     except SystemExit:
         pass
-    except:
+    except Exception:
         import traceback
         traceback.print_exc()
