@@ -436,6 +436,26 @@ class TestErrorInstructionWrapping(unittest.TestCase):
         self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
 
 
+def _tempdir_outside_git_repo():
+    """返回一个位于 git 仓库之外的临时根目录；找不到时返回 None。
+
+    沙箱内 TEMP/TMP 被重定向到仓库内的 .scratch/cache，此时不存在可用的
+    仓库外位置，调用方应跳过相关测试而不是断言一个假场景。
+    """
+    import subprocess
+
+    candidate = tempfile.gettempdir()
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=candidate,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    return None if result.returncode == 0 else candidate
+
+
 class TestGitRootHint(unittest.TestCase):
     """初始指令触发时，若 cwd 位于 git 仓库内但不是仓库根目录，应在 stderr 提醒"""
 
@@ -473,7 +493,12 @@ class TestGitRootHint(unittest.TestCase):
         self.assertNotIn("不是 git 仓库根目录", result.stderr)
 
     def test_no_warning_outside_git_repo(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
+        base = _tempdir_outside_git_repo()
+        if base is None:
+            self.skipTest(
+                "临时目录位于 git 仓库内（沙箱重定向），无法构造仓库外场景"
+            )
+        with tempfile.TemporaryDirectory(dir=base) as tmpdir:
             result = self._run_chat2cli(tmpdir)
         self.assertNotIn("不是 git 仓库根目录", result.stderr)
 

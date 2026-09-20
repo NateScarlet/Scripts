@@ -42,6 +42,30 @@ class TestWorkspaceWriteSid(unittest.TestCase):
             self.assertLess(int(part), 2**30)
 
 
+class TestGrantWriteSid(unittest.TestCase):
+    def test_deterministic(self):
+        self.assertEqual(
+            win_write_sandbox.grant_write_sid(),
+            win_write_sandbox.grant_write_sid(),
+        )
+
+    def test_independent_of_workspace_sid(self):
+        # 放行 SID 由用户 SID 派生，与 cwd 无关；工作区 SID 随 cwd 变化。
+        self.assertNotEqual(
+            win_write_sandbox.grant_write_sid(),
+            win_write_sandbox.workspace_write_sid(os.getcwd()),
+        )
+
+    def test_sid_format(self):
+        sid = win_write_sandbox.grant_write_sid()
+        self.assertTrue(sid.startswith("S-1-4-"))
+        parts = sid.split("-")
+        self.assertEqual(len(parts), 5)
+        for part in parts[3:]:
+            self.assertGreaterEqual(int(part), 1)
+            self.assertLess(int(part), 2**30)
+
+
 class TestDetectWriteDenial(unittest.TestCase):
     def test_recognizes_access_denied(self):
         msg = win_write_sandbox.detect_write_denial(
@@ -49,6 +73,7 @@ class TestDetectWriteDenial(unittest.TestCase):
         )
         self.assertIsNotNone(msg)
         self.assertIn("只能写入工作目录", msg)
+        self.assertIn("sandbox grant", msg)
         self.assertIn("--danger-full-access", msg)
 
     def test_recognizes_unauthorized_access(self):
@@ -218,6 +243,120 @@ class TestSandboxIntegration(unittest.TestCase):
         out, err = self._collect(proc)
         self.assertEqual(proc.returncode, 0, f"stderr: {err}")
         self.assertIn("tempfile ok", out)
+
+    def test_granted_directory_becomes_writable(self):
+        """放行后工作区外目录可写，撤销后恢复拒绝。
+
+        放行需要改 ACL（WRITE_DAC），在当前进程已被沙箱限制时必然失败，
+        因此沙箱内运行时跳过。
+        """
+        if win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程已受限，无法修改 ACL")
+
+        grant_dir = os.path.join(
+            os.getcwd(), ".scratch", "win-write-sandbox-test", "granted"
+        )
+        os.makedirs(grant_dir, exist_ok=True)
+        target = os.path.join(grant_dir, "granted.txt")
+        if os.path.exists(target):
+            os.unlink(target)
+
+        self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
+        win_write_sandbox.grant_write_access(grant_dir)
+
+        command = f"Set-Content -Path '{target}' -Value 'ok'"
+        out, err = self._collect(self._run(command))
+        self.assertTrue(
+            os.path.isfile(target),
+            f"放行后应可写入，stdout={out!r} stderr={err!r}",
+        )
+
+        win_write_sandbox.revoke_write_access(grant_dir)
+        os.unlink(target)
+        _, err_after = self._collect(self._run(command))
+        self.assertFalse(
+            os.path.isfile(target),
+            f"撤销后不应可写入，stderr={err_after!r}",
+        )
+
+    def test_granted_directory_propagates_to_existing_children(self):
+        """放行靠目录的可继承 ACE 传播到已存在的子目录与文件。
+
+        只对目录设置 ACE，其下已存在的子目录和文件无需逐个设置即可写。
+        """
+        if win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程已受限，无法修改 ACL")
+
+        grant_dir = os.path.join(
+            os.getcwd(), ".scratch", "win-write-sandbox-test", "grant-tree"
+        )
+        sub = os.path.join(grant_dir, "sub")
+        os.makedirs(sub, exist_ok=True)
+        target = os.path.join(sub, "nested.txt")
+        if os.path.exists(target):
+            os.unlink(target)
+
+        self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
+        win_write_sandbox.grant_write_access(grant_dir)
+
+        command = f"Set-Content -Path '{target}' -Value 'ok'"
+        out, err = self._collect(self._run(command))
+        self.assertTrue(
+            os.path.isfile(target),
+            f"子目录中的文件应可写，stdout={out!r} stderr={err!r}",
+        )
+
+    def test_grant_sets_only_root_and_is_idempotent(self):
+        """grant 只设置根目录一条显式 ACE，子项靠继承；重复调用幂等。"""
+        if win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程已受限，无法修改 ACL")
+
+        grant_dir = os.path.join(
+            os.getcwd(), ".scratch", "win-write-sandbox-test", "grant-root"
+        )
+        sub = os.path.join(grant_dir, "sub")
+        os.makedirs(sub, exist_ok=True)
+        self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
+
+        first = win_write_sandbox.grant_write_access(grant_dir)
+        self.assertEqual(first.changed, 1)
+        self.assertEqual(first.failures, [])
+
+        status = win_write_sandbox.grant_status(grant_dir)
+        # 只有根目录带显式 ACE，子目录靠继承可写
+        self.assertEqual(status["explicit_entries"], [grant_dir])
+        self.assertTrue(status["root_explicit"])
+        self.assertEqual(status["writable_count"], status["total_count"])
+
+        # 再次 grant：根目录已在放行范围内，不做任何修改
+        second = win_write_sandbox.grant_write_access(grant_dir)
+        self.assertEqual(second.changed, 0)
+        self.assertEqual(second.failures, [])
+
+    def test_grant_status_reflects_grant_and_revoke(self):
+        """status 应准确反映放行状态，并列出含显式 ACE 的条目。"""
+        if win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程已受限，无法修改 ACL")
+
+        grant_dir = os.path.join(
+            os.getcwd(), ".scratch", "win-write-sandbox-test", "status-tree"
+        )
+        os.makedirs(grant_dir, exist_ok=True)
+        self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
+
+        before = win_write_sandbox.grant_status(grant_dir)
+        self.assertFalse(before["root_explicit"])
+        self.assertEqual(before["explicit_entries"], [])
+
+        win_write_sandbox.grant_write_access(grant_dir)
+        after = win_write_sandbox.grant_status(grant_dir)
+        self.assertTrue(after["root_explicit"])
+        self.assertIn(grant_dir, after["explicit_entries"])
+
+        win_write_sandbox.revoke_write_access(grant_dir)
+        final = win_write_sandbox.grant_status(grant_dir)
+        self.assertFalse(final["root_explicit"])
+        self.assertEqual(final["explicit_entries"], [])
 
     def test_invalid_cwd_raises(self):
         fake = os.path.join(self.workspace, "no-such-dir-xyz")

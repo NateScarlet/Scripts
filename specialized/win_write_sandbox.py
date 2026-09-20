@@ -21,10 +21,19 @@ import ctypes.wintypes as wintypes
 import hashlib
 import msvcrt
 import os
+import stat
 import struct
 import subprocess
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+)
 
 if sys.platform != "win32":
     raise ImportError("win_write_sandbox 仅在 Windows 上可用")
@@ -48,6 +57,7 @@ _FILE_DELETE_CHILD = 0x00000040
 
 # 覆盖工作目录内的所有写操作：写数据、追加、写 EA、写属性、删除文件、删除子项。
 # 刻意不含 WRITE_DAC / WRITE_OWNER：受限进程若能改写 ACL 就能逃逸沙箱。
+# 只授予目录，文件通过 ACE 继承获得访问权。
 _GRANT_MASK = _FILE_GENERIC_WRITE | _DELETE | _FILE_DELETE_CHILD
 
 
@@ -58,6 +68,7 @@ _OBJECT_INHERIT_ACE = 0x1
 _ACE_INHERIT_FLAGS = _CONTAINER_INHERIT_ACE | _OBJECT_INHERIT_ACE
 
 _GRANT_ACCESS = 1
+_REVOKE_ACCESS = 4
 _TRUSTEE_IS_SID = 0
 _TRUSTEE_IS_UNKNOWN = 0
 
@@ -108,6 +119,20 @@ class SID_AND_ATTRIBUTES(ctypes.Structure):
     _fields_ = [
         ("Sid", ctypes.c_void_p),
         ("Attributes", wintypes.DWORD),
+    ]
+
+
+class TOKEN_USER(ctypes.Structure):
+    _fields_ = [
+        ("User", SID_AND_ATTRIBUTES),
+    ]
+
+
+class ACL_SIZE_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("AceCount", wintypes.DWORD),
+        ("AclBytesInUse", wintypes.DWORD),
+        ("AclBytesFree", wintypes.DWORD),
     ]
 
 
@@ -236,6 +261,21 @@ _advapi32.GetExplicitEntriesFromAclW.argtypes = [
 ]
 _advapi32.GetExplicitEntriesFromAclW.restype = wintypes.DWORD
 
+_advapi32.ConvertSidToStringSidW.argtypes = [
+    ctypes.c_void_p, ctypes.POINTER(ctypes.c_wchar_p)
+]
+_advapi32.ConvertSidToStringSidW.restype = wintypes.BOOL
+
+_advapi32.GetAclInformation.argtypes = [
+    ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, ctypes.c_int
+]
+_advapi32.GetAclInformation.restype = wintypes.BOOL
+
+_advapi32.GetAce.argtypes = [
+    ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(ctypes.c_void_p)
+]
+_advapi32.GetAce.restype = wintypes.BOOL
+
 _advapi32.CreateProcessAsUserW.argtypes = [
     wintypes.HANDLE, wintypes.LPCWSTR, wintypes.LPWSTR,
     ctypes.c_void_p, ctypes.c_void_p, wintypes.BOOL,
@@ -295,18 +335,75 @@ class SandboxError(Exception):
 # ── SID 工具 ──────────────────────────────────────────────────────
 
 
-def workspace_write_sid(workspace_root: str) -> str:
-    """从规范工作区路径确定性派生工作区能力 SID。
+def _derive_capability_sid(seed: str) -> str:
+    """由种子字符串确定性派生能力 SID。
 
     算法与 dsh 的 workspaceWriteSid 一致：
-    sha256(规范路径) 前 8 字节 → 两个 30 位子权威 → S-1-4-x-y。
-    同一路径永远产生同一 SID，不同路径产生不同 SID。
+    sha256(种子) 前 8 字节 → 两个 30 位子权威 → S-1-4-x-y。
+    同一种子永远产生同一 SID，不同种子产生不同 SID。
     """
-    canonical = os.path.realpath(workspace_root)
-    digest = hashlib.sha256(canonical.encode("utf-8")).digest()
+    digest = hashlib.sha256(seed.encode("utf-8")).digest()
     first = (struct.unpack_from("<I", digest, 0)[0] % (2**30 - 1)) + 1
     second = (struct.unpack_from("<I", digest, 4)[0] % (2**30 - 1)) + 1
     return f"S-1-4-{first}-{second}"
+
+
+def workspace_write_sid(workspace_root: str) -> str:
+    """派生工作区能力 SID。
+
+    种子是规范工作区路径，因此该 SID 随 cwd 变化，换个目录运行就失效，
+    不具备跨会话持久性；持久放行用 grant_write_sid。
+    """
+    return _derive_capability_sid(os.path.realpath(workspace_root))
+
+
+def _current_user_sid_string() -> str:
+    """返回当前进程令牌的用户 SID 字符串。"""
+    token = wintypes.HANDLE()
+    if not _advapi32.OpenProcessToken(
+        _kernel32.GetCurrentProcess(), _TOKEN_QUERY, ctypes.byref(token)
+    ):
+        raise SandboxError(f"OpenProcessToken 失败: {ctypes.get_last_error()}")
+    try:
+        size = wintypes.DWORD(0)
+        _advapi32.GetTokenInformation(
+            token, _TokenUser, None, 0, ctypes.byref(size)
+        )
+        if size.value == 0:
+            raise SandboxError(
+                "GetTokenInformation(TokenUser, 大小探测) 失败: "
+                f"{ctypes.get_last_error()}"
+            )
+        buf = ctypes.create_string_buffer(size.value)
+        if not _advapi32.GetTokenInformation(
+            token, _TokenUser, buf, size.value, ctypes.byref(size)
+        ):
+            raise SandboxError(
+                f"GetTokenInformation(TokenUser) 失败: {ctypes.get_last_error()}"
+            )
+        user = ctypes.cast(buf, ctypes.POINTER(TOKEN_USER)).contents
+        sid_str = ctypes.c_wchar_p()
+        if not _advapi32.ConvertSidToStringSidW(
+            user.User.Sid, ctypes.byref(sid_str)
+        ):
+            raise SandboxError(
+                f"ConvertSidToStringSidW 失败: {ctypes.get_last_error()}"
+            )
+        try:
+            return sid_str.value or ""
+        finally:
+            _kernel32.LocalFree(ctypes.cast(sid_str, ctypes.c_void_p))
+    finally:
+        _kernel32.CloseHandle(token)
+
+
+def grant_write_sid() -> str:
+    """派生放行 SID：由当前用户 SID 决定，与 cwd 无关，因此跨会话持久。
+
+    grant_write_access 把该 SID 的允许写入 ACE 写进目标目录的 DACL；
+    每个会话的 restricting SID 集合都包含它，于是被放行的目录在所有
+    会话中都保持可写。"""
+    return _derive_capability_sid("chat2cli-grant:" + _current_user_sid_string())
 
 
 def _sid_from_string(sid_str: str) -> ctypes.c_void_p:
@@ -371,56 +468,115 @@ def _get_logon_sid(
 
 # ── ACL 工具 ──────────────────────────────────────────────────────
 
+# GetAclInformation 的信息类
+_AclSizeInformation = 2
 
-def _grant_ace_exists(p_dacl: ctypes.c_void_p, sid_ptr: ctypes.c_void_p) -> bool:
-    """检查 DACL 中是否已有匹配的允许写入 ACE（exact-ACE skip）。"""
-    if not p_dacl:
-        return False
-
-    count = wintypes.ULONG(0)
-    entries = ctypes.POINTER(EXPLICIT_ACCESS_W)()
-    result = _advapi32.GetExplicitEntriesFromAclW(
-        p_dacl, ctypes.byref(count), ctypes.byref(entries)
-    )
-    if result != _ERROR_SUCCESS:
-        return False
-
-    try:
-        for i in range(count.value):
-            ea = entries[i]
-            if (
-                ea.grfAccessPermissions == _GRANT_MASK
-                and ea.grfAccessMode == _GRANT_ACCESS
-                and ea.grfInheritance == _ACE_INHERIT_FLAGS
-                and ea.Trustee.TrusteeForm == _TRUSTEE_IS_SID
-                and ea.Trustee.ptstrName
-                and _sid_equal(ea.Trustee.ptstrName, sid_ptr)
-            ):
-                return True
-        return False
-    finally:
-        _kernel32.LocalFree(ctypes.cast(entries, ctypes.c_void_p))
+# ACE 类型与标志
+_ACCESS_ALLOWED_ACE_TYPE = 0
+_INHERITED_ACE = 0x10
 
 
-def _ensure_workspace_ace(directory: str, sid_ptr: ctypes.c_void_p) -> None:
-    """确保工作目录的 DACL 中存在能力 SID 的允许写入 ACE。
+class _AceEntry:
+    """DACL 中一条允许型 ACE 的关键信息。"""
 
-    ACE 常驻不清理（dsh 逻辑）。已存在时跳过（exact-ACE skip）。
+    def __init__(
+        self, is_inherited: bool, mask: int, sid_ptr: ctypes.c_void_p
+    ):
+        self.is_inherited = is_inherited
+        self.mask = mask
+        self.sid_ptr = sid_ptr
+
+
+def _iter_dacl_aces(p_dacl: ctypes.c_void_p) -> List[_AceEntry]:
+    """枚举 DACL 中的允许型 ACE，返回 _AceEntry 列表。
+
+    GetExplicitEntriesFromAclW 会丢失 ACE 头中的 INHERITED_ACE 标志，
+    无法区分"显式设置"与"从父项继承"，因此这里直接按 ACE 结构解析。
     """
+    if not p_dacl:
+        return []
+
+    size_info = ACL_SIZE_INFORMATION()
+    if not _advapi32.GetAclInformation(
+        p_dacl, ctypes.byref(size_info), ctypes.sizeof(size_info),
+        _AclSizeInformation,
+    ):
+        raise SandboxError(
+            f"GetAclInformation 失败: {ctypes.get_last_error()}"
+        )
+
+    entries: List[_AceEntry] = []
+    for i in range(size_info.AceCount):
+        ace_ptr = ctypes.c_void_p()
+        if not _advapi32.GetAce(p_dacl, i, ctypes.byref(ace_ptr)):
+            raise SandboxError(f"GetAce({i}) 失败: {ctypes.get_last_error()}")
+
+        # ACE_HEADER：AceType(BYTE)、AceFlags(BYTE)、AceSize(WORD)
+        header = ctypes.cast(ace_ptr, ctypes.POINTER(ctypes.c_ubyte))
+        if header[0] != _ACCESS_ALLOWED_ACE_TYPE:
+            continue
+        ace_flags = header[1]
+
+        # ACCESS_ALLOWED_ACE：Header(4 字节)、Mask(4 字节)、SidStart
+        base = ace_ptr.value or 0
+        mask = ctypes.cast(
+            base + 4, ctypes.POINTER(wintypes.DWORD)
+        ).contents.value
+        sid_ptr = ctypes.c_void_p(base + 8)
+        entries.append(
+            _AceEntry(bool(ace_flags & _INHERITED_ACE), mask, sid_ptr)
+        )
+    return entries
+
+
+def _grant_ace_state(
+    p_dacl: ctypes.c_void_p, sid_ptr: ctypes.c_void_p
+) -> Tuple[bool, bool]:
+    """返回 (是否有该 SID 的显式允许 ACE, 是否有继承而来的允许 ACE)。"""
+    explicit = False
+    inherited = False
+    for entry in _iter_dacl_aces(p_dacl):
+        if not (entry.mask & _GRANT_MASK):
+            continue
+        if not _sid_equal(entry.sid_ptr, sid_ptr):
+            continue
+        if entry.is_inherited:
+            inherited = True
+        else:
+            explicit = True
+    return explicit, inherited
+
+
+def _read_dacl(path: str) -> Tuple[ctypes.c_void_p, ctypes.c_void_p]:
+    """读取路径的 DACL，返回 (p_sd, p_dacl)；调用方负责 LocalFree(p_sd)。"""
     p_sd = ctypes.c_void_p()
     p_dacl = ctypes.c_void_p()
     result = _advapi32.GetNamedSecurityInfoW(
-        directory, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
+        path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
         None, None, ctypes.byref(p_dacl), None, ctypes.byref(p_sd),
     )
     if result != _ERROR_SUCCESS:
-        raise SandboxError(
-            f"GetNamedSecurityInfoW({directory!r}) 失败: {result}"
-        )
+        raise SandboxError(f"GetNamedSecurityInfoW({path!r}) 失败: {result}")
+    return p_sd, p_dacl
+
+
+def _ensure_write_ace(path: str, sid_ptr: ctypes.c_void_p) -> bool:
+    """确保目录的 DACL 中存在能力 SID 的可继承允许写入 ACE。
+
+    返回是否新增了 ACE。该 SID 已经能写时（无论显式 ACE 还是从父目录
+    继承）不做修改并返回 False：一次调用就是一次设置，重复放行幂等。
+
+    只设置传入目录本身一条 ACE，不递归子目录：可继承标志让 Windows
+    立即传播到所有已存在的子目录与文件，之后新建的子项也自动获得，
+    因此子项无需各自设置。若某个文件显式设置了受保护 DACL（不继承），
+    则尊重它，不强行放行。
+    """
+    p_sd, p_dacl = _read_dacl(path)
 
     try:
-        if _grant_ace_exists(p_dacl, sid_ptr):
-            return
+        explicit, inherited = _grant_ace_state(p_dacl, sid_ptr)
+        if explicit or inherited:
+            return False
 
         ea = EXPLICIT_ACCESS_W()
         ea.grfAccessPermissions = _GRANT_MASK
@@ -439,17 +595,227 @@ def _ensure_workspace_ace(directory: str, sid_ptr: ctypes.c_void_p) -> None:
 
         try:
             result = _advapi32.SetNamedSecurityInfoW(
-                directory, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
+                path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
                 None, None, new_acl, None,
             )
             if result != _ERROR_SUCCESS:
                 raise SandboxError(
-                    f"SetNamedSecurityInfoW({directory!r}) 失败: {result}"
+                    f"SetNamedSecurityInfoW({path!r}) 失败: {result}"
                 )
         finally:
             _kernel32.LocalFree(new_acl)
+        return True
     finally:
         _kernel32.LocalFree(p_sd)
+
+
+def _remove_write_ace(path: str, sid_ptr: ctypes.c_void_p) -> bool:
+    """从路径的 DACL 中移除能力 SID 的显式允许 ACE。
+
+    返回是否移除了 ACE。没有显式 ACE 时不做修改并返回 False，因此重复
+    撤销是幂等的，也不会把"扫描到但无需处理"的条目计入变更数。
+
+    用 REVOKE_ACCESS 交给系统删除匹配项，其余 ACE（含继承 ACE）原样保留。
+    继承 ACE 无法在此移除：它由父项派生，父项撤销后自动消失。
+    """
+    p_sd, p_dacl = _read_dacl(path)
+
+    try:
+        explicit, _inherited = _grant_ace_state(p_dacl, sid_ptr)
+        if not explicit:
+            return False
+
+        ea = EXPLICIT_ACCESS_W()
+        ea.grfAccessPermissions = 0
+        ea.grfAccessMode = _REVOKE_ACCESS
+        ea.grfInheritance = 0
+        ea.Trustee.TrusteeForm = _TRUSTEE_IS_SID
+        ea.Trustee.TrusteeType = _TRUSTEE_IS_UNKNOWN
+        ea.Trustee.ptstrName = ctypes.cast(sid_ptr, ctypes.c_void_p)
+
+        new_acl = ctypes.c_void_p()
+        result = _advapi32.SetEntriesInAclW(
+            1, ctypes.byref(ea), p_dacl, ctypes.byref(new_acl)
+        )
+        if result != _ERROR_SUCCESS:
+            raise SandboxError(f"SetEntriesInAclW(撤销) 失败: {result}")
+
+        try:
+            result = _advapi32.SetNamedSecurityInfoW(
+                path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
+                None, None, new_acl, None,
+            )
+            if result != _ERROR_SUCCESS:
+                raise SandboxError(
+                    f"SetNamedSecurityInfoW({path!r}) 失败: {result}"
+                )
+        finally:
+            _kernel32.LocalFree(new_acl)
+        return True
+    finally:
+        _kernel32.LocalFree(p_sd)
+
+
+def _is_reparse_point(path: str) -> bool:
+    """路径是否为 reparse point（symlink / junction）。
+
+    这类目录指向别处，对其设置 ACL 会作用到目标上，因此递归时剪枝。
+    """
+    try:
+        attrs = os.lstat(path).st_file_attributes
+    except OSError:
+        return False
+    return bool(attrs & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def _walk_tree(root: str) -> Iterator[Tuple[str, bool]]:
+    """产出 (路径, 是否目录)，覆盖 root 及其下所有已有子项。
+
+    reparse point（symlink / junction）会被剪枝：对它设置 ACL 会作用到
+    目标上，从而越出放行范围。父项先于子项产出。
+    """
+    yield root, True
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [
+            d
+            for d in dirnames
+            if not _is_reparse_point(os.path.join(dirpath, d))
+        ]
+        for name in dirnames:
+            yield os.path.join(dirpath, name), True
+        for name in filenames:
+            target = os.path.join(dirpath, name)
+            if not _is_reparse_point(target):
+                yield target, False
+
+
+class TreeOpResult(NamedTuple):
+    """目录树放行/撤销操作的结果。"""
+
+    scanned: int
+    """扫描到的条目数。"""
+
+    changed: int
+    """实际发生 ACL 变更的条目数，不含扫描到但无需处理的条目。"""
+
+    failures: List[str]
+    """处理失败的条目及原因。"""
+
+
+def _remove_from_tree(root: str) -> TreeOpResult:
+    """清除目录树中所有显式 ACE，返回操作结果。
+
+    单个条目失败不中止整棵树：继续处理其余条目并汇总失败，避免留下
+    "改了一半却只报一条错"的不可知状态。
+
+    目录与文件都处理：目录的显式 ACE 撤销后子项继承的 ACE 自动消失，
+    但子项上单独设置过的显式 ACE（用户可能分别放行过子目录）不受影响，
+    必须逐项清除，否则父目录撤销后这些子项在沙箱内依然可写。
+    """
+    sid_ptr = _sid_from_string(grant_write_sid())
+    try:
+        scanned = 0
+        changed = 0
+        failures: List[str] = []
+        for target, _is_dir in _walk_tree(root):
+            scanned += 1
+            try:
+                if _remove_write_ace(target, sid_ptr):
+                    changed += 1
+            except SandboxError as e:
+                failures.append(f"{target}: {e}")
+        return TreeOpResult(scanned, changed, failures)
+    finally:
+        _kernel32.LocalFree(sid_ptr)
+
+
+def grant_write_access(path: str) -> TreeOpResult:
+    """放行目录的沙箱写入权限。
+
+    只对目标目录本身设置一条可继承 ACE：显式设置使该目录独立于父目录，
+    可继承则让子项自动获得访问权，无需逐个处理。目标已在放行范围内
+    （显式 ACE 或从父目录继承）时不做任何修改。ACE 常驻不清理，撤销用
+    revoke_write_access。
+    """
+    root = os.path.abspath(path)
+    if not os.path.isdir(root):
+        raise SandboxError(f"目录不存在: {root}")
+
+    sid_ptr = _sid_from_string(grant_write_sid())
+    try:
+        try:
+            changed = _ensure_write_ace(root, sid_ptr)
+        except SandboxError as e:
+            return TreeOpResult(1, 0, [f"{root}: {e}"])
+        return TreeOpResult(1, 1 if changed else 0, [])
+    finally:
+        _kernel32.LocalFree(sid_ptr)
+
+
+def revoke_write_access(path: str) -> TreeOpResult:
+    """递归撤销目录的沙箱写入权限。
+
+    目录与文件都处理。目录上的显式 ACE 撤销后，其子项继承的 ACE 自动
+    消失；但子项上单独设置过的显式 ACE 不受父项影响。用户可能分别放行
+    过子目录，再撤销父目录时期望整棵树都不可写，因此必须逐项清除，
+    否则这些子项在沙箱内依然可写。
+    """
+    root = os.path.abspath(path)
+    if not os.path.isdir(root):
+        raise SandboxError(f"目录不存在: {root}")
+    return _remove_from_tree(root)
+
+
+def grant_status(path: str) -> Dict[str, Any]:
+    """检查目录树的放行状态，返回状态字典。
+
+    explicit_entries 列出树中所有带显式允许 ACE 的条目：它们不依赖父目录，
+    因此父目录撤销后依然可写，是判断"撤销是否彻底"的依据。
+    只读操作，不修改任何 ACL。
+    """
+    root = os.path.abspath(path)
+    if not os.path.isdir(root):
+        raise SandboxError(f"目录不存在: {root}")
+
+    sid_ptr = _sid_from_string(grant_write_sid())
+    try:
+        explicit_entries: List[str] = []
+        writable_count = 0
+        total_count = 0
+        failures: List[str] = []
+        root_explicit = False
+        root_inherited = False
+
+        for target, _is_dir in _walk_tree(root):
+            total_count += 1
+            try:
+                p_sd, p_dacl = _read_dacl(target)
+            except SandboxError as e:
+                failures.append(f"{target}: {e}")
+                continue
+            try:
+                explicit, inherited = _grant_ace_state(p_dacl, sid_ptr)
+            finally:
+                _kernel32.LocalFree(p_sd)
+
+            if explicit:
+                explicit_entries.append(target)
+            if explicit or inherited:
+                writable_count += 1
+            if target == root:
+                root_explicit, root_inherited = explicit, inherited
+
+        return {
+            "path": root,
+            "root_explicit": root_explicit,
+            "root_inherited": root_inherited,
+            "explicit_entries": explicit_entries,
+            "writable_count": writable_count,
+            "total_count": total_count,
+            "failures": failures,
+        }
+    finally:
+        _kernel32.LocalFree(sid_ptr)
 
 
 # ── 令牌工具 ──────────────────────────────────────────────────────
@@ -745,6 +1111,10 @@ def spawn_pwsh_sandboxed(
     sid_str = workspace_write_sid(cwd_abs)
     ws_sid = _sid_from_string(sid_str)
 
+    # 1b. 派生放行 SID。它与 cwd 无关，因此在所有会话中取值相同，
+    # 使 grant_write_access 放行的目录在每个会话都保持可写。
+    grant_sid = _sid_from_string(grant_write_sid())
+
     # 2. 获取 Everyone SID
     everyone_sid = _sid_from_string("S-1-1-0")
 
@@ -774,18 +1144,21 @@ def spawn_pwsh_sandboxed(
         logon_sid, logon_buf = _get_logon_sid(current_token)
 
         # 4. 确保工作目录 ACE 存在
-        _ensure_workspace_ace(cwd_abs, ws_sid)
+        _ensure_write_ace(cwd_abs, ws_sid)
 
-        # 5. 创建受限令牌
+        # 5. 创建受限令牌。restricting SID 是白名单：对象 DACL 必须授予
+        # 其中至少一个 SID 访问权，操作才被放行。grant_sid 入列后，
+        # 被 grant_write_access 放行过的目录在本会话同样可写。
         restricted_token = _create_restricted_token(
             current_token,
-            [ws_sid, everyone_sid, logon_sid],
+            [ws_sid, grant_sid, everyone_sid, logon_sid],
         )
 
-        # 5b. 把工作区 SID 的允许 ACE 合并进受限令牌的默认 DACL。
+        # 5b. 把工作区与放行 SID 的允许 ACE 合并进受限令牌的默认 DACL。
         # 缺少这一步时，子进程创建标准流管道会被 pass-2 写入检查拒绝，
         # 表现为 CreateProcessAsUserW 返回 ERROR_ACCESS_DENIED (5)。
         _set_token_default_dacl_grant(restricted_token, ws_sid)
+        _set_token_default_dacl_grant(restricted_token, grant_sid)
 
         try:
             # 6. 创建管道
@@ -932,6 +1305,7 @@ def spawn_pwsh_sandboxed(
     finally:
         _kernel32.CloseHandle(current_token)
         _kernel32.LocalFree(ws_sid)
+        _kernel32.LocalFree(grant_sid)
         _kernel32.LocalFree(everyone_sid)
         # logon_sid 指向 logon_buf（Python 缓冲区），由 Python 回收，
         # 不能用 LocalFree 释放。
@@ -1012,8 +1386,9 @@ def detect_write_denial(stderr: str) -> Optional[str]:
         if pattern in stderr:
             return (
                 "检测到写入被沙箱拒绝。当前 pwsh 只能写入工作目录 "
-                f"({os.getcwd()})。如需写入其他目录，请在对应目录下重新运行 "
-                "chat2cli，或使用 --danger-full-access 关闭沙箱。"
+                f"({os.getcwd()})。如需写入其他目录，请在沙箱外运行 "
+                "`chat2cli.py sandbox grant <目录>` 持久放行该目录，或在对应目录下 "
+                "重新运行 chat2cli，或使用 --danger-full-access 关闭沙箱。"
             )
     return None
 

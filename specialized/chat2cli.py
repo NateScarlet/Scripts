@@ -289,7 +289,10 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 - 仅支持非交互式命令。
 - Windows 上命令运行在写入沙箱内：只能写入当前工作目录（含 .scratch），
   其他位置的写入与删除会被系统拒绝。需要写入其他目录时，
-  请提示用户在对应目录下重新运行 chat2cli，或改用 --danger-full-access。
+  请提示用户在沙箱外运行 `chat2cli.py sandbox grant <目录>` 持久放行该目录
+  （`sandbox revoke <目录>` 撤销，`sandbox status <目录>` 查看当前状态），
+  或提示用户在对应目录下重新运行 chat2cli，
+  或改用 --danger-full-access。
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
 - 长输出会被自动转存为可后续访问的临时文件，只在响应中只提供开头和结尾内容。
 
@@ -1836,6 +1839,99 @@ def execute_pwsh(
     }
 
 
+def run_sandbox_command(action: str, path: str) -> int:
+    """执行 sandbox 子命令（grant / revoke），返回退出码。
+
+    该子命令是沙箱外的管理工具：放行目录靠改目标目录的 ACL 实现，
+    在沙箱内能改 ACL 就等于沙箱逃逸，因此检测到进程已受限时直接拒绝。
+    """
+    if sys.platform != "win32":
+        sys.stderr.write("错误：沙箱写入放行仅在 Windows 上可用。\n")
+        return 1
+
+    try:
+        sandboxed = win_write_sandbox.current_process_is_sandboxed()
+    except win_write_sandbox.SandboxError as e:
+        sys.stderr.write(f"错误：无法读取当前进程令牌状态：{e}\n")
+        return 1
+    if sandboxed:
+        sys.stderr.write(
+            "错误：当前进程已运行在写入沙箱内，拒绝执行沙箱管理命令。\n"
+            "放行目录需要修改目标目录的 ACL，在沙箱内可改 ACL 即等于沙箱逃逸。\n"
+            "请在沙箱外（普通终端）重新运行该命令。\n"
+        )
+        return 1
+
+    failures: List[str] = []
+    try:
+        if action == "grant":
+            result = win_write_sandbox.grant_write_access(path)
+            failures = result.failures
+            if result.changed:
+                sys.stderr.write(
+                    f"已放行：{os.path.abspath(path)}"
+                    "（设置可继承 ACE，子项自动继承）\n"
+                )
+            else:
+                sys.stderr.write(
+                    f"{os.path.abspath(path)} 已在放行范围内，未做修改\n"
+                )
+        elif action == "revoke":
+            result = win_write_sandbox.revoke_write_access(path)
+            failures = result.failures
+            sys.stderr.write(
+                f"已扫描 {result.scanned} 个条目，撤销 {result.changed} 个："
+                f"{os.path.abspath(path)}\n"
+            )
+        else:
+            status = win_write_sandbox.grant_status(path)
+            failures = status["failures"]
+            _report_grant_status(status)
+    except win_write_sandbox.SandboxError as e:
+        sys.stderr.write(f"错误：{e}\n")
+        return 1
+
+    if not failures:
+        return 0
+
+    # 部分失败：列出未处理的条目并返回非零退出码，避免用户误以为已全部生效
+    sys.stderr.write(f"错误：{len(failures)} 个条目处理失败：\n")
+    for item in failures:
+        sys.stderr.write(f"  - {item}\n")
+    return 1
+
+
+def _report_grant_status(status: Dict[str, Any]) -> None:
+    """把 grant_status 的结果格式化到 stderr。"""
+    if status["root_explicit"]:
+        state = "已放行（显式 ACE）"
+    elif status["root_inherited"]:
+        state = "已放行（继承自父目录）"
+    else:
+        state = "未放行"
+
+    sys.stderr.write(f"{status['path']}\n")
+    sys.stderr.write(f"  状态：{state}\n")
+    sys.stderr.write(
+        f"  树内条目 {status['total_count']} 个，其中对该 SID 有访问权 "
+        f"{status['writable_count']} 个\n"
+    )
+
+    explicit = status["explicit_entries"]
+    if not explicit:
+        sys.stderr.write("  含显式 ACE 的条目：0\n")
+        return
+
+    sys.stderr.write(
+        f"  含显式 ACE 的条目：{len(explicit)} 个"
+        "（不依赖父目录，撤销父目录后依然可写）\n"
+    )
+    for item in explicit[:20]:
+        sys.stderr.write(f"    - {item}\n")
+    if len(explicit) > 20:
+        sys.stderr.write(f"    ...（其余 {len(explicit) - 20} 项省略）\n")
+
+
 def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
     """解析单个 <request> 标签内的 JSON-RPC 内容，返回请求列表。
 
@@ -2505,7 +2601,29 @@ def main():
         action="store_true",
         help="关闭 pwsh 写入沙箱，允许命令写入任意位置（危险，仅用于需要越界的场景）",
     )
+    subparsers = parser.add_subparsers(dest="command")
+    sandbox_parser = subparsers.add_parser(
+        "sandbox",
+        help="管理沙箱写入放行（须在沙箱外运行）",
+    )
+    sandbox_actions = sandbox_parser.add_subparsers(dest="action", required=True)
+    grant_parser = sandbox_actions.add_parser(
+        "grant", help="递归放行目录的沙箱写入权限"
+    )
+    grant_parser.add_argument("path", help="要放行的目录")
+    revoke_parser = sandbox_actions.add_parser(
+        "revoke", help="递归撤销目录的沙箱写入权限"
+    )
+    revoke_parser.add_argument("path", help="要撤销的目录")
+    status_parser = sandbox_actions.add_parser(
+        "status", help="查看目录的沙箱写入放行状态"
+    )
+    status_parser.add_argument("path", help="要检查的目录")
     args = parser.parse_args()
+
+    # sandbox 子命令是纯管理操作，不读 stdin、不参与对话解析
+    if args.command == "sandbox":
+        sys.exit(run_sandbox_command(args.action, args.path))
 
     # 配置 logging
     log_level = logging.DEBUG if args.debug else logging.WARNING
