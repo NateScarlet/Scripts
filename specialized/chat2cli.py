@@ -53,6 +53,11 @@ from datetime import date
 import yaml
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
+# Windows 上 pwsh 通过受限令牌沙箱执行，写入被限制在当前工作目录内。
+# 该模块仅在 Windows 可用，其他平台保持原有的 Popen 路径。
+if sys.platform == "win32":
+    import win_write_sandbox
+
 # 确保输入输出使用 UTF-8（避免 Windows 默认编码问题）
 try:
     sys.stdin.reconfigure(encoding="utf-8")  # type: ignore
@@ -282,6 +287,9 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 }}
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
+- Windows 上命令运行在写入沙箱内：只能写入当前工作目录（含 .scratch），
+  其他位置的写入与删除会被系统拒绝。需要写入其他目录时，
+  请提示用户在对应目录下重新运行 chat2cli，或改用 --danger-full-access。
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
 - 长输出会被自动转存为可后续访问的临时文件，只在响应中只提供开头和结尾内容。
 
@@ -1561,6 +1569,33 @@ def _format_redaction_reminder(hits: Dict[str, Dict[str, int]]) -> str:
     return "\n".join(lines)
 
 
+
+# pwsh 沙箱（Windows）只允许写入当前工作目录。各类工具的默认缓存与临时
+# 目录位于用户 profile 下，写入会被 ACL 拒绝，因此统一重定向到工作目录
+# 内的 .scratch/cache。路径不按日期分层，使缓存能跨多次 chat2cli 调用
+# 复用，避免每次执行都重新下载依赖。
+_PWSH_CACHE_SUBDIRS: Dict[str, str] = {
+    "UV_CACHE_DIR": "uv",
+    "PIP_CACHE_DIR": "pip",
+    "npm_config_cache": "npm",
+    "npm_config_store_dir": "pnpm-store",
+    "YARN_CACHE_FOLDER": "yarn",
+    "PNPM_HOME": "pnpm-home",
+    "GOCACHE": "go-build",
+    "GOMODCACHE": "go-mod",
+    "NUGET_PACKAGES": "nuget",
+    "XDG_CACHE_HOME": "xdg",
+    "TEMP": "tmp",
+    "TMP": "tmp",
+    "TMPDIR": "tmp",
+}
+
+
+def _pwsh_cache_root() -> str:
+    """返回沙箱内 pwsh 进程可写的缓存根目录（位于当前工作目录内）。"""
+    return os.path.join(os.getcwd(), ".scratch", "cache")
+
+
 def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     """构建 pwsh 子进程的环境变量。
 
@@ -1571,6 +1606,10 @@ def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     - LANG / LC_ALL：POSIX 工具链（Git for Windows、MSYS2 等）的 UTF-8 约定
     - CI / NO_COLOR：非交互执行、禁用彩色转义码
     另将 <data.xxx> 数据块注入为 $env:DATA_xxx。
+
+    Windows 上额外把缓存与临时目录重定向到工作目录内，否则沙箱会拒绝
+    工具对用户 profile 下默认位置的写入；并注入 Python 启动钩子，
+    修正沙箱内 os.mkdir(mode=0o700) 产出的目录不可继承 ACE 的问题。
     """
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
@@ -1582,11 +1621,37 @@ def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     env["NO_COLOR"] = "1"
     for ref_id, ref_content in data_map.items():
         env["DATA_" + ref_id] = ref_content
+
+    if sys.platform == "win32":
+        cache_root = _pwsh_cache_root()
+        for var_name, subdir in _PWSH_CACHE_SUBDIRS.items():
+            subdir_path = os.path.join(cache_root, subdir)
+            os.makedirs(subdir_path, exist_ok=True)
+            env[var_name] = subdir_path
+
+        # 注入 Python 启动钩子：沙箱内 os.mkdir(mode=0o700) 会产出不继承
+        # 工作区 ACE 的目录，使 tempfile 等无法使用。钩子把 0o700 改写为
+        # 0o755，让新目录正常继承。该目录只影响沙箱内的 Python 进程。
+        hook_dir = win_write_sandbox.ensure_python_sitecustomize(
+            os.path.join(cache_root, "pysandbox")
+        )
+        # 去重后前置：嵌套运行时父进程已注入过该路径，避免重复累积。
+        existing_entries = [
+            entry
+            for entry in env.get("PYTHONPATH", "").split(os.pathsep)
+            if entry and os.path.normcase(entry) != os.path.normcase(hook_dir)
+        ]
+        env["PYTHONPATH"] = os.pathsep.join([hook_dir, *existing_entries])
+
     return env
 
 
+
 def execute_pwsh(
-    id_: Any, params: Dict[str, Any], data_map: Dict[str, str]
+    id_: Any,
+    params: Dict[str, Any],
+    data_map: Dict[str, str],
+    full_access: bool = False,
 ) -> Dict[str, Any]:
     start = time.perf_counter()
     """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
@@ -1595,6 +1660,8 @@ def execute_pwsh(
     if not isinstance(command, str) or not command.strip():
         return {"success": False, "message": "错误：command 不能为空。"}
 
+    # PSStyle.OutputRendering 用 try/catch 容错：正常环境下关闭 ANSI 渲染，
+    # 让输出更干净；不可用时静默跳过，不影响命令本身。
     wrapped_command = (
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
         f"$OutputEncoding = [System.Text.Encoding]::UTF8; "
@@ -1638,26 +1705,40 @@ def execute_pwsh(
         sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: \033[33m{command}\033[0m\n")
     sys.stderr.flush()
 
-    try:
-        proc = subprocess.Popen(
-            ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            bufsize=1,
-            stdin=subprocess.DEVNULL,
-            env=env,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,  # 允许独立进程组管理
-        )
-    except FileNotFoundError:
-        return {
-            "success": False,
-            "message": "错误：未找到 pwsh.exe，请确保 PowerShell Core 已安装并添加到 PATH。",
-        }
-    except Exception as e:
-        return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
+    use_sandbox = sys.platform == "win32" and not full_access
+    if use_sandbox:
+        # Windows：受限令牌沙箱启动，写入仅限当前工作目录。
+        # 沙箱创建失败时直接报错，绝不降级为不受限执行。
+        try:
+            proc: Any = win_write_sandbox.spawn_pwsh_sandboxed(
+                wrapped_command, os.getcwd(), env
+            )
+        except win_write_sandbox.SandboxError as e:
+            return {
+                "success": False,
+                "message": f"错误：无法创建 Windows 写入沙箱：{str(e)}",
+            }
+    else:
+        try:
+            proc = subprocess.Popen(
+                ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
+                stdin=subprocess.DEVNULL,
+                env=env,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            )
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "message": "错误：未找到 pwsh.exe，请确保 PowerShell Core 已安装并添加到 PATH。",
+            }
+        except Exception as e:
+            return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
 
     stdout_lines: List[str] = []
     stderr_lines: List[str] = []
@@ -1719,6 +1800,10 @@ def execute_pwsh(
     t_out.join(timeout=5)
     t_err.join(timeout=5)
 
+    # 沙箱进程持有原生进程句柄和管道句柄，需要显式释放
+    if use_sandbox:
+        proc.close_handles()
+
     # 汇总本次输出中会被脱敏的内容。实时流只标记单行内可判定的片段，
     # 这里对完整输出再检测一次，覆盖跨行匹配（如私钥块）。
     combined_output = "".join(stdout_lines) + "".join(stderr_lines)
@@ -1733,6 +1818,13 @@ def execute_pwsh(
 
     stdout = "".join(stdout_lines).rstrip("\n")
     stderr = "".join(stderr_lines).rstrip("\n")
+
+    # 沙箱拒绝写入时，在 stderr 末尾补充可操作的提示，
+    # 让调用者知道需要请求用户切换到目标目录执行。
+    if use_sandbox:
+        denial_hint = win_write_sandbox.detect_write_denial(stderr)
+        if denial_hint:
+            stderr = f"{stderr}\n{denial_hint}" if stderr else denial_hint
 
     elapsed = time.perf_counter() - start
     return {
@@ -2237,7 +2329,9 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
 
 
 def dispatch_request(
-    req: Dict[str, Any], data_map: Dict[str, str]
+    req: Dict[str, Any],
+    data_map: Dict[str, str],
+    full_access: bool = False,
 ) -> Optional[Tuple[Dict[str, Any], str]]:
     """分发执行单个请求。
 
@@ -2328,7 +2422,7 @@ def dispatch_request(
             logging.debug(
                 f"  执行 PowerShell 命令: {params.get('command', '')[:200]}..."
             )
-            result = execute_pwsh(req_id, params, data_map)
+            result = execute_pwsh(req_id, params, data_map, full_access)
             if result.get("success"):
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
                 logging.debug(f"  执行结果: 成功, exit_code={result.get('exit_code')}")
@@ -2405,6 +2499,11 @@ def main():
         "--check",
         action="store_true",
         help="仅检查输入是否需要处理：需要返回退出码 0，否则返回 1，不输出任何内容",
+    )
+    parser.add_argument(
+        "--danger-full-access",
+        action="store_true",
+        help="关闭 pwsh 写入沙箱，允许命令写入任意位置（危险，仅用于需要越界的场景）",
     )
     args = parser.parse_args()
 
@@ -2532,7 +2631,9 @@ def main():
     logging.debug("【3. 执行请求】")
     for idx, req in enumerate(requests):
         logging.debug(f"处理请求 #{idx+1}:")
-        result = dispatch_request(req, data_map)
+        result = dispatch_request(
+            req, data_map, args.danger_full_access
+        )
         if result is None:
             logging.debug(f"  请求 #{idx+1}: 无响应（notification 或空）")
             continue
