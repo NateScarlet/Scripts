@@ -11,6 +11,9 @@ from pathlib import Path
 
 import chat2cli
 
+# 缩进字符从实现常量取，换缩进字符后测试无需修改
+IND = chat2cli._BLOCK_INDENT
+
 
 class TestExtractDataBlocks(unittest.TestCase):
     def test_simple(self):
@@ -77,15 +80,15 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(blocks, [])
 
     def test_data_block_can_contain_literal_fence(self):
-        # data 块内容包含字面的 ``` 围栏时，通过 ':' 缩进避免误识别
+        # data 块内容包含字面的 ``` 围栏时，通过缩进避免误识别
         text = (
             "```chat2cli\n"
-            ":<data.code>\n"
-            ":```\n"
-            ":literal fence content\n"
-            ":```\n"
-            ":</data.code>\n"
-            ':<request>\n:{"method":"skill"}\n:</request>\n'
+            f"{IND}<data.code>\n"
+            f"{IND}```\n"
+            f"{IND}literal fence content\n"
+            f"{IND}```\n"
+            f"{IND}</data.code>\n"
+            f'{IND}<request>\n{IND}{{"method":"skill"}}\n{IND}</request>\n'
             "```"
         )
         blocks = chat2cli.extract_chat2cli_blocks(text)
@@ -94,13 +97,13 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         data = chat2cli.extract_data_blocks(text)
         self.assertEqual(data["code"], "\n```\nliteral fence content\n```\n")
 
-    def test_line_missing_colon_raises_error(self):
-        # 后续行没有 ':' 开头时，视为非法输入
+    def test_line_missing_indent_raises_error(self):
+        # 后续行没有缩进字符开头时，视为非法输入
         text = (
             "```chat2cli\n"
-            ":<request>\n"
+            f"{IND}<request>\n"
             '{"method":"skill"}\n'
-            ":</request>\n"
+            f"{IND}</request>\n"
             "```"
         )
         with self.assertRaises(ValueError):
@@ -117,17 +120,17 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0]["method"], "skill")
 
-    def test_double_colon_produces_literal_colon(self):
-        # ':' 缩进只移除一个 ':'，'::' 行剥掉后保留一个字面 ':'
+    def test_doubled_indent_produces_literal_char(self):
+        # 缩进只移除一个字符，重复缩进行剥掉后保留一个字面缩进字符
         text = (
             "```chat2cli\n"
-            ":<data.code>\n"
-            "::literal\n"
-            ":</data.code>\n"
+            f"{IND}<data.code>\n"
+            f"{IND}{IND}literal\n"
+            f"{IND}</data.code>\n"
             "```"
         )
         data = chat2cli.extract_data_blocks(text)
-        self.assertEqual(data["code"], "\n:literal\n")
+        self.assertEqual(data["code"], f"\n{IND}literal\n")
 
     def test_ignores_request_outside_chat2cli_block(self):
         text = (
@@ -145,16 +148,16 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
 
 
 class TestHasTruncatedFence(unittest.TestCase):
-    def test_does_not_detect_truncation_with_colon_literal_inner_fence(self):
-        # 使用 ':' 缩进处理含字面 ``` 围栏的 data 块，不应误判为截断
+    def test_does_not_detect_truncation_with_literal_inner_fence(self):
+        # 使用缩进处理含字面 ``` 围栏的 data 块，不应误判为截断
         text = (
             "```chat2cli\n"
-            ":<data.code>\n"
-            ":```\n"
-            ":literal fence content\n"
-            ":```\n"
-            ":</data.code>\n"
-            ':<request>\n:{"method":"skill"}\n:</request>\n'
+            f"{IND}<data.code>\n"
+            f"{IND}```\n"
+            f"{IND}literal fence content\n"
+            f"{IND}```\n"
+            f"{IND}</data.code>\n"
+            f'{IND}<request>\n{IND}{{"method":"skill"}}\n{IND}</request>\n'
             "```"
         )
         self.assertFalse(chat2cli.has_truncated_fence(text)[0])
@@ -550,7 +553,7 @@ class TestPreprocessCommonMistakes(unittest.TestCase):
         self.assertEqual(processed, text)
         self.assertEqual(reminders, [])
 
-    def test_colon_indented_without_fence_is_wrapped(self):
+    def test_indented_without_fence_is_wrapped(self):
         text = (
             ':<request>\n'
             ':{"jsonrpc":"2.0","id":1,"method":"skill","params":{"name":"x"}}\n'
@@ -659,7 +662,7 @@ class TestPreprocessCommonMistakes(unittest.TestCase):
 
 
 
-    def test_bom_before_colon_indented_input_is_stripped(self):
+    def test_bom_before_indented_input_is_stripped(self):
         text = (
             "\ufeff"
             ':<request>\n'
@@ -697,7 +700,7 @@ class TestInputNeedsProcessing(unittest.TestCase):
         )
         self.assertTrue(chat2cli.input_needs_processing(text))
 
-    def test_colon_indented_without_fence_returns_true(self):
+    def test_indented_without_fence_returns_true(self):
         text = (
             ':<request>\n'
             ':{"method":"pwsh","params":{"command":"echo hi"}}\n'
@@ -1256,6 +1259,53 @@ class TestInstructionShowsTildeCwd(unittest.TestCase):
         outside = os.path.abspath(os.sep)
         output = self._render_instruction(outside)
         self.assertIn(f"当前工作目录：{outside}", output)
+
+
+class TestArbitraryIndentChar(unittest.TestCase):
+    """缩进字符由代码块首个非空行决定，任意非 '<' 字符均可用作缩进。"""
+
+    def test_other_char_indent_is_supported(self):
+        # 用 ';' 作为缩进字符，解析结果应与直接写死的前缀一致
+        text = (
+            "```chat2cli\n"
+            ";<data.code>\n"
+            ";line\n"
+            ";</data.code>\n"
+            ';<request>\n;{"method":"skill"}\n;</request>\n'
+            "```"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+        data = chat2cli.extract_data_blocks(text)
+        self.assertEqual(data["code"], "\nline\n")
+
+    def test_mismatched_indent_char_raises_error(self):
+        # 首个非空行用 ';' 缩进，后续行却用 ':' 缩进，应判为非法
+        text = (
+            "```chat2cli\n"
+            ";<request>\n"
+            '{"method":"pwsh"}\n'
+            ";}</request>\n"
+            "```"
+        )
+        with self.assertRaises(ValueError):
+            chat2cli.extract_chat2cli_blocks(text)
+
+    def test_indent_char_may_differ_from_configured(self):
+        # 缩进字符按块检测，不必等于配置常量
+        other = "#" if IND != "#" else "%"
+        text = (
+            "```chat2cli\n"
+            f"{other}<request>\n"
+            f'{other}{{"method":"skill"}}\n'
+            f"{other}</request>\n"
+            "```"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+
 
 
 if __name__ == "__main__":

@@ -75,6 +75,11 @@ _FILE_THRESHOLD = 8000
 # 待输出的带外数据（ref_id -> 内容），由 main 循环在 stdout 统一输出
 _pending_oob_data: Dict[str, str] = {}
 
+# chat2cli 代码块的行前缀缩进字符。解析器按代码块首个非空行自动检测缩进：
+# 该行以 '<' 开头视为无缩进，否则行首字符即为整块的缩进字符（任意非 '<'
+# 字符均可）。此常量只决定提示词与错误提示中示范用哪个字符。
+_BLOCK_INDENT = ";"
+
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)。"""
@@ -222,17 +227,19 @@ def print_instruction():
     hint = _git_root_mismatch_hint(cwd)
     if hint:
         sys.stderr.write(hint)
+    # 提示词中的缩进示例统一使用配置的缩进字符，避免示例与实际解析规则脱节
+    indent = _BLOCK_INDENT
     instruction = f"""<chat2cli_instruction>
 chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
 
 ```chat2cli
-:<data.数据块id>
-:作为字面文本的数据内容
-:</data.数据块id>
-:<request>
-:JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
-:</request>
+{indent}<data.数据块id>
+{indent}作为字面文本的数据内容
+{indent}</data.数据块id>
+{indent}<request>
+{indent}JSON-RPC 2.0 请求（单个对象或对象数组，数组按顺序执行）
+{indent}</request>
 ```
 
 解析器将只识别并处理 chat2cli 代码块中的内容。
@@ -315,7 +322,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
 
 ## 数据块
 
-chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。推荐总是给所有行添加 ':' 缩进（见下文“嵌套代码块处理”），避免数据内容中的反引号围栏提前闭合外层代码块。
+chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>...</data.{{id}}>，块内为纯文本，零转义（反斜杠、引号、换行原样保留）。推荐总是给所有行添加 '{indent}' 缩进（见下文“嵌套代码块处理”），避免数据内容中的反引号围栏提前闭合外层代码块。
 
 - <request> params 中所有字符串参数可以用对象引用：{{"id": "数据块id"}}代替，执行时会被替换为对应块内容。
 - 数据块会注入为真实环境变量 `$env:DATA_{{id}}`，可在 pwsh 命令中直接引用。
@@ -324,75 +331,75 @@ chat2cli 代码块内可以用 <data.xxx> 标签定义数据块：<data.{{id}}>.
 示例：用 gh 创建 issue，标题和正文通过 data 块传入。
 推荐优先使用 data 块，内容零转义：
 ```chat2cli
-:<data.issue_title>fix(chat2cli): should skip chat2rpc inside data blocks</data.issue_title>
-:<data.issue_body>
-:## Problem
-:
-:A data block's chat2cli fence is literal content, not a request.
-:
-:Closes #42
-:</data.issue_body>
-:<request>
-:{{
-:  "jsonrpc": "2.0",
-:  "id": 1,
-:  "method": "pwsh",
-:  "params": {{
-:    "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
-:  }}
-:}}
-:</request>
+{indent}<data.issue_title>fix(chat2cli): should skip chat2rpc inside data blocks</data.issue_title>
+{indent}<data.issue_body>
+{indent}## Problem
+{indent}
+{indent}A data block's chat2cli fence is literal content, not a request.
+{indent}
+{indent}Closes #42
+{indent}</data.issue_body>
+{indent}<request>
+{indent}{{
+{indent}  "jsonrpc": "2.0",
+{indent}  "id": 1,
+{indent}  "method": "pwsh",
+{indent}  "params": {{
+{indent}    "command": "gh issue create --title $env:DATA_issue_title --body $env:DATA_issue_body"
+{indent}  }}
+{indent}}}
+{indent}</request>
 ```
 
 同一内容若不用环境变量和 data 块，需要把 PowerShell 字符串和 JSON 各转义一层：
 ```chat2cli
-:<request>
-:{{
-:  "jsonrpc": "2.0",
-:  "id": 1,
-:  "method": "pwsh",
-:  "params": {{
-:    "command": "gh issue create --title 'fix(chat2cli): should skip request inside data blocks' --body '## Problem\\n\\nA data block''s request fence is literal content, not a request.\\n\\nCloses #42'"
-:  }}
-:}}
-:</request>
+{indent}<request>
+{indent}{{
+{indent}  "jsonrpc": "2.0",
+{indent}  "id": 1,
+{indent}  "method": "pwsh",
+{indent}  "params": {{
+{indent}    "command": "gh issue create --title 'fix(chat2cli): should skip request inside data blocks' --body '## Problem\\n\\nA data block''s request fence is literal content, not a request.\\n\\nCloses #42'"
+{indent}  }}
+{indent}}}
+{indent}</request>
 ```
 
 ### 嵌套代码块处理
 
-chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），通过给所有行添加 ':' 缩进来避免数据中的围栏被识别成 chat2cli 代码块结束围栏。
+chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown中的示例），通过给所有行添加 '{indent}' 缩进来避免数据中的围栏被识别成 chat2cli 代码块结束围栏。
 
 此示例演示替换一个包含三引号代码块的文本：
 
 ```chat2cli
-:<data.old_code>
-:```python
-:def old():
-:    return "legacy"
-:```
-:</data.old_code>
-:<data.new_code>
-:```python
-:def new():
-:    return "modern"
-:```
-:</data.new_code>
-:<request>
-:{{
-:  "jsonrpc": "2.0",
-:  "id": 1,
-:  "method": "str_replace_editor",
-:  "params": {{
-:    "command": "str_replace",
-:    "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
-:    "old_str": {{"id": "old_code"}},
-:    "new_str": {{"id": "new_code"}}
-:  }}
-:}}
-:</request>
+{indent}<data.old_code>
+{indent}```python
+{indent}def old():
+{indent}    return "legacy"
+{indent}```
+{indent}</data.old_code>
+{indent}<data.new_code>
+{indent}```python
+{indent}def new():
+{indent}    return "modern"
+{indent}```
+{indent}</data.new_code>
+{indent}<request>
+{indent}{{
+{indent}  "jsonrpc": "2.0",
+{indent}  "id": 1,
+{indent}  "method": "str_replace_editor",
+{indent}  "params": {{
+{indent}    "command": "str_replace",
+{indent}    "path": "C:\\Workspaces\\scripts\\specialized\\example.py",
+{indent}    "old_str": {{"id": "old_code"}},
+{indent}    "new_str": {{"id": "new_code"}}
+{indent}  }}
+{indent}}}
+{indent}</request>
 ````
 
-解析器会基于 chat2cli 代码块中首个非空行是否以 ':' 开头决定是否使用 ':' 缩进。使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除第一个 ':'；'::' 开头的行剥掉一个 ':' 后保留一个 ':' 作为字面内容。
+解析器按 chat2cli 代码块中首个非空行检测缩进：该行以 '<' 开头表示无缩进，每行内容原样使用；否则该行的首个字符即为整块的缩进字符（任意非 '<' 字符均可），每个非空行都必须以它开头，固定移除一个缩进字符；重复缩进（如 '{indent}{indent}'）剥掉一个后保留一个作为字面内容。
 
 ## 沟通要求
 
@@ -1982,11 +1989,11 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
 def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     """提取所有 chat2cli 围栏代码块的内容。
 
-    解析器基于 chat2cli 代码块中首个非空行是否以 ':' 开头决定是否使用
-    ':' 缩进。使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除第
-    一个 ':' 得到实际内容；'::' 开头的行剥掉一个 ':' 后保留一个 ':' 作
-    为字面内容。空行原样保留。这样可以避免 data 块中的字面围栏被渲染器
-    压扁空格后误识别为外层围栏的闭合。
+    解析器按代码块首个非空行检测缩进：该行以 '<' 开头表示无缩进，否则
+    行首字符即为整块的缩进字符（任意非 '<' 字符均可）。使用缩进时，
+    每个非空行都必须以该字符开头，固定移除一个得到实际内容；重复缩进
+    （如 ';;'）剥掉一个后保留一个作为字面内容。空行原样保留。这样可以
+    避免 data 块中的字面围栏被渲染器压扁空格后误识别为外层围栏的闭合。
     """
     blocks: List[str] = []
 
@@ -2022,16 +2029,17 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                     # 内容为空：跳过
                     if not any(line.strip() for line in content_lines):
                         continue
-                    # 基于首个非空行决定是否使用 ':' 缩进。
-                    # 使用 ':' 缩进时，每个非空行必须以 ':' 开头，固定移除
-                    # 第一个 ':'；'::' 行剥掉一个 ':' 后保留一个 ':' 作为字面内容。
+                    # 缩进按首个非空行检测：该行以 '<' 开头表示无缩进，否则
+                    # 行首字符即为整块的缩进字符，每个非空行都必须以它开头
+                    # 并统一移除一个；重复前缀（如 ';;'）剥掉一个后保留一个
+                    # 作为字面内容。
                     first_nonblank_idx = next(
                         i
                         for i, line in enumerate(content_lines)
                         if line.strip() != ""
                     )
                     first_line = content_lines[first_nonblank_idx]
-                    prefix = ":" if first_line.startswith(":") else ""
+                    prefix = "" if first_line.startswith("<") else first_line[0]
 
                     # 所有非空行必须遵守同样的前缀规则
                     stripped_lines: List[str] = []
@@ -2042,15 +2050,15 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                             stripped_lines.append("")
                             continue
                         if prefix:
-                            if not cl.startswith(":"):
+                            if not cl.startswith(prefix):
                                 error_line_idx = start_idx + i + 2
                                 error_line_content = cl
                                 raise ValueError(
                                     f"chat2cli 代码块缩进非法：第 {error_line_idx} 行"
-                                    f"（{error_line_content!r}）没有以 ':' 开头。"
-                                    f"使用 ':' 缩进时每个非空行必须以一个 ':' 开头。"
+                                    f"（{error_line_content!r}）没有以 {prefix!r} 开头。"
+                                    f"使用 {prefix!r} 缩进时每个非空行都必须以它开头。"
                                     f"提示：代码块第一行是 {first_line!r}，"
-                                    f"以 ':' 开头表示整个代码块采用 ':' 缩进模式。"
+                                    f"行首字符 {prefix!r} 表示整个代码块采用该字符缩进。"
                                 )
                             stripped_lines.append(cl[1:])
                         else:
@@ -2197,14 +2205,21 @@ def _preprocess_tool_calls(text: str) -> Tuple[str, List[str]]:
     return processed, reminders
 
 
-def _is_colon_indented_without_fence(text: str) -> bool:
-    """检测文本是否为纯 ':' 缩进的请求而缺少 chat2cli 围栏"""
+def _is_indented_without_fence(text: str) -> bool:
+    """检测文本是否为带缩进的请求而缺少 chat2cli 围栏。
+
+    缩进字符与解析器保持一致：按首个非空行的首字符判定，'<' 表示无缩进。
+    """
     lines = [line for line in text.splitlines() if line.strip()]
     if not lines:
         return False
-    if not all(line.startswith(":") for line in lines):
+    prefix = lines[0][0]
+    if prefix == "<":
         return False
-    if not re.search(r"^:<(?:request|data\.[^>]+)>", text, re.MULTILINE):
+    if not all(line.startswith(prefix) for line in lines):
+        return False
+    pattern = "^" + re.escape(prefix) + r"<(?:request|data\.[^>]+)>"
+    if not re.search(pattern, text, re.MULTILINE):
         return False
     return True
 
@@ -2213,7 +2228,7 @@ def preprocess_common_mistakes(text: str) -> Tuple[str, List[str]]:
     """对常见错误格式做预处理，返回 (处理后的文本, 提醒列表)。
 
     当前支持：
-    - 纯 ':' 缩进但缺少 chat2cli 代码围栏
+    - 带缩进但缺少 chat2cli 代码围栏
     - Anthropic / OpenAI 风格的 XML tool call
 
     不识别任何模式时原样返回。
@@ -2231,13 +2246,14 @@ def preprocess_common_mistakes(text: str) -> Tuple[str, List[str]]:
     if reminders:
         return processed, reminders
 
-    if _is_colon_indented_without_fence(text):
+    if _is_indented_without_fence(text):
         wrapped = f"```chat2cli\n{text.rstrip()}\n```"
+        indent = _BLOCK_INDENT
         reminder = (
-            '<system-reminder>检测到使用 : 缩进的请求，但缺少 chat2cli 代码围栏。'
-            '已尝试自动包裹。请始终把 <data> 和 <request> 标签放在 ```chat2cli 代码块内，'
-            '格式：```chat2cli\n:<request>\n:{"jsonrpc":"2.0",...}\n:</request>\n```。'
-            '后续请直接输出标准 chat2cli 格式。</system-reminder>'
+            f"<system-reminder>检测到使用 {indent} 缩进的请求，但缺少 chat2cli 代码围栏。"
+            "已尝试自动包裹。请始终把 <data> 和 <request> 标签放在 ```chat2cli 代码块内，"
+            f'格式：```chat2cli\n{indent}<request>\n{indent}{{"jsonrpc":"2.0",...}}\n{indent}</request>\n```。'
+            "后续请直接输出标准 chat2cli 格式。</system-reminder>"
         )
         return wrapped, [reminder]
 
@@ -2709,20 +2725,21 @@ def main():
                 print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             else:
                 # 通用截断错误
+                indent = _BLOCK_INDENT
                 error_msg = (
                     "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
-                    "如果代码块内容包含字面的 ``` 围栏，请给所有行添加 ':' 缩进，\n"
-                    "解析器会移除行首的 ':'。例如：\n"
+                    f"如果代码块内容包含字面的 ``` 围栏，请给所有行添加 '{indent}' 缩进，\n"
+                    f"解析器会移除行首的 '{indent}'。例如：\n"
                     "\n"
                     "```chat2cli\n"
-                    ":<data.code>\n"
-                    ":```\n"
-                    ":字面围栏内容\n"
-                    ":```\n"
-                    ":</data.code>\n"
-                    ":<request>\n"
-                    ':{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo hello"}}\n'
-                    ":</request>\n"
+                    f"{indent}<data.code>\n"
+                    f"{indent}```\n"
+                    f"{indent}字面围栏内容\n"
+                    f"{indent}```\n"
+                    f"{indent}</data.code>\n"
+                    f"{indent}<request>\n"
+                    f'{indent}{{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{{"command":"echo hello"}}}}\n'
+                    f"{indent}</request>\n"
                     "```\n"
                 )
                 print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
