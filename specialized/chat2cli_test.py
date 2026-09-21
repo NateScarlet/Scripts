@@ -12,7 +12,7 @@ from pathlib import Path
 import chat2cli
 
 # 缩进字符从实现常量取，换缩进字符后测试无需修改
-IND = chat2cli._BLOCK_INDENT
+IND = chat2cli._INSTRUCTION_INDENT
 
 
 class TestExtractDataBlocks(unittest.TestCase):

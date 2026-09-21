@@ -78,7 +78,7 @@ _pending_oob_data: Dict[str, str] = {}
 # chat2cli 代码块的行前缀缩进字符。解析器按代码块首个非空行自动检测缩进：
 # 该行以 '<' 开头视为无缩进，否则行首字符即为整块的缩进字符（任意非 '<'
 # 字符均可）。此常量只决定提示词与错误提示中示范用哪个字符。
-_BLOCK_INDENT = ";"
+_INSTRUCTION_INDENT = ";"
 
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
@@ -228,7 +228,7 @@ def print_instruction():
     if hint:
         sys.stderr.write(hint)
     # 提示词中的缩进示例统一使用配置的缩进字符，避免示例与实际解析规则脱节
-    indent = _BLOCK_INDENT
+    indent = _INSTRUCTION_INDENT
     instruction = f"""<chat2cli_instruction>
 chat2cli 是一种在用户本地把对话转换为可执行命令的语言。
 它的完整语法都写在语言标记为 chat2cli 的围栏代码块中：
@@ -399,7 +399,7 @@ chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown
 {indent}</request>
 ````
 
-解析器按 chat2cli 代码块中首个非空行检测缩进：该行以 '<' 开头表示无缩进，每行内容原样使用；否则该行的首个字符即为整块的缩进字符（任意非 '<' 字符均可），每个非空行都必须以它开头，固定移除一个缩进字符；重复缩进（如 '{indent}{indent}'）剥掉一个后保留一个作为字面内容。
+解析器按 chat2cli 代码块中首行检测缩进：该行以 '<' 开头表示无缩进，每行内容原样使用；否则该行的首个字符即为整块的缩进字符（任意非 '<' 字符均可），每行都必须以它开头，固定移除一个缩进字符；重复缩进（如 '{indent}{indent}'）剥掉一个后保留一个作为字面内容。
 
 ## 沟通要求
 
@@ -414,7 +414,7 @@ chat2cli 代码块内容需要包含另一个代码块时（比如修改Markdown
 涉及到多步操作时，在第一步的回复中给出待办列表，避免后续每一次响应都要重新分析这一步应该做什么。
 修订待办时每次都直接给出完整的修订后列表。
 </chat2cli_instruction>"""
-    print(instruction)
+    print(instruction) # 指令特意不提及容错支持，以避免分散注意力
 
     # 检查并输出 system-reminder（若存在 AGENTS 文件）
     reminder_parts: List[str] = []
@@ -2248,7 +2248,7 @@ def preprocess_common_mistakes(text: str) -> Tuple[str, List[str]]:
 
     if _is_indented_without_fence(text):
         wrapped = f"```chat2cli\n{text.rstrip()}\n```"
-        indent = _BLOCK_INDENT
+        indent = _INSTRUCTION_INDENT
         reminder = (
             f"<system-reminder>检测到使用 {indent} 缩进的请求，但缺少 chat2cli 代码围栏。"
             "已尝试自动包裹。请始终把 <data> 和 <request> 标签放在 ```chat2cli 代码块内，"
@@ -2725,7 +2725,7 @@ def main():
                 print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             else:
                 # 通用截断错误
-                indent = _BLOCK_INDENT
+                indent = _INSTRUCTION_INDENT
                 error_msg = (
                     "错误：检测到 chat2cli 围栏代码块，但无法完整识别其中内容。\n"
                     f"如果代码块内容包含字面的 ``` 围栏，请给所有行添加 '{indent}' 缩进，\n"
