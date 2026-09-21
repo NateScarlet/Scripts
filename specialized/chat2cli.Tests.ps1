@@ -148,6 +148,33 @@ Describe 'Test-Chat2CLIResponseText' {
         Test-Chat2CLIResponseText -Text $text | Should -BeTrue
     }
 
+    It '请求参数中的字面 response 文本不视为响应' {
+        # 回归：旧实现仅做子串匹配，含 <response> 字样的请求会被误判为响应而忽略
+        $text = @'
+```chat2cli
+<request>
+{"jsonrpc":"2.0","id":1,"method":"pwsh","params":{"command":"echo '<response>'"}}
+</request>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeFalse
+    }
+
+    It '结束标签行后还有其他内容时不视为响应' {
+        # 必须是块的最后一行，`</response>` 后还有 request 说明这是待执行输入
+        $text = @'
+```chat2cli
+<response>
+{"jsonrpc":"2.0","id":1,"result":{}}
+</response>
+<request>
+{"jsonrpc":"2.0","id":2,"method":"pwsh","params":{"command":"echo hi"}}
+</request>
+```
+'@
+        Test-Chat2CLIResponseText -Text $text | Should -BeFalse
+    }
+
     It '请求块不视为响应' {
         $text = @'
 ```chat2cli

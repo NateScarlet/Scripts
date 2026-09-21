@@ -479,15 +479,42 @@ function Test-Chat2CLIResponseText {
     }
 
     foreach ($block in $blocks) {
-        # data 块内部的 <response> 属于字面内容，先整体移除再检测
+        # data 块内部的 response 标签属于字面内容，先整体移除再检测
         $withoutData = [regex]::Replace(
             $block,
             '<data\.([^>\s]+)>.*?</data\.\1>',
             '',
             [System.Text.RegularExpressions.RegexOptions]::Singleline
         )
-        if ($withoutData -match '<response>') {
-            return $true
+
+        # 真正的响应以独立的 </response> 行结尾，其后紧跟代码围栏闭合。
+        # 仅出现 <response> 字面文本（如被引用的示例、请求参数里的字符串）
+        # 不算响应，否则会把用户请求误判为已处理而忽略。
+        $lines = $withoutData -split "`n"
+
+        # 缩进按块首个非空行判定，与 chat2cli.py 解析规则一致：
+        # 以 '<' 开头表示无缩进，否则行首字符即缩进字符。
+        $prefix = ''
+        foreach ($line in $lines) {
+            $candidate = $line.TrimEnd("`r")
+            if ($candidate.Trim() -eq '') { continue }
+            if (-not $candidate.StartsWith('<')) {
+                $prefix = $candidate.Substring(0, 1)
+            }
+            break
+        }
+
+        # 从末尾找首个非空行，去掉缩进前缀后必须严格等于 </response>
+        for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+            $line = $lines[$i].TrimEnd("`r")
+            if ($line.Trim() -eq '') { continue }
+            if ($prefix -ne '' -and $line.StartsWith($prefix)) {
+                $line = $line.Substring(1)
+            }
+            if ($line -eq '</response>') {
+                return $true
+            }
+            break
         }
     }
 
