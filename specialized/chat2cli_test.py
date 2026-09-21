@@ -175,6 +175,37 @@ class TestHasTruncatedFence(unittest.TestCase):
         )
         self.assertFalse(chat2cli.has_truncated_fence(text)[0])
 
+    def test_response_output_is_not_truncation(self):
+        # chat2cli 自身输出回灌（data + response，无 request）不是截断
+        text = (
+            "```chat2cli\n"
+            "<data.view_1>hello</data.view_1>\n"
+            "<response>\n"
+            '{"jsonrpc":"2.0","id":1,"result":{"success":true}}\n'
+            "</response>\n"
+            "```"
+        )
+        self.assertFalse(chat2cli.has_truncated_fence(text)[0])
+
+    def test_complete_data_block_without_request_is_not_truncation(self):
+        text = "```chat2cli\n<data.x>hello</data.x>\n```"
+        self.assertFalse(chat2cli.has_truncated_fence(text)[0])
+
+    def test_unclosed_data_tag_is_truncation(self):
+        # data 块内含字面围栏导致外层围栏提前闭合，只剩未闭合的 <data.code>
+        text = (
+            "```chat2cli\n"
+            "<data.code>\n"
+            "```\n"
+            "literal fence content\n"
+            "```\n"
+            "</data.code>\n"
+            '<request>{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+            '"params":{"command":"echo hi"}}</request>\n'
+            "```"
+        )
+        self.assertTrue(chat2cli.has_truncated_fence(text)[0])
+
 
 class TestFenceForContent(unittest.TestCase):
     def test_no_backticks_uses_minimum_three(self):
@@ -437,6 +468,44 @@ class TestErrorInstructionWrapping(unittest.TestCase):
         output = self._run_chat2cli(text)
         self.assertTrue(output.startswith("<chat2cli_instruction>\n"))
         self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
+
+
+class TestResponseOutputHandling(unittest.TestCase):
+    """chat2cli 自身输出回灌（data + response，无 request）应输出初始指令而非报错。"""
+
+    RESPONSE_OUTPUT = (
+        "```chat2cli\n"
+        "<data.view_1>hello</data.view_1>\n"
+        "<response>\n"
+        '{"jsonrpc":"2.0","id":1,"result":{"success":true}}\n'
+        "</response>\n"
+        "```"
+    )
+
+    def _run_chat2cli(self, input_text: str) -> str:
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = subprocess.run(
+                [sys.executable, str(script)],
+                input=input_text,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                cwd=tmpdir,
+                check=False,
+            )
+        return result.stdout
+
+    def test_prints_initial_instruction_instead_of_error(self):
+        output = self._run_chat2cli(self.RESPONSE_OUTPUT)
+        self.assertTrue(output.startswith("<chat2cli_instruction>\n"))
+        self.assertIn(
+            "chat2cli 是一种在用户本地把对话转换为可执行命令的语言", output
+        )
+        self.assertNotIn("无法完整识别", output)
 
 
 def _tempdir_outside_git_repo():
@@ -735,6 +804,18 @@ class TestInputNeedsProcessing(unittest.TestCase):
             "```"
         )
         self.assertTrue(chat2cli.input_needs_processing(text))
+
+    def test_response_output_returns_false(self):
+        # chat2cli 自身输出回灌不需要执行任何 RPC
+        text = (
+            "```chat2cli\n"
+            "<data.view_1>hello</data.view_1>\n"
+            "<response>\n"
+            '{"jsonrpc":"2.0","id":1,"result":{"success":true}}\n'
+            "</response>\n"
+            "```"
+        )
+        self.assertFalse(chat2cli.input_needs_processing(text))
 
 
 

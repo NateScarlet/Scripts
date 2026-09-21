@@ -2295,6 +2295,10 @@ def has_truncated_fence(text: str) -> Tuple[bool, Optional[str]]:
     """检测是否存在未闭合的 chat2cli 围栏。
 
     返回 (是否截断, 错误信息)，当缩进非法时错误信息包含具体原因。
+
+    判据是块内残留未配对的 data / request 标签：当 data 块包含字面
+    反引号围栏时，外层围栏会被提前闭合，把标签切成两半。仅有完整
+    标签（如 chat2cli 自身输出的 data + response）不算截断。
     """
     if not re.search(r"`{3,}chat2cli", text):
         return False, None
@@ -2306,8 +2310,28 @@ def has_truncated_fence(text: str) -> Tuple[bool, Optional[str]]:
     if not blocks:
         # 存在 chat2cli 围栏开头但解析不出任何块，说明围栏未正确闭合
         return True, "检测到 chat2cli 围栏代码块开头，但未找到匹配的闭合围栏。请确保代码块正确闭合。"
-    # 提取到块但没有任何 <request>，说明块被提前截断
-    return all("<request>" not in block for block in blocks), None
+    # 提取到块但块内残留未配对标签，说明围栏被提前闭合导致内容被截断
+    return any(_has_unpaired_tag(block) for block in blocks), None
+
+
+# 完整配对的 data / request 标签。左侧 data 分支优先匹配，整个 data 块
+# （含其中 request）被吞掉，因此其中的 request 不会被当作独立 token。
+_PAIRED_TAG_PATTERN = re.compile(
+    r"<data\.([^>\s]+)>(.*?)</data\.\1>" r"|<request>\s*(.*?)</request>",
+    re.DOTALL,
+)
+
+# 未配对的 data / request 标签片段。完整配对被移除后若仍残留这些片段，
+# 说明围栏被字面围栏提前闭合，把标签切成了两半。
+_UNPAIRED_TAG_PATTERN = re.compile(
+    r"<data\.[^>\s]+>|</data\.[^>\s]+>|<request>|</request>"
+)
+
+
+def _has_unpaired_tag(block: str) -> bool:
+    """判断块内是否残留未配对的 data / request 标签。"""
+    remainder = _PAIRED_TAG_PATTERN.sub("", block)
+    return bool(_UNPAIRED_TAG_PATTERN.search(remainder))
 
 
 def _parse_chat2cli_content(
@@ -2321,14 +2345,7 @@ def _parse_chat2cli_content(
     data_map: Dict[str, str] = {}
     blocks: List[Dict[str, Any]] = []
 
-    # 左侧 data 分支优先匹配，整个 data 块（含其中 request）被吞掉，
-    # 因此其中的 request 不会作为独立 token 被提取。
-    pattern = re.compile(
-        r"<data\.([^>\s]+)>(.*?)</data\.\1>" r"|<request>\s*(.*?)</request>",
-        re.DOTALL,
-    )
-
-    for match in pattern.finditer(content):
+    for match in _PAIRED_TAG_PATTERN.finditer(content):
         if match.group(1) is not None:
             data_content = match.group(2)
             if data_content is not None:
