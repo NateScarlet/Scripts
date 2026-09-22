@@ -2109,21 +2109,30 @@ def _has_bare_request(text: str) -> bool:
     return bool(re.search(r"<(?:request)>", text_without_blocks, re.IGNORECASE))
 
 
+# DSML 等模型幻觉格式会在标签名前插入装饰性前缀，例如
+# '<｜｜DSML｜｜ invoke'、'<|DSML|invoke'、'<|invoke'。此处统一匹配：
+# 可选的半角/全角竖线包裹的 DSML 标记（含尾随空白），或单个竖线，无前缀也可。
+_TOOL_TAG_SIGIL = r"(?:[\|｜]*DSML[\|｜]*\s*|[\|｜])?"
+
 _TOOL_CALL_PARAM_PATTERN = re.compile(
-    r'<\|?parameter\s+name="([^"]+)"'
-    r'(?:\s+string="(true|false)")?\s*>(.*?)</\|?parameter>',
+    r"<" + _TOOL_TAG_SIGIL + r'parameter\s+name="([^"]+)"'
+    r'(?:\s+string="(true|false)")?\s*>(.*?)</' + _TOOL_TAG_SIGIL + r"parameter>",
     re.DOTALL,
 )
 
 _TOOL_CALL_INVOKE_PATTERN = re.compile(
-    r'<\|?invoke\s+name="([^"]+)"\s*>(.*?)</\|?invoke>',
+    r"<" + _TOOL_TAG_SIGIL + r'invoke\s+name="([^"]+)"\s*>(.*?)</'
+    + _TOOL_TAG_SIGIL + r"invoke>",
     re.DOTALL,
 )
 
 _TOOL_CALL_CONTAINER_PATTERN = re.compile(
-    r'<\|tool_calls>|</\|tool_calls>',
+    r"</?" + _TOOL_TAG_SIGIL + r"(?:tool_)?calls>",
     re.IGNORECASE,
 )
+
+# 出现这些标记说明输入疑似模型幻觉出的 DSML tool call 格式
+_DSML_MARKER_PATTERN = re.compile(r"<[\|｜]*DSML", re.IGNORECASE)
 
 
 def _parse_tool_call_parameters(inner: str) -> Dict[str, Any]:
@@ -2165,42 +2174,67 @@ def _wrap_in_chat2cli(request_json: str) -> str:
     return f"```chat2cli\n<request>\n{request_json}\n</request>\n```"
 
 
-def _preprocess_tool_calls(text: str) -> Tuple[str, List[str]]:
-    """识别并转换常见 XML 风格 tool call 输入。
+def _wrap_chat2cli_request_param(payload: Any) -> str:
+    """把 chat2cli 工具的 request 参数（完整 JSON-RPC 载荷）包成 chat2cli 代码块。
 
-    支持 Anthropic 风格 `<invoke name="...">...` 与 OpenAI 风格
-    `<|tool_calls><|invoke name="...">...`。转换后每个 invoke 生成一个
+    payload 可能是字符串形式的 JSON（string="true" 时）或已解析对象。
+    无法解析为 JSON 时原样保留，便于用户看到实际内容。
+    """
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            return _wrap_in_chat2cli(payload)
+    return _wrap_in_chat2cli(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+_TOOL_CALL_FORMAT_REMINDER = (
+    "<system-reminder>检测到 XML/DSML 风格的 tool call 格式，已尝试转换为 chat2cli 代码块。"
+    "请使用 ```chat2cli 代码块包裹 <request> 标签，并在其中写入 JSON-RPC 2.0 请求："
+    '例如 ```chat2cli\n<request>\n{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+    '"params":{"command":"echo hi"}}\n</request>\n```。'
+    "后续请直接输出标准 chat2cli 格式。</system-reminder>"
+)
+
+
+def _preprocess_tool_calls(text: str) -> Tuple[str, List[str]]:
+    """识别并转换常见 XML / DSML 风格 tool call 输入。
+
+    支持 Anthropic 风格 `<invoke name="...">...`、OpenAI 风格
+    `<|tool_calls><|invoke name="...">...`，以及 DSML 幻觉格式
+    （如 `<｜｜DSML｜｜ invoke name="chat2cli">`）。转换后每个 invoke 生成一个
     独立的 chat2cli 代码块，其余文本原样保留。
 
     返回 (处理后的文本, 提醒列表)。
     """
-    # 先移除 OpenAI 的 tool_calls 容器标签，统一为裸 invoke 块
+    # 先移除 tool call 容器标签，统一为裸 invoke 块
     cleaned = _TOOL_CALL_CONTAINER_PATTERN.sub("", text)
 
     request_id = 0
-    reminders: List[str] = []
 
     def replace_invoke(match: re.Match[str]) -> str:
         nonlocal request_id
         method = match.group(1)
         inner = match.group(2)
         params = _parse_tool_call_parameters(inner)
+        # chat2cli 工具的 request 参数里是完整 JSON-RPC 载荷，直接包裹展开
+        if method == "chat2cli":
+            payload = params.get("request")
+            if payload is None:
+                return match.group(0)
+            return _wrap_chat2cli_request_param(payload)
         request_id += 1
         request_json = _build_request_json(method, params, request_id)
         return _wrap_in_chat2cli(request_json)
 
     processed, count = _TOOL_CALL_INVOKE_PATTERN.subn(replace_invoke, cleaned)
     if count == 0:
+        # 无法转换但检测到 DSML 特征时，仍提示模型改用标准格式
+        if _DSML_MARKER_PATTERN.search(text):
+            return text, [_TOOL_CALL_FORMAT_REMINDER]
         return text, []
 
-    reminders.append(
-        '<system-reminder>检测到 XML 风格的 tool call 格式，已尝试转换为 chat2cli 代码块。'
-        '请使用 ```chat2cli 代码块包裹 <request> 标签，并在其中写入 JSON-RPC 2.0 请求：'
-        '例如 ```chat2cli\n<request>\n{"jsonrpc":"2.0","id":1,"method":"pwsh",'
-        '"params":{"command":"echo hi"}}\n</request>\n```。'
-        '后续请直接输出标准 chat2cli 格式。</system-reminder>'
-    )
-    return processed, reminders
+    return processed, [_TOOL_CALL_FORMAT_REMINDER]
 
 
 def _is_indented_without_fence(text: str) -> bool:

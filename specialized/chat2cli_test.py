@@ -731,7 +731,67 @@ class TestPreprocessCommonMistakes(unittest.TestCase):
 
 
 
+
+    def test_dsml_chat2cli_multiple_requests_array(self):
+        # 用户实际场景：request 参数是含多个 pwsh 请求的 JSON 数组
+        payload = (
+            "[\n"
+            "  {\n"
+            '    "jsonrpc": "2.0",\n'
+            '    "id": 1,\n'
+            '    "method": "pwsh",\n'
+            '    "params": {"command": "echo one"}\n'
+            "  },\n"
+            "  {\n"
+            '    "jsonrpc": "2.0",\n'
+            '    "id": 2,\n'
+            '    "method": "pwsh",\n'
+            '    "params": {"command": "echo two"}\n'
+            "  }\n"
+            "]"
+        )
+        text = (
+            "<｜｜DSML｜｜ calls>\n"
+            '<｜｜DSML｜｜ invoke name="chat2cli">\n'
+            '<｜｜DSML｜｜ parameter name="request" string="true">'
+            + payload
+            + "</｜｜DSML｜｜ parameter>\n"
+            "</｜｜DSML｜｜ invoke>\n"
+            "</｜｜DSML｜｜ calls>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 2)
+        self.assertEqual(blocks[0]["params"]["command"], "echo one")
+        self.assertEqual(blocks[1]["params"]["command"], "echo two")
+
+    def test_dsml_marker_without_invoke_still_reminds(self):
+        # 检测到 DSML 特征但无法转换时，也应提示模型改用标准格式
+        text = (
+            "<｜｜DSML｜｜ calls>\n"
+            '<｜｜DSML｜｜ parameter name="request">garbage</｜｜DSML｜｜ parameter>\n'
+            "</｜｜DSML｜｜ calls>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertEqual(processed, text)
+        self.assertTrue(reminders)
+
+    def test_pipe_dsml_variant_is_converted(self):
+        text = (
+            '<|DSML|invoke name="pwsh">\n'
+            '<|DSML|parameter name="command">echo hi</|DSML|parameter>\n'
+            "</|DSML|invoke>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "pwsh")
+        self.assertEqual(blocks[0]["params"]["command"], "echo hi")
+
     def test_bom_before_indented_input_is_stripped(self):
+
         text = (
             "\ufeff"
             ':<request>\n'
@@ -744,6 +804,29 @@ class TestPreprocessCommonMistakes(unittest.TestCase):
         blocks = chat2cli.extract_chat2cli_blocks(processed)
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0]["method"], "skill")
+
+
+
+    def test_dsml_chat2cli_invoke_is_expanded(self):
+        # DSML 是模型幻觉格式：chat2cli 工具的 request 参数里是完整 JSON-RPC
+        text = (
+            "<｜｜DSML｜｜ calls>\n"
+            '<｜｜DSML｜｜ invoke name="chat2cli">\n'
+            '<｜｜DSML｜｜ parameter name="request" string="true">'
+            '[\n  {\n    "jsonrpc": "2.0",\n    "id": 1,\n'
+            '    "method": "pwsh",\n'
+            '    "params": {"command": "echo hi"}\n  }\n]'
+            "</｜｜DSML｜｜ parameter>\n"
+            "</｜｜DSML｜｜ invoke>\n"
+            "</｜｜DSML｜｜ calls>\n"
+        )
+        processed, reminders = chat2cli.preprocess_common_mistakes(text)
+        self.assertTrue(reminders)
+        blocks = chat2cli.extract_chat2cli_blocks(processed)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "pwsh")
+        self.assertEqual(blocks[0]["params"]["command"], "echo hi")
+
 
 
 
@@ -1418,5 +1501,4 @@ class TestArbitraryIndentChar(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 
