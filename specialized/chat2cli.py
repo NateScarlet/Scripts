@@ -1588,31 +1588,6 @@ def _format_redaction_reminder(hits: Dict[str, Dict[str, int]]) -> str:
 
 
 
-# pwsh 沙箱（Windows）只允许写入当前工作目录。各类工具的默认缓存与临时
-# 目录位于用户 profile 下，写入会被 ACL 拒绝，因此统一重定向到工作目录
-# 内的 .scratch/cache。路径不按日期分层，使缓存能跨多次 chat2cli 调用
-# 复用，避免每次执行都重新下载依赖。
-_PWSH_CACHE_SUBDIRS: Dict[str, str] = {
-    "UV_CACHE_DIR": "uv",
-    "PIP_CACHE_DIR": "pip",
-    "npm_config_cache": "npm",
-    "npm_config_store_dir": "pnpm-store",
-    "YARN_CACHE_FOLDER": "yarn",
-    "PNPM_HOME": "pnpm-home",
-    "GOCACHE": "go-build",
-    "GOMODCACHE": "go-mod",
-    "NUGET_PACKAGES": "nuget",
-    "XDG_CACHE_HOME": "xdg",
-    "TEMP": "tmp",
-    "TMP": "tmp",
-    "TMPDIR": "tmp",
-}
-
-
-def _pwsh_cache_root() -> str:
-    """返回沙箱内 pwsh 进程可写的缓存根目录（位于当前工作目录内）。"""
-    return os.path.join(os.getcwd(), ".scratch", "cache")
-
 
 def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     """构建 pwsh 子进程的环境变量。
@@ -1625,9 +1600,8 @@ def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     - CI / NO_COLOR：非交互执行、禁用彩色转义码
     另将 <data.xxx> 数据块注入为 $env:DATA_xxx。
 
-    Windows 上额外把缓存与临时目录重定向到工作目录内，否则沙箱会拒绝
-    工具对用户 profile 下默认位置的写入；并注入 Python 启动钩子，
-    修正沙箱内 os.mkdir(mode=0o700) 产出的目录不可继承 ACE 的问题。
+    Windows 上额外注入 Python 启动钩子，修正沙箱内
+    os.mkdir(mode=0o700) 产出的目录不可继承 ACE 的问题。
     """
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
@@ -1641,17 +1615,11 @@ def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
         env["DATA_" + ref_id] = ref_content
 
     if sys.platform == "win32":
-        cache_root = _pwsh_cache_root()
-        for var_name, subdir in _PWSH_CACHE_SUBDIRS.items():
-            subdir_path = os.path.join(cache_root, subdir)
-            os.makedirs(subdir_path, exist_ok=True)
-            env[var_name] = subdir_path
-
         # 注入 Python 启动钩子：沙箱内 os.mkdir(mode=0o700) 会产出不继承
         # 工作区 ACE 的目录，使 tempfile 等无法使用。钩子把 0o700 改写为
         # 0o755，让新目录正常继承。该目录只影响沙箱内的 Python 进程。
         hook_dir = win_write_sandbox.ensure_python_sitecustomize(
-            os.path.join(cache_root, "pysandbox")
+            os.path.join(os.getcwd(), ".scratch", "pysandbox")
         )
         # 去重后前置：嵌套运行时父进程已注入过该路径，避免重复累积。
         existing_entries = [
