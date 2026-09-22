@@ -1435,30 +1435,28 @@ def _find_redaction_spans(
     # (start, end, category, priority)；priority 越小越优先
     candidates: List[Tuple[int, int, str, int]] = []
 
-    # 值驱动：按值长度降序，避免短值恰好是长值子串时被先切断
+    # 值驱动：按值长度降序，避免短值恰好是长值子串时被先切断。
+    # 大小写不敏感匹配：输出中的大小写可能与环境变量不同，但仍是同一凭证。
     for name, value in sorted(
         secret_values.items(), key=lambda item: len(item[1]), reverse=True
     ):
         if name in _STRUCTURAL_VARIABLE_NAMES:
             # 短值加词边界，避免切断粘连文本
-            for match in re.finditer(r"\b" + re.escape(value) + r"\b", text):
+            for match in re.finditer(
+                r"\b" + re.escape(value) + r"\b", text, re.IGNORECASE
+            ):
                 candidates.append((match.start(), match.end(), name, 0))
         else:
-            start = 0
-            while True:
-                index = text.find(value, start)
-                if index == -1:
-                    break
-                candidates.append((index, index + len(value), name, 0))
-                start = index + len(value)
+            for match in re.finditer(re.escape(value), text, re.IGNORECASE):
+                candidates.append((match.start(), match.end(), name, 0))
 
     # 键值对形式：只替换值部分，保留字段名
     for match in re.finditer(_KEY_VALUE_SECRET_PATTERN, text, re.DOTALL):
         candidates.append((match.start(3), match.end(3), _KEY_VALUE_SECRET_LABEL, 1))
 
-    # 其余高置信度模式：整体替换
+    # 其余高置信度模式：整体替换。大小写不敏感，凭证的大小写变体同样敏感。
     for pattern_src in _REDACT_PATTERNS:
-        for match in re.finditer(pattern_src, text, re.DOTALL):
+        for match in re.finditer(pattern_src, text, re.DOTALL | re.IGNORECASE):
             candidates.append((match.start(), match.end(), pattern_src, 2))
 
     # 同起点时先按优先级，再按区间长度降序

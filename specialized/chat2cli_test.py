@@ -1031,6 +1031,33 @@ class TestRedactText(unittest.TestCase):
         self.assertEqual(hits, {"SECRET_FOO": 1})
 
 
+    def test_value_driven_is_case_insensitive(self):
+        # 输出里的值大小写与环境变量不一致时也必须脱敏
+        redacted, hits = chat2cli._redact_text(
+            "token SUPERSECRETVALUE end", {"SECRET_FOO": "supersecretvalue"}
+        )
+        self.assertEqual(redacted, 'token <redacted env="SECRET_FOO"> end')
+        self.assertEqual(hits, {"SECRET_FOO": 1})
+
+    def test_structural_value_is_case_insensitive(self):
+        # 结构性短值同样按大小写不敏感匹配
+        redacted, _ = chat2cli._redact_text(
+            "ABCDE abcde", {"USERNAME": "abcde"}
+        )
+        self.assertEqual(
+            redacted,
+            '<redacted env="USERNAME"> <redacted env="USERNAME">',
+        )
+
+    def test_pattern_driven_is_case_insensitive(self):
+        # 高置信度模式的大小写变体同样是凭证
+        token = "SK-" + "A" * 24
+        redacted, hits = chat2cli._redact_text(f"x {token} y", {})
+        self.assertNotIn(token, redacted)
+        self.assertEqual(hits, {"sk-[A-Za-z0-9_-]{20,}": 1})
+
+
+
 class TestRedactNode(unittest.TestCase):
     """递归脱敏结构中的所有字符串字段"""
 
@@ -1391,6 +1418,5 @@ class TestArbitraryIndentChar(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 
 
