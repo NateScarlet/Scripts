@@ -135,6 +135,8 @@ function Remove-Empty-Dir {
 
 . "$ScriptLib/New-GitWorkspace.ps1"
 
+$env:PATH = "$PSScriptRoot/bin;$env:PATH"
+
 function dsh () {
     & pnpx `
         --allow-build='@deepseek-ai/dsh-subprocess-local' `
