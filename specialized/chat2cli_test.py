@@ -1498,6 +1498,119 @@ class TestArbitraryIndentChar(unittest.TestCase):
         self.assertEqual(blocks[0]["method"], "skill")
 
 
+class TestStderrRequestFeedback(unittest.TestCase):
+    """每个请求（含执行失败与识别失败）都应在 stderr 有反馈，
+
+    便于用户在终端直接区分“格式识别不出来”与“调用无效”。
+    """
+
+    def _run(self, input_text: str):
+        import subprocess
+        import sys
+
+        script = Path(__file__).with_name("chat2cli.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            return subprocess.run(
+                [sys.executable, str(script)],
+                input=input_text,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                cwd=tmpdir,
+                check=False,
+            )
+
+    def _wrap(self, request_json: str) -> str:
+        fence = "```"
+        return "说明\n" + fence + "chat2cli\n<request>\n" + request_json + "\n</request>\n" + fence
+
+    def test_unknown_method_reports_to_stderr(self):
+        result = self._run(
+            self._wrap('{"jsonrpc":"2.0","id":1,"method":"bogus","params":{}}')
+        )
+        self.assertIn("request#1", result.stderr)
+        self.assertIn("bogus", result.stderr)
+
+    def test_unknown_param_reports_to_stderr(self):
+        result = self._run(
+            self._wrap(
+                '{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+                '"params":{"command":"echo hi","bogus":1}}'
+            )
+        )
+        self.assertIn("request#1", result.stderr)
+        self.assertIn("bogus", result.stderr)
+
+    def test_missing_data_ref_reports_to_stderr(self):
+        result = self._run(
+            self._wrap(
+                '{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+                '"params":{"command":{"id":"nope"}}}'
+            )
+        )
+        self.assertIn("nope", result.stderr)
+
+    def test_execution_failure_reports_to_stderr(self):
+        result = self._run(
+            self._wrap(
+                '{"jsonrpc":"2.0","id":1,"method":"pwsh",'
+                '"params":{"command":""}}'
+            )
+        )
+        self.assertIn("request#1", result.stderr)
+
+    def test_skill_failure_reports_to_stderr(self):
+        result = self._run(
+            self._wrap(
+                '{"jsonrpc":"2.0","id":1,"method":"skill",'
+                '"params":{"name":"no-such-skill-xyz"}}'
+            )
+        )
+        self.assertIn("no-such-skill-xyz", result.stderr)
+
+    def test_notification_failure_reports_to_stderr(self):
+        # 无 id 的通知请求失败时不应被静默丢弃
+        result = self._run(self._wrap('{"method":"bogus","params":{}}'))
+        self.assertIn("bogus", result.stderr)
+
+    def test_truncated_fence_reports_to_stderr(self):
+        result = self._run("```chat2cli\n<request>\n" + '{"method":"pwsh"}' + "\n")
+        self.assertIn("chat2cli", result.stderr)
+
+    def test_bare_request_reports_to_stderr(self):
+        result = self._run("<request>\n" + '{"method":"pwsh"}' + "\n</request>\n")
+        self.assertIn("chat2cli", result.stderr)
+
+    def test_skill_success_reports_to_stderr(self):
+        # skill 成功激活也应有 stderr 回显，保持与其他方法一致
+        import contextlib
+        import io
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skill_dir = os.path.join(tmpdir, "demo-skill")
+            os.makedirs(skill_dir)
+            with open(
+                os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8"
+            ) as f:
+                f.write("demo body")
+            old_skills = chat2cli._discovered_skills
+            chat2cli._discovered_skills = {"demo-skill": {"path": skill_dir}}
+            err = io.StringIO()
+            try:
+                with contextlib.redirect_stderr(err):
+                    chat2cli.dispatch_request(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": 1,
+                            "method": "skill",
+                            "params": {"name": "demo-skill"},
+                        },
+                        {},
+                    )
+            finally:
+                chat2cli._discovered_skills = old_skills
+        self.assertIn("demo-skill", err.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

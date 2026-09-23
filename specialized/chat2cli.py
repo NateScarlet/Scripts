@@ -799,6 +799,8 @@ Resolve relative paths mentioned by this skill against the base directory before
         "path": _display_path(skill_dir),
         "message": "Skill activated.",
     }
+    sys.stderr.write(f"[request#{id_}] 🧩 skill: {name}\n")
+    sys.stderr.flush()
     return meta, content_block
 
 
@@ -2467,6 +2469,35 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
     return True, ""
 
 
+def _report_request_error(req_id: Any, has_id: bool, message: str) -> None:
+    """把请求失败原因写到 stderr，供用户在终端直接看到。
+
+    没有这一步时，失败原因只出现在 JSON-RPC response（stdout）里，
+    用户必须复制输出才能区分“格式没识别出来”和“调用无效”。
+    """
+    label = f"request#{req_id}" if has_id else "request(notification)"
+    sys.stderr.write(f"[chat2cli] [{label}] 错误：{message}\n")
+    sys.stderr.flush()
+
+
+def _fail_response(
+    req_id: Any, has_id: bool, code: int, message: str
+) -> Optional[Tuple[Dict[str, Any], str]]:
+    """写 stderr 并构造 (错误响应, 空内容块)。
+
+    notification（无 id）不产生响应，返回 None，但仍会写 stderr，
+    避免无 id 请求失败时被静默丢弃。
+    """
+    _report_request_error(req_id, has_id, message)
+    if not has_id:
+        return None
+    return {
+        "jsonrpc": "2.0",
+        "error": {"code": code, "message": message},
+        "id": req_id,
+    }, ""
+
+
 def dispatch_request(
     req: Dict[str, Any],
     data_map: Dict[str, str],
@@ -2504,26 +2535,14 @@ def dispatch_request(
         try:
             resolved_params = resolve_data_refs(req["params"], data_map)
         except KeyError as e:
-            if not has_id:
-                return None
-            return {
-                "jsonrpc": "2.0",
-                "error": {"code": -32602, "message": str(e)},
-                "id": req_id,
-            }, ""
+            return _fail_response(req_id, has_id, -32602, str(e))
         req = {**req, "params": resolved_params}
         params = cast(Dict[str, Any], req.get("params"))
 
     valid, err_msg = validate_request(req)
     logging.debug(f"  校验结果: {'通过' if valid else '失败 - ' + err_msg}")
     if not valid:
-        if not has_id:
-            return None
-        return {
-            "jsonrpc": "2.0",
-            "error": {"code": -32600, "message": err_msg},
-            "id": req_id,
-        }, ""
+        return _fail_response(req_id, has_id, -32600, err_msg)
 
     method = cast(str, req["method"])
     params = cast(Dict[str, Any], req["params"])
@@ -2531,6 +2550,8 @@ def dispatch_request(
     try:
         response: Optional[Dict[str, Any]] = None
         content_block = ""
+        # 失败原因先累积，末尾统一走 _fail_response（写 stderr + 构造响应）
+        error_message: Optional[str] = None
         logging.debug(f"  执行 method: {method}")
 
         if method == "str_replace_editor":
@@ -2547,15 +2568,8 @@ def dispatch_request(
                 response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
                 logging.debug(f"  执行结果: 成功 - {meta}")
             else:
-                response = {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32000,
-                        "message": meta.get("message", "未知错误"),
-                    },
-                    "id": req_id,
-                }
-                logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
+                error_message = meta.get("message", "未知错误")
+                logging.debug(f"  执行结果: 失败 - {error_message}")
 
         elif method == "pwsh":
             logging.debug(
@@ -2566,15 +2580,8 @@ def dispatch_request(
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
                 logging.debug(f"  执行结果: 成功, exit_code={result.get('exit_code')}")
             else:
-                response = {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32000,
-                        "message": result.get("message", "未知错误"),
-                    },
-                    "id": req_id,
-                }
-                logging.debug(f"  执行结果: 失败 - {result.get('message', '未知错误')}")
+                error_message = result.get("message", "未知错误")
+                logging.debug(f"  执行结果: 失败 - {error_message}")
 
         elif method == "skill":
             logging.debug(f"  激活 skill: {params.get('name', '')}")
@@ -2584,15 +2591,11 @@ def dispatch_request(
                 response = {"jsonrpc": "2.0", "id": req_id, "result": meta}
                 logging.debug(f"  执行结果: 成功 - skill '{meta.get('name')}' 已激活")
             else:
-                response = {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32000,
-                        "message": meta.get("message", "未知错误"),
-                    },
-                    "id": req_id,
-                }
-                logging.debug(f"  执行结果: 失败 - {meta.get('message', '未知错误')}")
+                error_message = meta.get("message", "未知错误")
+                logging.debug(f"  执行结果: 失败 - {error_message}")
+
+        if error_message is not None:
+            return _fail_response(req_id, has_id, -32000, error_message)
 
         if not has_id:
             logging.debug("  请求为 notification，不返回响应")
@@ -2608,13 +2611,7 @@ def dispatch_request(
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         logging.debug(f"  执行异常: {e}")
-        if not has_id:
-            return None
-        return {
-            "jsonrpc": "2.0",
-            "error": {"code": -32603, "message": f"内部错误：{str(e)}"},
-            "id": req_id,
-        }, ""
+        return _fail_response(req_id, has_id, -32603, f"内部错误：{str(e)}")
 
 
 def _fence_for_content(content: str) -> str:
@@ -2739,6 +2736,8 @@ def main():
             if err_detail:
                 # 缩进非法等具体错误，直接输出错误详情
                 error_msg = f"错误：{err_detail}"
+                sys.stderr.write(f"[chat2cli] 解析错误：{err_detail}\n")
+                sys.stderr.flush()
                 print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             else:
                 # 通用截断错误
@@ -2759,6 +2758,10 @@ def main():
                     f"{indent}</request>\n"
                     "```\n"
                 )
+                sys.stderr.write(
+                    "[chat2cli] 解析错误：检测到 chat2cli 围栏但无法完整识别其中内容。\n"
+                )
+                sys.stderr.flush()
                 print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
@@ -2774,6 +2777,10 @@ def main():
                 "</request>\n"
                 "```\n"
             )
+            sys.stderr.write(
+                "[chat2cli] 解析错误：检测到 <request> 标签未包裹在 chat2cli 代码块中。\n"
+            )
+            sys.stderr.flush()
             print(f"<chat2cli_instruction>\n{error_msg}\n</chat2cli_instruction>")
             return
 
