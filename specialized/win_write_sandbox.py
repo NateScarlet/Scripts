@@ -1065,9 +1065,12 @@ def _spawn_inheriting_restrictions(
     上再次调用 CreateRestrictedToken（会以 ERROR_INVALID_PARAMETER 失败），
     并让 pwsh 保持 FullLanguage。
     """
+    # 必须加 -OutputFormat Text：EncodedCommand 模式下 PowerShell 会把
+    # stderr 上的错误记录序列化成 CLIXML（#< CLIXML ... <Objs>）而非纯文本，
+    # 污染读取端；Text 强制纯文本且不影响 stdout 渲染。
     encoded = base64.b64encode(command.encode("utf-16-le")).decode("ascii")
     popen = subprocess.Popen(
-        ["pwsh.exe", "-NoProfile", "-EncodedCommand", encoded],
+        ["pwsh.exe", "-NoProfile", "-OutputFormat", "Text", "-EncodedCommand", encoded],
         cwd=cwd,
         env=env,
         stdout=subprocess.PIPE,
@@ -1240,11 +1243,14 @@ def spawn_pwsh_sandboxed(
 
                 # 命令行用 -EncodedCommand 传递（UTF-16LE + base64），
                 # 避免命令中的引号、换行或特殊字符破坏命令行解析。
+                # 必须加 -OutputFormat Text：EncodedCommand 模式下 PowerShell
+                # 会把 stderr 上的错误记录序列化成 CLIXML（#< CLIXML ... <Objs>）
+                # 而非纯文本，污染读取端；Text 强制纯文本且不影响 stdout 渲染。
                 encoded = base64.b64encode(
                     command.encode("utf-16-le")
                 ).decode("ascii")
                 cmdline = ctypes.create_unicode_buffer(
-                    f"pwsh.exe -NoProfile -EncodedCommand {encoded}"
+                    f"pwsh.exe -NoProfile -OutputFormat Text -EncodedCommand {encoded}"
                 )
 
                 # 8. 启动进程

@@ -149,6 +149,20 @@ class TestSandboxIntegration(unittest.TestCase):
             if os.path.exists(target):
                 os.unlink(target)
 
+    def test_stderr_is_plain_text_not_clixml(self):
+        """EncodedCommand 模式下 stderr 的错误记录不应被序列化为 CLIXML。
+
+        PowerShell 用 EncodedCommand 启动且未指定 -OutputFormat Text 时，
+        会把 stderr 上的错误对象序列化成 #< CLIXML ... <Objs> 形式，
+        污染读取端；沙箱必须显式传 Text 才能拿到纯文本。
+        """
+        proc = self._run("Write-Error 'boom'")
+        _, err = self._collect(proc)
+        self.assertNotIn(
+            "CLIXML", err, f"stderr 不应含 CLIXML 噪音，实际: {err!r}"
+        )
+        self.assertIn("boom", err)
+
     def test_cannot_write_outside_workspace(self):
         """未受限上下文中，子进程获得全新沙箱，工作区外写入必须被拒绝。"""
         if win_write_sandbox.current_process_is_sandboxed():
@@ -367,4 +381,3 @@ class TestSandboxIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
