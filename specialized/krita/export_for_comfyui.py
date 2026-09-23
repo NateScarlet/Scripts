@@ -22,6 +22,10 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
 导出完成后会尝试自动切回 ComfyUI 窗口，成功则不再打扰；找不到窗口或切换
 失败时才弹框提示。
 
+导出成功后会把文档标记为「未修改」，这样关闭 Krita 时不会再弹「是否保存」
+确认。注意：导出写的是临时目录中的副本，原文档的改动并没有写回原文件，
+该标记会一并取消 Krita 对未保存编辑的保护。
+
 关键原理：
   遮罩类内容的有效数据常常落在完全透明区域（例如整幅图只有一小块不透明，
   其余是 alpha=0 的纯色）。而 Krita 的合成/导出流程会把完全透明区域的 RGB
@@ -427,6 +431,10 @@ def export_and_copy():
     if not os.path.exists(export_path):
         QMessageBox.critical(None, "导出失败", "PNG 文件未生成。")
         return None
+
+    # 导出成功即视为本次工作已落盘，清掉文档的修改标记，避免退出时
+    # 弹出「是否保存」确认。注意：这不会把改动写回原文件。
+    doc.setModified(False)
 
     try:
         copy_file_to_clipboard(export_path)
