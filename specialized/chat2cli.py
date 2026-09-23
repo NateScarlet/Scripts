@@ -1650,9 +1650,11 @@ def execute_pwsh(
 
     # PSStyle.OutputRendering 用 try/catch 容错：正常环境下关闭 ANSI 渲染，
     # 让输出更干净；不可用时静默跳过，不影响命令本身。
+    # $OutputEncoding 用无 BOM 的 UTF8Encoding($false)：管道喂给原生程序的
+    # stdin 若带 BOM，Python 等接收方会把 EF BB BF 一并写入输出文件。
     wrapped_command = (
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
-        f"$OutputEncoding = [System.Text.Encoding]::UTF8; "
+        f"$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
         f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
         f"{command}"
     )
