@@ -1666,6 +1666,118 @@ class TestStderrRequestFeedback(unittest.TestCase):
         self.assertIn("demo-skill", err.getvalue())
 
 
+class TestPwshPermission(unittest.TestCase):
+    """pwsh permission 字段的取值校验与默认推导。"""
+
+    def test_rejects_invalid_permission(self):
+        valid, msg = chat2cli.validate_request(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "pwsh",
+                "params": {"command": "echo hi", "permission": "sudo"},
+            }
+        )
+        self.assertFalse(valid)
+        self.assertIn("permission", msg)
+
+    def test_accepts_all_valid_permissions(self):
+        for perm in ("read-only", "workspace-write", "danger-full-access"):
+            valid, msg = chat2cli.validate_request(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "pwsh",
+                    "params": {"command": "echo hi", "permission": perm},
+                }
+            )
+            self.assertTrue(valid, msg)
+
+    def test_permission_optional(self):
+        valid, msg = chat2cli.validate_request(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "pwsh",
+                "params": {"command": "echo hi"},
+            }
+        )
+        self.assertTrue(valid, msg)
+
+    def test_default_request_permission_is_min_of_workspace_write(self):
+        # 默认批准 workspace-write：请求默认取 workspace-write
+        self.assertEqual(
+            chat2cli._default_request_permission("workspace-write"),
+            "workspace-write",
+        )
+        # --read-only：请求默认收窄为 read-only
+        self.assertEqual(
+            chat2cli._default_request_permission("read-only"), "read-only"
+        )
+        # --danger-full-access：请求默认仍为 workspace-write
+        self.assertEqual(
+            chat2cli._default_request_permission("danger-full-access"),
+            "workspace-write",
+        )
+
+    def test_approved_permission_from_args(self):
+        import argparse
+
+        self.assertEqual(
+            chat2cli._approved_permission_from_args(
+                argparse.Namespace(read_only=True, danger_full_access=False)
+            ),
+            "read-only",
+        )
+        self.assertEqual(
+            chat2cli._approved_permission_from_args(
+                argparse.Namespace(read_only=False, danger_full_access=True)
+            ),
+            "danger-full-access",
+        )
+        self.assertEqual(
+            chat2cli._approved_permission_from_args(
+                argparse.Namespace(read_only=False, danger_full_access=False)
+            ),
+            "workspace-write",
+        )
+
+    def test_denial_hint_mentions_higher_permission(self):
+        ro_hint = chat2cli._permission_denial_hint("read-only")
+        self.assertIsNotNone(ro_hint)
+        self.assertIn("workspace-write", ro_hint)
+
+        ws_hint = chat2cli._permission_denial_hint("workspace-write")
+        self.assertIsNotNone(ws_hint)
+        self.assertIn("danger-full-access", ws_hint)
+
+        # 已是最高权限时无可提示的更高权限
+        self.assertIsNone(
+            chat2cli._permission_denial_hint("danger-full-access")
+        )
+
+    def test_confirm_escalation_fail_closed_without_tk(self):
+        """无法导入 tkinter 时必须返回 False（拒绝执行），而不是放行。"""
+        import builtins
+
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "tkinter":
+                raise ImportError("no tkinter")
+            return real_import(name, *args, **kwargs)
+
+        builtins.__import__ = fake_import
+        try:
+            self.assertFalse(
+                chat2cli._confirm_permission_escalation(
+                    "danger-full-access", "workspace-write", "echo hi"
+                )
+            )
+        finally:
+            builtins.__import__ = real_import
+
+
 if __name__ == "__main__":
     unittest.main()
 

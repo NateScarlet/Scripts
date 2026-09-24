@@ -53,10 +53,13 @@ from datetime import date
 import yaml
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
-# Windows 上 pwsh 通过受限令牌沙箱执行，写入被限制在当前工作目录内。
-# 该模块仅在 Windows 可用，其他平台保持原有的 Popen 路径。
-if sys.platform == "win32":
-    import win_write_sandbox
+# chat2cli 仅支持 Windows：pwsh 通过受限令牌沙箱执行，写入被限制在
+# 生效权限允许的范围内。其他平台没有对应实现，直接拒绝启动。
+if sys.platform != "win32":
+    sys.stderr.write("错误：chat2cli 仅支持 Windows。\n")
+    sys.exit(1)
+
+import win_write_sandbox
 
 # 确保输入输出使用 UTF-8（避免 Windows 默认编码问题）
 try:
@@ -79,6 +82,14 @@ _pending_oob_data: Dict[str, str] = {}
 # 该行以 '<' 开头视为无缩进，否则行首字符即为整块的缩进字符（任意非 '<'
 # 字符均可）。此常量只决定提示词与错误提示中示范用哪个字符。
 _INSTRUCTION_INDENT = ";"
+
+# pwsh 权限等级。数值越大权限越高；请求权限不得超过用户在命令行
+# 批准的权限（approved）。
+_PERMISSION_ORDER = {
+    "read-only": 0,
+    "workspace-write": 1,
+    "danger-full-access": 2,
+}
 
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
@@ -293,17 +304,25 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
   "id": 2,
   "method": "pwsh",
   "params": {{
-    "command": "要执行的命令"
+    "command": "要执行的命令",
+    "permission": "workspace-write"
   }}
 }}
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
 - 仅支持非交互式命令。
-- Windows 上命令运行在写入沙箱内：只能写入当前工作目录（含 .scratch），
+- permission 可选，声明命令所需的权限级别，取值：
+    "read-only"          只能读取，任何写入都被拒绝
+    "workspace-write"    可写入当前工作目录（含 .scratch），默认值
+    "danger-full-access" 可写入任意位置（危险，弹窗确认后才执行）
+  不声明时按 "workspace-write" 处理（用户以 --read-only 启动时收窄为 read-only）。
+- 命令运行在写入沙箱内：workspace-write 只能写入当前工作目录（含 .scratch），
   其他位置的写入与删除会被系统拒绝。需要写入其他目录时，
   请提示用户在沙箱外运行 `chat2cli.py sandbox grant <目录>` 持久放行该目录
   （`sandbox revoke <目录>` 撤销，`sandbox status <目录>` 查看当前状态），
   或提示用户在对应目录下重新运行 chat2cli，
-  或改用 --danger-full-access。
+  或在请求中声明 "permission": "danger-full-access"（将弹出确认窗口）。
+- 请求的权限高于用户批准的权限时，脚本会弹出确认窗口，用户同意后才执行；
+  无法弹出确认窗口（如无桌面环境）时一律拒绝执行。
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
 - 长输出会被自动转存为可后续访问的临时文件，只在响应中只提供开头和结尾内容。
 
@@ -1628,30 +1647,122 @@ def _build_pwsh_env(data_map: Dict[str, str]) -> Dict[str, str]:
     for ref_id, ref_content in data_map.items():
         env["DATA_" + ref_id] = ref_content
 
-    if sys.platform == "win32":
-        # 注入 Python 启动钩子：沙箱内 os.mkdir(mode=0o700) 会产出不继承
-        # 工作区 ACE 的目录，使 tempfile 等无法使用。钩子把 0o700 改写为
-        # 0o755，让新目录正常继承。该目录只影响沙箱内的 Python 进程。
-        hook_dir = win_write_sandbox.ensure_python_sitecustomize(
-            os.path.join(os.getcwd(), ".scratch", "pysandbox")
-        )
-        # 去重后前置：嵌套运行时父进程已注入过该路径，避免重复累积。
-        existing_entries = [
-            entry
-            for entry in env.get("PYTHONPATH", "").split(os.pathsep)
-            if entry and os.path.normcase(entry) != os.path.normcase(hook_dir)
-        ]
-        env["PYTHONPATH"] = os.pathsep.join([hook_dir, *existing_entries])
+    # 注入 Python 启动钩子：沙箱内 os.mkdir(mode=0o700) 会产出不继承
+    # 工作区 ACE 的目录，使 tempfile 等无法使用。钩子把 0o700 改写为
+    # 0o755，让新目录正常继承。该目录只影响沙箱内的 Python 进程。
+    hook_dir = win_write_sandbox.ensure_python_sitecustomize(
+        os.path.join(os.getcwd(), ".scratch", "pysandbox")
+    )
+    # 去重后前置：嵌套运行时父进程已注入过该路径，避免重复累积。
+    existing_entries = [
+        entry
+        for entry in env.get("PYTHONPATH", "").split(os.pathsep)
+        if entry and os.path.normcase(entry) != os.path.normcase(hook_dir)
+    ]
+    env["PYTHONPATH"] = os.pathsep.join([hook_dir, *existing_entries])
 
     return env
 
+
+
+def _approved_permission_from_args(args: argparse.Namespace) -> str:
+    """把命令行开关转换为批准权限。"""
+    if args.read_only:
+        return "read-only"
+    if args.danger_full_access:
+        return "danger-full-access"
+    return "workspace-write"
+
+
+def _default_request_permission(approved: str) -> str:
+    """模型未声明 permission 时的请求权限。
+
+    取 workspace-write 与批准权限中较低者：默认运行下即为 workspace-write，
+    --read-only 下收窄为 read-only，--danger-full-access 下仍为 workspace-write。
+    """
+    if _PERMISSION_ORDER[approved] < _PERMISSION_ORDER["workspace-write"]:
+        return approved
+    return "workspace-write"
+
+
+def _confirm_permission_escalation(
+    requested: str, approved: str, command: str
+) -> bool:
+    """弹窗请用户确认超出批准范围的权限请求。
+
+    无法确认（tkinter 不可用、无桌面、窗口异常、用户选择否）一律返回
+    False，保证无法取得确认时不执行。
+    """
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+    except ImportError as e:
+        sys.stderr.write(
+            f"[chat2cli] 无法导入 tkinter（{e}），无法弹出权限确认，已拒绝执行。\n"
+        )
+        sys.stderr.flush()
+        return False
+
+    try:
+        root = tk.Tk()
+    except Exception as e:
+        sys.stderr.write(
+            f"[chat2cli] 无法创建确认窗口（{e}），已拒绝执行。\n"
+        )
+        sys.stderr.flush()
+        return False
+
+    try:
+        root.withdraw()
+        root.attributes("-topmost", True)
+        # 命令过长时截断，避免弹窗被撑满
+        shown = command if len(command) <= 2000 else command[:2000] + "\n...（已截断）"
+        message = (
+            "chat2cli 请求更高的执行权限。\n\n"
+            f"请求权限：{requested}\n"
+            f"已批准权限：{approved}\n\n"
+            f"命令：\n{shown}\n\n"
+            "是否允许本次执行？"
+        )
+        return bool(
+            messagebox.askyesno("chat2cli 权限确认", message, parent=root)
+        )
+    except Exception as e:
+        sys.stderr.write(f"[chat2cli] 权限确认窗口异常（{e}），已拒绝执行。\n")
+        sys.stderr.flush()
+        return False
+    finally:
+        try:
+            root.destroy()
+        except Exception:
+            pass
+
+
+def _permission_denial_hint(effective: str) -> Optional[str]:
+    """写入被拒时，按当前生效权限给出可用的更高权限提示。"""
+    if effective == "read-only":
+        return (
+            "检测到写入被沙箱拒绝。当前权限为 read-only，只能读取。"
+            "如需写入工作目录，请在 pwsh 请求中声明 "
+            '\"permission\": \"workspace-write\"' 
+            "（将请求用户确认），或让用户以默认权限重新运行 chat2cli。"
+        )
+    if effective == "workspace-write":
+        return (
+            "检测到写入被沙箱拒绝。当前 pwsh 只能写入工作目录 "
+            f"({os.getcwd()})。如需写入其他目录，请在沙箱外运行 "
+            "`chat2cli.py sandbox grant <目录>` 持久放行该目录，或在对应目录下 "
+            "重新运行 chat2cli，或在 pwsh 请求中声明 "
+            '\"permission\": \"danger-full-access\"（将请求用户确认）。'
+        )
+    return None
 
 
 def execute_pwsh(
     id_: Any,
     params: Dict[str, Any],
     data_map: Dict[str, str],
-    full_access: bool = False,
+    approved_permission: str = "workspace-write",
 ) -> Dict[str, Any]:
     start = time.perf_counter()
     """执行 PowerShell 命令，实时输出到 stderr，返回 JSON-RPC result 字典"""
@@ -1660,14 +1771,52 @@ def execute_pwsh(
     if not isinstance(command, str) or not command.strip():
         return {"success": False, "message": "错误：command 不能为空。"}
 
+    # 解析本次请求的权限：模型显式声明优先，否则取默认请求权限。
+    requested_permission = params.get("permission")
+    if requested_permission is None:
+        requested_permission = _default_request_permission(approved_permission)
+    if requested_permission not in _PERMISSION_ORDER:
+        return {
+            "success": False,
+            "message": f"错误：permission 取值非法：{requested_permission!r}",
+        }
+
+    effective_permission = requested_permission
+    if (
+        _PERMISSION_ORDER[requested_permission]
+        > _PERMISSION_ORDER[approved_permission]
+    ):
+        # 超出批准范围：弹窗确认。无法确认或用户拒绝则不执行。
+        sys.stderr.write(
+            f"[request#{id_}] 请求权限 {requested_permission} 高于已批准权限 "
+            f"{approved_permission}，等待用户确认...\n"
+        )
+        sys.stderr.flush()
+        if not _confirm_permission_escalation(
+            requested_permission, approved_permission, command
+        ):
+            return {
+                "success": False,
+                "message": (
+                    f"错误：请求权限 {requested_permission} 高于已批准权限 "
+                    f"{approved_permission}，用户未批准执行。"
+                ),
+            }
+        sys.stderr.write(
+            f"[request#{id_}] 用户已批准 {requested_permission} 权限。\n"
+        )
+        sys.stderr.flush()
+
     # PSStyle.OutputRendering 用 try/catch 容错：正常环境下关闭 ANSI 渲染，
     # 让输出更干净；不可用时静默跳过，不影响命令本身。
     # $OutputEncoding 用无 BOM 的 UTF8Encoding($false)：管道喂给原生程序的
     # stdin 若带 BOM，Python 等接收方会把 EF BB BF 一并写入输出文件。
+    # 三项初始化都包在 try/catch 内：受限语言模式下无法创建 .NET 类型
+    # 或设置属性，缺少 try/catch 会让每次调用都吐出 InvalidOperation 噪音。
     wrapped_command = (
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
-        f"$OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
-        f"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+        f"try {{ $OutputEncoding = [System.Text.UTF8Encoding]::new($false) }} catch {{}}; "
+        f"try {{ [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 }} catch {{}}; "
         f"{command}"
     )
 
@@ -1707,13 +1856,16 @@ def execute_pwsh(
         sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: \033[33m{command}\033[0m\n")
     sys.stderr.flush()
 
-    use_sandbox = sys.platform == "win32" and not full_access
+    use_sandbox = effective_permission != "danger-full-access"
     if use_sandbox:
-        # Windows：受限令牌沙箱启动，写入仅限当前工作目录。
-        # 沙箱创建失败时直接报错，绝不降级为不受限执行。
+        # 受限令牌沙箱启动：read-only 不授予任何写权限，workspace-write
+        # 写入仅限当前工作目录。沙箱创建失败时直接报错，绝不降级。
         try:
             proc: Any = win_write_sandbox.spawn_pwsh_sandboxed(
-                wrapped_command, os.getcwd(), env
+                wrapped_command,
+                os.getcwd(),
+                env,
+                read_only=(effective_permission == "read-only"),
             )
         except win_write_sandbox.SandboxError as e:
             return {
@@ -1721,6 +1873,7 @@ def execute_pwsh(
                 "message": f"错误：无法创建 Windows 写入沙箱：{str(e)}",
             }
     else:
+        # danger-full-access：不经过沙箱，直接执行。
         try:
             proc = subprocess.Popen(
                 ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
@@ -1823,8 +1976,8 @@ def execute_pwsh(
 
     # 沙箱拒绝写入时，在 stderr 末尾补充可操作的提示，
     # 让调用者知道需要请求用户切换到目标目录执行。
-    if use_sandbox:
-        denial_hint = win_write_sandbox.detect_write_denial(stderr)
+    if win_write_sandbox.detect_write_denial(stderr):
+        denial_hint = _permission_denial_hint(effective_permission)
         if denial_hint:
             stderr = f"{stderr}\n{denial_hint}" if stderr else denial_hint
 
@@ -1844,10 +1997,6 @@ def run_sandbox_command(action: str, path: str) -> int:
     该子命令是沙箱外的管理工具：放行目录靠改目标目录的 ACL 实现，
     在沙箱内能改 ACL 就等于沙箱逃逸，因此检测到进程已受限时直接拒绝。
     """
-    if sys.platform != "win32":
-        sys.stderr.write("错误：沙箱写入放行仅在 Windows 上可用。\n")
-        return 1
-
     try:
         sandboxed = win_write_sandbox.current_process_is_sandboxed()
     except win_write_sandbox.SandboxError as e:
@@ -2466,7 +2615,7 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
             "offset",
             "limit",
         },
-        "pwsh": {"command"},
+        "pwsh": {"command", "permission"},
         "skill": {"name"},
     }
     allowed = allowed_params[method]
@@ -2479,6 +2628,15 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
             False,
             f"params 中存在未知字段：{sorted(unknown_params)}，method={method} 允许的字段：{sorted(allowed)}。{hint}",
         )
+
+    if method == "pwsh":
+        permission = req["params"].get("permission")
+        if permission is not None and permission not in _PERMISSION_ORDER:
+            return (
+                False,
+                f"permission 取值非法：{permission!r}，"
+                f"允许：{sorted(_PERMISSION_ORDER)}",
+            )
 
     return True, ""
 
@@ -2515,7 +2673,7 @@ def _fail_response(
 def dispatch_request(
     req: Dict[str, Any],
     data_map: Dict[str, str],
-    full_access: bool = False,
+    approved_permission: str = "workspace-write",
 ) -> Optional[Tuple[Dict[str, Any], str]]:
     """分发执行单个请求。
 
@@ -2589,7 +2747,9 @@ def dispatch_request(
             logging.debug(
                 f"  执行 PowerShell 命令: {params.get('command', '')[:200]}..."
             )
-            result = execute_pwsh(req_id, params, data_map, full_access)
+            result = execute_pwsh(
+                req_id, params, data_map, approved_permission
+            )
             if result.get("success"):
                 response = {"jsonrpc": "2.0", "id": req_id, "result": result}
                 logging.debug(f"  执行结果: 成功, exit_code={result.get('exit_code')}")
@@ -2650,10 +2810,16 @@ def main():
         action="store_true",
         help="仅检查输入是否需要处理：需要返回退出码 0，否则返回 1，不输出任何内容",
     )
-    parser.add_argument(
+    permission_group = parser.add_mutually_exclusive_group()
+    permission_group.add_argument(
+        "--read-only",
+        action="store_true",
+        help="批准权限设为 read-only：pwsh 只能读取，任何写入都被拒绝",
+    )
+    permission_group.add_argument(
         "--danger-full-access",
         action="store_true",
-        help="关闭 pwsh 写入沙箱，允许命令写入任意位置（危险，仅用于需要越界的场景）",
+        help="批准权限设为 danger-full-access：pwsh 可写入任意位置（危险）",
     )
     subparsers = parser.add_subparsers(dest="command")
     sandbox_parser = subparsers.add_parser(
@@ -2812,11 +2978,10 @@ def main():
     redaction_hits: Dict[str, Dict[str, int]] = {}
 
     logging.debug("【3. 执行请求】")
+    approved_permission = _approved_permission_from_args(args)
     for idx, req in enumerate(requests):
         logging.debug(f"处理请求 #{idx+1}:")
-        result = dispatch_request(
-            req, data_map, args.danger_full_access
-        )
+        result = dispatch_request(req, data_map, approved_permission)
         if result is None:
             logging.debug(f"  请求 #{idx+1}: 无响应（notification 或空）")
             continue
