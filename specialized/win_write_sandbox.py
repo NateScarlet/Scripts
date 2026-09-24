@@ -1,11 +1,18 @@
 
 """Windows 写入沙箱：将 pwsh 子进程的写入限制在当前工作目录内。
 
-机制来自 @deepseek-ai/dsh-sandbox-windows-acl（huoyaoyuan/windows-acl-restrict-poc 的移植）：
+机制对照 @deepseek-ai/dsh-sandbox-windows-acl 0.1.7：
 
 - 从规范工作区路径确定性派生工作区能力 SID（sha256 → S-1-4-x-y）
-- 给工作目录 ACL 添加该 SID 的允许写入 ACE（常驻，不清理，exact-ACE skip）
-- 创建 WRITE_RESTRICTED 受限令牌，restricting SIDs = [工作区 SID, Everyone, Logon SID]
+- 给工作目录写入三件套授权，缺一不可：
+  1. 该 SID 的允许写入 ACE，掩码精确为 GRANT_MASK(0x110156)，可继承
+  2. 对 Everyone 的 FILE_DELETE_CHILD 拒绝 ACE，仅容器继承
+  3. SACL 中的 Low 完整性标签（S-1-16-4096，no-write-up），可继承
+  三件在同一次 SetNamedSecurityInfoW 中写入，ACE 常驻不清理。
+- 创建 WRITE_RESTRICTED 受限令牌，restricting SIDs =
+  [工作区 SID, 放行 SID, Everyone, Logon SID]
+- 把令牌降到 Low 完整性：写入未标 Low 的对象被 no-write-up 规则拒绝，
+  这是第 3 件标签存在的原因，也是纵深防御的一层
 - 用受限令牌通过 CreateProcessAsUserW 启动 pwsh.exe
 
 任何 Win32 调用失败都抛出 SandboxError，绝不降级为不受限执行（fail closed）。
@@ -52,13 +59,21 @@ _RESTRICTED_TOKEN_FLAGS = _DISABLE_MAX_PRIVILEGE | _LUA_TOKEN | _WRITE_RESTRICTE
 # ── 访问掩码 ──────────────────────────────────────────────────────
 
 _FILE_GENERIC_WRITE = 0x00120116
+_STANDARD_RIGHTS_WRITE = 0x00020000
 _DELETE = 0x00010000
 _FILE_DELETE_CHILD = 0x00000040
+_WRITE_OWNER = 0x00080000
 
-# 覆盖工作目录内的所有写操作：写数据、追加、写 EA、写属性、删除文件、删除子项。
-# 刻意不含 WRITE_DAC / WRITE_OWNER：受限进程若能改写 ACL 就能逃逸沙箱。
+# 与 DSH 0.1.7 的 GRANT_MASK 逐位一致：
+#   (FILE_GENERIC_WRITE & ~STANDARD_RIGHTS_WRITE) | DELETE | FILE_DELETE_CHILD
+# 剔除 STANDARD_RIGHTS_WRITE（其中含 WRITE_DAC / WRITE_OWNER）：
+# 受限进程若能改写 ACL 就能逃逸沙箱。
 # 只授予目录，文件通过 ACE 继承获得访问权。
-_GRANT_MASK = _FILE_GENERIC_WRITE | _DELETE | _FILE_DELETE_CHILD
+_GRANT_MASK = (
+    (_FILE_GENERIC_WRITE & ~_STANDARD_RIGHTS_WRITE)
+    | _DELETE
+    | _FILE_DELETE_CHILD
+)
 
 
 # ── ACE / ACL 常量 ────────────────────────────────────────────────
@@ -67,14 +82,26 @@ _CONTAINER_INHERIT_ACE = 0x2
 _OBJECT_INHERIT_ACE = 0x1
 _ACE_INHERIT_FLAGS = _CONTAINER_INHERIT_ACE | _OBJECT_INHERIT_ACE
 
+_ACCESS_ALLOWED_ACE_TYPE = 0x0
+_ACCESS_DENIED_ACE_TYPE = 0x1
+_SYSTEM_MANDATORY_LABEL_ACE_TYPE = 0x11
+_SYSTEM_MANDATORY_LABEL_NO_WRITE_UP = 0x1
+_ACL_REVISION = 0x2
+
 _GRANT_ACCESS = 1
+_DENY_ACCESS = 3
 _REVOKE_ACCESS = 4
 _TRUSTEE_IS_SID = 0
 _TRUSTEE_IS_UNKNOWN = 0
 
 _SE_FILE_OBJECT = 1
 _DACL_SECURITY_INFORMATION = 0x00000004
+_LABEL_SECURITY_INFORMATION = 0x00000010
 _ERROR_SUCCESS = 0
+
+# 已知 SID：Everyone 与 Low 完整性标签（S-1-16-4096）
+_WORLD_SID = "S-1-1-0"
+_LOW_LABEL_SID = "S-1-16-4096"
 
 
 # ── 令牌信息类 ────────────────────────────────────────────────────
@@ -99,6 +126,10 @@ _TOKEN_ASSIGN_PRIMARY = 0x0001
 
 # TOKEN_INFORMATION_CLASS 取值
 _TokenDefaultDacl = 6
+_TokenIntegrityLevel = 25
+
+# 完整性 SID 在令牌中的属性标志：标记该 SID 是完整性级别而非普通组
+_SE_GROUP_INTEGRITY = 0x00000020
 
 _FILE_ALL_ACCESS = 0x001F01FF
 
@@ -203,6 +234,17 @@ _kernel32 = ctypes.WinDLL("kernel32.dll", use_last_error=True)
 _advapi32.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p)]
 _advapi32.ConvertStringSidToSidW.restype = wintypes.BOOL
 
+_advapi32.InitializeAcl.argtypes = [
+    ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD
+]
+_advapi32.InitializeAcl.restype = wintypes.BOOL
+
+_advapi32.AddMandatoryAce.argtypes = [
+    ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD,
+    wintypes.DWORD, ctypes.c_void_p,
+]
+_advapi32.AddMandatoryAce.restype = wintypes.BOOL
+
 _advapi32.GetLengthSid.argtypes = [ctypes.c_void_p]
 _advapi32.GetLengthSid.restype = wintypes.DWORD
 
@@ -254,12 +296,6 @@ _advapi32.SetNamedSecurityInfoW.argtypes = [
     ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
 ]
 _advapi32.SetNamedSecurityInfoW.restype = wintypes.DWORD
-
-_advapi32.GetExplicitEntriesFromAclW.argtypes = [
-    ctypes.c_void_p, ctypes.POINTER(wintypes.ULONG),
-    ctypes.POINTER(ctypes.POINTER(EXPLICIT_ACCESS_W)),
-]
-_advapi32.GetExplicitEntriesFromAclW.restype = wintypes.DWORD
 
 _advapi32.ConvertSidToStringSidW.argtypes = [
     ctypes.c_void_p, ctypes.POINTER(ctypes.c_wchar_p)
@@ -471,34 +507,54 @@ def _get_logon_sid(
 # GetAclInformation 的信息类
 _AclSizeInformation = 2
 
-# ACE 类型与标志
-_ACCESS_ALLOWED_ACE_TYPE = 0
+# ACE 头中的标志位：AceFlags 低 4 位是继承标志，第 5 位表示 ACE 本身是继承来的
 _INHERITED_ACE = 0x10
+_ACE_INHERIT_MASK = 0x0F
 
 
 class _AceEntry:
-    """DACL 中一条允许型 ACE 的关键信息。"""
+    """ACL 中一条 ACE 的关键字段。
+
+    ACCESS_ALLOWED_ACE / ACCESS_DENIED_ACE / SYSTEM_MANDATORY_LABEL_ACE
+    三者的二进制布局相同（Header 4 字节、Mask 4 字节、SidStart），
+    因此用同一个结构承载。
+    """
 
     def __init__(
-        self, is_inherited: bool, mask: int, sid_ptr: ctypes.c_void_p
+        self,
+        ace_type: int,
+        ace_flags: int,
+        mask: int,
+        sid_ptr: ctypes.c_void_p,
     ):
-        self.is_inherited = is_inherited
+        self.ace_type = ace_type
+        self.ace_flags = ace_flags
         self.mask = mask
         self.sid_ptr = sid_ptr
 
+    @property
+    def is_inherited(self) -> bool:
+        return bool(self.ace_flags & _INHERITED_ACE)
 
-def _iter_dacl_aces(p_dacl: ctypes.c_void_p) -> List[_AceEntry]:
-    """枚举 DACL 中的允许型 ACE，返回 _AceEntry 列表。
+    @property
+    def inheritance(self) -> int:
+        """继承标志位（不含 INHERITED_ACE）。"""
+        return self.ace_flags & _ACE_INHERIT_MASK
 
-    GetExplicitEntriesFromAclW 会丢失 ACE 头中的 INHERITED_ACE 标志，
-    无法区分"显式设置"与"从父项继承"，因此这里直接按 ACE 结构解析。
+
+def _iter_aces(p_acl: ctypes.c_void_p) -> List[_AceEntry]:
+    """枚举 ACL 中的所有 ACE，返回 _AceEntry 列表。
+
+    GetExplicitEntriesFromAclW 只返回允许/拒绝型且会丢失 ACE 头中的
+    INHERITED_ACE 标志，无法区分"显式设置"与"从父项继承"，也拿不到
+    完整性标签 ACE，因此这里直接按 ACE 结构解析。
     """
-    if not p_dacl:
+    if not p_acl:
         return []
 
     size_info = ACL_SIZE_INFORMATION()
     if not _advapi32.GetAclInformation(
-        p_dacl, ctypes.byref(size_info), ctypes.sizeof(size_info),
+        p_acl, ctypes.byref(size_info), ctypes.sizeof(size_info),
         _AclSizeInformation,
     ):
         raise SandboxError(
@@ -508,25 +564,82 @@ def _iter_dacl_aces(p_dacl: ctypes.c_void_p) -> List[_AceEntry]:
     entries: List[_AceEntry] = []
     for i in range(size_info.AceCount):
         ace_ptr = ctypes.c_void_p()
-        if not _advapi32.GetAce(p_dacl, i, ctypes.byref(ace_ptr)):
+        if not _advapi32.GetAce(p_acl, i, ctypes.byref(ace_ptr)):
             raise SandboxError(f"GetAce({i}) 失败: {ctypes.get_last_error()}")
 
         # ACE_HEADER：AceType(BYTE)、AceFlags(BYTE)、AceSize(WORD)
         header = ctypes.cast(ace_ptr, ctypes.POINTER(ctypes.c_ubyte))
-        if header[0] != _ACCESS_ALLOWED_ACE_TYPE:
-            continue
+        ace_type = header[0]
         ace_flags = header[1]
 
-        # ACCESS_ALLOWED_ACE：Header(4 字节)、Mask(4 字节)、SidStart
         base = ace_ptr.value or 0
         mask = ctypes.cast(
             base + 4, ctypes.POINTER(wintypes.DWORD)
         ).contents.value
         sid_ptr = ctypes.c_void_p(base + 8)
-        entries.append(
-            _AceEntry(bool(ace_flags & _INHERITED_ACE), mask, sid_ptr)
-        )
+        entries.append(_AceEntry(ace_type, ace_flags, mask, sid_ptr))
     return entries
+
+
+def _exact_grant_present(
+    p_dacl: ctypes.c_void_p, sid_ptr: ctypes.c_void_p
+) -> bool:
+    """DACL 中是否已有与 DSH 0.1.7 逐字段一致的能力 SID 允许 ACE。
+
+    匹配条件：aceType=Allow、inheritance=OI|CI、mask=_GRANT_MASK、
+    trustee=能力 SID。DSH 用严格相等判定，掩码差一位就不认，
+    因此这里必须逐字段比对而非按位包含。
+    """
+    for entry in _iter_aces(p_dacl):
+        if entry.ace_type != _ACCESS_ALLOWED_ACE_TYPE:
+            continue
+        if entry.inheritance != _ACE_INHERIT_FLAGS:
+            continue
+        if entry.mask != _GRANT_MASK:
+            continue
+        if _sid_equal(entry.sid_ptr, sid_ptr):
+            return True
+    return False
+
+
+def _exact_deny_present(
+    p_dacl: ctypes.c_void_p, world_sid_ptr: ctypes.c_void_p
+) -> bool:
+    """DACL 中是否已有对 Everyone 的 FILE_DELETE_CHILD 拒绝 ACE。
+
+    匹配条件：aceType=Deny、inheritance=CI（仅容器，不能继承到文件上）、
+    mask=FILE_DELETE_CHILD、trustee=Everyone。
+    """
+    for entry in _iter_aces(p_dacl):
+        if entry.ace_type != _ACCESS_DENIED_ACE_TYPE:
+            continue
+        if entry.inheritance != _CONTAINER_INHERIT_ACE:
+            continue
+        if entry.mask != _FILE_DELETE_CHILD:
+            continue
+        if _sid_equal(entry.sid_ptr, world_sid_ptr):
+            return True
+    return False
+
+
+def _label_present(
+    p_sacl: ctypes.c_void_p, label_sid_ptr: ctypes.c_void_p
+) -> bool:
+    """SACL 中是否已有 Low 完整性标签 ACE。
+
+    匹配条件：aceType=MandatoryLabel、inheritance=OI|CI、
+    policy=NO_WRITE_UP、trustee=Low 标签 SID。
+    """
+    for entry in _iter_aces(p_sacl):
+        if entry.ace_type != _SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+            continue
+        if entry.inheritance != _ACE_INHERIT_FLAGS:
+            continue
+        if entry.mask != _SYSTEM_MANDATORY_LABEL_NO_WRITE_UP:
+            continue
+        if _sid_equal(entry.sid_ptr, label_sid_ptr):
+            return True
+    return False
 
 
 def _grant_ace_state(
@@ -535,7 +648,9 @@ def _grant_ace_state(
     """返回 (是否有该 SID 的显式允许 ACE, 是否有继承而来的允许 ACE)。"""
     explicit = False
     inherited = False
-    for entry in _iter_dacl_aces(p_dacl):
+    for entry in _iter_aces(p_dacl):
+        if entry.ace_type != _ACCESS_ALLOWED_ACE_TYPE:
+            continue
         if not (entry.mask & _GRANT_MASK):
             continue
         if not _sid_equal(entry.sid_ptr, sid_ptr):
@@ -549,111 +664,337 @@ def _grant_ace_state(
 
 def _read_dacl(path: str) -> Tuple[ctypes.c_void_p, ctypes.c_void_p]:
     """读取路径的 DACL，返回 (p_sd, p_dacl)；调用方负责 LocalFree(p_sd)。"""
-    p_sd = ctypes.c_void_p()
-    p_dacl = ctypes.c_void_p()
-    result = _advapi32.GetNamedSecurityInfoW(
-        path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
-        None, None, ctypes.byref(p_dacl), None, ctypes.byref(p_sd),
-    )
-    if result != _ERROR_SUCCESS:
-        raise SandboxError(f"GetNamedSecurityInfoW({path!r}) 失败: {result}")
+    p_sd, p_dacl, _p_sacl = _read_security(path)
     return p_sd, p_dacl
 
 
-def _ensure_write_ace(path: str, sid_ptr: ctypes.c_void_p) -> bool:
-    """确保目录的 DACL 中存在能力 SID 的可继承允许写入 ACE。
+def _read_security(
+    path: str,
+) -> Tuple[ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]:
+    """读取路径的 DACL 与完整性标签(SACL)。
 
-    返回是否新增了 ACE。该 SID 已经能写时（无论显式 ACE 还是从父目录
-    继承）不做修改并返回 False：一次调用就是一次设置，重复放行幂等。
-
-    只设置传入目录本身一条 ACE，不递归子目录：可继承标志让 Windows
-    立即传播到所有已存在的子目录与文件，之后新建的子项也自动获得，
-    因此子项无需各自设置。若某个文件显式设置了受保护 DACL（不继承），
-    则尊重它，不强行放行。
+    返回 (p_sd, p_dacl, p_sacl)；调用方负责 LocalFree(p_sd)。
+    p_sacl 可能为 None（该对象没有 SACL），此时视为无标签。
     """
-    p_sd, p_dacl = _read_dacl(path)
+    p_sd = ctypes.c_void_p()
+    p_dacl = ctypes.c_void_p()
+    p_sacl = ctypes.c_void_p()
+    result = _advapi32.GetNamedSecurityInfoW(
+        path, _SE_FILE_OBJECT,
+        _DACL_SECURITY_INFORMATION | _LABEL_SECURITY_INFORMATION,
+        None, None, ctypes.byref(p_dacl), ctypes.byref(p_sacl),
+        ctypes.byref(p_sd),
+    )
+    if result != _ERROR_SUCCESS:
+        raise SandboxError(f"GetNamedSecurityInfoW({path!r}) 失败: {result}")
+    return p_sd, p_dacl, p_sacl
+
+
+# ── Low 完整性标签 ACL 构造 ───────────────────────────────────────
+
+
+def _build_low_label_acl(
+    label_sid_ptr: ctypes.c_void_p,
+) -> Any:
+    """构造只含一条 Low 标签 ACE 的 SACL，返回缓冲区对象。
+
+    返回 Python 缓冲区本身而非裸指针：SetNamedSecurityInfoW 在返回前复制
+    ACL，调用期间缓冲区必须存活，由调用方持有引用。
+
+    标签 ACL 必须独立构造后与 DACL 在**同一次** SetNamedSecurityInfoW
+    调用中写入：分两次写会留下"DACL 已改、SACL 未改"的半成品状态，
+    而 DSH 的幂等跳过要求三件同时成立，半成品会永久卡住。
+
+    AddMandatoryAce 的 policy 取 NO_WRITE_UP：低于标签完整性的进程不得
+    向上写入，这正是标签起隔离作用的机制。
+    """
+    sid_len = _advapi32.GetLengthSid(label_sid_ptr)
+    # 与 DSH 的 buildLowLabelAcl 一致留出余量：ACL 头 8 字节 + ACE 头 4 字节
+    # + SID，另加对齐余量，避免 AddMandatoryAce 因空间不足失败。
+    acl_len = 16 + sid_len
+    acl = ctypes.create_string_buffer(acl_len)
+    acl_ptr = ctypes.cast(acl, ctypes.c_void_p)
+
+    if not _advapi32.InitializeAcl(acl_ptr, acl_len, _ACL_REVISION):
+        raise SandboxError(
+            f"InitializeAcl(标签 ACL) 失败: {ctypes.get_last_error()}"
+        )
+
+    if not _advapi32.AddMandatoryAce(
+        acl_ptr,
+        _ACL_REVISION,
+        _ACE_INHERIT_FLAGS,
+        _SYSTEM_MANDATORY_LABEL_NO_WRITE_UP,
+        label_sid_ptr,
+    ):
+        raise SandboxError(
+            f"AddMandatoryAce 失败: {ctypes.get_last_error()}"
+        )
+
+    return acl
+
+
+def _explicit_access(
+    mask: int,
+    mode: int,
+    inheritance: int,
+    sid_ptr: ctypes.c_void_p,
+) -> EXPLICIT_ACCESS_W:
+    """构造一条 EXPLICIT_ACCESS_W，供 SetEntriesInAclW 合并进 DACL。"""
+    ea = EXPLICIT_ACCESS_W()
+    ea.grfAccessPermissions = mask
+    ea.grfAccessMode = mode
+    ea.grfInheritance = inheritance
+    ea.Trustee.TrusteeForm = _TRUSTEE_IS_SID
+    ea.Trustee.TrusteeType = _TRUSTEE_IS_UNKNOWN
+    ea.Trustee.ptstrName = ctypes.cast(sid_ptr, ctypes.c_void_p)
+    return ea
+
+
+def _has_write_owner(
+    p_dacl: ctypes.c_void_p, user_sid_ptr: ctypes.c_void_p
+) -> bool:
+    """DACL 中是否已有该用户 SID 的 WRITE_OWNER 允许 ACE。
+
+    只按位判断是否含 WRITE_OWNER，不要求掩码精确相等：这条 ACE 的作用
+    只是让本次写入通过权限检查，无需与任何外部实现逐位对齐。
+    """
+    for entry in _iter_aces(p_dacl):
+        if entry.ace_type != _ACCESS_ALLOWED_ACE_TYPE:
+            continue
+        if not (entry.mask & _WRITE_OWNER):
+            continue
+        if _sid_equal(entry.sid_ptr, user_sid_ptr):
+            return True
+    return False
+
+
+def _merge_and_apply(
+    path: str,
+    p_dacl: ctypes.c_void_p,
+    entries: List[EXPLICIT_ACCESS_W],
+    info: int,
+    sacl_arg: Any,
+) -> None:
+    """把 entries 合并进 p_dacl 并应用，可选同时写 SACL。
+
+    entries 为空时仍会执行应用：调用方可能只想改 SACL（标签）。info 决定
+    实际写入哪些安全信息位——传 _LABEL_SECURITY_INFORMATION 而 sacl_arg
+    为 None 表示**清除**现有标签。
+    """
+    ea_array = (EXPLICIT_ACCESS_W * len(entries))(*entries)
+    new_acl = ctypes.c_void_p()
+    result = _advapi32.SetEntriesInAclW(
+        len(entries), ea_array, p_dacl, ctypes.byref(new_acl)
+    )
+    if result != _ERROR_SUCCESS:
+        raise SandboxError(f"SetEntriesInAclW 失败: {result}")
 
     try:
-        explicit, inherited = _grant_ace_state(p_dacl, sid_ptr)
-        if explicit or inherited:
-            return False
-
-        ea = EXPLICIT_ACCESS_W()
-        ea.grfAccessPermissions = _GRANT_MASK
-        ea.grfAccessMode = _GRANT_ACCESS
-        ea.grfInheritance = _ACE_INHERIT_FLAGS
-        ea.Trustee.TrusteeForm = _TRUSTEE_IS_SID
-        ea.Trustee.TrusteeType = _TRUSTEE_IS_UNKNOWN
-        ea.Trustee.ptstrName = ctypes.cast(sid_ptr, ctypes.c_void_p)
-
-        new_acl = ctypes.c_void_p()
-        result = _advapi32.SetEntriesInAclW(
-            1, ctypes.byref(ea), p_dacl, ctypes.byref(new_acl)
+        result = _advapi32.SetNamedSecurityInfoW(
+            path, _SE_FILE_OBJECT, info,
+            None, None, new_acl, sacl_arg,
         )
         if result != _ERROR_SUCCESS:
-            raise SandboxError(f"SetEntriesInAclW 失败: {result}")
-
-        try:
-            result = _advapi32.SetNamedSecurityInfoW(
-                path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
-                None, None, new_acl, None,
+            raise SandboxError(
+                f"SetNamedSecurityInfoW({path!r}) 失败: {result}"
             )
-            if result != _ERROR_SUCCESS:
-                raise SandboxError(
-                    f"SetNamedSecurityInfoW({path!r}) 失败: {result}"
-                )
-        finally:
-            _kernel32.LocalFree(new_acl)
-        return True
     finally:
-        _kernel32.LocalFree(p_sd)
+        _kernel32.LocalFree(new_acl)
+
+
+def _ensure_write_ace(path: str, sid_ptr: ctypes.c_void_p) -> bool:
+    """确保目录具备 DSH 0.1.7 规格的三件套写入授权。
+
+    三件指：
+    1. 能力 SID 的可继承允许写入 ACE（DACL）
+    2. 对 Everyone 的 FILE_DELETE_CHILD 拒绝 ACE（DACL，仅容器继承）
+    3. Low 完整性标签 ACE（SACL）
+
+    三件齐备时不做修改并返回 False，否则返回 True。判定用逐字段严格
+    相等，与 DSH 的幂等跳过条件一致；掩码差一位就不算齐备，因为 DSH
+    不认那个 ACE，放行会静默失效。
+
+    写 SACL 需要 WRITE_OWNER，而目录所有者默认只有 WRITE_DAC。因此先
+    单独补一条调用者的 WRITE_OWNER 允许 ACE（已存在则跳过），使操作
+    自愈，无需用户手动 icacls。这一步必须独立成一次写入：权限检查用的是
+    调用开始时目标已有的描述符，同一次调用里新增的 WO ACE 尚未生效。
+
+    只设置传入目录本身，不递归子目录：可继承标志让 Windows 立即传播到
+    所有已存在的子目录与文件，之后新建的子项也自动获得。若某个文件显式
+    设置了受保护 DACL（不继承），则尊重它，不强行放行。
+    """
+    world_sid = _sid_from_string(_WORLD_SID)
+    label_sid = _sid_from_string(_LOW_LABEL_SID)
+    user_sid = _sid_from_string(_current_user_sid_string())
+    try:
+        p_sd, p_dacl, p_sacl = _read_security(path)
+        try:
+            grant_ok = _exact_grant_present(p_dacl, sid_ptr)
+            deny_ok = _exact_deny_present(p_dacl, world_sid)
+            label_ok = _label_present(p_sacl, label_sid)
+            if grant_ok and deny_ok and label_ok:
+                return False
+            wo_ok = _has_write_owner(p_dacl, user_sid)
+        finally:
+            _kernel32.LocalFree(p_sd)
+
+        # 前置步骤：补齐 WRITE_OWNER。没有它，下一步写 SACL 会以
+        # ERROR_ACCESS_DENIED(5) 失败。
+        if not wo_ok:
+            p_sd, p_dacl, _p_sacl = _read_security(path)
+            try:
+                _merge_and_apply(
+                    path, p_dacl,
+                    [
+                        _explicit_access(
+                            _WRITE_OWNER, _GRANT_ACCESS,
+                            _ACE_INHERIT_FLAGS, user_sid,
+                        )
+                    ],
+                    _DACL_SECURITY_INFORMATION, None,
+                )
+            finally:
+                _kernel32.LocalFree(p_sd)
+
+        # 主体：重新读取（上一步已改变 DACL），写入三件套。
+        p_sd, p_dacl, p_sacl = _read_security(path)
+        try:
+            grant_ok = _exact_grant_present(p_dacl, sid_ptr)
+            deny_ok = _exact_deny_present(p_dacl, world_sid)
+            label_ok = _label_present(p_sacl, label_sid)
+
+            entries: List[EXPLICIT_ACCESS_W] = []
+            if not grant_ok:
+                # 先撤销该 SID 的既有 ACE 再重新授予：旧版本写入的掩码与
+                # 0.1.7 不同，直接 GRANT 会与之合并成一个仍不精确的掩码。
+                entries.append(
+                    _explicit_access(0, _REVOKE_ACCESS, 0, sid_ptr)
+                )
+                entries.append(
+                    _explicit_access(
+                        _GRANT_MASK, _GRANT_ACCESS, _ACE_INHERIT_FLAGS,
+                        sid_ptr,
+                    )
+                )
+            if not deny_ok:
+                entries.append(
+                    _explicit_access(
+                        _FILE_DELETE_CHILD, _DENY_ACCESS,
+                        _CONTAINER_INHERIT_ACE, world_sid,
+                    )
+                )
+
+            # 标签已存在时只传 DACL 信息：带上 LABEL 位会以传入的 pSacl
+            # 整体替换现有 SACL，把已有标签清掉。
+            info = _DACL_SECURITY_INFORMATION
+            sacl_arg: Any = None
+            if not label_ok:
+                label_acl = _build_low_label_acl(label_sid)
+                info |= _LABEL_SECURITY_INFORMATION
+                sacl_arg = ctypes.cast(label_acl, ctypes.c_void_p)
+
+            _merge_and_apply(path, p_dacl, entries, info, sacl_arg)
+            return True
+        finally:
+            _kernel32.LocalFree(p_sd)
+    finally:
+        _kernel32.LocalFree(world_sid)
+        _kernel32.LocalFree(label_sid)
+        _kernel32.LocalFree(user_sid)
+
+
+def _has_foreign_grant(
+    p_dacl: ctypes.c_void_p, sid_ptr: ctypes.c_void_p
+) -> bool:
+    """DACL 中是否存在**其他**能力 SID 的精确授予 ACE。
+
+    用于撤销时决定是否清除 Low 标签：同一目录可能承载多个能力授予
+    （例如工作区 SID 与放行 SID），清掉标签会让仍然有效的那一个失去
+    隔离语义。判定与 DSH 的 hasForeignGrant 一致：mask 精确等于
+    _GRANT_MASK 且 SID 不是被撤销的那个。
+    """
+    for entry in _iter_aces(p_dacl):
+        if entry.ace_type != _ACCESS_ALLOWED_ACE_TYPE:
+            continue
+        if entry.mask != _GRANT_MASK:
+            continue
+        if _sid_equal(entry.sid_ptr, sid_ptr):
+            continue
+        return True
+    return False
 
 
 def _remove_write_ace(path: str, sid_ptr: ctypes.c_void_p) -> bool:
-    """从路径的 DACL 中移除能力 SID 的显式允许 ACE。
+    """移除路径上该能力 SID 的 ACE，必要时清除 Low 标签。
 
-    返回是否移除了 ACE。没有显式 ACE 时不做修改并返回 False，因此重复
-    撤销是幂等的，也不会把"扫描到但无需处理"的条目计入变更数。
+    返回是否发生变更。没有该 SID 的 ACE 时不做修改并返回 False，因此
+    重复撤销是幂等的。
 
-    用 REVOKE_ACCESS 交给系统删除匹配项，其余 ACE（含继承 ACE）原样保留。
+    与 DSH 0.1.7 的 revokeWrite 一致：用 REVOKE_ACCESS 删除该 SID 的
+    全部 ACE（其余条目原样保留），并且仅当目录上不再有其他能力授予时
+    才清除 Low 标签——同一目录可能承载多个能力授予，留下标签是让仍
+    有效的那一个继续正常工作所必需的。
+
     继承 ACE 无法在此移除：它由父项派生，父项撤销后自动消失。
     """
-    p_sd, p_dacl = _read_dacl(path)
-
+    user_sid = _sid_from_string(_current_user_sid_string())
     try:
-        explicit, _inherited = _grant_ace_state(p_dacl, sid_ptr)
-        if not explicit:
-            return False
-
-        ea = EXPLICIT_ACCESS_W()
-        ea.grfAccessPermissions = 0
-        ea.grfAccessMode = _REVOKE_ACCESS
-        ea.grfInheritance = 0
-        ea.Trustee.TrusteeForm = _TRUSTEE_IS_SID
-        ea.Trustee.TrusteeType = _TRUSTEE_IS_UNKNOWN
-        ea.Trustee.ptstrName = ctypes.cast(sid_ptr, ctypes.c_void_p)
-
-        new_acl = ctypes.c_void_p()
-        result = _advapi32.SetEntriesInAclW(
-            1, ctypes.byref(ea), p_dacl, ctypes.byref(new_acl)
-        )
-        if result != _ERROR_SUCCESS:
-            raise SandboxError(f"SetEntriesInAclW(撤销) 失败: {result}")
-
+        p_sd, p_dacl = _read_dacl(path)
         try:
-            result = _advapi32.SetNamedSecurityInfoW(
-                path, _SE_FILE_OBJECT, _DACL_SECURITY_INFORMATION,
-                None, None, new_acl, None,
+            if not p_dacl:
+                return False
+
+            explicit, _inherited = _grant_ace_state(p_dacl, sid_ptr)
+            # 该 SID 无 ACE 时不触碰描述符：避免为无谓的写操作重传播整棵树
+            if not explicit:
+                return False
+
+            # 若接下来要清标签，同样需要 WRITE_OWNER（标签在 SACL）。
+            # 与 grant 一样必须独立成一次写入，新加的 WO ACE 才能生效。
+            keep_label = _has_foreign_grant(p_dacl, sid_ptr)
+            need_wo = (
+                not keep_label and not _has_write_owner(p_dacl, user_sid)
             )
-            if result != _ERROR_SUCCESS:
-                raise SandboxError(
-                    f"SetNamedSecurityInfoW({path!r}) 失败: {result}"
-                )
         finally:
-            _kernel32.LocalFree(new_acl)
-        return True
+            _kernel32.LocalFree(p_sd)
+
+        if need_wo:
+            p_sd, p_dacl = _read_dacl(path)
+            try:
+                _merge_and_apply(
+                    path, p_dacl,
+                    [
+                        _explicit_access(
+                            _WRITE_OWNER, _GRANT_ACCESS,
+                            _ACE_INHERIT_FLAGS, user_sid,
+                        )
+                    ],
+                    _DACL_SECURITY_INFORMATION, None,
+                )
+            finally:
+                _kernel32.LocalFree(p_sd)
+
+        p_sd, p_dacl = _read_dacl(path)
+        try:
+            # 仍有其他能力授予时保留标签（kind=keep → information=4）；
+            # 否则连标签一起清掉（kind=clear → information=20 且 SACL 传
+            # NULL）。与 DSH 一致：清除是无条件的，不先判断标签是否存在。
+            keep_label = _has_foreign_grant(p_dacl, sid_ptr)
+            info = _DACL_SECURITY_INFORMATION
+            if not keep_label:
+                info |= _LABEL_SECURITY_INFORMATION
+
+            _merge_and_apply(
+                path, p_dacl,
+                [_explicit_access(0, _REVOKE_ACCESS, 0, sid_ptr)],
+                info, None,
+            )
+            return True
+        finally:
+            _kernel32.LocalFree(p_sd)
     finally:
-        _kernel32.LocalFree(p_sd)
+        _kernel32.LocalFree(user_sid)
 
 
 def _is_reparse_point(path: str) -> bool:
@@ -769,8 +1110,12 @@ def revoke_write_access(path: str) -> TreeOpResult:
 def grant_status(path: str) -> Dict[str, Any]:
     """检查目录树的放行状态，返回状态字典。
 
-    explicit_entries 列出树中所有带显式允许 ACE 的条目：它们不依赖父目录，
-    因此父目录撤销后依然可写，是判断"撤销是否彻底"的依据。
+    "已放行"的口径是 0.1.7 三件套齐备（能力 ACE + world deny + Low 标签）：
+    只看能力 ACE 会把无效放行报告成已放行——这正是升级后最常见的误判，
+    旧的 ACE 还在，但缺标签导致写入被完整性检查拒绝。
+
+    explicit_entries 列出树中带显式能力 ACE 的条目：它们不依赖父目录，
+    因此父目录撤销后依然有 ACE，是判断"撤销是否彻底"的依据。
     只读操作，不修改任何 ACL。
     """
     root = os.path.abspath(path)
@@ -778,37 +1123,51 @@ def grant_status(path: str) -> Dict[str, Any]:
         raise SandboxError(f"目录不存在: {root}")
 
     sid_ptr = _sid_from_string(grant_write_sid())
+    world_sid_ptr = _sid_from_string(_WORLD_SID)
+    label_sid_ptr = _sid_from_string(_LOW_LABEL_SID)
     try:
         explicit_entries: List[str] = []
         writable_count = 0
         total_count = 0
         failures: List[str] = []
-        root_explicit = False
-        root_inherited = False
+        root_state: Dict[str, bool] = {
+            "grant": False, "deny": False, "label": False,
+        }
 
         for target, _is_dir in _walk_tree(root):
             total_count += 1
             try:
-                p_sd, p_dacl = _read_dacl(target)
+                p_sd, p_dacl, p_sacl = _read_security(target)
             except SandboxError as e:
                 failures.append(f"{target}: {e}")
                 continue
             try:
-                explicit, inherited = _grant_ace_state(p_dacl, sid_ptr)
+                explicit, _inherited = _grant_ace_state(p_dacl, sid_ptr)
+                state = {
+                    "grant": _exact_grant_present(p_dacl, sid_ptr),
+                    "deny": _exact_deny_present(p_dacl, world_sid_ptr),
+                    "label": _label_present(p_sacl, label_sid_ptr),
+                }
             finally:
                 _kernel32.LocalFree(p_sd)
 
             if explicit:
                 explicit_entries.append(target)
-            if explicit or inherited:
+            if state["grant"] and state["deny"] and state["label"]:
                 writable_count += 1
             if target == root:
-                root_explicit, root_inherited = explicit, inherited
+                root_state = state
 
         return {
             "path": root,
-            "root_explicit": root_explicit,
-            "root_inherited": root_inherited,
+            "root_grant": root_state["grant"],
+            "root_deny": root_state["deny"],
+            "root_label": root_state["label"],
+            "root_granted": (
+                root_state["grant"]
+                and root_state["deny"]
+                and root_state["label"]
+            ),
             "explicit_entries": explicit_entries,
             "writable_count": writable_count,
             "total_count": total_count,
@@ -816,6 +1175,8 @@ def grant_status(path: str) -> Dict[str, Any]:
         }
     finally:
         _kernel32.LocalFree(sid_ptr)
+        _kernel32.LocalFree(world_sid_ptr)
+        _kernel32.LocalFree(label_sid_ptr)
 
 
 # ── 令牌工具 ──────────────────────────────────────────────────────
@@ -922,6 +1283,34 @@ def _set_token_default_dacl_grant(
             )
     finally:
         _kernel32.LocalFree(new_dacl)
+
+
+def _set_token_low_integrity(
+    token: wintypes.HANDLE, label_sid_ptr: ctypes.c_void_p
+) -> None:
+    """把令牌的完整性级别设为 Low（S-1-16-4096）。
+
+    与 DSH 的沙箱模型一致：沙箱子进程运行在 Low 完整性，写入未标 Low 的
+    对象会被 no-write-up 规则拒绝。这是纵深防御的一层——即使某个目录被
+    误授予了能力 SID，只要它没有 Low 标签，沙箱进程依然写不进去。
+
+    代价是被授权的目录必须显式标上 Low 标签，否则写入会因完整性检查
+    失败（这正是 _ensure_write_ace 写标签的原因）。
+
+    TokenIntegrityLevel 的载荷是单条 SID_AND_ATTRIBUTES，属性必须带
+    SE_GROUP_INTEGRITY，否则 SetTokenInformation 以参数错误失败。
+    """
+    label = SID_AND_ATTRIBUTES()
+    label.Sid = ctypes.cast(label_sid_ptr, ctypes.c_void_p)
+    label.Attributes = _SE_GROUP_INTEGRITY
+    if not _advapi32.SetTokenInformation(
+        token, _TokenIntegrityLevel, ctypes.byref(label),
+        ctypes.sizeof(label),
+    ):
+        raise SandboxError(
+            f"SetTokenInformation(TokenIntegrityLevel) 失败: "
+            f"{ctypes.get_last_error()}"
+        )
 
 
 def _create_restricted_token(
@@ -1118,8 +1507,9 @@ def spawn_pwsh_sandboxed(
     # 使 grant_write_access 放行的目录在每个会话都保持可写。
     grant_sid = _sid_from_string(grant_write_sid())
 
-    # 2. 获取 Everyone SID
-    everyone_sid = _sid_from_string("S-1-1-0")
+    # 2. 获取 Everyone SID 与 Low 完整性标签 SID
+    everyone_sid = _sid_from_string(_WORLD_SID)
+    low_label_sid = _sid_from_string(_LOW_LABEL_SID)
 
     # 3. 获取当前进程令牌和 Logon SID
     current_token = wintypes.HANDLE()
@@ -1146,7 +1536,8 @@ def spawn_pwsh_sandboxed(
         # logon_buf 必须在令牌创建完成前保持存活，因此作为局部变量持有
         logon_sid, logon_buf = _get_logon_sid(current_token)
 
-        # 4. 确保工作目录 ACE 存在
+        # 4. 确保工作目录具备三件套授权（能力 ACE + world deny + Low 标签）。
+        # 必须在令牌降完整性之前完成：这是沙箱外身份的 ACL 编辑。
         _ensure_write_ace(cwd_abs, ws_sid)
 
         # 5. 创建受限令牌。restricting SID 是白名单：对象 DACL 必须授予
@@ -1162,6 +1553,11 @@ def spawn_pwsh_sandboxed(
         # 表现为 CreateProcessAsUserW 返回 ERROR_ACCESS_DENIED (5)。
         _set_token_default_dacl_grant(restricted_token, ws_sid)
         _set_token_default_dacl_grant(restricted_token, grant_sid)
+
+        # 5c. 把令牌降到 Low 完整性，与 DSH 的沙箱模型一致。
+        # 必须放在 _ensure_write_ace 之后：写标签需要提升前的令牌权限，
+        # 而 _ensure_write_ace 是沙箱外身份执行的 ACL 编辑。
+        _set_token_low_integrity(restricted_token, low_label_sid)
 
         try:
             # 6. 创建管道
@@ -1313,6 +1709,7 @@ def spawn_pwsh_sandboxed(
         _kernel32.LocalFree(ws_sid)
         _kernel32.LocalFree(grant_sid)
         _kernel32.LocalFree(everyone_sid)
+        _kernel32.LocalFree(low_label_sid)
         # logon_sid 指向 logon_buf（Python 缓冲区），由 Python 回收，
         # 不能用 LocalFree 释放。
         del logon_buf

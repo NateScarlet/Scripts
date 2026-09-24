@@ -3,14 +3,22 @@
 用途：让 DSH 的 workspace-write 沙箱在**不切换到 danger-full-access** 的前提下，
 写入工作区之外的指定目录。放行是一次性的 ACL 改动，之后所有会话都生效。
 
-机制（对照 @deepseek-ai/dsh-sandbox-windows-acl）：
+机制（对照 @deepseek-ai/dsh-sandbox-windows-acl 0.1.7）：
 
 - DSH 从**规范工作区路径**确定性派生工作区能力 SID：
   sha256(工作区路径) 前 8 字节 → 两个 30 位子权威 → S-1-4-x-y
 - 该 SID 被放进 WRITE_RESTRICTED 令牌的 restricting 列表，Windows 做两次
   访问检查，只有两次都通过才授予写权限
-- 因此**只要给目标目录的 DACL 加一条该工作区 SID 的允许写入 ACE**，
-  该目录就在所有携带此 SID 的 DSH 会话中变可写
+- 0.1.7 起一次放行要写**三件**，缺一不可：
+  1. 目标目录 DACL 中该工作区 SID 的允许写入 ACE（掩码精确为 0x110156）
+  2. DACL 中对 Everyone 的 FILE_DELETE_CHILD 拒绝 ACE（仅容器继承）
+  3. SACL 中的 Low 完整性标签（S-1-16-4096，no-write-up）
+  三件在同一次 SetNamedSecurityInfoW 调用中写入，DSH 也用严格相等判定
+  是否已齐备，掩码差一位或标签缺失都会让它认不出自己的授权。
+- 沙箱子进程运行在 Low 完整性，写入未标 Low 的对象会被 no-write-up 规则
+  拒绝——这是第 3 件存在的原因，也是升级后旧脚本放行失效的根因。
+- 写 SACL 需要 WRITE_OWNER，目录所有者默认只有 WRITE_DAC。脚本在
+  同一次运行中先补一条调用者的 WO ACE（已存在则跳过），做到自愈。
 
 关键约束：DSH 的 restricting 列表是写死的，runner 只接受
 `--write-sid` / `--temp-write-sid` 两个由它自己派生的 SID。外部无法把自定义
@@ -40,7 +48,7 @@ import hashlib
 import os
 import struct
 import sys
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # 复用 chat2cli 沙箱已验证的 ACL 原语：DACL 读写、ACE 增删、树遍历。
 # 这些是与 SID 无关的底层实现，DSH 与 chat2cli 只是喂给它们不同的 SID。
@@ -117,25 +125,43 @@ def _guard_not_sandboxed() -> None:
         )
 
 
+def _grant_state(path: str, sid: str) -> Dict[str, bool]:
+    """读取目标路径的 0.1.7 三件套齐备度（只读，不改 ACL）。
+
+    三件指能力 ACE、Everyone 的 FILE_DELETE_CHILD 拒绝、Low 完整性标签。
+    只看能力 ACE 会把无效放行报成已放行——DSH 0.1.7 起，缺标签的目录在
+    沙箱内写不进去，因此齐备度必须按三件判断。
+    """
+    sid_ptr = wws._sid_from_string(sid)
+    world_ptr = wws._sid_from_string(wws._WORLD_SID)
+    label_ptr = wws._sid_from_string(wws._LOW_LABEL_SID)
+    try:
+        p_sd, p_dacl, p_sacl = wws._read_security(path)
+        try:
+            return {
+                "grant": wws._exact_grant_present(p_dacl, sid_ptr),
+                "deny": wws._exact_deny_present(p_dacl, world_ptr),
+                "label": wws._label_present(p_sacl, label_ptr),
+            }
+        finally:
+            wws._kernel32.LocalFree(p_sd)
+    finally:
+        wws._kernel32.LocalFree(sid_ptr)
+        wws._kernel32.LocalFree(world_ptr)
+        wws._kernel32.LocalFree(label_ptr)
+
+
 def _sid_already_granted(path: str, sid: str) -> bool:
-    """目标目录是否已有该 SID 的允许写入 ACE（显式或继承）。
+    """目标目录是否已放行（三件套齐备）。
 
     只读检查，不修改 ACL。
     """
-    sid_ptr = wws._sid_from_string(sid)
-    try:
-        p_sd, p_dacl = wws._read_dacl(path)
-        try:
-            explicit, inherited = wws._grant_ace_state(p_dacl, sid_ptr)
-        finally:
-            wws._kernel32.LocalFree(p_sd)
-        return explicit or inherited
-    finally:
-        wws._kernel32.LocalFree(sid_ptr)
+    state = _grant_state(path, sid)
+    return state["grant"] and state["deny"] and state["label"]
 
 
 def _grant(path: str, sid: str) -> Tuple[bool, List[str]]:
-    """给目录加一条可继承的允许写入 ACE。返回 (是否变更, 失败列表)。"""
+    """写入 0.1.7 三件套授权。返回 (是否变更, 失败列表)。"""
     sid_ptr = wws._sid_from_string(sid)
     try:
         try:
@@ -182,7 +208,7 @@ def cmd_sid(workspace: Optional[str]) -> int:
 
 
 def cmd_grant(target: str, workspace: Optional[str]) -> int:
-    """放行目录：给目标目录加一条工作区 SID 的可继承允许写入 ACE。"""
+    """放行目录：写入 0.1.7 三件套授权（能力 ACE + world deny + Low 标签）。"""
     _guard_not_sandboxed()
     canonical, sid = resolve_workspace(workspace)
 
@@ -250,43 +276,66 @@ def cmd_status(target: str, workspace: Optional[str]) -> int:
         raise DshGrantError(f"目标目录不存在: {root}")
 
     # 放行状态的判定要区分两种来源：
-    # - 目标自身带显式 ACE：独立于父目录，撤销父目录后仍可写
+    # - 目标自身带显式 ACE：独立于父目录，撤销父目录后仍有 ACE
     # - 仅从父目录继承：父目录撤销后即失效
     # 只报"可写"会把这两种情况混为一谈，故分开列出。
     explicit_entries: List[str] = []
-    inherited_only: List[str] = []
+    granted_entries: List[str] = []
     total = 0
     failures: List[str] = []
+    root_state: Dict[str, bool] = {
+        "grant": False, "deny": False, "label": False,
+    }
 
     sid_ptr = wws._sid_from_string(sid)
+    world_ptr = wws._sid_from_string(wws._WORLD_SID)
+    label_ptr = wws._sid_from_string(wws._LOW_LABEL_SID)
     try:
         for entry, _is_dir in wws._walk_tree(root):
             total += 1
             try:
-                p_sd, p_dacl = wws._read_dacl(entry)
+                p_sd, p_dacl, p_sacl = wws._read_security(entry)
             except wws.SandboxError as e:
                 failures.append(f"{entry}: {e}")
                 continue
             try:
-                explicit, inherited = wws._grant_ace_state(p_dacl, sid_ptr)
+                explicit, _inherited = wws._grant_ace_state(p_dacl, sid_ptr)
+                state = {
+                    "grant": wws._exact_grant_present(p_dacl, sid_ptr),
+                    "deny": wws._exact_deny_present(p_dacl, world_ptr),
+                    "label": wws._label_present(p_sacl, label_ptr),
+                }
             finally:
                 wws._kernel32.LocalFree(p_sd)
 
             if explicit:
                 explicit_entries.append(entry)
-            elif inherited:
-                inherited_only.append(entry)
+            if state["grant"] and state["deny"] and state["label"]:
+                granted_entries.append(entry)
+            if entry == root:
+                root_state = state
     finally:
         wws._kernel32.LocalFree(sid_ptr)
+        wws._kernel32.LocalFree(world_ptr)
+        wws._kernel32.LocalFree(label_ptr)
 
-    writable = len(explicit_entries) + len(inherited_only)
+    writable = len(granted_entries)
 
     sys.stdout.write(f"目标  : {root}\n")
     sys.stdout.write(f"工作区: {canonical}\n")
     sys.stdout.write(f"SID   : {sid}\n")
     sys.stdout.write(
-        f"扫描条目: {total}，其中可写入: {writable}"
-        f"（显式 ACE {len(explicit_entries)}，仅继承 {len(inherited_only)}）\n"
+        f"扫描条目: {total}，其中三件齐备（可写入）: {writable}"
+        f"（含显式 ACE {len(explicit_entries)}）\n"
+    )
+
+    # 三件逐项列出，缺哪件一目了然：升级后最常见的问题是能力 ACE 还在
+    # 但标签缺失，此时目录在沙箱内实际不可写。
+    sys.stdout.write(
+        "目标三件: "
+        f"能力 ACE {'有' if root_state['grant'] else '无'}，"
+        f"world deny {'有' if root_state['deny'] else '无'}，"
+        f"Low 标签 {'有' if root_state['label'] else '无'}\n"
     )
 
     if writable == 0:
@@ -296,13 +345,11 @@ def cmd_status(target: str, workspace: Optional[str]) -> int:
     elif explicit_entries:
         sys.stdout.write("状态  : 已放行（目标自身带显式 ACE）。\n")
         _print_sample("显式 ACE 条目", explicit_entries)
-        if inherited_only:
-            _print_sample("仅继承条目", inherited_only)
     else:
         sys.stdout.write(
             "状态  : 仅通过父目录继承获得权限；父目录撤销后本目录即失效。\n"
         )
-        _print_sample("仅继承条目", inherited_only)
+        _print_sample("仅继承条目", granted_entries)
 
     if failures:
         sys.stderr.write(f"错误：{len(failures)} 个条目读取失败：\n")
