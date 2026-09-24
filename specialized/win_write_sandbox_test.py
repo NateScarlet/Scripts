@@ -68,25 +68,26 @@ class TestGrantWriteSid(unittest.TestCase):
 
 class TestDetectWriteDenial(unittest.TestCase):
     def test_recognizes_access_denied(self):
-        msg = win_write_sandbox.detect_write_denial(
-            "Remove-Item: Access is denied"
+        self.assertTrue(
+            win_write_sandbox.detect_write_denial(
+                "Remove-Item: Access is denied"
+            )
         )
-        self.assertIsNotNone(msg)
-        self.assertIn("只能写入工作目录", msg)
-        self.assertIn("sandbox grant", msg)
-        self.assertIn("--danger-full-access", msg)
 
     def test_recognizes_unauthorized_access(self):
-        msg = win_write_sandbox.detect_write_denial(
-            "Exception: System.UnauthorizedAccessException"
+        self.assertTrue(
+            win_write_sandbox.detect_write_denial(
+                "Exception: System.UnauthorizedAccessException"
+            )
         )
-        self.assertIsNotNone(msg)
 
-    def test_returns_none_for_normal_output(self):
-        self.assertIsNone(win_write_sandbox.detect_write_denial("hello world"))
+    def test_returns_false_for_normal_output(self):
+        self.assertFalse(
+            win_write_sandbox.detect_write_denial("hello world")
+        )
 
-    def test_returns_none_for_empty(self):
-        self.assertIsNone(win_write_sandbox.detect_write_denial(""))
+    def test_returns_false_for_empty(self):
+        self.assertFalse(win_write_sandbox.detect_write_denial(""))
 
 
 @unittest.skipUnless(sys.platform == "win32", "仅 Windows")
@@ -377,6 +378,47 @@ class TestSandboxIntegration(unittest.TestCase):
         self.assertFalse(os.path.exists(fake))
         with self.assertRaises(win_write_sandbox.SandboxError):
             self._run("echo hi", fake)
+
+    def test_read_only_can_read_but_not_write(self):
+        """read_only=True：读取正常，工作区内写入也被拒绝。"""
+        if win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程已在沙箱内，无法创建只读沙箱")
+        target = os.path.join(self.workspace, "readonly.txt")
+        if os.path.exists(target):
+            os.unlink(target)
+        try:
+            proc = win_write_sandbox.spawn_pwsh_sandboxed(
+                f"Write-Output 'read-ok'; "
+                f"Set-Content -Path '{target}' -Value 'x'",
+                self.workspace,
+                dict(os.environ),
+                read_only=True,
+            )
+            out, err = self._collect(proc)
+            self.assertIn("read-ok", out)
+            self.assertFalse(
+                os.path.exists(target), "只读模式下不得创建文件"
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertTrue(
+                win_write_sandbox.detect_write_denial(err),
+                f"stderr 应含拒绝迹象，实际: {err!r}",
+            )
+        finally:
+            if os.path.exists(target):
+                os.unlink(target)
+
+    def test_read_only_rejected_when_already_sandboxed(self):
+        """已受限上下文无法收窄为只读，必须报错而不是静默放宽。"""
+        if not win_write_sandbox.current_process_is_sandboxed():
+            self.skipTest("当前进程未受限，无继承收窄语义可验证")
+        with self.assertRaises(win_write_sandbox.SandboxError):
+            win_write_sandbox.spawn_pwsh_sandboxed(
+                "echo hi",
+                self.workspace,
+                dict(os.environ),
+                read_only=True,
+            )
 
 
 if __name__ == "__main__":

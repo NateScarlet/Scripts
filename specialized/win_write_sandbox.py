@@ -1,16 +1,20 @@
 
-"""Windows 写入沙箱：将 pwsh 子进程的写入限制在当前工作目录内。
+"""Windows 写入沙箱：将 pwsh 子进程的写入限制在指定范围内。
 
 机制来自 @deepseek-ai/dsh-sandbox-windows-acl（huoyaoyuan/windows-acl-restrict-poc 的移植）：
 
 - 从规范工作区路径确定性派生工作区能力 SID（sha256 → S-1-4-x-y）
 - 给工作目录 ACL 添加该 SID 的允许写入 ACE（常驻，不清理，exact-ACE skip）
-- 创建 WRITE_RESTRICTED 受限令牌，restricting SIDs = [工作区 SID, Everyone, Logon SID]
+- 创建 WRITE_RESTRICTED 受限令牌，按模式选择 restricting SID 列表：
+    workspace-write: [工作区 SID, 放行 SID, Everyone, Logon SID]，授予工作区写入
+    read-only:       [Everyone, Logon SID]，不授予任何写入
 - 用受限令牌通过 CreateProcessAsUserW 启动 pwsh.exe
 
 任何 Win32 调用失败都抛出 SandboxError，绝不降级为不受限执行（fail closed）。
 
 限制范围：只防写，不防读。写入被 ACL 拒绝时命令以非零退出码失败。
+read-only 模式下 PowerShell 会进入 ConstrainedLanguage（启动时的 AppLocker
+探测需要写 temp 而不可得），这是平台行为，非本模块的限制。
 """
 
 from __future__ import annotations
@@ -1088,16 +1092,20 @@ def spawn_pwsh_sandboxed(
     command: str,
     cwd: str,
     env: Dict[str, str],
+    *,
+    read_only: bool = False,
 ) -> SandboxedProcess:
     """在 Windows 写入沙箱中启动 pwsh.exe。
 
-    写入限制在 cwd 内。任何 Win32 失败都抛出 SandboxError，
-    绝不降级为不受限执行。
+    read_only=False（默认）：写入限制在 cwd 内。
+    read_only=True：不授予任何写权限，所有写入被拒绝（读取不受影响）。
+    任何 Win32 失败都抛出 SandboxError，绝不降级为不受限执行。
 
     参数：
         command: 完整的 PowerShell 命令字符串（已包含包装前缀）
-        cwd: 工作目录（沙箱的可写根）
+        cwd: 工作目录（非只读模式下的可写根）
         env: 子进程环境变量
+        read_only: 是否完全不授予写权限
 
     返回 SandboxedProcess，调用方负责在结束时调用 close_handles()。
     """
@@ -1108,20 +1116,38 @@ def spawn_pwsh_sandboxed(
     # 当前进程已受限（例如 chat2cli 运行在自身沙箱内）时，子进程通过普通
     # 进程创建即可继承写限制，不需要也无法再创建受限令牌。
     if _restricting_sid_count() > 0:
+        # 继承模式无法收窄范围：父进程的可写范围可能宽于只读请求。
+        # 此时直接失败，而不是让请求的权限静默地不生效。
+        if read_only:
+            raise SandboxError(
+                "当前进程已运行在写入沙箱内，无法再收窄为只读权限。"
+            )
         return _spawn_inheriting_restrictions(command, cwd_abs, env)
 
-    # 1. 派生工作区能力 SID
-    sid_str = workspace_write_sid(cwd_abs)
-    ws_sid = _sid_from_string(sid_str)
-
-    # 1b. 派生放行 SID。它与 cwd 无关，因此在所有会话中取值相同，
-    # 使 grant_write_access 放行的目录在每个会话都保持可写。
-    grant_sid = _sid_from_string(grant_write_sid())
-
-    # 2. 获取 Everyone SID
+    # 1. 派生 restricting SID 白名单与默认 DACL 授权 SID。
+    #
+    # WRITE_RESTRICTED 只约束写操作，读走对象自身 DACL。只读模式不携带
+    # 任何写 SID，因此工作目录的常驻放行 ACE 保持惰性（pass-2 检查只放行
+    # 白名单携带的 SID），可读而不可写。
     everyone_sid = _sid_from_string("S-1-1-0")
+    if read_only:
+        # Everyone 与 Logon SID 不授予用户文件写权限（文件 DACL 通常只把
+        # 写权限给用户 SID，而用户 SID 不在白名单内），但 pwsh 启动需要
+        # 它们：缺少会以 0xC0000142 (STATUS_DLL_INIT_FAILED) 失败。
+        # 默认 DACL 合并 Everyone，使子进程标准流管道通过 pass-2 检查。
+        restricting_sids: List[ctypes.c_void_p] = [everyone_sid]
+        default_dacl_sids: List[ctypes.c_void_p] = [everyone_sid]
+        owned_sids: List[ctypes.c_void_p] = [everyone_sid]
+    else:
+        # 工作区 SID 使 cwd 可写；放行 SID 与 cwd 无关，使
+        # grant_write_access 放行的目录在每个会话都保持可写。
+        ws_sid = _sid_from_string(workspace_write_sid(cwd_abs))
+        grant_sid = _sid_from_string(grant_write_sid())
+        restricting_sids = [ws_sid, grant_sid, everyone_sid]
+        default_dacl_sids = [ws_sid, grant_sid]
+        owned_sids = [ws_sid, grant_sid, everyone_sid]
 
-    # 3. 获取当前进程令牌和 Logon SID
+    # 2. 获取当前进程令牌和 Logon SID
     current_token = wintypes.HANDLE()
     # TOKEN_DUPLICATE 供 CreateRestrictedToken 复制令牌，
     # TOKEN_QUERY 供读取 TokenGroups，
@@ -1146,22 +1172,24 @@ def spawn_pwsh_sandboxed(
         # logon_buf 必须在令牌创建完成前保持存活，因此作为局部变量持有
         logon_sid, logon_buf = _get_logon_sid(current_token)
 
-        # 4. 确保工作目录 ACE 存在
-        _ensure_write_ace(cwd_abs, ws_sid)
+        if not read_only:
+            # 确保工作目录 ACE 存在
+            _ensure_write_ace(cwd_abs, ws_sid)
 
-        # 5. 创建受限令牌。restricting SID 是白名单：对象 DACL 必须授予
-        # 其中至少一个 SID 访问权，操作才被放行。grant_sid 入列后，
-        # 被 grant_write_access 放行过的目录在本会话同样可写。
+        # 3. Logon SID 让登录会话正常访问自身创建的对象，pwsh 启动也需要它。
+        restricting_sids.append(logon_sid)
+
+        # 4. 创建受限令牌。restricting SID 是白名单：写操作要求对象 DACL
+        # 授予其中至少一个 SID 访问权。
         restricted_token = _create_restricted_token(
-            current_token,
-            [ws_sid, grant_sid, everyone_sid, logon_sid],
+            current_token, restricting_sids
         )
 
-        # 5b. 把工作区与放行 SID 的允许 ACE 合并进受限令牌的默认 DACL。
+        # 5. 把白名单 SID 的允许 ACE 合并进受限令牌的默认 DACL。
         # 缺少这一步时，子进程创建标准流管道会被 pass-2 写入检查拒绝，
         # 表现为 CreateProcessAsUserW 返回 ERROR_ACCESS_DENIED (5)。
-        _set_token_default_dacl_grant(restricted_token, ws_sid)
-        _set_token_default_dacl_grant(restricted_token, grant_sid)
+        for sid_ptr in default_dacl_sids:
+            _set_token_default_dacl_grant(restricted_token, sid_ptr)
 
         try:
             # 6. 创建管道
@@ -1310,9 +1338,8 @@ def spawn_pwsh_sandboxed(
             _kernel32.CloseHandle(restricted_token)
     finally:
         _kernel32.CloseHandle(current_token)
-        _kernel32.LocalFree(ws_sid)
-        _kernel32.LocalFree(grant_sid)
-        _kernel32.LocalFree(everyone_sid)
+        for sid_ptr in owned_sids:
+            _kernel32.LocalFree(sid_ptr)
         # logon_sid 指向 logon_buf（Python 缓冲区），由 Python 回收，
         # 不能用 LocalFree 释放。
         del logon_buf
@@ -1386,15 +1413,10 @@ def current_process_is_sandboxed() -> bool:
     return _restricting_sid_count() > 0
 
 
-def detect_write_denial(stderr: str) -> Optional[str]:
-    """检测 stderr 中是否包含写入被拒绝的迹象，返回提示文本或 None。"""
-    for pattern in _WRITE_DENIAL_PATTERNS:
-        if pattern in stderr:
-            return (
-                "检测到写入被沙箱拒绝。当前 pwsh 只能写入工作目录 "
-                f"({os.getcwd()})。如需写入其他目录，请在沙箱外运行 "
-                "`chat2cli.py sandbox grant <目录>` 持久放行该目录，或在对应目录下 "
-                "重新运行 chat2cli，或使用 --danger-full-access 关闭沙箱。"
-            )
-    return None
+def detect_write_denial(stderr: str) -> bool:
+    """检测 stderr 中是否包含写入被拒绝的迹象。
+
+    只做判定，具体提示文案由调用方按生效权限生成。
+    """
+    return any(pattern in stderr for pattern in _WRITE_DENIAL_PATTERNS)
 
