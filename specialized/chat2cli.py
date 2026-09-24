@@ -315,12 +315,10 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
     "workspace-write"    可写入当前工作目录（含 .scratch），默认值
     "danger-full-access" 可写入任意位置（危险，弹窗确认后才执行）
   不声明时按 "workspace-write" 处理（用户以 --read-only 启动时收窄为 read-only）。
-- 命令运行在写入沙箱内：workspace-write 只能写入当前工作目录（含 .scratch），
+- 命令运行在写入沙箱内：workspace-write 只能写入当前工作目录，
   其他位置的写入与删除会被系统拒绝。需要写入其他目录时，
-  请提示用户在沙箱外运行 `chat2cli.py sandbox grant <目录>` 持久放行该目录
-  （`sandbox revoke <目录>` 撤销，`sandbox status <目录>` 查看当前状态），
-  或提示用户在对应目录下重新运行 chat2cli，
-  或在请求中声明 "permission": "danger-full-access"（将弹出确认窗口）。
+  请在请求中声明 "permission": "danger-full-access"（将弹出确认窗口由用户人工确认）。
+  部分软件因为需要更新全局缓存，也会需要使用 danger-full-access。
 - 请求的权限高于用户批准的权限时，脚本会弹出确认窗口，用户同意后才执行；
   无法弹出确认窗口（如无桌面环境）时一律拒绝执行。
 - 正文中定义的 <data.{{id}}> 数据块会注入为环境变量 `$env:DATA_{{id}}`，可在命令中直接引用。
