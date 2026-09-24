@@ -1682,16 +1682,30 @@ class TestPwshPermission(unittest.TestCase):
         self.assertIn("permission", msg)
 
     def test_accepts_all_valid_permissions(self):
-        for perm in ("read-only", "workspace-write", "danger-full-access"):
-            valid, msg = chat2cli.validate_request(
-                {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "pwsh",
-                    "params": {"command": "echo hi", "permission": perm},
-                }
-            )
-            self.assertTrue(valid, msg)
+        params_by_perm = {
+            "read-only": {"command": "echo hi", "permission": "read-only"},
+            "workspace-write": {
+                "command": "echo hi",
+                "permission": "workspace-write",
+            },
+            # danger-full-access 还要求 justification，单独构造
+            "danger-full-access": {
+                "command": "echo hi",
+                "permission": "danger-full-access",
+                "justification": "需要写入工作目录之外的位置",
+            },
+        }
+        for perm, params in params_by_perm.items():
+            with self.subTest(permission=perm):
+                valid, msg = chat2cli.validate_request(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "pwsh",
+                        "params": params,
+                    }
+                )
+                self.assertTrue(valid, msg)
 
     def test_permission_optional(self):
         valid, msg = chat2cli.validate_request(
@@ -1703,6 +1717,65 @@ class TestPwshPermission(unittest.TestCase):
             }
         )
         self.assertTrue(valid, msg)
+
+    def test_danger_full_access_requires_justification(self):
+        valid, msg = chat2cli.validate_request(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "pwsh",
+                "params": {
+                    "command": "echo hi",
+                    "permission": "danger-full-access",
+                },
+            }
+        )
+        self.assertFalse(valid)
+        self.assertIn("justification", msg)
+
+    def test_danger_full_access_accepts_justification(self):
+        valid, msg = chat2cli.validate_request(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "pwsh",
+                "params": {
+                    "command": "echo hi",
+                    "permission": "danger-full-access",
+                    "justification": "需要写入工作目录之外的全局缓存",
+                },
+            }
+        )
+        self.assertTrue(valid, msg)
+
+    def test_justification_optional_for_lower_permissions(self):
+        for perm in ("read-only", "workspace-write"):
+            with self.subTest(permission=perm):
+                valid, msg = chat2cli.validate_request(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "pwsh",
+                        "params": {"command": "echo hi", "permission": perm},
+                    }
+                )
+                self.assertTrue(valid, msg)
+
+    def test_justification_must_be_string(self):
+        valid, msg = chat2cli.validate_request(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "pwsh",
+                "params": {
+                    "command": "echo hi",
+                    "permission": "workspace-write",
+                    "justification": 123,
+                },
+            }
+        )
+        self.assertFalse(valid)
+        self.assertIn("justification", msg)
 
     def test_default_request_permission_is_min_of_workspace_write(self):
         # 默认批准 workspace-write：请求默认取 workspace-write
@@ -1776,6 +1849,58 @@ class TestPwshPermission(unittest.TestCase):
             )
         finally:
             builtins.__import__ = real_import
+
+    def test_confirm_escalation_shows_justification(self):
+        """申请理由应展示在确认弹窗文案中。"""
+        import sys
+        import types
+
+        captured = {}
+
+        class FakeRoot:
+            def withdraw(self):
+                pass
+
+            def attributes(self, *args):
+                pass
+
+            def destroy(self):
+                pass
+
+        fake_tk = types.ModuleType("tkinter")
+        fake_tk.Tk = FakeRoot
+        fake_messagebox = types.ModuleType("tkinter.messagebox")
+
+        def fake_askyesno(title, message, parent=None):
+            captured["message"] = message
+            return True
+
+        fake_messagebox.askyesno = fake_askyesno
+        fake_tk.messagebox = fake_messagebox
+
+        # tkinter 可能已被其他测试导入，替换后需恢复原状
+        saved = {
+            name: sys.modules.get(name)
+            for name in ("tkinter", "tkinter.messagebox")
+        }
+        sys.modules["tkinter"] = fake_tk
+        sys.modules["tkinter.messagebox"] = fake_messagebox
+        try:
+            approved = chat2cli._confirm_permission_escalation(
+                "danger-full-access",
+                "workspace-write",
+                "echo hi",
+                "需要更新全局缓存",
+            )
+        finally:
+            for name, module in saved.items():
+                if module is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = module
+
+        self.assertTrue(approved)
+        self.assertIn("需要更新全局缓存", captured["message"])
 
 
 if __name__ == "__main__":

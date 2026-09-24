@@ -305,7 +305,8 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
   "method": "pwsh",
   "params": {{
     "command": "要执行的命令",
-    "permission": "workspace-write"
+    "permission": "workspace-write",
+    "justification": "为什么需要该权限的一句话说明（permission 为 danger-full-access 时必填）"
   }}
 }}
 - command 为通过 pwsh.exe 执行的命令，无超时限制（用户可通过 Ctrl+C 中断）。
@@ -315,6 +316,8 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
     "workspace-write"    可写入当前工作目录（含 .scratch），默认值
     "danger-full-access" 可写入任意位置（危险，弹窗确认后才执行）
   不声明时按 "workspace-write" 处理（用户以 --read-only 启动时收窄为 read-only）。
+- justification 可选，用一句话说明为什么需要所声明的权限，
+  会在权限确认弹窗中展示给用户；permission 为 "danger-full-access" 时必填。
 - 命令运行在写入沙箱内：workspace-write 只能写入当前工作目录，
   其他位置的写入与删除会被系统拒绝。需要写入其他目录时，
   请在请求中声明 "permission": "danger-full-access"（将弹出确认窗口由用户人工确认）。
@@ -1684,12 +1687,16 @@ def _default_request_permission(approved: str) -> str:
 
 
 def _confirm_permission_escalation(
-    requested: str, approved: str, command: str
+    requested: str,
+    approved: str,
+    command: str,
+    justification: Optional[str] = None,
 ) -> bool:
     """弹窗请用户确认超出批准范围的权限请求。
 
-    无法确认（tkinter 不可用、无桌面、窗口异常、用户选择否）一律返回
-    False，保证无法取得确认时不执行。
+    justification 是模型给出的申请理由（可为空），非空时展示在弹窗里，
+    帮助用户判断是否放行。无法确认（tkinter 不可用、无桌面、窗口异常、
+    用户选择否）一律返回 False，保证无法取得确认时不执行。
     """
     try:
         import tkinter as tk
@@ -1715,10 +1722,17 @@ def _confirm_permission_escalation(
         root.attributes("-topmost", True)
         # 命令过长时截断，避免弹窗被撑满
         shown = command if len(command) <= 2000 else command[:2000] + "\n...（已截断）"
+        # 理由可能缺失或只有空白，为空时不给弹窗增加噪音
+        reason = (
+            f"申请理由：{justification}\n\n"
+            if isinstance(justification, str) and justification.strip()
+            else ""
+        )
         message = (
             "chat2cli 请求更高的执行权限。\n\n"
             f"请求权限：{requested}\n"
             f"已批准权限：{approved}\n\n"
+            f"{reason}"
             f"命令：\n{shown}\n\n"
             "是否允许本次执行？"
         )
@@ -1791,7 +1805,10 @@ def execute_pwsh(
         )
         sys.stderr.flush()
         if not _confirm_permission_escalation(
-            requested_permission, approved_permission, command
+            requested_permission,
+            approved_permission,
+            command,
+            params.get("justification"),
         ):
             return {
                 "success": False,
@@ -2613,7 +2630,7 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
             "offset",
             "limit",
         },
-        "pwsh": {"command", "permission"},
+        "pwsh": {"command", "permission", "justification"},
         "skill": {"name"},
     }
     allowed = allowed_params[method]
@@ -2634,6 +2651,24 @@ def validate_request(req: Dict[str, Any]) -> Tuple[bool, str]:
                 False,
                 f"permission 取值非法：{permission!r}，"
                 f"允许：{sorted(_PERMISSION_ORDER)}",
+            )
+
+        justification = req["params"].get("justification")
+        if justification is not None and not isinstance(justification, str):
+            return (
+                False,
+                "justification 必须是字符串，得到："
+                f"{type(justification).__name__}",
+            )
+        # danger-full-access 会绕过沙箱，要求模型先给出申请理由，
+        # 该理由会在确认弹窗中展示给用户
+        if permission == "danger-full-access" and not (
+            isinstance(justification, str) and justification.strip()
+        ):
+            return (
+                False,
+                'permission 为 "danger-full-access" 时必须提供非空的 '
+                "justification，用一句话说明为什么需要该权限。",
             )
 
     return True, ""
