@@ -954,6 +954,60 @@ class TestCreateCommandAutoParentDir(unittest.TestCase):
         self.assertEqual(content, "old")
 
 
+class TestEditorPathScope(unittest.TestCase):
+    """view 是读操作，应放行任意绝对路径（与 pwsh 沙箱只限制写入一致）；
+    写操作仍限制在当前工作目录或 ~/.agents/skills 内。"""
+
+    def _run(self, cwd: str, path: str, command: str = "view", **extra):
+        """在指定 cwd 下调用 execute_str_replace_editor"""
+        old_cwd = os.getcwd()
+        os.chdir(cwd)
+        try:
+            params = {"command": command, "path": path}
+            params.update(extra)
+            return chat2cli.execute_str_replace_editor("1", params)
+        finally:
+            os.chdir(old_cwd)
+
+    def test_view_outside_cwd_succeeds(self):
+        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as outside:
+            target = Path(outside) / "note.txt"
+            target.write_text("hello", encoding="utf-8")
+            meta, content = self._run(workspace, str(target))
+        self.assertTrue(meta["success"])
+        self.assertIn("hello", content)
+
+    def test_view_relative_path_rejected(self):
+        with tempfile.TemporaryDirectory() as workspace:
+            meta, _ = self._run(workspace, "relative.txt")
+        self.assertFalse(meta["success"])
+
+    def test_create_outside_cwd_rejected(self):
+        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as outside:
+            target = Path(outside) / "new.txt"
+            meta, _ = self._run(workspace, str(target), command="create", file_text="x")
+            self.assertFalse(meta["success"])
+            self.assertFalse(target.exists())
+
+    def test_str_replace_outside_cwd_rejected(self):
+        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as outside:
+            target = Path(outside) / "note.txt"
+            target.write_text("old", encoding="utf-8")
+            meta, _ = self._run(
+                workspace, str(target), command="str_replace", old_str="old", new_str="new"
+            )
+            self.assertFalse(meta["success"])
+            self.assertEqual(target.read_text(encoding="utf-8"), "old")
+
+    def test_insert_outside_cwd_rejected(self):
+        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as outside:
+            target = Path(outside) / "note.txt"
+            target.write_text("line1\n", encoding="utf-8")
+            meta, _ = self._run(
+                workspace, str(target), command="insert", insert_line=1, new_str="line2"
+            )
+            self.assertFalse(meta["success"])
+            self.assertEqual(target.read_text(encoding="utf-8"), "line1\n")
 
 
 class TestBuildPwshEnv(unittest.TestCase):

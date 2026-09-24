@@ -261,7 +261,9 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
     "path": "文件或目录的绝对路径"
   }}
 }}
-- path 必须是绝对路径（~ 会被展开为 home 目录），且只能指向当前工作目录内的文件或目录。
+- path 必须是绝对路径（~ 会被展开为 home 目录）。
+- view 为读操作，可读取任意路径（与 pwsh 沙箱只限制写入保持一致）；
+  create/str_replace/insert 为写操作，只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。
 - command 支持四种子命令，各子命令所需字段如下：
 
   1) view — 查看文件或目录
@@ -804,10 +806,11 @@ Resolve relative paths mentioned by this skill against the base directory before
     return meta, content_block
 
 
-def _resolve_editor_path(path_raw: str) -> str:
+def _resolve_editor_path(path_raw: str, *, for_write: bool) -> str:
     """解析 str_replace_editor 的 path。
 
-    允许两类路径：
+    读取（view）放行任意绝对路径，与 pwsh 沙箱只限制写入保持一致；
+    写入（create/str_replace/insert）仅允许两类路径：
     1. 当前工作目录内的绝对路径
     2. ~/.agents/skills 目录内的绝对路径（供 skills_resource 引用的资源读取）
     """
@@ -815,6 +818,9 @@ def _resolve_editor_path(path_raw: str) -> str:
     if not os.path.isabs(expanded):
         return ""
     abs_path = os.path.abspath(expanded)
+
+    if not for_write:
+        return abs_path
 
     cwd = os.path.abspath(os.getcwd())
     if abs_path == cwd:
@@ -853,15 +859,21 @@ def execute_str_replace_editor(
     if not isinstance(path_raw, str) or not path_raw:
         return {"success": False, "message": "错误：path 不能为空。"}, ""
 
-    path = _resolve_editor_path(path_raw)
+    # view 是读操作，放行任意绝对路径；写操作仍限制在当前工作目录或 ~/.agents/skills 内
+    path = _resolve_editor_path(path_raw, for_write=(command != "view"))
     if not path:
+        if command == "view":
+            return {
+                "success": False,
+                "message": "错误：path 必须是绝对路径（~ 会被展开为 home 目录）。",
+            }, ""
         import socket
 
         hostname = socket.gethostname()
         cwd = os.getcwd()
         return {
             "success": False,
-            "message": f"错误：path 必须是绝对路径（~ 会被展开为 home 目录），且只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。当前机器：{hostname}，当前工作目录：{_display_path(cwd)}。如需操作其他目录外的文件，请提示用户在对应目录下重新运行此方法。",
+            "message": f"错误：path 必须是绝对路径（~ 会被展开为 home 目录），且写入只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。当前机器：{hostname}，当前工作目录：{_display_path(cwd)}。如需写入其他目录，请提示用户在对应目录下重新运行此方法。",
         }, ""
 
     if command == "view":
