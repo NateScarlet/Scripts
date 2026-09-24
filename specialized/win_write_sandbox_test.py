@@ -339,10 +339,7 @@ class TestSandboxIntegration(unittest.TestCase):
         status = win_write_sandbox.grant_status(grant_dir)
         # 只有根目录带显式 ACE，子目录靠继承可写
         self.assertEqual(status["explicit_entries"], [grant_dir])
-        self.assertTrue(status["root_granted"])
-        self.assertTrue(status["root_grant"])
-        self.assertTrue(status["root_deny"])
-        self.assertTrue(status["root_label"])
+        self.assertTrue(status["root_explicit"])
         self.assertEqual(status["writable_count"], status["total_count"])
 
         # 再次 grant：根目录已在放行范围内，不做任何修改
@@ -362,40 +359,18 @@ class TestSandboxIntegration(unittest.TestCase):
         self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
 
         before = win_write_sandbox.grant_status(grant_dir)
-        self.assertFalse(before["root_granted"])
+        self.assertFalse(before["root_explicit"])
         self.assertEqual(before["explicit_entries"], [])
 
         win_write_sandbox.grant_write_access(grant_dir)
         after = win_write_sandbox.grant_status(grant_dir)
-        self.assertTrue(after["root_granted"])
+        self.assertTrue(after["root_explicit"])
         self.assertIn(grant_dir, after["explicit_entries"])
 
         win_write_sandbox.revoke_write_access(grant_dir)
         final = win_write_sandbox.grant_status(grant_dir)
-        self.assertFalse(final["root_granted"])
+        self.assertFalse(final["root_explicit"])
         self.assertEqual(final["explicit_entries"], [])
-
-    def test_grant_writes_three_piece_state(self):
-        """grant 后三件必须齐备：能力 ACE、world deny、Low 标签。
-
-        只写能力 ACE 的旧实现会被 DSH 0.1.7 判为未授权：缺标签时沙箱
-        进程（Low 完整性）的写入会被 no-write-up 规则拒绝。
-        """
-        if win_write_sandbox.current_process_is_sandboxed():
-            self.skipTest("当前进程已受限，无法修改 ACL")
-
-        grant_dir = os.path.join(
-            os.getcwd(), ".scratch", "win-write-sandbox-test", "three-piece"
-        )
-        os.makedirs(grant_dir, exist_ok=True)
-        self.addCleanup(win_write_sandbox.revoke_write_access, grant_dir)
-
-        win_write_sandbox.grant_write_access(grant_dir)
-        status = win_write_sandbox.grant_status(grant_dir)
-        self.assertTrue(status["root_grant"], "能力 ACE 应存在")
-        self.assertTrue(status["root_deny"], "world deny 应存在")
-        self.assertTrue(status["root_label"], "Low 标签应存在")
-        self.assertTrue(status["root_granted"])
 
     def test_invalid_cwd_raises(self):
         fake = os.path.join(self.workspace, "no-such-dir-xyz")

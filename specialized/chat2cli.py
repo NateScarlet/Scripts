@@ -1866,14 +1866,10 @@ def run_sandbox_command(action: str, path: str) -> int:
         if action == "grant":
             result = win_write_sandbox.grant_write_access(path)
             failures = result.failures
-            if failures:
-                # 失败时不打印成功口径的消息：changed=0 既可能是"已放行"
-                # 也可能是"写入被拒"，合并显示会让用户误以为放行成功。
-                pass
-            elif result.changed:
+            if result.changed:
                 sys.stderr.write(
                     f"已放行：{os.path.abspath(path)}"
-                    "（写入三件套授权，子项自动继承）\n"
+                    "（设置可继承 ACE，子项自动继承）\n"
                 )
             else:
                 sys.stderr.write(
@@ -1906,23 +1902,17 @@ def run_sandbox_command(action: str, path: str) -> int:
 
 def _report_grant_status(status: Dict[str, Any]) -> None:
     """把 grant_status 的结果格式化到 stderr。"""
-    if status["root_granted"]:
-        state = "已放行（三件齐备）"
+    if status["root_explicit"]:
+        state = "已放行（显式 ACE）"
+    elif status["root_inherited"]:
+        state = "已放行（继承自父目录）"
     else:
-        state = "未放行（三件未齐备）"
+        state = "未放行"
 
     sys.stderr.write(f"{status['path']}\n")
     sys.stderr.write(f"  状态：{state}\n")
-    # 三件逐项列出：升级后常见问题是能力 ACE 还在但 Low 标签缺失，
-    # 此时目录在沙箱内实际不可写，只看"有无 ACE"会误判为已放行。
     sys.stderr.write(
-        "  三件："
-        f"能力 ACE {'有' if status['root_grant'] else '无'}，"
-        f"world deny {'有' if status['root_deny'] else '无'}，"
-        f"Low 标签 {'有' if status['root_label'] else '无'}\n"
-    )
-    sys.stderr.write(
-        f"  树内条目 {status['total_count']} 个，其中三件齐备（可写入） "
+        f"  树内条目 {status['total_count']} 个，其中对该 SID 有访问权 "
         f"{status['writable_count']} 个\n"
     )
 

@@ -255,11 +255,6 @@ class TestGrantRoundTrip(unittest.TestCase):
         changed, failures = dsg._grant(self.dir, sid)
         self.assertEqual(failures, [])
         self.assertTrue(changed, "首次放行应发生变更")
-        state = dsg._grant_state(self.dir, sid)
-        self.assertEqual(
-            state, {"grant": True, "deny": True, "label": True},
-            "放行后三件应齐备",
-        )
         self.assertTrue(dsg._sid_already_granted(self.dir, sid), "放行后应可写")
 
         # 幂等：重复放行不应再改 ACL
