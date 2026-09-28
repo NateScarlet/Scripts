@@ -1228,16 +1228,54 @@ class TestRedactNode(unittest.TestCase):
 
 
 class TestFormatRedactionReminder(unittest.TestCase):
-    def test_lists_category_count_and_where(self):
-        hits = {"request#1.result.stdout": {"sk-token": 2}}
+    """提醒列出类别与“如何作为工具输入”，不再重复来源字段与次数"""
+
+    def test_env_category_hints_env_reference(self):
+        hits = {"request#1.result.stdout": {"SECRET_FOO": 2}}
         reminder = chat2cli._format_redaction_reminder(hits)
         self.assertIn("<system-reminder>", reminder)
+        self.assertIn("SECRET_FOO", reminder)
+        self.assertIn("$env:SECRET_FOO", reminder)
+        # 来源字段与命中次数是给用户的诊断信息，不进入提醒
+        self.assertNotIn("request#1.result.stdout", reminder)
+        self.assertNotIn("×2", reminder)
+
+    def test_key_value_secret_hints_wizard_script(self):
+        reminder = chat2cli._format_redaction_reminder(
+            {"stdout": {"key-value-secret": 1}}
+        )
+        self.assertIn("key-value-secret", reminder)
+        self.assertIn("wizard", reminder)
+
+    def test_username_hints_tilde_expansion(self):
+        reminder = chat2cli._format_redaction_reminder({"stdout": {"USERNAME": 1}})
+        self.assertIn("$env:USERNAME", reminder)
+        self.assertIn("~", reminder)
+
+    def test_pattern_category_hints_env_or_wizard(self):
+        reminder = chat2cli._format_redaction_reminder({"stdout": {"sk-token": 1}})
         self.assertIn("sk-token", reminder)
-        self.assertIn("request#1.result.stdout", reminder)
-        self.assertIn("2", reminder)
+        self.assertIn("$env:", reminder)
+        self.assertIn("wizard", reminder)
+
+    def test_same_category_from_multiple_sources_listed_once(self):
+        hits = {
+            "request#1.result.stdout": {"SECRET_FOO": 1},
+            "request#2.result.stdout": {"SECRET_FOO": 3},
+        }
+        reminder = chat2cli._format_redaction_reminder(hits)
+        self.assertEqual(reminder.count("$env:SECRET_FOO"), 1)
 
     def test_empty_hits_returns_empty_string(self):
         self.assertEqual(chat2cli._format_redaction_reminder({}), "")
+
+    def test_categories_are_deduplicated(self):
+        hits = {
+            "request#1.result.stdout": {"SECRET_FOO": 1},
+            "request#2.result.stdout": {"SECRET_FOO": 3},
+        }
+        reminder = chat2cli._format_redaction_reminder(hits)
+        self.assertEqual(reminder.count("$env:SECRET_FOO"), 1)
 
 
 class TestRedactionEndToEnd(unittest.TestCase):

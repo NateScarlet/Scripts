@@ -1607,17 +1607,47 @@ def _redact_node(
     return node, {}
 
 
+def _redaction_input_hint(category: str) -> str:
+    """说明被脱敏的某类内容应如何作为工具输入重新提供。
+
+    只讲怎么把该内容重新提供给工具，不重复来源字段与命中次数：
+    来源字段 Agent 从输出本身就能看到，次数只是给用户的诊断信息。
+    """
+    if _is_secret_variable_name(category):
+        hint = f"在 pwsh 命令中用 $env:{category} 引用，不要直接写出值。"
+        if category == "USERNAME":
+            hint += "涉及 home 目录的路径可以直接用 ~，工具会展开为 home 目录。"
+        return hint
+    if category == _KEY_VALUE_SECRET_LABEL:
+        return "不要写进命令，改为写一个 wizard 脚本，由用户自己运行时输入该值。"
+    return (
+        "不要在命令中硬编码，改为从环境变量（$env:NAME）读取，"
+        "或写一个 wizard 脚本由用户自己运行时输入。"
+    )
+
+
 def _format_redaction_reminder(hits: Dict[str, Dict[str, int]]) -> str:
-    """生成脱敏提示的 system-reminder；无命中时返回空串。"""
+    """生成脱敏提示的 system-reminder；无命中时返回空串。
+
+    只说明被脱敏的内容该如何作为工具输入重新提供，不给出来源字段与命中
+    次数：那是给用户的诊断信息，由 stderr 单独展示。
+    """
     if not hits:
         return ""
 
-    lines: List[str] = ["<system-reminder>输出中发现疑似敏感信息，已脱敏："]
+    entries: List[str] = []
     for where in sorted(hits.keys()):
-        categories = hits[where]
-        for category in sorted(categories.keys()):
-            lines.append(f"- {category} ×{categories[category]}（{where}）")
-    lines.append("这些内容不会出现在本通道中。</system-reminder>")
+        for category in sorted(hits[where].keys()):
+            entry = f"- {category}：{_redaction_input_hint(category)}"
+            if entry not in entries:
+                entries.append(entry)
+
+    lines: List[str] = [
+        "<system-reminder>输出中发现疑似敏感信息，已脱敏，这些内容不会出现在本通道中。"
+        "需要时按以下方式作为工具输入重新提供："
+    ]
+    lines.extend(entries)
+    lines.append("</system-reminder>")
     return "\n".join(lines)
 
 
