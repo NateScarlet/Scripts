@@ -193,7 +193,8 @@
             if ($result.PullEnabled) {
                 try {
                     Write-Host "正在拉取最新变更..."
-                    Invoke-NativeCommand git pull --autostash --quiet
+                    # --no-edit: 合并时直接使用自动生成的提交信息，不打开编辑器等待用户输入
+                    Invoke-NativeCommand git pull --autostash --quiet --no-edit
                 }
                 catch {
                     throw "拉取失败: $_"
