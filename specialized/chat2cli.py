@@ -1896,9 +1896,9 @@ def execute_pwsh(
         colored_lines = "\n".join(
             f"\033[33m{line}\033[0m" for line in command.split("\n")
         )
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh:\n```pwsh\n{colored_lines}\n```\n")
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh({effective_permission}):\n```pwsh\n{colored_lines}\n```\n")
     else:
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh: \033[33m{command}\033[0m\n")
+        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh({effective_permission}): \033[33m{command}\033[0m\n")
     sys.stderr.flush()
 
     use_sandbox = effective_permission != "danger-full-access"
