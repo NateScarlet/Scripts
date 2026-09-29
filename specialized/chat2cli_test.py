@@ -528,6 +528,24 @@ def _tempdir_outside_git_repo():
     return None if result.returncode == 0 else candidate
 
 
+class TestConsoleCodepageHint(unittest.TestCase):
+    """终端输出代码页不是 UTF-8 时，提示用户执行 chcp 65001"""
+
+    def test_no_hint_for_utf8_codepage(self):
+        self.assertIsNone(chat2cli._codepage_hint_for(65001))
+
+    def test_no_hint_without_console(self):
+        self.assertIsNone(chat2cli._codepage_hint_for(0))
+
+    def test_hint_mentions_codepage_and_both_fixes(self):
+        hint = chat2cli._codepage_hint_for(936) or ""
+        self.assertIn("936", hint)
+        # 两种修正方式都要给出：临时改终端代码页，或改系统区域设置
+        self.assertIn("chcp 65001", hint)
+        self.assertIn("intl.cpl", hint)
+        self.assertIn("使用 Unicode UTF-8 提供全球语言支持", hint)
+
+
 class TestGitRootHint(unittest.TestCase):
     """初始指令触发时，若 cwd 位于 git 仓库内但不是仓库根目录，应在 stderr 提醒"""
 

@@ -231,6 +231,41 @@ def _git_root_mismatch_hint(cwd: str) -> Optional[str]:
     )
 
 
+def _codepage_hint_for(codepage: int) -> Optional[str]:
+    """终端输出代码页不是 UTF-8 时返回提醒文本，否则返回 None。
+
+    codepage 为 0 表示进程未附加控制台（例如输出被重定向到管道），
+    此时不存在乱码问题，不提醒。
+    """
+    if codepage in (0, 65001):
+        return None
+    return (
+        f"[chat2cli] 当前终端输出代码页为 {codepage}，不是 UTF-8，"
+        "pwsh 输出中的非 ASCII 字符会显示为乱码。\n"
+        "修正方式（任选其一）：\n"
+        "  1. 在当前终端执行 chcp 65001：只影响该终端窗口，立即生效。\n"
+        "  2. 运行 intl.cpl，切到「管理」→「更改系统区域设置」，\n"
+        "     勾选「使用 Unicode UTF-8 提供全球语言支持(Beta)」后重启：\n"
+        "     全系统生效，但按 ANSI 代码页解释文本的老程序会因此乱码。\n"
+    )
+
+
+def _console_codepage_hint() -> Optional[str]:
+    """查询当前终端输出代码页，返回乱码提醒文本或 None。
+
+    沙箱内的 pwsh 处于 ConstrainedLanguage，无法自行修正输出编码：
+    切换编码所需的静态方法调用与属性 setter 都被该语言模式禁用，
+    包装前缀里的编码语句因此静默失效，输出编码只能跟随终端代码页。
+    简体中文终端默认为 936，而读取端按 UTF-8 解码，中文即乱码。
+    终端代码页由用户在启动前设置，这里只能提醒，无法代为修正。
+    """
+    import ctypes
+
+    # GetConsoleOutputCP 返回进程所附加控制台的输出代码页，无控制台时为 0
+    codepage = ctypes.WinDLL("kernel32").GetConsoleOutputCP()
+    return _codepage_hint_for(codepage)
+
+
 def print_instruction():
     """输出初始系统环境提示词，用于指导模型调用RPC"""
     cwd = os.getcwd()
@@ -2933,6 +2968,12 @@ def main():
     # --check 模式：只回退出码，不输出任何内容，供外部判断是否值得处理
     if args.check:
         sys.exit(0 if input_needs_processing(input_text) else 1)
+
+    # 终端代码页不是 UTF-8 时提醒，否则 pwsh 输出中的中文会乱码
+    codepage_hint = _console_codepage_hint()
+    if codepage_hint:
+        sys.stderr.write(codepage_hint)
+        sys.stderr.flush()
 
     if not input_text.strip():
         sys.stderr.write("[chat2cli] 输入为空，已输出初始指令。\n")
