@@ -13,8 +13,14 @@
 任何 Win32 调用失败都抛出 SandboxError，绝不降级为不受限执行（fail closed）。
 
 限制范围：只防写，不防读。写入被 ACL 拒绝时命令以非零退出码失败。
-read-only 模式下 PowerShell 会进入 ConstrainedLanguage（启动时的 AppLocker
-探测需要写 temp 而不可得），这是平台行为，非本模块的限制。
+
+沙箱内的 PowerShell 会进入 ConstrainedLanguage：启动时的 AppLocker 探测需要
+写 temp 而不可得。read-only 与 workspace-write 两种模式都如此——workspace-write
+只是放行了工作目录，temp 仍不可写。这是平台行为，非本模块的限制。
+
+该语言模式的可见后果之一是输出编码无法在命令内修正：设置编码所需的静态方法
+调用与属性 setter 都被禁用（见 chat2cli.py 的 pwsh 包装前缀），输出编码因此
+跟随终端代码页，非 UTF-8 终端下中文显示为乱码。
 """
 
 from __future__ import annotations

@@ -1887,12 +1887,21 @@ def execute_pwsh(
         )
         sys.stderr.flush()
 
-    # PSStyle.OutputRendering 用 try/catch 容错：正常环境下关闭 ANSI 渲染，
-    # 让输出更干净；不可用时静默跳过，不影响命令本身。
-    # $OutputEncoding 用无 BOM 的 UTF8Encoding($false)：管道喂给原生程序的
-    # stdin 若带 BOM，Python 等接收方会把 EF BB BF 一并写入输出文件。
-    # 三项初始化都包在 try/catch 内：受限语言模式下无法创建 .NET 类型
-    # 或设置属性，缺少 try/catch 会让每次调用都吐出 InvalidOperation 噪音。
+    # 三项初始化都包在 try/catch 内：沙箱内 pwsh 进入 ConstrainedLanguage，
+    # 该模式禁止调用静态方法（::new）与写静态属性，三项会全部抛错；
+    # 缺少 try/catch 会让每次调用都吐出 InvalidOperation 噪音。
+    #
+    # 注意沙箱下三项必然全部失败（且被静默吞掉），而不是仅「不可用时跳过」：
+    # 于是 pwsh 输出编码停留在进程启动时的值，即终端代码页。简体中文终端
+    # 为 936，而读取端按 UTF-8 解码，中文即乱码。终端代码页无法在命令内
+    # 修正（chcp 不刷新 .NET 已缓存的 Console.OutputEncoding），故在启动时
+    # 由 _console_codepage_hint 提醒用户。
+    #
+    # 各语句在可用时的作用：
+    # - $PSStyle.OutputRendering：关闭 ANSI 渲染，让输出更干净。
+    # - $OutputEncoding：用无 BOM 的 UTF8Encoding($false)，避免管道喂给原生
+    #   程序的 stdin 带 BOM，被 Python 等接收方把 EF BB BF 写入输出文件。
+    # - [Console]::OutputEncoding：把控制台输出编码对齐到 UTF-8。
     wrapped_command = (
         f"try {{ $PSStyle.OutputRendering = 'PlainText' }} catch {{}}; "
         f"try {{ $OutputEncoding = [System.Text.UTF8Encoding]::new($false) }} catch {{}}; "
