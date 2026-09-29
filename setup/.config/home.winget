@@ -69,3 +69,10 @@ properties:
       settings:
         id: 9NBLGGH5R558
         source: msstore
+
+    - directives:
+        description: Install QRCP
+      resource: Microsoft.WinGet.DSC/WinGetPackage
+      settings:
+        id: claudiodangelis.qrcp 
+
