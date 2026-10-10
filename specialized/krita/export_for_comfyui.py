@@ -22,6 +22,13 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
 导出完成后会尝试自动切回 ComfyUI 窗口，成功则不再打扰；找不到窗口或切换
 失败时才弹框提示。
 
+切回窗口成功后，还会把当前文档对应原图内嵌的 ComfyUI 工作流送达网页端打开，
+省去手动打开工作流这一步。该功能复用 image-funnel 已部署的 open_workflow 钩子
+（目录由 IMAGE_FUNNEL_HOOK_DIR 指定，未设置时回退到
+%AppData%\\io.github.NateScarlet.image-funnel\\hooks），以 `uv run` 启动，因此需要 uv 在 PATH 中；
+钩子目录或 uv 缺失、原图未保存到磁盘、原图没有内嵌工作流等情况下只提示，
+不影响导出与剪贴板复制。
+
 导出成功后会把文档标记为「未修改」，这样关闭 Krita 时不会再弹「是否保存」
 确认。注意：导出写的是临时目录中的副本，原文档的改动并没有写回原文件，
 该标记会一并取消 Krita 对未保存编辑的保护。
@@ -43,11 +50,14 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
   其他结构会抛异常而不是静默退化。
 """
 
+import json
 import os
 import time
 import zlib
 import struct
 import ctypes
+import shutil
+import subprocess
 import tempfile
 
 from ctypes import wintypes
@@ -269,29 +279,130 @@ def _activate_window(hwnd):
     return _user32.GetForegroundWindow() == hwnd
 
 
-def _activate_comfyui_or_warn(export_path):
+def _activate_comfyui():
     """
     查找并激活 ComfyUI 窗口。
 
-    成功则静默结束；找不到窗口或激活失败时弹框告知，因为此时用户需要手动
-    切换才能粘贴。
+    返回 None 表示已成功切到窗口；否则返回一句说明原因的文字（找不到窗口或
+    激活失败），由调用方决定如何提示。
     """
     hwnd = _find_window_by_title(COMFYUI_WINDOW_TITLE_SUBSTRING)
     if hwnd is None:
-        QMessageBox.information(
-            None,
-            "完成",
-            f"已导出并复制到剪贴板：\n{export_path}\n\n"
-            f"未找到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口，请手动切换后粘贴。",
+        return f"未找到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口"
+    if not _activate_window(hwnd):
+        return f"无法切换到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口"
+    return None
+
+
+# ---------------------------------------------------------------------------
+# 送达工作流：复用 image-funnel 已部署的 open_workflow 钩子
+# ---------------------------------------------------------------------------
+
+# 钩子部署目录的环境变量名（与 image-funnel 自身保持一致）
+HOOK_DIR_ENV_VAR = "IMAGE_FUNNEL_HOOK_DIR"
+
+
+# image-funnel 默认部署位置中的应用目录名（反向域名，与其应用标识一致）
+IMAGE_FUNNEL_APP_DIR = "io.github.NateScarlet.image-funnel"
+
+
+def _resolve_hooks_dir():
+    """
+    解析钩子部署目录：优先 IMAGE_FUNNEL_HOOK_DIR，未设置时回退到 image-funnel
+    的默认部署位置（%AppData%\\io.github.NateScarlet.image-funnel\\hooks）。
+    """
+    configured = os.environ.get(HOOK_DIR_ENV_VAR, "").strip()
+    if configured:
+        return configured
+
+    appdata = os.environ.get("APPDATA", "").strip()
+    if not appdata:
+        return ""
+    return os.path.join(appdata, IMAGE_FUNNEL_APP_DIR, "hooks")
+
+
+def _last_line(text):
+    """取文本最后一行非空内容，用于把钩子的 traceback 收敛成一句原因。"""
+    lines = [line for line in text.splitlines() if line.strip()]
+    return lines[-1] if lines else ""
+
+
+def _warn_open_workflow(reason):
+    """送达工作流失败时的统一提示。导出本身已经成功，因此只作为附加说明。"""
+    QMessageBox.information(
+        None, "打开工作流", f"未能自动打开原图的工作流：\n\n{reason}"
+    )
+
+
+def _open_embedded_workflow_or_warn(image_path):
+    """
+    把原图内嵌的 ComfyUI 工作流送达网页端打开。
+
+    复用 image-funnel 已部署的 open_workflow 钩子，与「在 ComfyUI 页面打开」
+    快捷键走同一条路径。通过 uv 启动，因此需要 uv 在 PATH 中；钩子自身的第三方
+    依赖由 uv 按 PEP 723 声明现场解析，不污染 Krita 的 Python 环境。
+
+    本函数只做降级提示，不抛异常：导出与剪贴板复制已经完成，不能因为送达失败
+    让用户以为整件事没成功。
+    """
+    hooks_dir = _resolve_hooks_dir()
+    if not hooks_dir:
+        _warn_open_workflow(
+            f"未设置 {HOOK_DIR_ENV_VAR}，且无法定位默认钩子目录（APPDATA 缺失）。"
         )
         return
-    if not _activate_window(hwnd):
+    if not image_path:
+        _warn_open_workflow("当前文档尚未保存到磁盘，无法读取内嵌工作流。")
+        return
+    if not os.path.isfile(os.path.join(hooks_dir, "runner.py")):
+        _warn_open_workflow(f"钩子目录下没有 runner.py：\n{hooks_dir}")
+        return
+    uv = shutil.which("uv")
+    if not uv:
+        _warn_open_workflow("找不到 uv，请把它加入 PATH。")
+        return
+
+    env = dict(os.environ)
+    env["IMAGE_FUNNEL_IMAGE_PATHS"] = json.dumps([os.path.abspath(image_path)])
+    try:
+        result = subprocess.run(
+            [uv, "run", "runner.py", "comfyui.open_workflow"],
+            cwd=hooks_dir,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            # 不分配控制台窗口：否则 uv.exe 作为控制台程序会拿到一个新控制台，
+            # Windows Terminal 按「附加到最近使用的窗口」把已有终端带到前台，
+            # 盖住刚激活的 ComfyUI 窗口
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+    except OSError as error:
+        _warn_open_workflow(f"启动 uv 失败：{error}")
+        return
+
+    if result.returncode != 0:
+        reason = _last_line(result.stderr) or _last_line(result.stdout)
+        _warn_open_workflow(reason or f"uv 以退出码 {result.returncode} 结束。")
+
+
+def _after_export(export_path, image_path):
+    """
+    导出收尾（在事件循环空闲后执行）：切回 ComfyUI，成功后送达原图内嵌工作流。
+
+    只有成功切回 ComfyUI 才尝试打开工作流：切不回去说明用户还在 Krita 侧，
+    此时送达意义不大，且与「找不到窗口」共用同一条手动切换提示。
+    """
+    reason = _activate_comfyui()
+    if reason:
         QMessageBox.information(
             None,
             "完成",
-            f"已导出并复制到剪贴板：\n{export_path}\n\n"
-            f"无法切换到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口，请手动切换后粘贴。",
+            f"已导出并复制到剪贴板：\n{export_path}\n\n{reason}，请手动切换后粘贴。",
         )
+        return
+    _open_embedded_workflow_or_warn(image_path)
 
 
 # ---------------------------------------------------------------------------
@@ -416,7 +527,9 @@ def export_and_copy():
 
     doc.waitForDone()
 
-    doc_name = os.path.splitext(os.path.basename(doc.fileName() or "untitled"))[0]
+    # 原图路径用于读取内嵌工作流；文档未保存到磁盘时为空
+    source_path = doc.fileName()
+    doc_name = os.path.splitext(os.path.basename(source_path or "untitled"))[0]
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     # 前缀标明文件由本脚本导出（保留透明区 RGB），便于在临时目录中识别
     filename = f"krita_export_{doc_name}_{timestamp}.png"
@@ -446,11 +559,13 @@ def export_and_copy():
         )
         return export_path
 
-    # ---- 切回 ComfyUI ----
+    # ---- 切回 ComfyUI 并送达工作流 ----
     # Ten Scripts 在 main() 返回后还会在 Krita 窗口上显示浮动通知，把 Krita
     # 重新提到前台，覆盖刚做的窗口激活。因此把激活推迟到事件循环空闲后执行，
     # 确保它发生在 Krita 的收尾动作之后。
-    QTimer.singleShot(ACTIVATION_DELAY_MS, lambda: _activate_comfyui_or_warn(export_path))
+    QTimer.singleShot(
+        ACTIVATION_DELAY_MS, lambda: _after_export(export_path, source_path)
+    )
     return export_path
 
 
