@@ -1786,8 +1786,14 @@ def _confirm_permission_escalation(
     try:
         root.withdraw()
         root.attributes("-topmost", True)
-        # 命令过长时截断，避免弹窗被撑满
-        shown = command if len(command) <= 2000 else command[:2000] + "\n...（已截断）"
+        # 命令过长时截断，避免弹窗被撑满；完整命令已在弹窗弹出前
+        # 回显到 stderr，此处必须告知用户去哪里核对，否则只能盲签。
+        shown = (
+            command
+            if len(command) <= 2000
+            else command[:2000]
+            + "\n...（已截断，完整命令已输出到终端 stderr）"
+        )
         # 理由可能缺失或只有空白，为空时不给弹窗增加噪音
         reason = (
             f"申请理由：{justification}\n\n"
@@ -1836,6 +1842,27 @@ def _permission_denial_hint(effective: str) -> Optional[str]:
     return None
 
 
+def _echo_pwsh_command(id_: Any, permission: str, command: str) -> None:
+    """把即将执行的命令回显到 stderr。
+
+    提权确认弹窗会截断超长命令，终端回显是用户核对完整命令的唯一途径，
+    因此该回显必须在确认之前、且无条件执行。
+    """
+    if "\n" in command:
+        # 对多行命令，逐行着色以保持颜色在换行后延续
+        colored_lines = "\n".join(
+            f"\033[33m{line}\033[0m" for line in command.split("\n")
+        )
+        sys.stderr.write(
+            f"[request#{id_}] 🖥️ pwsh({permission}):\n```pwsh\n{colored_lines}\n```\n"
+        )
+    else:
+        sys.stderr.write(
+            f"[request#{id_}] 🖥️ pwsh({permission}): \033[33m{command}\033[0m\n"
+        )
+    sys.stderr.flush()
+
+
 def execute_pwsh(
     id_: Any,
     params: Dict[str, Any],
@@ -1860,11 +1887,15 @@ def execute_pwsh(
         }
 
     effective_permission = requested_permission
-    if (
+    escalated = (
         _PERMISSION_ORDER[requested_permission]
         > _PERMISSION_ORDER[approved_permission]
-    ):
+    )
+    if escalated:
         # 超出批准范围：弹窗确认。无法确认或用户拒绝则不执行。
+        # 弹窗会截断超长命令，故先在终端完整回显命令，用户才有核对手段；
+        # 回显不擦除，批准与拒绝各自追加一行独立日志。
+        _echo_pwsh_command(id_, effective_permission, command)
         sys.stderr.write(
             f"[request#{id_}] 请求权限 {requested_permission} 高于已批准权限 "
             f"{approved_permission}，等待用户确认...\n"
@@ -1876,6 +1907,11 @@ def execute_pwsh(
             command,
             params.get("justification"),
         ):
+            sys.stderr.write(
+                f"[request#{id_}] 用户拒绝了 {requested_permission} 权限请求，"
+                f"不执行。\n"
+            )
+            sys.stderr.flush()
             return {
                 "success": False,
                 "message": (
@@ -1935,16 +1971,9 @@ def execute_pwsh(
             except OSError:
                 pass
 
-    # 执行前先把命令回显到 stderr，让用户即使命令无输出也能看到正在执行什么
-    if "\n" in command:
-        # 对多行命令，逐行着色以保持颜色在换行后延续
-        colored_lines = "\n".join(
-            f"\033[33m{line}\033[0m" for line in command.split("\n")
-        )
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh({effective_permission}):\n```pwsh\n{colored_lines}\n```\n")
-    else:
-        sys.stderr.write(f"[request#{id_}] 🖥️ pwsh({effective_permission}): \033[33m{command}\033[0m\n")
-    sys.stderr.flush()
+    # 非提权路径没有确认环节，命令尚未回显，此处补齐
+    if not escalated:
+        _echo_pwsh_command(id_, effective_permission, command)
 
     use_sandbox = effective_permission != "danger-full-access"
     if use_sandbox:

@@ -1958,6 +1958,106 @@ class TestPwshPermission(unittest.TestCase):
         self.assertTrue(approved)
         self.assertIn("需要更新全局缓存", captured["message"])
 
+    def test_confirm_escalation_truncation_points_to_stderr(self):
+        """命令超过弹窗展示上限时，提示完整命令已输出到终端，避免盲签。"""
+        import sys
+        import types
+
+        captured = {}
+
+        class FakeRoot:
+            def withdraw(self):
+                pass
+
+            def attributes(self, *args):
+                pass
+
+            def destroy(self):
+                pass
+
+        fake_tk = types.ModuleType("tkinter")
+        fake_tk.Tk = FakeRoot
+        fake_messagebox = types.ModuleType("tkinter.messagebox")
+
+        def fake_askyesno(title, message, parent=None):
+            captured["message"] = message
+            return False
+
+        fake_messagebox.askyesno = fake_askyesno
+        fake_tk.messagebox = fake_messagebox
+
+        saved = {
+            name: sys.modules.get(name)
+            for name in ("tkinter", "tkinter.messagebox")
+        }
+        sys.modules["tkinter"] = fake_tk
+        sys.modules["tkinter.messagebox"] = fake_messagebox
+        try:
+            chat2cli._confirm_permission_escalation(
+                "danger-full-access",
+                "workspace-write",
+                "x" * 3000,
+                "需要更新全局缓存",
+            )
+        finally:
+            for name, module in saved.items():
+                if module is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = module
+
+        # 截断时用户必须知道去哪里读到完整命令，否则只能盲签
+        self.assertIn("完整命令", captured["message"])
+        self.assertIn("终端", captured["message"])
+
+
+class TestExecutePwshEscalationStderr(unittest.TestCase):
+    """提权确认前后的 stderr 行为。
+
+    命令必须在弹窗弹出之前就完整回显到终端，且批准/拒绝各有一行独立日志，
+    使用户在看不到弹窗全文时仍有核对手段。
+    """
+
+    def _call_denied(self, id_: int, command: str):
+        import contextlib
+        import io
+
+        captured = {}
+        err = io.StringIO()
+
+        def fake_confirm(requested, approved, cmd, justification):
+            # 记录弹窗被调用瞬间的 stderr，用于断言回显早于确认
+            captured["stderr_at_confirm"] = err.getvalue()
+            return False
+
+        old = chat2cli._confirm_permission_escalation
+        chat2cli._confirm_permission_escalation = fake_confirm
+        try:
+            with contextlib.redirect_stderr(err):
+                chat2cli.execute_pwsh(
+                    id_,
+                    {
+                        "command": command,
+                        "permission": "danger-full-access",
+                        "justification": "需要写入工作目录外的路径",
+                    },
+                    {},
+                    approved_permission="workspace-write",
+                )
+        finally:
+            chat2cli._confirm_permission_escalation = old
+        return err.getvalue(), captured.get("stderr_at_confirm", "")
+
+    def test_command_echoed_before_confirmation(self):
+        # 弹窗弹出时，终端必须已经有完整命令
+        _, at_confirm = self._call_denied(7, "echo hello-world")
+        self.assertIn("echo hello-world", at_confirm)
+
+    def test_denial_logged_on_own_line(self):
+        full, _ = self._call_denied(7, "echo hi")
+        self.assertIn("[request#7]", full)
+        self.assertIn("用户拒绝了", full)
+
 
 if __name__ == "__main__":
     unittest.main()
