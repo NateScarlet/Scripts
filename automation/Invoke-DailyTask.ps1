@@ -12,6 +12,7 @@ try {
     & "$PSScriptRoot\Sync-Rime.ps1"
     & "$PSScriptRoot\Invoke-AutoGitCommit.ps1"
     & "$PSScriptRoot\Delete-Old-Download.ps1"
+    & "$PSScriptRoot\Delete-Unused-ComfyUI-Files.ps1"
 }
 catch {
     Write-Warning "执行出错: $_"
