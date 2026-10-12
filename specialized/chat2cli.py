@@ -1419,6 +1419,10 @@ _STRUCTURAL_VARIABLE_NAMES = frozenset(
     }
 )
 
+# home 目录绝对路径的占位符类别。该类别的值不是环境变量值，而是本机
+# home 路径本身；整体替换后 LLM 能看出此处等价于 ~，无需猜用户名。
+_PATH_EQUIV_LABEL = "path-equiv"
+
 # 敏感变量名模式：不假设固定环境，按名称形状识别
 _SECRET_NAME_PATTERNS: List[str] = [
     r"^SECRET_",
@@ -1467,6 +1471,22 @@ def _collect_secret_values(
     return values
 
 
+def _home_path_variants() -> List[str]:
+    """本机 home 目录绝对路径的等价写法（反斜杠 / 正斜杠）。
+
+    Windows 下 home 是 C:\\Users\\<用户名>，输出中可能以正斜杠或反斜杠
+    形式出现；两者都应识别为同一个 home 路径。
+    """
+    home = os.path.expanduser("~")
+    if not home or home == "~":
+        return []
+    variants: List[str] = [home]
+    alt = home.replace("\\", "/")
+    if alt != home:
+        variants.append(alt)
+    return variants
+
+
 def _redaction_label(pattern_src: str) -> str:
     """模式驱动脱敏的占位符：带正则原文的标签，便于定位命中的规则。"""
     return f'<redacted regex="{pattern_src}">'
@@ -1504,6 +1524,15 @@ def _find_redaction_spans(
 
     # (start, end, category, priority)；priority 越小越优先
     candidates: List[Tuple[int, int, str, int]] = []
+
+    # home 目录绝对路径：整体替换，避免路径中的用户名被单独脱敏成
+    # <redacted env="USERNAME"> 后拼出残缺路径，导致 LLM 猜不出 home
+    # 目录名。必须以分隔符或字符串结尾收尾，避免把 C:\\Users\\abcde2
+    # 这样的其他目录误判为 home。
+    for variant in _home_path_variants():
+        pattern = re.escape(variant) + r"(?=[\\/]|$)"
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            candidates.append((match.start(), match.end(), _PATH_EQUIV_LABEL, 0))
 
     # 值驱动：按值长度降序，避免短值恰好是长值子串时被先切断。
     # 大小写不敏感匹配：输出中的大小写可能与环境变量不同，但仍是同一凭证。
@@ -1546,8 +1575,11 @@ def _find_redaction_spans(
 def _redaction_replacement(category: str, secret_values: Dict[str, str]) -> str:
     """返回某类别对应的替换文本。
 
-    值驱动类别用 <redacted env="NAME">，其余类别用 <redacted regex="REGEX">。
+    值驱动类别用 <redacted env="NAME">，home 路径用
+    <redacted path-equiv="~">，其余类别用 <redacted regex="REGEX">。
     """
+    if category == _PATH_EQUIV_LABEL:
+        return '<redacted path-equiv="~">'
     if category in secret_values:
         return f'<redacted env="{category}">'
     return _redaction_label(category)
@@ -1649,6 +1681,8 @@ def _redaction_input_hint(category: str) -> str:
     只讲怎么把该内容重新提供给工具，不重复来源字段与命中次数：
     来源字段 Agent 从输出本身就能看到，次数只是给用户的诊断信息。
     """
+    if category == _PATH_EQUIV_LABEL:
+        return "该路径是本机 home 目录，可直接用 ~ 表示，工具会展开为 home 目录。"
     if _is_secret_variable_name(category):
         hint = f"在 pwsh 命令中用 $env:{category} 引用，不要直接写出值。"
         if category == "USERNAME":

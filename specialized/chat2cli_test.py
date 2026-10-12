@@ -1212,6 +1212,68 @@ class TestRedactText(unittest.TestCase):
         self.assertEqual(hits, {"sk-[A-Za-z0-9_-]{20,}": 1})
 
 
+class TestHomePathRedaction(unittest.TestCase):
+    """home 目录绝对路径整体替换为 <redacted path-equiv="~">。
+
+    避免路径中的用户名被单独脱敏成 <redacted env="USERNAME"> 后拼出
+    C:\\Users\\<redacted env="USERNAME"> 这种残缺路径，导致 LLM 猜不出
+    home 目录名。
+    """
+
+    def test_home_path_replaced_with_path_equiv(self):
+        home = os.path.expanduser("~")
+        redacted, hits = chat2cli._redact_text(f"path {home}\\foo", {})
+        self.assertEqual(redacted, 'path <redacted path-equiv="~">\\foo')
+        self.assertEqual(hits, {chat2cli._PATH_EQUIV_LABEL: 1})
+
+    def test_home_path_with_username_value_uses_path_equiv(self):
+        # home 路径整体替换后，路径内的用户名不再单独暴露
+        home = os.path.expanduser("~")
+        username = os.path.basename(home)
+        redacted, hits = chat2cli._redact_text(
+            f"{home}\\foo", {"USERNAME": username}
+        )
+        self.assertIn('<redacted path-equiv="~">', redacted)
+        self.assertNotIn('<redacted env="USERNAME">', redacted)
+        self.assertEqual(hits, {chat2cli._PATH_EQUIV_LABEL: 1})
+
+    def test_username_outside_home_path_still_redacted(self):
+        # 用户名单独出现（非 home 路径）时仍按 USERNAME 脱敏
+        home = os.path.expanduser("~")
+        username = os.path.basename(home)
+        if len(username) < chat2cli._STRUCTURAL_MIN_LENGTH:
+            self.skipTest("当前用户名短于结构性变量阈值")
+        redacted, _ = chat2cli._redact_text(
+            f"user {username}", {"USERNAME": username}
+        )
+        self.assertEqual(redacted, 'user <redacted env="USERNAME">')
+
+    def test_home_prefix_in_longer_path_not_matched(self):
+        # C:\\Users\\abcde2 不应被识别为 home（home 是 C:\\Users\\abcde）
+        home = os.path.expanduser("~")
+        redacted, hits = chat2cli._redact_text(f"{home}2\\foo", {})
+        self.assertNotIn('<redacted path-equiv="~">', redacted)
+        self.assertEqual(hits, {})
+
+    def test_home_path_forward_slash_variant(self):
+        home = os.path.expanduser("~").replace("\\", "/")
+        redacted, hits = chat2cli._redact_text(f"{home}/foo", {})
+        self.assertIn('<redacted path-equiv="~">', redacted)
+        self.assertEqual(hits, {chat2cli._PATH_EQUIV_LABEL: 1})
+
+    def test_home_path_is_case_insensitive(self):
+        home = os.path.expanduser("~").lower()
+        redacted, hits = chat2cli._redact_text(f"{home}\\foo", {})
+        self.assertIn('<redacted path-equiv="~">', redacted)
+        self.assertEqual(hits, {chat2cli._PATH_EQUIV_LABEL: 1})
+
+    def test_home_path_bare_at_end(self):
+        # home 路径位于文本末尾（后面没有分隔符）也应匹配
+        home = os.path.expanduser("~")
+        redacted, hits = chat2cli._redact_text(f"cwd {home}", {})
+        self.assertEqual(redacted, 'cwd <redacted path-equiv="~">')
+        self.assertEqual(hits, {chat2cli._PATH_EQUIV_LABEL: 1})
+
 
 class TestRedactNode(unittest.TestCase):
     """递归脱敏结构中的所有字符串字段"""
@@ -1268,6 +1330,13 @@ class TestFormatRedactionReminder(unittest.TestCase):
     def test_username_hints_tilde_expansion(self):
         reminder = chat2cli._format_redaction_reminder({"stdout": {"USERNAME": 1}})
         self.assertIn("$env:USERNAME", reminder)
+        self.assertIn("~", reminder)
+
+    def test_path_equiv_hints_tilde(self):
+        reminder = chat2cli._format_redaction_reminder(
+            {"stdout": {chat2cli._PATH_EQUIV_LABEL: 1}}
+        )
+        self.assertIn(chat2cli._PATH_EQUIV_LABEL, reminder)
         self.assertIn("~", reminder)
 
     def test_pattern_category_hints_env_or_wizard(self):
@@ -1389,6 +1458,21 @@ class TestRedactionEndToEnd(unittest.TestCase):
             scratch_files = list(Path(tmpdir).glob(".scratch/**/stdout_1.txt"))
             self.assertEqual(len(scratch_files), 1)
             self.assertIn(token, scratch_files[0].read_text(encoding="utf-8"))
+
+    def test_home_path_in_pwsh_output_redacted(self):
+        # pwsh 输出 home 绝对路径时整体替换为 path-equiv，不泄露用户名
+        home = os.path.expanduser("~")
+        username = os.path.basename(home)
+        request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "pwsh",
+            "params": {"command": f'Write-Output "{home}"'},
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self._run_chat2cli(self._request(request), tmpdir)
+        self.assertNotIn(username, result.stdout)
+        self.assertIn(chat2cli._PATH_EQUIV_LABEL, result.stdout)
 
 
 
