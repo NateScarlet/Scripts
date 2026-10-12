@@ -2306,7 +2306,7 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                                 raise ValueError(
                                     f"chat2cli 代码块缩进非法：第 {error_line_idx} 行"
                                     f"（{error_line_content!r}）没有以 {prefix!r} 开头。"
-                                    f"使用 {prefix!r} 缩进时每个非空行都必须以它开头。"
+                                    f"使用 {prefix!r} 缩进时每行都必须以它开头。" #　故意不提及非空行以避免判断空行的认知负担
                                     f"提示：代码块第一行是 {first_line!r}，"
                                     f"行首字符 {prefix!r} 表示整个代码块采用该字符缩进。"
                                 )
