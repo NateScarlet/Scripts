@@ -2143,6 +2143,48 @@ class TestExecutePwshEscalationStderr(unittest.TestCase):
         self.assertIn("用户拒绝了", full)
 
 
+class TestDangerousCommandHighlight(unittest.TestCase):
+    """命令回显中危险操作的高亮。
+
+    提权确认前的回显是用户核对完整命令的唯一手段，删除、覆盖写入等
+    破坏性操作必须在回显中一眼可辨，否则用户只能逐字阅读长命令。
+    """
+
+    def _echo(self, command: str) -> str:
+        import contextlib
+        import io
+
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            chat2cli._echo_pwsh_command(1, "workspace-write", command)
+        return err.getvalue()
+
+    def test_remove_item_is_highlighted(self):
+        out = self._echo("Remove-Item -Recurse -Force C:\\tmp")
+        self.assertIn("\033[1;31mRemove-Item", out)
+
+    def test_set_content_is_highlighted(self):
+        out = self._echo("Set-Content -Path a.txt -Value x")
+        self.assertIn("\033[1;31mSet-Content", out)
+
+    def test_highlight_is_case_insensitive(self):
+        out = self._echo("remove-item a.txt")
+        self.assertIn("\033[1;31mremove-item", out)
+
+    def test_plain_command_has_no_danger_highlight(self):
+        out = self._echo("Get-ChildItem C:\\tmp")
+        self.assertNotIn("\033[1;31m", out)
+
+    def test_highlight_survives_multiline_command(self):
+        out = self._echo("Get-Date\nRemove-Item a.txt")
+        self.assertIn("\033[1;31mRemove-Item", out)
+
+    def test_short_token_respects_word_boundary(self):
+        # 危险短词不应匹配到普通单词内部（如 form 含 rm）
+        out = self._echo("Get-Item form.txt")
+        self.assertNotIn("\033[1;31m", out)
+
+
 if __name__ == "__main__":
     unittest.main()
 

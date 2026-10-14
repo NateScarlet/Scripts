@@ -91,6 +91,46 @@ _PERMISSION_ORDER = {
     "danger-full-access": 2,
 }
 
+# 命令回显中需要高亮警示的破坏性操作。回显是用户核对完整命令的
+# 唯一手段，删除、覆盖写入、停服务等操作必须一眼可辨，否则用户
+# 只能在长命令里逐字排查。清单同时收录 cmdlet 全名与常用别名，
+# 短别名（如 rm、del）依赖词边界，避免命中普通单词内部。
+_DANGEROUS_COMMANDS: Tuple[str, ...] = (
+    "Remove-Item",
+    "Remove-ItemProperty",
+    "Remove-Service",
+    "Clear-Content",
+    "Set-Content",
+    "Add-Content",
+    "Out-File",
+    "Move-Item",
+    "Rename-Item",
+    "Copy-Item",
+    "New-Item",
+    "Format-Volume",
+    "Stop-Process",
+    "Stop-Service",
+    "Stop-Computer",
+    "Restart-Computer",
+    "rm",
+    "ri",
+    "rd",
+    "del",
+    "erase",
+)
+
+# 按长度降序排列候选，保证 Remove-ItemProperty 优先于 Remove-Item 匹配；
+# 两侧的边界排除 -，避免把 cmdlet 名的片段当成独立命令。
+_DANGEROUS_COMMAND_RE = re.compile(
+    r"(?<![\w-])("
+    + "|".join(
+        re.escape(token)
+        for token in sorted(_DANGEROUS_COMMANDS, key=len, reverse=True)
+    )
+    + r")(?![\w-])",
+    re.IGNORECASE,
+)
+
 
 def _parse_skill_frontmatter(skill_md_path: str) -> Tuple[str, str]:
     """解析 SKILL.md 的 YAML frontmatter，返回 (name, description)。"""
@@ -1876,23 +1916,43 @@ def _permission_denial_hint(effective: str) -> Optional[str]:
     return None
 
 
+def _highlight_dangerous_commands(line: str, base_color: str) -> str:
+    """把一行命令中的破坏性操作标红，其余部分保持基础色。
+
+    高亮后立即恢复基础色，否则同行后续文本会继承危险色，失去区分度。
+    """
+    danger_color = "\033[1;31m"
+    parts: List[str] = []
+    position = 0
+    for match in _DANGEROUS_COMMAND_RE.finditer(line):
+        parts.append(line[position:match.start()])
+        parts.append(f"{danger_color}{match.group(0)}{base_color}")
+        position = match.end()
+    parts.append(line[position:])
+    return "".join(parts)
+
+
 def _echo_pwsh_command(id_: Any, permission: str, command: str) -> None:
     """把即将执行的命令回显到 stderr。
 
     提权确认弹窗会截断超长命令，终端回显是用户核对完整命令的唯一途径，
-    因此该回显必须在确认之前、且无条件执行。
+    因此该回显必须在确认之前、且无条件执行。破坏性操作在回显中标红，
+    使用户无需逐字阅读长命令即可发现危险操作。
     """
+    base_color = "\033[33m"
     if "\n" in command:
         # 对多行命令，逐行着色以保持颜色在换行后延续
         colored_lines = "\n".join(
-            f"\033[33m{line}\033[0m" for line in command.split("\n")
+            f"{base_color}{_highlight_dangerous_commands(line, base_color)}\033[0m"
+            for line in command.split("\n")
         )
         sys.stderr.write(
             f"[request#{id_}] 🖥️ pwsh({permission}):\n```pwsh\n{colored_lines}\n```\n"
         )
     else:
+        highlighted = _highlight_dangerous_commands(command, base_color)
         sys.stderr.write(
-            f"[request#{id_}] 🖥️ pwsh({permission}): \033[33m{command}\033[0m\n"
+            f"[request#{id_}] 🖥️ pwsh({permission}): {base_color}{highlighted}\033[0m\n"
         )
     sys.stderr.flush()
 
