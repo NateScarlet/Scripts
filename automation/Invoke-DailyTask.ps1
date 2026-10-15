@@ -12,7 +12,10 @@ try {
     & "$PSScriptRoot\Sync-Rime.ps1"
     & "$PSScriptRoot\Invoke-AutoGitCommit.ps1"
     & "$PSScriptRoot\Delete-Old-Download.ps1"
-    & "$PSScriptRoot\Delete-Unused-ComfyUI-Files.ps1"
+    # 仅在装有 ComfyUI 的机器上执行清理，避免路径不存在时抛错
+    if (Test-Path -Path "C:/ComfyUI/ComfyUI/input") {
+        & "$PSScriptRoot\Delete-Unused-ComfyUI-Files.ps1"
+    }
 }
 catch {
     Write-Warning "执行出错: $_"
