@@ -7,9 +7,6 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
   ComfyUI 自带的 Mask Editor 不好用，也无法吸色。在 Krita 里画好内容后，
   用本脚本一键导出并复制，切到 ComfyUI 直接粘贴。
 
-  内容可以是 mask，也可以是普通彩图——后者没有需要保留的透明区域，
-  导出结果同样正确。
-
 用法（二选一）：
   1. 工具 > 脚本 > 常用脚本快捷键（Ten Scripts）：把本 .py 绑定到某个槽位，
      为该槽位对应的 "Execute Script N" 分配快捷键。脚本入口是 main()。
@@ -44,10 +41,6 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
        透明区域的 RGB 依然存在于此。
     2. 直接读透明蒙版的 pixelData()——1 字节/像素的 Alpha。
     3. 用 Python 拼出 RGBA 后自行写出文件。透明区域的 RGB 原样保留，不被清零。
-
-适用范围：
-  单个颜料层 + 可选一个透明度蒙版子节点，颜色模型 RGBA、深度 U8（8 位/通道）。
-  其他结构会抛异常而不是静默退化。
 """
 
 import json
@@ -454,7 +447,7 @@ def export_preserving_transparent_rgb(doc, export_path):
     """
     导出文档为 PNG，保留透明区域的原始 RGB 数据。
 
-    前提：文档结构为单个颜料层（可选一个透明度蒙版子节点），
+    前提：文档结构为单个颜料层 + 一个透明度蒙版子节点，
     颜色模型 RGBA、深度 U8。
     """
     w, h = doc.width(), doc.height()
@@ -477,11 +470,21 @@ def export_preserving_transparent_rgb(doc, export_path):
             "本脚本仅支持 RGBA/U8。"
         )
 
-    transparency_mask = None
-    for n in paint_layer.childNodes():
-        if n.type() == "transparencymask":
-            transparency_mask = n
-            break
+    transparency_masks = [
+        n for n in paint_layer.childNodes() if n.type() == "transparencymask"
+    ]
+    if not transparency_masks:
+        raise RuntimeError(
+            "颜料层的透明度蒙版缺失。导出结果依赖蒙版提供有效区域，"
+            "没有它只会得到一张空蒙版，ComfyUI 会输出与输入完全一致的图。"
+            "如果是直接在颜料层上涂抹而忘了新建透明度蒙版，"
+            "请选中颜料层后「图层 > 新建 > 透明度蒙版」，再把涂抹内容放进蒙版。"
+        )
+    if len(transparency_masks) > 1:
+        raise RuntimeError(
+            f"颜料层下有 {len(transparency_masks)} 个透明度蒙版，本脚本只支持一个。"
+        )
+    transparency_mask = transparency_masks[0]
 
     # ---- 取颜料层原始像素（Krita 内部为 BGRA 字节序） ----
     ld = bytes(paint_layer.pixelData(0, 0, w, h))
@@ -492,13 +495,11 @@ def export_preserving_transparent_rgb(doc, export_path):
         )
 
     # ---- 取透明蒙版 Alpha（1 字节/像素） ----
-    md = None
-    if transparency_mask is not None:
-        md = bytes(transparency_mask.pixelData(0, 0, w, h))
-        if len(md) != w * h:
-            raise RuntimeError(
-                f"透明蒙版数据长度异常：{len(md)}，期望 {w * h}。"
-            )
+    md = bytes(transparency_mask.pixelData(0, 0, w, h))
+    if len(md) != w * h:
+        raise RuntimeError(
+            f"透明蒙版数据长度异常：{len(md)}，期望 {w * h}。"
+        )
 
     # ---- BGRA -> RGBA：交换每个像素的第 0 字节和第 2 字节 ----
     rgba = bytearray(ld)
@@ -506,9 +507,8 @@ def export_preserving_transparent_rgb(doc, export_path):
 
     # ---- 合并 Alpha：最终 alpha = 图层 alpha × 蒙版 alpha / 255 ----
     # 透明区域（蒙版 alpha=0）的 RGB 保持颜料层原值，不被清零。
-    if md is not None:
-        layer_a = bytes(rgba[3::4])
-        rgba[3::4] = bytes((a * m) // 255 for a, m in zip(layer_a, md))
+    layer_a = bytes(rgba[3::4])
+    rgba[3::4] = bytes((a * m) // 255 for a, m in zip(layer_a, md))
 
     _write_png(export_path, w, h, bytes(rgba), dpi=doc.resolution())
 
