@@ -348,6 +348,7 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
   }}
 }}
 - path 必须是绝对路径（~ 会被展开为 home 目录）。
+  应总是用 ~ 代替 $HOME 完整路径避免意外操作其他用户路径。
 - view 为读操作，可读取任意路径（与 pwsh 沙箱只限制写入保持一致）；
   create/str_replace/insert 为写操作，只能指向当前工作目录或 ~/.agents/skills 目录内的文件或目录。
 - command 支持四种子命令，各子命令所需字段如下：
@@ -371,8 +372,6 @@ chat2cli 代码块可以出现在正文的任意位置，也可以前后补充�
      必填：command, path, insert_line, new_str
      · insert_line：目标行号（1 起），new_str 插入到该行之后
 
-- 状态在多次调用间保持持久。
-- 路径参数均支持 `~` 扩展为 $HOME，不应尝试把 ~ 替换成完整路径
 
 2. pwsh - 执行 PowerShell 命令：
 {{
