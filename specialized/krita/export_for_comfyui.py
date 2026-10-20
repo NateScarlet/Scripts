@@ -16,15 +16,12 @@ Krita 脚本：把当前文档导出并复制到剪贴板，供 ComfyUI 使用
        from export_for_comfyui import export_and_copy
        export_and_copy()
 
-导出完成后会尝试自动切回 ComfyUI 窗口，成功则不再打扰；找不到窗口或切换
-失败时才弹框提示。
-
-切回窗口成功后，还会把当前文档对应原图内嵌的 ComfyUI 工作流送达网页端打开，
-省去手动打开工作流这一步。该功能复用 image-funnel 已部署的 open_workflow 钩子
-（目录由 IMAGE_FUNNEL_HOOK_DIR 指定，未设置时回退到
+导出完成后会把当前文档对应原图内嵌的 ComfyUI 工作流送达网页端打开，并切到
+ComfyUI 窗口，省去手动打开工作流和切换窗口这两步。该功能复用 image-funnel
+已部署的 open_workflow 钩子（目录由 IMAGE_FUNNEL_HOOK_DIR 指定，未设置时回退到
 %AppData%\\io.github.NateScarlet.image-funnel\\hooks），以 `uv run` 启动，因此需要 uv 在 PATH 中；
-钩子目录或 uv 缺失、原图未保存到磁盘、原图没有内嵌工作流等情况下只提示，
-不影响导出与剪贴板复制。
+窗口激活与确认也由该钩子完成，本脚本不再枚举窗口。钩子目录或 uv 缺失、
+原图未保存到磁盘、原图没有内嵌工作流等情况下只提示，不影响导出与剪贴板复制。
 
 导出成功后会把文档标记为「未修改」，这样关闭 Krita 时不会再弹「是否保存」
 确认。注意：导出写的是临时目录中的副本，原文档的改动并没有写回原文件，
@@ -52,9 +49,6 @@ import ctypes
 import shutil
 import subprocess
 import tempfile
-
-from ctypes import wintypes
-
 from krita import Krita
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
@@ -181,110 +175,10 @@ def copy_file_to_clipboard(file_path):
 # 窗口激活：导出后切回 ComfyUI
 # ---------------------------------------------------------------------------
 
-# 匹配窗口标题的子串（不区分大小写）。ComfyUI 在 Firefox 中作为独立窗口打开时，
-# 标题形如 "*Unsaved Workflow (6) - ComfyUI — Mozilla Firefox 中的 ComfyUI"。
-COMFYUI_WINDOW_TITLE_SUBSTRING = "ComfyUI"
-
-# 激活 ComfyUI 前的延迟（毫秒）。Ten Scripts 在 main() 返回后还会在 Krita 窗口上
-# 显示浮动通知，把 Krita 重新提到前台。推迟激活可确保它发生在 Krita 收尾之后。
+# 调用钩子前的延迟（毫秒）。Ten Scripts 在 main() 返回后还会在 Krita 窗口上
+# 显示浮动通知，把 Krita 重新提到前台。推迟调用可确保钩子内的窗口激活
+# 发生在 Krita 收尾之后。
 ACTIVATION_DELAY_MS = 300
-
-WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
-
-_user32.EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
-_user32.EnumWindows.restype = ctypes.c_bool
-_user32.IsWindowVisible.argtypes = [wintypes.HWND]
-_user32.IsWindowVisible.restype = ctypes.c_bool
-_user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
-_user32.GetWindowTextLengthW.restype = ctypes.c_int
-_user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
-_user32.GetWindowTextW.restype = ctypes.c_int
-_user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
-_user32.ShowWindow.restype = ctypes.c_bool
-_user32.IsIconic.argtypes = [wintypes.HWND]
-_user32.IsIconic.restype = ctypes.c_bool
-_user32.SetForegroundWindow.argtypes = [wintypes.HWND]
-_user32.SetForegroundWindow.restype = ctypes.c_bool
-_user32.GetForegroundWindow.restype = wintypes.HWND
-_user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
-_user32.GetWindowThreadProcessId.restype = wintypes.DWORD
-_user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, ctypes.c_bool]
-_user32.AttachThreadInput.restype = ctypes.c_bool
-_user32.BringWindowToTop.argtypes = [wintypes.HWND]
-_user32.BringWindowToTop.restype = ctypes.c_bool
-
-_kernel32.GetCurrentThreadId.restype = wintypes.DWORD
-
-
-def _find_window_by_title(substring):
-    """返回标题含指定子串（不区分大小写）的第一个可见顶层窗口句柄；找不到返回 None。"""
-    matches = []
-
-    @WNDENUMPROC
-    def _enum_proc(hwnd, _lparam):
-        if not _user32.IsWindowVisible(hwnd):
-            return True
-        length = _user32.GetWindowTextLengthW(hwnd)
-        if length == 0:
-            return True
-        buf = ctypes.create_unicode_buffer(length + 1)
-        _user32.GetWindowTextW(hwnd, buf, length + 1)
-        if substring.lower() in buf.value.lower():
-            matches.append(hwnd)
-        return True
-
-    _user32.EnumWindows(_enum_proc, 0)
-    return matches[0] if matches else None
-
-
-def _activate_window(hwnd):
-    """
-    把窗口切到前台并激活，成功返回 True。
-
-    只在窗口最小化时调用 ShowWindow(SW_RESTORE)：SW_RESTORE 的语义是「恢复到
-    原始尺寸和位置」，对已最大化的窗口调用会把它还原成最大化之前的大小。
-    非最小化的窗口保持原样，不做任何 ShowWindow。
-
-    SetForegroundWindow 受前台锁限制：只有调用进程已是前台进程时才一定成功。
-    脚本由用户在 Krita 中按快捷键触发，此刻 Krita 正持前台，通常直接成功。
-    若失败，回退到 AttachThreadInput——把本线程的输入队列临时接到当前前台线程上，
-    绕过前台锁再试一次。
-    """
-    if _user32.IsIconic(hwnd):
-        SW_RESTORE = 9
-        _user32.ShowWindow(hwnd, SW_RESTORE)
-
-    if _user32.SetForegroundWindow(hwnd):
-        return True
-
-    foreground = _user32.GetForegroundWindow()
-    if foreground:
-        fg_thread = _user32.GetWindowThreadProcessId(foreground, None)
-        cur_thread = _kernel32.GetCurrentThreadId()
-        if fg_thread and fg_thread != cur_thread:
-            _user32.AttachThreadInput(cur_thread, fg_thread, True)
-            try:
-                _user32.SetForegroundWindow(hwnd)
-            finally:
-                _user32.AttachThreadInput(cur_thread, fg_thread, False)
-
-    _user32.BringWindowToTop(hwnd)
-    return _user32.GetForegroundWindow() == hwnd
-
-
-def _activate_comfyui():
-    """
-    查找并激活 ComfyUI 窗口。
-
-    返回 None 表示已成功切到窗口；否则返回一句说明原因的文字（找不到窗口或
-    激活失败），由调用方决定如何提示。
-    """
-    hwnd = _find_window_by_title(COMFYUI_WINDOW_TITLE_SUBSTRING)
-    if hwnd is None:
-        return f"未找到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口"
-    if not _activate_window(hwnd):
-        return f"无法切换到 {COMFYUI_WINDOW_TITLE_SUBSTRING} 窗口"
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +217,9 @@ def _last_line(text):
 def _warn_open_workflow(reason):
     """送达工作流失败时的统一提示。导出本身已经成功，因此只作为附加说明。"""
     QMessageBox.information(
-        None, "打开工作流", f"未能自动打开原图的工作流：\n\n{reason}"
+        None,
+        "打开工作流",
+        f"未能自动打开原图的工作流：\n\n{reason}\n\n请手动切换到 ComfyUI 窗口。",
     )
 
 
@@ -380,21 +276,14 @@ def _open_embedded_workflow_or_warn(image_path):
         _warn_open_workflow(reason or f"uv 以退出码 {result.returncode} 结束。")
 
 
-def _after_export(export_path, image_path):
+def _after_export(image_path):
     """
-    导出收尾（在事件循环空闲后执行）：切回 ComfyUI，成功后送达原图内嵌工作流。
+    导出收尾（在事件循环空闲后执行）：送达原图内嵌工作流并切到 ComfyUI 窗口。
 
-    只有成功切回 ComfyUI 才尝试打开工作流：切不回去说明用户还在 Krita 侧，
-    此时送达意义不大，且与「找不到窗口」共用同一条手动切换提示。
+    窗口激活由 image-funnel 的 open_workflow 钩子完成，本脚本不再枚举窗口。
+    钩子内部会先送达工作流再激活窗口，因此即使激活失败，工作流也已经送达，
+    用户手动切换后即可看到。
     """
-    reason = _activate_comfyui()
-    if reason:
-        QMessageBox.information(
-            None,
-            "完成",
-            f"已导出并复制到剪贴板：\n{export_path}\n\n{reason}，请手动切换后粘贴。",
-        )
-        return
     _open_embedded_workflow_or_warn(image_path)
 
 
@@ -559,12 +448,12 @@ def export_and_copy():
         )
         return export_path
 
-    # ---- 切回 ComfyUI 并送达工作流 ----
+    # ---- 送达工作流并切到 ComfyUI ----
     # Ten Scripts 在 main() 返回后还会在 Krita 窗口上显示浮动通知，把 Krita
-    # 重新提到前台，覆盖刚做的窗口激活。因此把激活推迟到事件循环空闲后执行，
+    # 重新提到前台，覆盖钩子做的窗口激活。因此把调用推迟到事件循环空闲后执行，
     # 确保它发生在 Krita 的收尾动作之后。
     QTimer.singleShot(
-        ACTIVATION_DELAY_MS, lambda: _after_export(export_path, source_path)
+        ACTIVATION_DELAY_MS, lambda: _after_export(source_path)
     )
     return export_path
 
