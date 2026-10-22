@@ -13,20 +13,48 @@ Set-Alias "chat2cli" Invoke-Chat2CLI
 
 
 # 剪贴板被其他进程占用时，Win32 剪贴板 API 会返回 CLIPBRD_E_CANT_OPEN。
+# PowerShell 调用 .NET 静态方法时，底层 COMException 会被包装成
+# MethodInvocationException，所以直接 catch COMException 永远匹配不到，
+# 异常会穿透重试循环直接终止监听。这里沿 InnerException 链判断原始错误。
+function Test-Chat2CLIClipboardBusyError {
+    param([System.Exception]$Exception)
+
+    $current = $Exception
+    while ($null -ne $current) {
+        if ($current -is [System.Runtime.InteropServices.COMException]) {
+            return $true
+        }
+        $current = $current.InnerException
+    }
+
+    return $false
+}
+
+
 # 通过带退避的重试循环获取剪贴板访问权，而不是直接失败。
+# 读取场景可指定 -IgnoreFailure：重试耗尽后返回 $null（此刻剪贴板不可读），
+# 由调用方降级处理，避免长时间运行的监听循环被瞬时故障打断。
 function Invoke-Chat2CLIClipboardWithRetry {
     param(
         [scriptblock]$Action,
         [int]$MaxAttempts = 10,
-        [int]$RetryDelayMilliseconds = 100
+        [int]$RetryDelayMilliseconds = 100,
+        [switch]$IgnoreFailure
     )
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
         try {
             return & $Action
         }
-        catch [System.Runtime.InteropServices.COMException] {
+        catch {
+            # 与剪贴板占用无关的错误重试也不会好转，直接向上抛出
+            if (-not (Test-Chat2CLIClipboardBusyError -Exception $_.Exception)) {
+                throw
+            }
             if ($attempt -eq $MaxAttempts) {
+                if ($IgnoreFailure) {
+                    return $null
+                }
                 throw
             }
             Start-Sleep -Milliseconds $RetryDelayMilliseconds
@@ -92,7 +120,8 @@ function Set-Chat2CLIClipboard {
 function Test-Chat2CLIClipboardGenerated {
     Add-Type -AssemblyName PresentationCore
 
-    $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
+    # 读不到剪贴板时按“不是生成内容”处理，不打断调用方
+    $data = Invoke-Chat2CLIClipboardWithRetry -IgnoreFailure { [System.Windows.Clipboard]::GetDataObject() }
     if ($null -eq $data) {
         return $false
     }
@@ -107,7 +136,8 @@ function Test-Chat2CLIClipboardGenerated {
 function Get-Chat2CLIClipboardText {
     Add-Type -AssemblyName PresentationCore
 
-    $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
+    # 读不到剪贴板时返回空文本，不打断调用方
+    $data = Invoke-Chat2CLIClipboardWithRetry -IgnoreFailure { [System.Windows.Clipboard]::GetDataObject() }
     if ($null -eq $data) {
         return ""
     }
@@ -775,8 +805,10 @@ function Watch-Chat2CLI {
                 break
             }
 
-            # 使用带重试的原生方法避免其他进程占用剪贴板导致的瞬时失败
-            $data = Invoke-Chat2CLIClipboardWithRetry { [System.Windows.Clipboard]::GetDataObject() }
+            # 使用带重试的原生方法避免其他进程占用剪贴板导致的瞬时失败；
+            # 重试仍失败时 $data 为 $null，按“剪贴板为空”处理继续下一轮监听，
+            # 而不是让异常终止整个监听进程。
+            $data = Invoke-Chat2CLIClipboardWithRetry -IgnoreFailure { [System.Windows.Clipboard]::GetDataObject() }
             $current = ""
             # 使用 UnicodeText 而不是 Text：Text 是 ANSI 格式（CF_TEXT），
             # 中文会乱码；UnicodeText（CF_UNICODETEXT）与 Get-Clipboard 一致。
