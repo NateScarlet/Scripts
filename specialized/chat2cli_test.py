@@ -2179,6 +2179,17 @@ class TestDangerousCommandHighlight(unittest.TestCase):
         out = self._echo("Get-Date\nRemove-Item a.txt")
         self.assertIn("\033[1;31mRemove-Item", out)
 
+    def test_color_resets_after_dangerous_token(self):
+        # 危险色带 bold 属性，仅用基础色覆盖前景会残留 bold，
+        # 使同行后续文本呈现与普通文本不同的粗体黄。恢复时必须先复位。
+        out = self._echo("Remove-Item a.txt; Get-Date")
+        self.assertIn("\033[1;31mRemove-Item\033[0m\033[33m", out)
+
+    def test_second_dangerous_token_still_highlighted(self):
+        out = self._echo("Remove-Item a.txt; Set-Content b.txt x")
+        self.assertIn("\033[1;31mRemove-Item", out)
+        self.assertIn("\033[1;31mSet-Content", out)
+
     def test_short_token_respects_word_boundary(self):
         # 危险短词不应匹配到普通单词内部（如 form 含 rm）
         out = self._echo("Get-Item form.txt")

@@ -1920,14 +1920,16 @@ def _permission_denial_hint(effective: str) -> Optional[str]:
 def _highlight_dangerous_commands(line: str, base_color: str) -> str:
     """把一行命令中的破坏性操作标红，其余部分保持基础色。
 
-    高亮后立即恢复基础色，否则同行后续文本会继承危险色，失去区分度。
+    危险色携带 bold 属性，仅用基础色覆盖前景色会残留 bold，使同行
+    后续文本呈现为粗体黄。因此恢复时先复位全部属性再重新上基础色。
     """
     danger_color = "\033[1;31m"
+    restore_color = f"\033[0m{base_color}"
     parts: List[str] = []
     position = 0
     for match in _DANGEROUS_COMMAND_RE.finditer(line):
         parts.append(line[position:match.start()])
-        parts.append(f"{danger_color}{match.group(0)}{base_color}")
+        parts.append(f"{danger_color}{match.group(0)}{restore_color}")
         position = match.end()
     parts.append(line[position:])
     return "".join(parts)
