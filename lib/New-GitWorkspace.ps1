@@ -1,14 +1,90 @@
+function ConvertTo-GitRepoUrl {
+    <#
+    .SYNOPSIS
+        将 gh 语义的 repository 参数转换为 HTTPS URL。
+
+    .DESCRIPTION
+        支持以下输入形式，与 gh 命令的 repository 参数语义一致：
+          - https://host/owner/repo（原样返回）
+          - user@host:owner/repo（scp 风格 SSH，转换为 HTTPS）
+          - HOST/OWNER/REPO
+          - OWNER/REPO（主机取 GH_HOST 或 github.com）
+          - REPO（owner 取当前登录用户，仅此形式需要查询登录用户）
+
+    .PARAMETER Repository
+        待解析的仓库地址。
+
+    .PARAMETER GetLogin
+        接受主机名并返回登录用户名的脚本块，用于解析单段 REPO。
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Repository,
+
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$GetLogin
+    )
+
+    $Repository = $Repository.Trim()
+
+    # 已带协议头的完整 URL 原样返回
+    if ($Repository -match '^https?://') {
+        return $Repository
+    }
+
+    # scp 风格 SSH 地址：user@host:path
+    if ($Repository -match '^[^@/]+@([^:/]+):(.+)$') {
+        $sshHost = $Matches[1]
+        $sshPath = $Matches[2] -replace '\.git$', ''
+        return "https://$sshHost/$sshPath"
+    }
+
+    # 按 gh 语义解析 [HOST/]OWNER/REPO 或 REPO
+    $segments = $Repository -split '/'
+    $defaultHost = if ($env:GH_HOST) { $env:GH_HOST } else { 'github.com' }
+
+    switch ($segments.Count) {
+        1 {
+            $hostName = $defaultHost
+            $owner = & $GetLogin $hostName
+            if ([string]::IsNullOrWhiteSpace($owner)) {
+                throw "无法确定主机 $hostName 的登录用户，请提供 OWNER/REPO 形式的地址"
+            }
+            $repoPart = $segments[0]
+        }
+        2 {
+            $hostName = $defaultHost
+            $owner = $segments[0]
+            $repoPart = $segments[1]
+        }
+        3 {
+            $hostName = $segments[0]
+            $owner = $segments[1]
+            $repoPart = $segments[2]
+        }
+        default {
+            throw "无法解析仓库地址 '$Repository'：段数过多"
+        }
+    }
+
+    $repoPart = $repoPart -replace '\.git$', ''
+    return "https://$hostName/$owner/$repoPart"
+}
+
 function New-GitWorkspace {
     <#
     .SYNOPSIS
         克隆 Git 仓库到工作区，使用分离的 Git 目录。
     
     .DESCRIPTION
-        此函数接收一个 Git HTTP URL，将仓库克隆到指定的工作区目录，同时将 Git 目录分离到独立位置。
+        此函数接收一个 Git 仓库地址，将仓库克隆到指定的工作区目录，同时将 Git 目录分离到独立位置。
         工作区目录统一不包含 .git 后缀，Git 目录统一包含 .git 后缀。
+        地址参数采用 gh 命令的 repository 语义，非完整 URL 会被自动补全为 HTTPS URL。
     
     .PARAMETER Url
-        Git 仓库的 HTTP 或 HTTPS URL。
+        Git 仓库地址，语义与 gh 命令的 repository 参数一致：
+        支持 https://host/owner/repo、user@host:owner/repo、HOST/OWNER/REPO、OWNER/REPO、REPO。
+        非完整 URL 会被自动补全为 HTTPS URL。
     
     .PARAMETER Name
         可选参数，指定工作区目录的名称。如果未提供，则从 URL 中提取仓库名称。
@@ -22,6 +98,16 @@ function New-GitWorkspace {
         New-GitWorkspace -Url "https://gitlab.example.com:8080/group/project.git" -Name "my-project"
         
         克隆仓库到 C:/Workspaces/my-project，Git 目录存储在 $env:LOCAL_GIT_DIR_ROOT/gitlab.example.com/group/project.git（端口号被移除）
+    
+    .EXAMPLE
+        New-GitWorkspace -Url "cli/cli"
+        
+        克隆 github.com/cli/cli 仓库
+    
+    .EXAMPLE
+        New-GitWorkspace -Url "myrepo"
+        
+        克隆当前登录用户（通过 gh auth status 读取）名下的 myrepo 仓库
     
     .NOTES
         要求环境变量 LOCAL_GIT_ROOT 已定义，否则会抛出错误。
@@ -44,10 +130,12 @@ function New-GitWorkspace {
         return 
     }
     
-    # 验证 URL 格式
-    if ($Url -notmatch '^https?://') {
-        Write-Error "URL 格式不正确，必须以 http:// 或 https:// 开头"
-        return
+    # 将 gh 语义的 repository 参数补全为 HTTPS URL
+    $Url = ConvertTo-GitRepoUrl -Repository $Url -GetLogin {
+        param($hostName)
+        $status = gh auth status --hostname $hostName --json hosts 2>$null | ConvertFrom-Json
+        if (-not $status) { return $null }
+        $status.hosts.$hostName | Where-Object { $_.active } | Select-Object -First 1 -ExpandProperty login
     }
     
     # 解析 URL
