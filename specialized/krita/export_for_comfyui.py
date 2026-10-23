@@ -208,6 +208,39 @@ def _resolve_hooks_dir():
     return os.path.join(appdata, IMAGE_FUNNEL_APP_DIR, "hooks")
 
 
+def _subprocess_env(image_path):
+    """
+    构造 uv 子进程的环境变量。
+
+    Krita 内嵌的 Python 会把 PYTHONHOME/PYTHONPATH 指向自己的解释器与标准库
+    （标准库常以 zip 形式分发）。这些变量会被 uv 启动的新解释器继承，使新解释器
+    去加载 Krita 的标准库 zip，报 bad magic number in 'encodings'。因此剔除所有
+    PYTHON* 变量，让 uv 管理的解释器使用自身标准库。
+
+    钩子按设计只在 image-funnel 注入的环境下运行，会直接读取 IMAGE_FUNNEL_DATA_DIR
+    而不做回退。这里独立于 image-funnel 启动钩子，需要补上主程序在变量缺失时
+    使用的默认数据目录，否则钩子会因缺少该变量快速失败。
+    """
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith("PYTHON")
+    }
+    env["IMAGE_FUNNEL_IMAGE_PATHS"] = json.dumps([os.path.abspath(image_path)])
+
+    # 编码设置随 PYTHON* 一并被剔除，但钩子依赖它们输出 UTF-8，
+    # 因此按 image-funnel 注入的相同值补回，避免 Windows 下按 cp936 编码输出
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+
+    if not env.get("IMAGE_FUNNEL_DATA_DIR", "").strip():
+        appdata = os.environ.get("APPDATA", "").strip()
+        # 与 image-funnel 主程序一致：UserConfigDir 不可用时回落到当前目录
+        base = appdata if appdata else "."
+        env["IMAGE_FUNNEL_DATA_DIR"] = os.path.join(base, IMAGE_FUNNEL_APP_DIR)
+    return env
+
+
 def _last_line(text):
     """取文本最后一行非空内容，用于把钩子的 traceback 收敛成一句原因。"""
     lines = [line for line in text.splitlines() if line.strip()]
@@ -251,8 +284,7 @@ def _open_embedded_workflow_or_warn(image_path):
         _warn_open_workflow("找不到 uv，请把它加入 PATH。")
         return
 
-    env = dict(os.environ)
-    env["IMAGE_FUNNEL_IMAGE_PATHS"] = json.dumps([os.path.abspath(image_path)])
+    env = _subprocess_env(image_path)
     try:
         result = subprocess.run(
             [uv, "run", "runner.py", "comfyui.open_workflow"],
