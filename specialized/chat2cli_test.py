@@ -98,7 +98,7 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         self.assertEqual(data["code"], "\n```\nliteral fence content\n```\n")
 
     def test_line_missing_indent_raises_error(self):
-        # 后续行没有缩进字符开头时，视为非法输入
+        # 非结束标签的行缺少缩进字符时，仍视为非法输入
         text = (
             "```chat2cli\n"
             f"{IND}<request>\n"
@@ -108,6 +108,34 @@ class TestExtractChat2cliBlocks(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             chat2cli.extract_chat2cli_blocks(text)
+
+    def test_missing_indent_on_request_closing_tag_is_repaired(self):
+        # 结束标签漏缩进时自动补上并记录提醒，而不是整体失败
+        chat2cli._indent_repair_notes.clear()
+        text = (
+            "```chat2cli\n"
+            f"{IND}<request>\n"
+            f'{IND}{{"jsonrpc":"2.0","id":1,"method":"skill","params":{{"name":"x"}}}}\n'
+            "</request>\n"
+            "```"
+        )
+        blocks = chat2cli.extract_chat2cli_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["method"], "skill")
+        self.assertTrue(chat2cli._indent_repair_notes)
+
+    def test_missing_indent_on_data_closing_tag_is_repaired(self):
+        chat2cli._indent_repair_notes.clear()
+        text = (
+            "```chat2cli\n"
+            f"{IND}<data.code>\n"
+            f"{IND}line\n"
+            "</data.code>\n"
+            "```"
+        )
+        data = chat2cli.extract_data_blocks(text)
+        self.assertEqual(data["code"], "\nline\n")
+        self.assertTrue(chat2cli._indent_repair_notes)
 
     def test_unindented_block_uses_empty_prefix(self):
         # 首行无缩进时，内容原样返回
@@ -458,6 +486,20 @@ class TestErrorInstructionWrapping(unittest.TestCase):
         output = self._run_chat2cli(text)
         self.assertTrue(output.startswith("<chat2cli_instruction>\n"))
         self.assertTrue(output.rstrip().endswith("</chat2cli_instruction>"))
+
+    def test_repaired_closing_tag_emits_system_reminder(self):
+        # 结束标签漏缩进时自动补上，并通过 system-reminder 提示
+        text = (
+            "```chat2cli\n"
+            ":<request>\n"
+            ':{"method":"str_replace_editor","params":{"command":"view","path":"/nonexistent"}}\n'
+            "</request>\n"
+            "```"
+        )
+        output = self._run_chat2cli(text)
+        self.assertNotIn("<chat2cli_instruction>\n错误", output)
+        self.assertIn("<system-reminder>", output)
+        self.assertIn("</request>", output)
 
     def test_bare_request_error_wrapped_in_instruction_tag(self):
         text = (

@@ -78,6 +78,10 @@ _FILE_THRESHOLD = 8000
 # 待输出的带外数据（ref_id -> 内容），由 main 循环在 stdout 统一输出
 _pending_oob_data: Dict[str, str] = {}
 
+# 代码块解析时自动修复过的格式问题（如结束标签漏缩进），由 main 统一
+# 转成 system-reminder 提示模型，避免下次再犯。
+_indent_repair_notes: List[str] = []
+
 # chat2cli 代码块的行前缀缩进字符。解析器按代码块首个非空行自动检测缩进：
 # 该行以 '<' 开头视为无缩进，否则行首字符即为整块的缩进字符（任意非 '<'
 # 字符均可）。此常量只决定提示词与错误提示中示范用哪个字符。
@@ -2333,6 +2337,11 @@ def _parse_request_payload(content: str) -> List[Dict[str, Any]]:
     return blocks
 
 
+# 整行只含一个结束标签（可能带行尾空白）。结束标签漏缩进是高频笔误，
+# 解析器会补上缩进继续解析并通过 system-reminder 提醒，而不是整体失败。
+_CLOSING_TAG_ONLY_PATTERN = re.compile(r"^</(?:data\.[^>\s]+|request)>$")
+
+
 def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
     """提取所有 chat2cli 围栏代码块的内容。
 
@@ -2396,20 +2405,31 @@ def _extract_chat2cli_fence_blocks(text: str) -> List[str]:
                         if cl.strip() == "":
                             stripped_lines.append("")
                             continue
-                        if prefix:
-                            if not cl.startswith(prefix):
-                                error_line_idx = start_idx + i + 2
-                                error_line_content = cl
-                                raise ValueError(
-                                    f"chat2cli 代码块缩进非法：第 {error_line_idx} 行"
-                                    f"（{error_line_content!r}）没有以 {prefix!r} 开头。"
-                                    f"使用 {prefix!r} 缩进时每行都必须以它开头。" #　故意不提及非空行以避免判断空行的认知负担
-                                    f"提示：代码块第一行是 {first_line!r}，"
-                                    f"行首字符 {prefix!r} 表示整个代码块采用该字符缩进。"
-                                )
-                            stripped_lines.append(cl[1:])
-                        else:
+                        if not prefix:
                             stripped_lines.append(cl)
+                            continue
+                        if cl.startswith(prefix):
+                            stripped_lines.append(cl[1:])
+                            continue
+                        # 结束标签漏缩进是高频笔误：补上缩进并按原意解析，
+                        # 同时记录提醒，而不是让整份输入失败。其他行漏缩进
+                        # 仍视为非法输入，避免掩盖结构性错误。
+                        if _CLOSING_TAG_ONLY_PATTERN.match(cl.strip()):
+                            stripped_lines.append(cl.strip())
+                            _indent_repair_notes.append(
+                                f"第 {start_idx + i + 2} 行 {cl.strip()!r} 缺少缩进"
+                                f" {prefix!r}，已自动补上。"
+                            )
+                            continue
+                        error_line_idx = start_idx + i + 2
+                        error_line_content = cl
+                        raise ValueError(
+                            f"chat2cli 代码块缩进非法：第 {error_line_idx} 行"
+                            f"（{error_line_content!r}）没有以 {prefix!r} 开头。"
+                            f"使用 {prefix!r} 缩进时每行都必须以它开头。" #　故意不提及非空行以避免判断空行的认知负担
+                            f"提示：代码块第一行是 {first_line!r}，"
+                            f"行首字符 {prefix!r} 表示整个代码块采用该字符缩进。"
+                        )
                     # 去掉首尾因围栏产生的空行
                     while stripped_lines and stripped_lines[0] == "":
                         stripped_lines.pop(0)
@@ -3087,9 +3107,10 @@ def main():
         stream=sys.stderr,
     )
 
-    # 重置带外数据全局状态，避免多次调用（如测试）串扰
+    # 重置带外数据与缩进修复提醒的全局状态，避免多次调用（如测试）串扰
     global _pending_oob_data
     _pending_oob_data.clear()
+    _indent_repair_notes.clear()
 
     # 读取 stdin 全部内容
     input_text = sys.stdin.read()
@@ -3294,6 +3315,21 @@ def main():
 
     if not no_blocks.strip() and requests:
         print(reminder_text)
+
+    # 解析时自动修复的格式问题单独提醒，避免模型误以为原格式可用
+    if _indent_repair_notes:
+        repair_lines: List[str] = [
+            "<system-reminder>chat2cli 代码块存在缩进问题，已自动修复："
+        ]
+        repair_lines.extend(f"- {note}" for note in _indent_repair_notes)
+        repair_lines.append(
+            f"后续请给代码块内每一行都加上 '{_INSTRUCTION_INDENT}' 缩进，"
+            "包括 </data.xxx> 和 </request> 等结束标签。"
+            "</system-reminder>"
+        )
+        sys.stderr.write("[chat2cli] 自动修复了代码块缩进问题。\n")
+        sys.stderr.flush()
+        print("\n".join(repair_lines))
 
 
     for reminder in preprocess_reminders:
