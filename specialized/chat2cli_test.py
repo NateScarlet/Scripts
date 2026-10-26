@@ -5,6 +5,7 @@
 data 块内部的 <request> 属于字面内容，不应被当作 RPC 请求执行。
 """
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -2236,6 +2237,75 @@ class TestDangerousCommandHighlight(unittest.TestCase):
         # 危险短词不应匹配到普通单词内部（如 form 含 rm）
         out = self._echo("Get-Item form.txt")
         self.assertNotIn("\033[1;31m", out)
+
+
+class TestPartialOutputFlush(unittest.TestCase):
+    """验证无换行输出立即转出，而不是缓冲到换行才出现。
+
+    真实场景：sudo 的密码提示不带换行，按行读取时它卡在缓冲里，
+    用户看不到提示只能盲打，回车后才一次性显示。
+    """
+
+    def test_partial_line_reaches_stderr_immediately(self):
+        """子进程写出无换行的片段后，应立刻出现在 stderr。"""
+        import time
+
+        # 写临时脚本而不是 -c 内联：命令要经 pwsh 解析，多层引号会被
+        # 拆坏，导致子进程根本没启动，测出的失败与缓冲无关。
+        script = os.path.join(
+            tempfile.mkdtemp(), "partial.py"
+        )
+        with open(script, "w", encoding="utf-8") as f:
+            f.write(
+                "import sys, time\n"
+                "sys.stdout.write('PROMPT: ')\n"
+                "sys.stdout.flush()\n"
+                "time.sleep(1.5)\n"
+                "sys.stdout.write('done\\n')\n"
+                "sys.stdout.flush()\n"
+            )
+        command = '& "%s" -u "%s"' % (sys.executable, script)
+
+        events = []
+        t0 = time.perf_counter()
+
+        class Recorder:
+            def write(self, text):
+                if text:
+                    events.append((time.perf_counter() - t0, text))
+                return len(text)
+
+            def flush(self):
+                pass
+
+        original = sys.stderr
+        sys.stderr = Recorder()
+        try:
+            chat2cli.execute_pwsh(
+                1,
+                {"command": command},
+                {},
+                approved_permission="danger-full-access",
+            )
+        finally:
+            sys.stderr = original
+
+        # 命令回显里也含 PROMPT 字样，必须排除：真实的部分行输出
+        # 不含后续的 done，而回显与完整行都会包含。
+        hits = [
+            t for t, text in events
+            if "PROMPT: " in text and "done" not in text
+        ]
+        self.assertTrue(
+            hits,
+            "未捕获到不含后续内容的部分行输出，说明提示被缓冲了",
+        )
+        self.assertLess(
+            hits[0],
+            1.0,
+            "提示应在写出后立即出现，实际延迟 %.2fs"
+            "（子进程 0s 写出，1.5s 后才完成）" % hits[0],
+        )
 
 
 if __name__ == "__main__":

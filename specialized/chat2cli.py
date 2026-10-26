@@ -31,6 +31,7 @@ chat2cli.py - chat2cli 语言执行器
 from __future__ import annotations
 
 import argparse
+import codecs
 import os
 import time
 import sys
@@ -2052,19 +2053,60 @@ def execute_pwsh(
     secret_values = _collect_secret_values()
 
     def _stream_reader(
-        stream: Any, stream_name: str, lines_list: List[str], pid: int
+        stream: Any, stream_name: str, chunks_list: List[str], pid: int
     ) -> None:
-        """逐行读取子进程输出，实时写入 stderr 并累积到列表"""
+        """读取子进程输出并实时写入 stderr，同时累积到列表。
+
+        必须绕过 Python 的 io 缓冲按原始字节读：
+        readline() 要等到换行才返回，read(n) 也会被 io 层按块缓冲。
+        交互式提示（如 sudo 的密码提示）不带换行，按行读时它一直卡在
+        缓冲里，用户看不到提示只能盲打，回车后才连同行尾一起显示。
+        os.read(fd) 在有任意字节可读时立即返回。
+        """
         base_color = "\033[31m" if stream_name == "err" else "\033[37m"
+        # 块边界可能切断多字节 UTF-8 字符，用增量解码器把残缺序列留到下一块。
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        fd = stream.fileno()
+        # 原始字节读绕过了 TextIOWrapper 的通用换行转换，需要自行把 CRLF/CR
+        # 归一为 LF：行尾残留的 CR 会让按整串匹配的路径脱敏规则失效。
+        # CR 可能正好落在块边界，用 pending_cr 留到下一块再判定。
+        pending_cr = False
+
+        def emit(text: str) -> None:
+            prefix = f"\033[90m[{pid}]\033[0m "
+            # 命中脱敏规则的片段着灰色，标记该内容进入响应时会被脱敏
+            colored = _colorize_redacted_spans(text, secret_values, base_color)
+            sys.stderr.write(f"{prefix}{colored}")
+            sys.stderr.flush()
+            chunks_list.append(text)
+
+        def normalize(text: str) -> str:
+            nonlocal pending_cr
+            if pending_cr:
+                text = "\r" + text
+                pending_cr = False
+            if text.endswith("\r"):
+                text = text[:-1]
+                pending_cr = True
+            return text.replace("\r\n", "\n").replace("\r", "\n")
+
         try:
-            for line in iter(stream.readline, ""):
-                # 构建前缀：灰色显示的 [<PID>]
-                prefix = f"\033[90m[{pid}]\033[0m "
-                # 行内命中脱敏规则的片段着灰色，标记该内容进入响应时会被脱敏
-                colored = _colorize_redacted_spans(line, secret_values, base_color)
-                sys.stderr.write(f"{prefix}{colored}")
-                sys.stderr.flush()
-                lines_list.append(line)
+            while True:
+                try:
+                    raw = os.read(fd, 4096)
+                except OSError:
+                    break
+                if not raw:
+                    break
+                text = normalize(decoder.decode(raw))
+                if text:
+                    emit(text)
+            tail = normalize(decoder.decode(b"", final=True))
+            if pending_cr:
+                tail += "\n"
+                pending_cr = False
+            if tail:
+                emit(tail)
         finally:
             # 关闭流，忽略关闭时的异常
             try:

@@ -633,48 +633,58 @@ function Watch-Chat2CLI {
 
             $stdoutTask = $process.StandardOutput.ReadToEndAsync()
 
-            # stderr 在主线程轮询逐行读取，原样输出，保留 ANSI 颜色。
-            # 顺序由读取时机保证，不会像事件队列那样乱序。
-            $stderrLineTask = $process.StandardError.ReadLineAsync()
+            # stderr 按块读取而不是按行：ReadLineAsync 要等到换行才返回，
+            # 交互式提示（如 sudo 的密码提示）不带换行，会一直卡在缓冲里，
+            # 用户看不到提示只能盲打，回车后才连同行尾一起显示。
+            # ReadAsync(char[]) 有任意字符可读就返回。
+            $stderrBuffer = New-Object char[] 4096
+            $stderrTask = $process.StandardError.ReadAsync(
+                $stderrBuffer, 0, $stderrBuffer.Length
+            )
 
             # 注册异步任务到脚本作用域，供 finally 块在异常时清理。
             # Ctrl+C 中断时这些任务可能仍在管道上等待读取，
             # 必须在释放进程前等待它们结束，否则句柄残留。
-            $script:Chat2CLIAsyncTasks = @($stdoutTask, $stderrLineTask)
+            $script:Chat2CLIAsyncTasks = @($stdoutTask, $stderrTask)
 
-            while (-not $process.HasExited) {
-                # 持续读取直到当前没有可用的行，避免每次只读一行后固定睡眠，
-                # 输出量大时被 20ms 睡眠严重拖慢吞吐。
-                while ($stderrLineTask.IsCompleted) {
-                    $stderrLine = $stderrLineTask.Result
-                    if ($null -ne $stderrLine) {
-                        Write-Host $stderrLine
-                        $stderrLineTask = $process.StandardError.ReadLineAsync()
+            while ($true) {
+                if (-not $stderrTask.IsCompleted) {
+                    if ($process.HasExited) {
+                        # 进程已退出，管道应随之关闭。仍加超时兜底，
+                        # 避免异常情况下读取任务永不完成而卡死。
+                        try {
+                            if (-not $stderrTask.Wait(2000)) { break }
+                        }
+                        catch {
+                            break
+                        }
                     }
                     else {
-                        # ReadLineAsync 返回 null 表示已到流末尾
-                        break
+                        Start-Sleep -Milliseconds 20
+                        continue
                     }
                 }
-                if ($process.HasExited) {
+
+                try {
+                    $readCount = $stderrTask.Result
+                }
+                catch {
+                    # 管道被关闭等异常视为流结束
                     break
                 }
-                Start-Sleep -Milliseconds 20
-            }
-
-            # 进程退出后，把 stderr 剩余的行全部读出。
-            # 最后一个异步读可能仍占用流，先等它完成，避免同步 ReadLine 抛异常。
-            if (-not $stderrLineTask.IsCompleted) {
-                $stderrLineTask.Wait()
-            }
-            if ($null -ne $stderrLineTask.Result) {
-                Write-Host $stderrLineTask.Result
-            }
-            while (-not $process.StandardError.EndOfStream) {
-                $remainingLine = $process.StandardError.ReadLine()
-                if ($null -ne $remainingLine) {
-                    Write-Host $remainingLine
+                if ($readCount -le 0) {
+                    # 返回 0 表示已到流末尾
+                    break
                 }
+
+                # 用 -NoNewline 原样输出：块边界未必落在换行处，
+                # 补换行会破坏输出内容与 ANSI 颜色序列。
+                Write-Host -NoNewline (-join $stderrBuffer[0..($readCount - 1)])
+
+                $stderrTask = $process.StandardError.ReadAsync(
+                    $stderrBuffer, 0, $stderrBuffer.Length
+                )
+                $script:Chat2CLIAsyncTasks = @($stdoutTask, $stderrTask)
             }
 
             # 确保子进程完全退出后再读取 stdout 结果
