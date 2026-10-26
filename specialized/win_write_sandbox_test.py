@@ -506,5 +506,63 @@ class TestProcessTreeTermination(unittest.TestCase):
         self.assertFalse(reader_thread.is_alive(), "读线程应收到 EOF")
 
 
+class TestStdinInheritance(unittest.TestCase):
+    """验证子进程能继承调用方 stdin，支持交互式输入。
+
+    真实场景：ssh -t 把本地 stdin 转发给远端 sudo，密码经此通道传递。
+    原先 stdin 固定为 DEVNULL / NUL，交互命令立即拿到 EOF，表现为静默卡死。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        base = os.path.join(os.getcwd(), ".scratch", "win-write-sandbox-test")
+        cls.workspace = os.path.join(base, "workspace")
+        os.makedirs(cls.workspace, exist_ok=True)
+
+    def _collect(self, proc):
+        out_lines = []
+
+        def reader():
+            for line in iter(proc.stdout.readline, ""):
+                out_lines.append(line)
+
+        t = threading.Thread(target=reader, daemon=True)
+        t.start()
+        proc.wait()
+        t.join(timeout=5)
+        proc.close_handles()
+        return "".join(out_lines)
+
+    def test_inherited_stdin_reaches_child(self):
+        """继承模式下，写入 stdin 的数据能被 pwsh 读到。
+
+        用管道模拟控制台：写入一行后关闭写端，子进程应读到该行而非立即 EOF。
+        """
+        import msvcrt
+
+        r, w = os.pipe()
+        w_closed = False
+        try:
+            proc = win_write_sandbox.spawn_pwsh_sandboxed(
+                "Write-Output ('GOT=[' + [Console]::In.ReadLine() + ']')",
+                self.workspace,
+                dict(os.environ),
+                stdin_fd=r,
+            )
+            os.write(w, b"secret\n")
+            os.close(w)
+            w_closed = True
+            out = self._collect(proc)
+            self.assertIn(
+                "GOT=[secret]",
+                out,
+                f"子进程应读到写入的输入，实际输出: {out!r}",
+            )
+        finally:
+            os.close(r)
+            if not w_closed:
+                os.close(w)
+
+
 if __name__ == "__main__":
     unittest.main()

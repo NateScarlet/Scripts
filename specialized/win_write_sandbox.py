@@ -402,6 +402,13 @@ _kernel32.TerminateJobObject.restype = wintypes.BOOL
 _kernel32.ResumeThread.argtypes = [wintypes.HANDLE]
 _kernel32.ResumeThread.restype = wintypes.DWORD
 
+_kernel32.DuplicateHandle.argtypes = [
+    wintypes.HANDLE, wintypes.HANDLE,
+    wintypes.HANDLE, ctypes.POINTER(wintypes.HANDLE),
+    wintypes.DWORD, wintypes.BOOL, wintypes.DWORD,
+]
+_kernel32.DuplicateHandle.restype = wintypes.BOOL
+
 
 # ── 异常 ──────────────────────────────────────────────────────────
 
@@ -436,6 +443,26 @@ def create_kill_on_close_job() -> wintypes.HANDLE:
         _kernel32.CloseHandle(job)
         raise SandboxError(f"SetInformationJobObject 失败: {err}")
     return job
+
+
+_DUPLICATE_SAME_ACCESS = 0x00000002
+
+
+def _duplicate_inheritable(handle: int) -> wintypes.HANDLE:
+    """复制句柄为可继承副本。
+
+    调用方传入的句柄归调用方所有，不能直接塞进 STARTUPINFO 或 Popen：
+    前者要求可继承，后者会接管所有权。复制一份让两边各自管理生命周期。
+    """
+    src = wintypes.HANDLE(handle)
+    dup = wintypes.HANDLE()
+    if not _kernel32.DuplicateHandle(
+        _kernel32.GetCurrentProcess(), src,
+        _kernel32.GetCurrentProcess(), ctypes.byref(dup),
+        0, True, _DUPLICATE_SAME_ACCESS,
+    ):
+        raise SandboxError(f"DuplicateHandle(stdin) 失败: {ctypes.get_last_error()}")
+    return dup
 
 
 def close_job(job: Optional[wintypes.HANDLE]) -> None:
@@ -1231,7 +1258,10 @@ class SandboxedProcess:
 
 
 def _spawn_inheriting_restrictions(
-    command: str, cwd: str, env: Dict[str, str]
+    command: str,
+    cwd: str,
+    env: Dict[str, str],
+    stdin_fd: Optional[int] = None,
 ) -> SandboxedProcess:
     """当前进程已受限时，用普通进程创建让子进程继承写限制。
 
@@ -1253,7 +1283,7 @@ def _spawn_inheriting_restrictions(
         encoding="utf-8",
         errors="replace",
         bufsize=1,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL if stdin_fd is None else stdin_fd,
     )
     # 继承模式同样需要 job 才能覆盖后代；绑定失败时必须杀掉已启动的进程，
     # 否则它会带着未受约束的后代继续运行。
@@ -1274,6 +1304,7 @@ def spawn_pwsh_sandboxed(
     env: Dict[str, str],
     *,
     read_only: bool = False,
+    stdin_fd: Optional[int] = None,
 ) -> SandboxedProcess:
     """在 Windows 写入沙箱中启动 pwsh.exe。
 
@@ -1286,6 +1317,10 @@ def spawn_pwsh_sandboxed(
         cwd: 工作目录（非只读模式下的可写根）
         env: 子进程环境变量
         read_only: 是否完全不授予写权限
+        stdin_fd: 子进程标准输入的 C 运行时 fd；None 表示接 NUL/DEVNULL。
+            需要交互输入（如 ssh -t 转发 sudo 密码）时传入调用方的
+            stdin fd，通常为 sys.stdin.fileno()。用 fd 而非 Win32 句柄，
+            因为继承模式经 subprocess.Popen 创建，它只接受 fd。
 
     返回 SandboxedProcess，调用方负责在结束时调用 close_handles()。
     """
@@ -1302,7 +1337,9 @@ def spawn_pwsh_sandboxed(
             raise SandboxError(
                 "当前进程已运行在写入沙箱内，无法再收窄为只读权限。"
             )
-        return _spawn_inheriting_restrictions(command, cwd_abs, env)
+        return _spawn_inheriting_restrictions(
+            command, cwd_abs, env, stdin_fd
+        )
 
     # 1. 派生 restricting SID 白名单与默认 DACL 授权 SID。
     #
@@ -1419,24 +1456,34 @@ def spawn_pwsh_sandboxed(
                 # 7. 构建 STARTUPINFO。STARTF_USESTDHANDLES 要求三个句柄都有效，
                 # 否则子进程的标准输入可能继承到父进程不可用的句柄。
                 # STARTF_USESTDHANDLES 要求三个句柄在子进程中可用，
-                # NUL 句柄必须是可继承的，否则子进程打开标准输入时被拒绝。
-                nul_handle = _kernel32.CreateFileW(
-                    "NUL", _GENERIC_READ,
-                    _FILE_SHARE_READ | _FILE_SHARE_WRITE,
-                    None, _OPEN_EXISTING, 0, None,
-                )
-                # CreateFileW 的 restype 是 HANDLE，ctypes 返回 Python int
-                if not nul_handle or nul_handle == _INVALID_HANDLE_VALUE:
-                    raise SandboxError(
-                        f"打开 NUL 设备失败: {ctypes.get_last_error()}"
+                # 标准输入句柄必须是可继承的，否则子进程打开标准输入时被拒绝。
+                # 传入 stdin_fd 时复制一份可继承副本供子进程使用，
+                # 原句柄仍归调用方所有；否则退回 NUL（不可交互）。
+                if stdin_fd is not None:
+                    # Popen 走 fd，CreateProcessAsUserW 走 Win32 句柄，
+                    # 在此转换：get_osfhandle 不接管所有权，fd 仍归调用方。
+                    stdin_child = _duplicate_inheritable(
+                        msvcrt.get_osfhandle(stdin_fd)
                     )
-                if not _kernel32.SetHandleInformation(
-                    nul_handle, _HANDLE_FLAG_INHERIT, _HANDLE_FLAG_INHERIT
-                ):
-                    _kernel32.CloseHandle(nul_handle)
-                    raise SandboxError(
-                        f"SetHandleInformation(NUL) 失败: {ctypes.get_last_error()}"
+                else:
+                    stdin_child = _kernel32.CreateFileW(
+                        "NUL", _GENERIC_READ,
+                        _FILE_SHARE_READ | _FILE_SHARE_WRITE,
+                        None, _OPEN_EXISTING, 0, None,
                     )
+                    # CreateFileW 的 restype 是 HANDLE，ctypes 返回 Python int
+                    if not stdin_child or stdin_child == _INVALID_HANDLE_VALUE:
+                        raise SandboxError(
+                            f"打开 NUL 设备失败: {ctypes.get_last_error()}"
+                        )
+                    if not _kernel32.SetHandleInformation(
+                        stdin_child, _HANDLE_FLAG_INHERIT, _HANDLE_FLAG_INHERIT
+                    ):
+                        _kernel32.CloseHandle(stdin_child)
+                        raise SandboxError(
+                            "SetHandleInformation(stdin) 失败: "
+                            f"{ctypes.get_last_error()}"
+                        )
 
                 # lpDesktop 保持 NULL，让子进程继承父进程的桌面。
                 # 显式指定 winsta0\default 需要同时调整该桌面 DACL 授予
@@ -1446,7 +1493,7 @@ def spawn_pwsh_sandboxed(
                 si.cb = ctypes.sizeof(si)
                 si.dwFlags = _STARTF_USESTDHANDLES | _STARTF_USESHOWWINDOW
                 si.wShowWindow = _SW_HIDE
-                si.hStdInput = nul_handle
+                si.hStdInput = stdin_child
                 si.hStdOutput = stdout_write
                 si.hStdError = stderr_write
 
@@ -1483,7 +1530,7 @@ def spawn_pwsh_sandboxed(
                     ctypes.byref(pi),
                 ):
                     err = ctypes.get_last_error()
-                    _kernel32.CloseHandle(nul_handle)
+                    _kernel32.CloseHandle(stdin_child)
                     raise SandboxError(f"CreateProcessAsUserW 失败: {err}")
 
                 # 10. 绑定 job 后再恢复执行。挂起态保证此时尚无后代，
@@ -1498,13 +1545,13 @@ def spawn_pwsh_sandboxed(
                     _kernel32.TerminateProcess(pi.hProcess, 1)
                     _kernel32.CloseHandle(pi.hThread)
                     _kernel32.CloseHandle(pi.hProcess)
-                    _kernel32.CloseHandle(nul_handle)
+                    _kernel32.CloseHandle(stdin_child)
                     raise
 
-                # 主线程句柄与 NUL 设备不再需要，立即关闭避免泄漏。
+                # 主线程句柄与标准输入副本不再需要，立即关闭避免泄漏。
                 # 进程句柄保留在 SandboxedProcess 中，由 close_handles 释放。
                 _kernel32.CloseHandle(pi.hThread)
-                _kernel32.CloseHandle(nul_handle)
+                _kernel32.CloseHandle(stdin_child)
 
                 # 父进程关闭写端，子进程已持有自己的副本；
                 # 置 None 防止 finally 重复关闭同一句柄。

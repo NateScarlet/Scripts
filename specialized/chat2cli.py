@@ -2076,6 +2076,14 @@ def execute_pwsh(
     if not escalated:
         _echo_pwsh_command(id_, effective_permission, command)
 
+    # 子进程继承调用方 stdin，使 ssh -t 等交互命令能拿到用户输入。
+    # 没有可用 stdin（无控制台、已关闭）时退回 DEVNULL，保持旧的不可交互
+    # 行为而不是报错。
+    try:
+        stdin_fd: Optional[int] = sys.stdin.fileno()
+    except (AttributeError, OSError, ValueError):
+        stdin_fd = None
+
     use_sandbox = effective_permission != "danger-full-access"
     if use_sandbox:
         # 受限令牌沙箱启动：read-only 不授予任何写权限，workspace-write
@@ -2086,6 +2094,7 @@ def execute_pwsh(
                 os.getcwd(),
                 env,
                 read_only=(effective_permission == "read-only"),
+                stdin_fd=stdin_fd,
             )
         except win_write_sandbox.SandboxError as e:
             return {
@@ -2105,7 +2114,7 @@ def execute_pwsh(
                 encoding="utf-8",
                 errors="replace",
                 bufsize=1,
-                stdin=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL if stdin_fd is None else stdin_fd,
                 env=env,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             )
