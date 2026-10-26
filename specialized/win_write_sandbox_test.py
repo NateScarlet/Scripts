@@ -8,6 +8,7 @@
 import os
 import sys
 import tempfile
+import threading
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -419,6 +420,90 @@ class TestSandboxIntegration(unittest.TestCase):
                 dict(os.environ),
                 read_only=True,
             )
+
+
+class TestProcessTreeTermination(unittest.TestCase):
+    """验证 job 关闭时终止整棵进程树，避免残留后代持有管道导致死锁。"""
+
+    @classmethod
+    def setUpClass(cls):
+        base = os.path.join(os.getcwd(), ".scratch", "win-write-sandbox-test")
+        cls.workspace = os.path.join(base, "workspace")
+        os.makedirs(cls.workspace, exist_ok=True)
+
+    def _spawn_with_grandchild(self):
+        """启动 pwsh，它再启动一个 30 秒的子 pwsh，然后父 pwsh 立即退出。
+
+        返回 (proc, grandchild_pid, reader_thread)。
+        父 pwsh 已 assign 到 job 后，它启动的子进程会被内核自动加入同一 job，
+        这正是要验证的终止范围。
+        """
+        script = (
+            "$child = Start-Process -FilePath 'pwsh.exe' "
+            "-ArgumentList '-NoProfile','-Command','Start-Sleep 30' "
+            "-NoNewWindow -PassThru; "
+            "Write-Output \"child=$($child.Id)\"; "
+            "exit 0"
+        )
+        proc = win_write_sandbox.spawn_pwsh_sandboxed(
+            script, self.workspace, dict(os.environ)
+        )
+        out_lines = []
+        line_received = threading.Event()
+
+        def reader():
+            for line in iter(proc.stdout.readline, ""):
+                out_lines.append(line)
+                if line.strip().startswith("child="):
+                    line_received.set()
+
+        t = threading.Thread(target=reader, daemon=True)
+        t.start()
+        proc.wait()
+        line_received.wait(timeout=5)
+        child_pid = None
+        for line in out_lines:
+            if line.strip().startswith("child="):
+                child_pid = int(line.strip().split("=")[1])
+                break
+        return proc, child_pid, t
+
+    def test_close_handles_kills_grandchild(self):
+        """close_handles 必须杀死 job 里残留的后代进程。
+
+        pwsh 已退出，但它启动的子 pwsh 还活着并持有 stdout 管道写端；
+        不杀 job 的话读线程永远收不到 EOF。
+        """
+        proc, child_pid, reader_thread = self._spawn_with_grandchild()
+        self.assertIsNotNone(child_pid, "未取得子进程 pid")
+        proc.close_handles()
+        reader_thread.join(timeout=5)
+        self.assertFalse(
+            reader_thread.is_alive(),
+            "读线程应收到 EOF，说明子进程已被 job 关闭时杀死",
+        )
+
+    def test_close_handles_does_not_deadlock(self):
+        """残留后代持有管道写端时，close_handles 不应死锁。
+
+        这是原始 bug 的直接复现：close() 与阻塞的 readline 争同一文件对象锁。
+        """
+        proc, child_pid, reader_thread = self._spawn_with_grandchild()
+        self.assertIsNotNone(child_pid, "未取得子进程 pid")
+        done = threading.Event()
+
+        def _close():
+            try:
+                proc.close_handles()
+            finally:
+                done.set()
+
+        closer = threading.Thread(target=_close, daemon=True)
+        closer.start()
+        if not done.wait(timeout=5):
+            self.fail("close_handles 在残留后代存在时死锁")
+        reader_thread.join(timeout=5)
+        self.assertFalse(reader_thread.is_alive(), "读线程应收到 EOF")
 
 
 if __name__ == "__main__":

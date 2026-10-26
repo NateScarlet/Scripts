@@ -2094,8 +2094,10 @@ def execute_pwsh(
             }
     else:
         # danger-full-access：不经过沙箱，直接执行。
+        # 仍纳入 job：不绑定 job 时 pwsh 派生的 ssh.exe 等后代在 pwsh 退出后
+        # 继续存活并持有管道写端，读线程收不到 EOF，close 会与 readline 死锁。
         try:
-            proc = subprocess.Popen(
+            popen = subprocess.Popen(
                 ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -2115,6 +2117,26 @@ def execute_pwsh(
         except Exception as e:
             return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
 
+        job = None
+        try:
+            job = win_write_sandbox.create_kill_on_close_job()
+            win_write_sandbox.assign_pid_to_job(job, popen.pid)
+        except win_write_sandbox.SandboxError as e:
+            # 绑定失败时进程已在跑且不受 job 约束，必须主动终止再报错。
+            # 已创建的 job 与管道文件对象一并释放，避免泄漏。
+            # 此时无法杀树（没有可用的 job），只能终止 pwsh 本身。
+            popen.kill()
+            popen.wait()
+            win_write_sandbox.close_job(job)
+            for f in (popen.stdout, popen.stderr):
+                if f is not None:
+                    f.close()
+            return {
+                "success": False,
+                "message": f"错误：无法约束 pwsh 进程树：{str(e)}",
+            }
+        proc = win_write_sandbox.SandboxedProcess.from_popen(popen, job=job)
+
     stdout_lines: List[str] = []
     stderr_lines: List[str] = []
     t_out = threading.Thread(
@@ -2130,20 +2152,19 @@ def execute_pwsh(
     t_out.start()
     t_err.start()
 
-    # 设置信号处理器，在收到 SIGINT 时清理子进程
+    # 设置信号处理器，在收到 SIGINT 时清理进程树后退出
     def _signal_handler(sig: int, frame: Any) -> None:
-        """处理 Ctrl+C 信号，清理子进程后退出"""
-        sys.stderr.write("\n[chat2cli] 收到中断信号，正在清理 pwsh 进程...\n")
+        """处理 Ctrl+C 信号，清理进程树后退出"""
+        sys.stderr.write("\n[chat2cli] 收到中断信号，正在清理 pwsh 进程树...\n")
         sys.stderr.flush()
         try:
-            # 终止进程组，确保所有子进程都被清理
-            proc.terminate()
-            # 等待一小段时间让进程优雅退出
+            # 必须杀整棵树：只杀 pwsh 会留下 ssh.exe 等后代，它们持有
+            # 管道写端，读线程收不到 EOF，退出过程会卡在 close() 上。
+            proc.terminate_tree()
             try:
                 proc.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.wait()
+            except Exception:
+                pass
         except Exception as e:
             sys.stderr.write(f"[chat2cli] 清理子进程时发生错误: {e}\n")
             sys.stderr.flush()
@@ -2152,21 +2173,29 @@ def execute_pwsh(
     original_handler = signal.signal(signal.SIGINT, _signal_handler)
 
     try:
-        # 无限等待，让命令自然结束
-        returncode = proc.wait()
-    except Exception:
-        # 如果发生异常，确保清理进程
+        # 轮询等待而不是无限等待。Windows 上 Ctrl+C 由主线程在字节码
+        # 边界检查中断标志后才会调度 Python handler；proc.wait() 无超时
+        # 时主线程阻塞在 WaitForSingleObject(INFINITE) 内部，handler
+        # 永远不会执行，表现为 Ctrl+C 完全无效。短超时轮询让主线程
+        # 周期性回到解释器，中断才可被响应。
+        while True:
+            try:
+                returncode = proc.wait(timeout=0.2)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+    except BaseException:
+        # 中断或异常路径：必须杀整棵进程树，否则残留后代持有管道写端，
+        # 后续 close 会与阻塞中的 readline 争锁而死锁。
         try:
-            proc.terminate()
-            proc.wait(timeout=2)
+            proc.terminate_tree()
+            try:
+                proc.wait(timeout=2)
+            except Exception:
+                pass
         except Exception as cleanup_err:
             sys.stderr.write(f"[chat2cli] 清理子进程时发生错误: {cleanup_err}\n")
             sys.stderr.flush()
-            try:
-                proc.kill()
-                proc.wait()
-            except Exception:
-                pass
         raise
     finally:
         # 恢复原始信号处理器
@@ -2175,9 +2204,16 @@ def execute_pwsh(
     t_out.join(timeout=5)
     t_err.join(timeout=5)
 
-    # 沙箱进程持有原生进程句柄和管道句柄，需要显式释放
-    if use_sandbox:
-        proc.close_handles()
+    # 读线程未结束说明仍有后代持有管道写端（pwsh 已退出，但它们还活着）。
+    # 此时不能直接 close_handles：close() 会与阻塞在 readline 的线程争
+    # 同一文件对象锁而死锁。先杀树让写端关闭，线程读到 EOF 后才能安全 close。
+    if t_out.is_alive() or t_err.is_alive():
+        proc.terminate_tree()
+        t_out.join(timeout=5)
+        t_err.join(timeout=5)
+
+    # 两条路径都持有原生句柄/job/管道，需要显式释放。
+    proc.close_handles()
 
     # 汇总本次输出中会被脱敏的内容。实时流只标记单行内可判定的片段，
     # 这里对完整输出再检测一次，覆盖跨行匹配（如私钥块）。

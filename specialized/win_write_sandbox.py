@@ -97,6 +97,7 @@ _SE_GROUP_LOGON_ID = 0xC0000000
 # ── 进程创建 ──────────────────────────────────────────────────────
 
 _CREATE_UNICODE_ENVIRONMENT = 0x00000400
+_CREATE_SUSPENDED = 0x00000004
 _STARTF_USESTDHANDLES = 0x00000100
 _STARTF_USESHOWWINDOW = 0x00000001
 _SW_HIDE = 0
@@ -120,6 +121,53 @@ _OPEN_EXISTING = 3
 _WAIT_OBJECT_0 = 0x00000000
 _WAIT_TIMEOUT = 0x00000102
 _INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value
+
+# ── Job Object ────────────────────────────────────────────────────
+#
+# 用 job 约束整棵进程树：关闭 job handle 时内核终止树内所有进程。
+# 缺少这一步时，pwsh 启动的后代（ssh.exe 等）在 pwsh 被杀后继续存活，
+# 并持有从父进程继承的 stdout/stderr 管道写端，使父进程侧读不到 EOF，
+# 表现为 execute_pwsh 的 close() 与阻塞的 readline 互锁、Ctrl+C 无效。
+_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+_JobObjectExtendedLimitInformation = 9
+_PROCESS_SET_QUOTA = 0x0100
+_PROCESS_TERMINATE = 0x0001
+
+
+class IO_COUNTERS(ctypes.Structure):
+    _fields_ = [
+        ("ReadOperationCount", ctypes.c_ulonglong),
+        ("WriteOperationCount", ctypes.c_ulonglong),
+        ("OtherOperationCount", ctypes.c_ulonglong),
+        ("ReadTransferCount", ctypes.c_ulonglong),
+        ("WriteTransferCount", ctypes.c_ulonglong),
+        ("OtherTransferCount", ctypes.c_ulonglong),
+    ]
+
+
+class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("PerProcessUserTimeLimit", ctypes.c_longlong),
+        ("PerJobUserTimeLimit", ctypes.c_longlong),
+        ("LimitFlags", wintypes.DWORD),
+        ("MinimumWorkingSetSize", ctypes.c_size_t),
+        ("MaximumWorkingSetSize", ctypes.c_size_t),
+        ("ActiveProcessLimit", wintypes.DWORD),
+        ("Affinity", ctypes.c_size_t),
+        ("PriorityClass", wintypes.DWORD),
+        ("SchedulingClass", wintypes.DWORD),
+    ]
+
+
+class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("BasicLimitInformation", JOBOBJECT_BASIC_LIMIT_INFORMATION),
+        ("IoInfo", IO_COUNTERS),
+        ("ProcessMemoryLimit", ctypes.c_size_t),
+        ("JobMemoryLimit", ctypes.c_size_t),
+        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+        ("PeakJobMemoryUsed", ctypes.c_size_t),
+    ]
 
 
 # ── ctypes 结构体 ─────────────────────────────────────────────────
@@ -334,12 +382,99 @@ _kernel32.TerminateProcess.restype = wintypes.BOOL
 _kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
 _kernel32.OpenProcess.restype = wintypes.HANDLE
 
+_kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+_kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+
+_kernel32.SetInformationJobObject.argtypes = [
+    wintypes.HANDLE,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    wintypes.DWORD,
+]
+_kernel32.SetInformationJobObject.restype = wintypes.BOOL
+
+_kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+_kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+
+_kernel32.TerminateJobObject.argtypes = [wintypes.HANDLE, wintypes.UINT]
+_kernel32.TerminateJobObject.restype = wintypes.BOOL
+
+_kernel32.ResumeThread.argtypes = [wintypes.HANDLE]
+_kernel32.ResumeThread.restype = wintypes.DWORD
+
 
 # ── 异常 ──────────────────────────────────────────────────────────
 
 
 class SandboxError(Exception):
     """沙箱创建或进程启动失败。"""
+
+
+# ── Job Object 工具 ───────────────────────────────────────────────
+
+
+def create_kill_on_close_job() -> wintypes.HANDLE:
+    """创建关闭即杀树的 job。
+
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE 使 job 最后一个 handle 关闭时内核
+    终止树内全部进程，无需逐个 TerminateProcess。后代进程在 pwsh 启动后
+    由内核自动加入同一 job，因此能覆盖 ssh.exe 这类孙进程。
+    """
+    job = _kernel32.CreateJobObjectW(None, None)
+    if not job:
+        raise SandboxError(f"CreateJobObjectW 失败: {ctypes.get_last_error()}")
+
+    info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+    info.BasicLimitInformation.LimitFlags = _JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    if not _kernel32.SetInformationJobObject(
+        job,
+        _JobObjectExtendedLimitInformation,
+        ctypes.byref(info),
+        ctypes.sizeof(info),
+    ):
+        err = ctypes.get_last_error()
+        _kernel32.CloseHandle(job)
+        raise SandboxError(f"SetInformationJobObject 失败: {err}")
+    return job
+
+
+def close_job(job: Optional[wintypes.HANDLE]) -> None:
+    """关闭 job handle。
+
+    job 设置了 KILL_ON_JOB_CLOSE，关闭即终止树内残留进程。调用方在
+    绑定失败等错误路径上必须调用，否则 handle 泄漏到进程退出。
+    """
+    if job:
+        _kernel32.CloseHandle(job)
+
+
+def _assign_to_job(job: wintypes.HANDLE, h_process: wintypes.HANDLE) -> None:
+    """把进程加入 job，失败即报错。
+
+    进程一旦启动就可能已经派生后代，因此调用方必须在进程刚创建、
+    尚未执行用户命令时完成绑定。
+    """
+    if not _kernel32.AssignProcessToJobObject(job, h_process):
+        raise SandboxError(
+            f"AssignProcessToJobObject 失败: {ctypes.get_last_error()}"
+        )
+
+
+def assign_pid_to_job(job: wintypes.HANDLE, pid: int) -> None:
+    """按 pid 打开进程并加入 job，供非沙箱路径包装 subprocess.Popen 使用。
+
+    Popen 不暴露进程句柄，只能重新 OpenProcess。句柄用后立即关闭，
+    job 已持有自己的引用。
+    """
+    h = _kernel32.OpenProcess(_PROCESS_SET_QUOTA | _PROCESS_TERMINATE, False, pid)
+    if not h:
+        raise SandboxError(
+            f"OpenProcess(pid={pid}) 失败: {ctypes.get_last_error()}"
+        )
+    try:
+        _assign_to_job(job, h)
+    finally:
+        _kernel32.CloseHandle(h)
 
 
 # ── SID 工具 ──────────────────────────────────────────────────────
@@ -997,18 +1132,33 @@ class SandboxedProcess:
         stdout_file: Any,
         stderr_file: Any,
         popen: Optional[Any] = None,
+        job: Optional[wintypes.HANDLE] = None,
     ):
         self._h_process = h_process
         self._popen = popen
+        self._job = job
         self.pid = pid
         self.stdout = stdout_file
         self.stderr = stderr_file
         self.returncode: Optional[int] = None
 
     @classmethod
-    def from_popen(cls, popen: Any) -> "SandboxedProcess":
+    def from_popen(
+        cls, popen: Any, job: Optional[wintypes.HANDLE] = None
+    ) -> "SandboxedProcess":
         """包装 subprocess.Popen，对外接口与受限令牌后端一致。"""
-        return cls(None, popen.pid, popen.stdout, popen.stderr, popen=popen)
+        return cls(None, popen.pid, popen.stdout, popen.stderr, popen=popen, job=job)
+
+    def terminate_tree(self) -> None:
+        """终止整棵进程树。
+
+        job 存在时用 TerminateJobObject 一次杀掉全部后代，避免 ssh.exe 这类
+        孙进程在 pwsh 退出后继续持有管道写端。无 job 时退回 terminate()。
+        """
+        if self._job:
+            _kernel32.TerminateJobObject(self._job, 1)
+            return
+        self.terminate()
 
     def wait(self, timeout: Optional[float] = None) -> int:
         """等待进程结束，返回退出码。timeout 为 None 时无限等待。"""
@@ -1051,10 +1201,24 @@ class SandboxedProcess:
         self.terminate()
 
     def close_handles(self) -> None:
-        """关闭原生进程句柄与管道文件对象。"""
+        """关闭原生进程句柄、job 与管道文件对象。
+
+        顺序不可调换：先杀整棵树，否则残留后代持有管道写端，读端收不到
+        EOF，close() 会与阻塞中的 readline 争同一文件对象锁而死锁。
+        杀树后写端全部关闭，读到 EOF 的线程已不再持锁，close() 才能返回。
+
+        调用方应保证读线程已 join，或在杀树之后才 join；此处不等待线程，
+        避免把等待责任散落到两层。
+        """
         if self._h_process:
             _kernel32.CloseHandle(self._h_process)
             self._h_process = None
+        # TerminateJobObject 显式终止，随后关 job handle。仅关 handle 也会
+        # 因 KILL_ON_JOB_CLOSE 生效，但显式终止让行为不依赖该标志。
+        if self._job:
+            _kernel32.TerminateJobObject(self._job, 1)
+            _kernel32.CloseHandle(self._job)
+            self._job = None
         for f in (self.stdout, self.stderr):
             if f is not None:
                 try:
@@ -1091,7 +1255,17 @@ def _spawn_inheriting_restrictions(
         bufsize=1,
         stdin=subprocess.DEVNULL,
     )
-    return SandboxedProcess.from_popen(popen)
+    # 继承模式同样需要 job 才能覆盖后代；绑定失败时必须杀掉已启动的进程，
+    # 否则它会带着未受约束的后代继续运行。
+    job = create_kill_on_close_job()
+    try:
+        assign_pid_to_job(job, popen.pid)
+    except SandboxError:
+        popen.kill()
+        popen.wait()
+        _kernel32.CloseHandle(job)
+        raise
+    return SandboxedProcess.from_popen(popen, job=job)
 
 
 def spawn_pwsh_sandboxed(
@@ -1197,6 +1371,11 @@ def spawn_pwsh_sandboxed(
         for sid_ptr in default_dacl_sids:
             _set_token_default_dacl_grant(restricted_token, sid_ptr)
 
+        # job 在 finally 中统一释放，此处先初始化为 None：
+        # 既避免管道创建等早期步骤失败时 finally 触发 NameError，
+        # 也让成功路径可以通过置 None 表示所有权已移交。
+        job: Optional[wintypes.HANDLE] = None
+
         try:
             # 6. 创建管道
             stdout_read = wintypes.HANDLE()
@@ -1287,24 +1466,43 @@ def spawn_pwsh_sandboxed(
                     f"pwsh.exe -NoProfile -OutputFormat Text -EncodedCommand {encoded}"
                 )
 
-                # 8. 启动进程
+                # 8. 先建 job。子进程以挂起态创建，绑定 job 后才恢复执行，
+                # 避免它在这段窗口内派生后代而漏出 job 覆盖范围。
+                job = create_kill_on_close_job()
+
+                # 9. 启动进程（挂起态）
                 if not _advapi32.CreateProcessAsUserW(
                     restricted_token,
                     None,
                     cmdline,
                     None, None, True,
-                    _CREATE_UNICODE_ENVIRONMENT,
+                    _CREATE_UNICODE_ENVIRONMENT | _CREATE_SUSPENDED,
                     ctypes.cast(env_block, ctypes.c_void_p),
                     cwd_abs,
                     ctypes.byref(si),
                     ctypes.byref(pi),
                 ):
+                    err = ctypes.get_last_error()
                     _kernel32.CloseHandle(nul_handle)
-                    raise SandboxError(
-                        f"CreateProcessAsUserW 失败: {ctypes.get_last_error()}"
-                    )
+                    raise SandboxError(f"CreateProcessAsUserW 失败: {err}")
 
-                # 主线程句柄与 NUL 设备不再需要，立即关闭避免泄漏
+                # 10. 绑定 job 后再恢复执行。挂起态保证此时尚无后代，
+                # 之后派生的 ssh.exe 等由内核自动加入同一 job。
+                try:
+                    _assign_to_job(job, pi.hProcess)
+                    if _kernel32.ResumeThread(pi.hThread) == 0xFFFFFFFF:
+                        raise SandboxError(
+                            f"ResumeThread 失败: {ctypes.get_last_error()}"
+                        )
+                except SandboxError:
+                    _kernel32.TerminateProcess(pi.hProcess, 1)
+                    _kernel32.CloseHandle(pi.hThread)
+                    _kernel32.CloseHandle(pi.hProcess)
+                    _kernel32.CloseHandle(nul_handle)
+                    raise
+
+                # 主线程句柄与 NUL 设备不再需要，立即关闭避免泄漏。
+                # 进程句柄保留在 SandboxedProcess 中，由 close_handles 释放。
                 _kernel32.CloseHandle(pi.hThread)
                 _kernel32.CloseHandle(nul_handle)
 
@@ -1332,14 +1530,24 @@ def spawn_pwsh_sandboxed(
                     stderr_fd, "r", encoding="utf-8", errors="replace"
                 )
 
+                # 所有权移交 SandboxedProcess，置 None 让 finally 不再关闭。
+                # 遗漏这一步会在 return 后由 finally 关掉 job handle，
+                # 触发 KILL_ON_JOB_CLOSE 把刚启动的进程当场杀掉。
+                owned_job = job
+                job = None
                 return SandboxedProcess(
-                    pi.hProcess, pi.dwProcessId, stdout_file, stderr_file
+                    pi.hProcess, pi.dwProcessId, stdout_file, stderr_file,
+                    job=owned_job,
                 )
             finally:
                 # 清理尚未移交的句柄；成功路径上相关变量已置 None
                 for h in (stdout_read, stderr_read, stdout_write, stderr_write):
                     if h is not None and h.value:
                         _kernel32.CloseHandle(h)
+                # job 在成功路径上已移交 SandboxedProcess，此处置 None；
+                # 创建后任何一步失败都必须关闭，否则残留 job 与受限令牌同寿。
+                if job is not None:
+                    _kernel32.CloseHandle(job)
         finally:
             _kernel32.CloseHandle(restricted_token)
     finally:
