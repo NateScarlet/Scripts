@@ -2076,75 +2076,96 @@ def execute_pwsh(
     if not escalated:
         _echo_pwsh_command(id_, effective_permission, command)
 
-    # 子进程继承调用方 stdin，使 ssh -t 等交互命令能拿到用户输入。
-    # 没有可用 stdin（无控制台、已关闭）时退回 DEVNULL，保持旧的不可交互
-    # 行为而不是报错。
-    try:
-        stdin_fd: Optional[int] = sys.stdin.fileno()
-    except (AttributeError, OSError, ValueError):
-        stdin_fd = None
+    # 交互输入必须走控制台设备而不是 stdin。
+    #
+    # chat2cli 的 stdin 承载整轮对话数据（见 chat2cli.ps1 的两条调用路径，
+    # 都是写满后立即关闭的管道），main 里的 sys.stdin.read() 读完即 EOF。
+    # 把 stdin 继承给 pwsh 等价于接 DEVNULL，ssh -t 仍拿不到密码。
+    # CONIN$ 与对话数据流分离，且 ssh 的 passphrase 提示本就直接读它，
+    # 交互命令因此能正常工作。
+    #
+    # 无控制台时打开 CONIN$ 会成功但读到的是空设备：不 EOF、不来数据，
+    # 读操作永久阻塞。必须先用 GetConsoleMode 确认控制台存在，否则退回
+    # DEVNULL —— 否则会重演最初那个静默挂死的故障。
+    console_fd: Optional[int] = win_write_sandbox.open_console_input()
+    stdin_fd = console_fd
 
     use_sandbox = effective_permission != "danger-full-access"
-    if use_sandbox:
-        # 受限令牌沙箱启动：read-only 不授予任何写权限，workspace-write
-        # 写入仅限当前工作目录。沙箱创建失败时直接报错，绝不降级。
-        try:
-            proc: Any = win_write_sandbox.spawn_pwsh_sandboxed(
-                wrapped_command,
-                os.getcwd(),
-                env,
-                read_only=(effective_permission == "read-only"),
-                stdin_fd=stdin_fd,
-            )
-        except win_write_sandbox.SandboxError as e:
-            return {
-                "success": False,
-                "message": f"错误：无法创建 Windows 写入沙箱：{str(e)}",
-            }
-    else:
-        # danger-full-access：不经过沙箱，直接执行。
-        # 仍纳入 job：不绑定 job 时 pwsh 派生的 ssh.exe 等后代在 pwsh 退出后
-        # 继续存活并持有管道写端，读线程收不到 EOF，close 会与 readline 死锁。
-        try:
-            popen = subprocess.Popen(
-                ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                bufsize=1,
-                stdin=subprocess.DEVNULL if stdin_fd is None else stdin_fd,
-                env=env,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-            )
-        except FileNotFoundError:
-            return {
-                "success": False,
-                "message": "错误：未找到 pwsh.exe，请确保 PowerShell Core 已安装并添加到 PATH。",
-            }
-        except Exception as e:
-            return {"success": False, "message": f"错误：命令执行异常：{str(e)}"}
+    # 子进程拿到句柄副本后主进程就可以关闭 console_fd；用 finally 覆盖
+    # 下方所有提前返回路径，避免逐处记得关闭。
+    try:
+        if use_sandbox:
+            # 受限令牌沙箱启动：read-only 不授予任何写权限，workspace-write
+            # 写入仅限当前工作目录。沙箱创建失败时直接报错，绝不降级。
+            try:
+                proc: Any = win_write_sandbox.spawn_pwsh_sandboxed(
+                    wrapped_command,
+                    os.getcwd(),
+                    env,
+                    read_only=(effective_permission == "read-only"),
+                    stdin_fd=stdin_fd,
+                )
+            except win_write_sandbox.SandboxError as e:
+                return {
+                    "success": False,
+                    "message": f"错误：无法创建 Windows 写入沙箱：{str(e)}",
+                }
+        else:
+            # danger-full-access：不经过沙箱，直接执行。
+            # 仍纳入 job：不绑定 job 时 pwsh 派生的 ssh.exe 等后代在 pwsh 退出后
+            # 继续存活并持有管道写端，读线程收不到 EOF，close 会与 readline 死锁。
+            try:
+                popen = subprocess.Popen(
+                    ["pwsh.exe", "-NoProfile", "-Command", wrapped_command],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    bufsize=1,
+                    stdin=subprocess.DEVNULL if stdin_fd is None else stdin_fd,
+                    env=env,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                )
+            except FileNotFoundError:
+                return {
+                    "success": False,
+                    "message": "错误：未找到 pwsh.exe，请确保 PowerShell Core 已安装并添加到 PATH。",
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "message": f"错误：命令执行异常：{str(e)}",
+                }
 
-        job = None
-        try:
-            job = win_write_sandbox.create_kill_on_close_job()
-            win_write_sandbox.assign_pid_to_job(job, popen.pid)
-        except win_write_sandbox.SandboxError as e:
-            # 绑定失败时进程已在跑且不受 job 约束，必须主动终止再报错。
-            # 已创建的 job 与管道文件对象一并释放，避免泄漏。
-            # 此时无法杀树（没有可用的 job），只能终止 pwsh 本身。
-            popen.kill()
-            popen.wait()
-            win_write_sandbox.close_job(job)
-            for f in (popen.stdout, popen.stderr):
-                if f is not None:
-                    f.close()
-            return {
-                "success": False,
-                "message": f"错误：无法约束 pwsh 进程树：{str(e)}",
-            }
-        proc = win_write_sandbox.SandboxedProcess.from_popen(popen, job=job)
+            job = None
+            try:
+                job = win_write_sandbox.create_kill_on_close_job()
+                win_write_sandbox.assign_pid_to_job(job, popen.pid)
+            except win_write_sandbox.SandboxError as e:
+                # 绑定失败时进程已在跑且不受 job 约束，必须主动终止再报错。
+                # 已创建的 job 与管道文件对象一并释放，避免泄漏。
+                # 此时无法杀树（没有可用的 job），只能终止 pwsh 本身。
+                popen.kill()
+                popen.wait()
+                win_write_sandbox.close_job(job)
+                for f in (popen.stdout, popen.stderr):
+                    if f is not None:
+                        f.close()
+                return {
+                    "success": False,
+                    "message": f"错误：无法约束 pwsh 进程树：{str(e)}",
+                }
+            proc = win_write_sandbox.SandboxedProcess.from_popen(
+                popen, job=job
+            )
+    finally:
+        # 子进程已持有继承/复制后的句柄，主进程副本可立即关闭。
+        if console_fd is not None:
+            try:
+                os.close(console_fd)
+            except OSError:
+                pass
 
     stdout_lines: List[str] = []
     stderr_lines: List[str] = []

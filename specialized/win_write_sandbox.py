@@ -114,6 +114,7 @@ _TokenDefaultDacl = 6
 _FILE_ALL_ACCESS = 0x001F01FF
 
 _GENERIC_READ = 0x80000000
+_GENERIC_WRITE = 0x40000000
 _FILE_SHARE_READ = 0x00000001
 _FILE_SHARE_WRITE = 0x00000002
 _OPEN_EXISTING = 3
@@ -409,6 +410,12 @@ _kernel32.DuplicateHandle.argtypes = [
 ]
 _kernel32.DuplicateHandle.restype = wintypes.BOOL
 
+_kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
+_kernel32.GetStdHandle.restype = wintypes.HANDLE
+
+_kernel32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+_kernel32.GetConsoleMode.restype = wintypes.BOOL
+
 
 # ── 异常 ──────────────────────────────────────────────────────────
 
@@ -463,6 +470,49 @@ def _duplicate_inheritable(handle: int) -> wintypes.HANDLE:
     ):
         raise SandboxError(f"DuplicateHandle(stdin) 失败: {ctypes.get_last_error()}")
     return dup
+
+
+_STD_INPUT_HANDLE = -10
+
+
+def open_console_input() -> Optional[int]:
+    """打开控制台输入设备，返回可交给子进程的 fd；无控制台时返回 None。
+
+    chat2cli 的 stdin 承载对话数据，不能复用；交互输入必须走独立的
+    控制台设备。CONIN$ 与 stdin 的重定向互不影响，ssh 的 passphrase
+    提示本来就直接读它。
+
+    没有控制台时打开 CONIN$ 依然"成功"，但读到的是空设备：不 EOF、
+    不来数据，读操作会永久阻塞。因此先用 GetConsoleMode 判定控制台
+    真实存在，否则返回 None 让调用方退回 DEVNULL，避免静默挂死。
+
+    返回的 fd 由调用方负责关闭。
+    """
+    handle = _kernel32.CreateFileW(
+        "CONIN$", _GENERIC_READ | _GENERIC_WRITE,
+        _FILE_SHARE_READ | _FILE_SHARE_WRITE,
+        None, _OPEN_EXISTING, 0, None,
+    )
+    if not handle or handle == _INVALID_HANDLE_VALUE:
+        return None
+
+    # 必须对 CONIN$ 句柄本身判断，不能对 GetStdHandle(-10) 判断：
+    # chat2cli 的 stdin 被重定向到管道，那个句柄的 GetConsoleMode 必然
+    # 失败（ERROR_INVALID_HANDLE），但进程仍可能附着一个可用控制台。
+    # 实测该组合确实存在：GetStdHandle(-10) 判为不可用、CONIN$ 却返回
+    # 有效输入模式，ssh 的 passphrase 提示走的就是这条路。
+    mode = wintypes.DWORD()
+    if not _kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+        _kernel32.CloseHandle(handle)
+        return None
+
+    try:
+        fd = msvcrt.open_osfhandle(handle, os.O_RDONLY)
+    except OSError:
+        _kernel32.CloseHandle(handle)
+        return None
+    # open_osfhandle 接管句柄所有权，失败路径已单独关闭。
+    return fd
 
 
 def close_job(job: Optional[wintypes.HANDLE]) -> None:
