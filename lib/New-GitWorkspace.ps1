@@ -80,6 +80,8 @@ function New-GitWorkspace {
         此函数接收一个 Git 仓库地址，将仓库克隆到指定的工作区目录，同时将 Git 目录分离到独立位置。
         工作区目录统一不包含 .git 后缀，Git 目录统一包含 .git 后缀。
         地址参数采用 gh 命令的 repository 语义，非完整 URL 会被自动补全为 HTTPS URL。
+        指定 -Depth 时执行浅克隆，只拉取指定数量的提交，适合避免下载历史巨大的仓库
+        （git 会同时只跟踪单一分支，默认分支）。
     
     .PARAMETER Url
         Git 仓库地址，语义与 gh 命令的 repository 参数一致：
@@ -88,6 +90,9 @@ function New-GitWorkspace {
     
     .PARAMETER Name
         可选参数，指定工作区目录的名称。如果未提供，则从 URL 中提取仓库名称。
+    
+    .PARAMETER Depth
+        可选参数，浅克隆深度（传给 git clone 的 --depth）。省略或为 0 时执行完整克隆。
     
     .EXAMPLE
         New-GitWorkspace -Url "https://github.com/username/repository.git"
@@ -109,6 +114,11 @@ function New-GitWorkspace {
         
         克隆当前登录用户（通过 gh auth status 读取）名下的 myrepo 仓库
     
+    .EXAMPLE
+        New-GitWorkspace -Url "torvalds/linux" -Depth 1
+        
+        浅克隆 github.com/torvalds/linux，只拉取 1 个提交，避免下载完整历史
+    
     .NOTES
         要求环境变量 LOCAL_GIT_ROOT 已定义，否则会抛出错误。
     #>
@@ -118,7 +128,12 @@ function New-GitWorkspace {
         [string]$Url,
         
         [Parameter(Mandatory = $false)]
-        [string]$Name
+        [string]$Name,
+        
+        # 0 表示完整克隆（不传 --depth）
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Depth = 0
     )
     
     # 常量定义
@@ -205,8 +220,17 @@ function New-GitWorkspace {
         Write-Host "自定义工作区名称: $Name" -ForegroundColor Yellow
     }
     
+    if ($Depth -gt 0) {
+        Write-Host "克隆深度: $Depth" -ForegroundColor Yellow
+    }
+    
     # 直接在当前目录执行 git clone，指定完整的目标路径
-    git clone --separate-git-dir="$gitDir" "$Url" "$workspaceDir"
+    $cloneArgs = @('clone')
+    if ($Depth -gt 0) {
+        $cloneArgs += '--depth', $Depth
+    }
+    $cloneArgs += "--separate-git-dir=$gitDir", $Url, $workspaceDir
+    git @cloneArgs
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "克隆成功！" -ForegroundColor Green
