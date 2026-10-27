@@ -78,3 +78,47 @@ Describe 'ConvertTo-GitRepoUrl' {
             Should -Throw
     }
 }
+
+Describe 'New-GitWorkspace' {
+    BeforeAll {
+        $script:OriginalGitRoot = $env:LOCAL_GIT_ROOT
+        $script:OriginalWorkspacesRoot = $env:LOCAL_WORKSPACES_ROOT
+        $env:LOCAL_GIT_ROOT = Join-Path $TestDrive 'git-root'
+        $env:LOCAL_WORKSPACES_ROOT = Join-Path $TestDrive 'workspaces'
+
+        # 用函数覆盖外部 git 命令，只记录参数、不实际克隆
+        function script:git {
+            $script:GitArguments = $args
+            $global:LASTEXITCODE = 0
+        }
+    }
+
+    AfterAll {
+        $env:LOCAL_GIT_ROOT = $script:OriginalGitRoot
+        $env:LOCAL_WORKSPACES_ROOT = $script:OriginalWorkspacesRoot
+    }
+
+    BeforeEach {
+        $script:GitArguments = @()
+    }
+
+    It '指定 -Depth 时传入 --depth' {
+        New-GitWorkspace -Url 'https://github.com/foo/bar.git' -Depth 1 | Out-Null
+        $script:GitArguments -join ' ' | Should -Match '--depth 1'
+    }
+
+    It '未指定 -Depth 时使用完整克隆' {
+        New-GitWorkspace -Url 'https://github.com/foo/bar.git' | Out-Null
+        $script:GitArguments -join ' ' | Should -Not -Match '--depth'
+    }
+
+    It '-Depth 0 视为完整克隆' {
+        New-GitWorkspace -Url 'https://github.com/foo/bar.git' -Depth 0 | Out-Null
+        $script:GitArguments -join ' ' | Should -Not -Match '--depth'
+    }
+
+    It '负数 -Depth 抛错' {
+        { New-GitWorkspace -Url 'https://github.com/foo/bar.git' -Depth -1 } |
+            Should -Throw
+    }
+}
