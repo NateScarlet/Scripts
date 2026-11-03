@@ -85,6 +85,3 @@ $#e:: {
         Run "wt"
     }
 }
-
-; Win+V 触发 UniClipboard 快捷面板（替代系统剪贴板历史）
-$#v:: Send "^!v"
