@@ -23,10 +23,11 @@
     本脚本不依赖 diagnose-windows-sandbox-acl skill，自行实现相同机制。
 
 .PARAMETER Path
-    要修复的根目录，递归处理。
+    要修复的根目录，递归处理。相对路径按调用方当前工作目录解析。
 
 .PARAMETER Out
-    报告与恢复记录的目录。修复模式必填。
+    报告与恢复记录的目录。默认是第一个 -Path 下的 .scratch\dsh-acl-repair，
+    相对路径同样按调用方当前工作目录解析。目录不存在时自动创建。
 
 .PARAMETER Exclude
     跳过的目录名，默认是包缓存与构建产物。
@@ -39,6 +40,10 @@
 
 .PARAMETER RestoreRecord
     还原一份恢复记录，而不是修复。
+
+.EXAMPLE
+    # 相对路径：修复当前目录，报告写进 .\specialized\.scratch\dsh-acl-repair
+    pwsh -File Repair-DshSandboxAcl.ps1 -Path .\specialized
 
 .EXAMPLE
     pwsh -File Repair-DshSandboxAcl.ps1 -Path 'C:\Workspaces\scripts' -Out 'C:\Workspaces\scripts\.scratch\2026-10-31-dsh-acl-repair\tree'
@@ -85,9 +90,14 @@ function Write-Report {
     [Console]::Out.WriteLine('REPORT ' + $json)
 }
 
+function Initialize-OutputDirectory {
+    param([string]$Directory)
+    # -Out 默认落在 .scratch 下，通常还不存在；恢复记录与报告都写在这里。
+    [System.IO.Directory]::CreateDirectory($Directory) | Out-Null
+}
+
 function Open-ReportFile {
     param([string]$Directory)
-    [System.IO.Directory]::CreateDirectory($Directory) | Out-Null
     $script:ReportPath = Join-Path $Directory ('acl-repair-{0}.jsonl' -f [guid]::NewGuid().ToString('N'))
     $stream = [System.IO.File]::Open($script:ReportPath, [System.IO.FileMode]::CreateNew, [System.IO.FileAccess]::Write)
     $script:ReportWriter = [System.IO.StreamWriter]::new($stream, [System.Text.UTF8Encoding]::new($false))
@@ -167,9 +177,24 @@ public static void SetDacl(string path, string sddl) {
 
 #region 路径与安全检查
 
+# 相对路径以调用方的工作目录为基准，进程当前目录可能和它不一致。
+function Get-CallerWorkingDirectory {
+    $location = Get-Location
+    if ($location.Provider.Name -ne 'FileSystem') {
+        throw "当前工作目录不在文件系统上（$($location.Provider.Name)），无法解析相对路径。"
+    }
+    return $location.ProviderPath
+}
+
 function Get-NormalizedPath {
-    param([string]$Value)
-    $full = [System.IO.Path]::GetFullPath($Value)
+    param([string]$Value, [string]$BaseDirectory)
+    if (-not $Value) { throw '路径不能为空' }
+    $full = if ([System.IO.Path]::IsPathRooted($Value)) { $Value }
+    else {
+        if (-not $BaseDirectory) { throw "相对路径 '$Value' 缺少解析基准目录" }
+        Join-Path $BaseDirectory $Value
+    }
+    $full = [System.IO.Path]::GetFullPath($full)
     $root = [System.IO.Path]::GetPathRoot($full)
     if ($full.Length -le $root.Length) { return $root }
     return $full.TrimEnd('\', '/')
@@ -191,6 +216,15 @@ function Test-DangerousRoot {
         if ($trimmed -ieq $protected) { return 'managed application directory' }
         if ($trimmed.StartsWith($protected.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return 'managed application directory' }
     }
+    return $null
+}
+
+# 根目录能否遍历；不能时返回拒绝原因。入口与遍历循环共用同一判断。
+function Get-RootRefusal {
+    param([string]$FullPath)
+    if (-not (Test-Path -LiteralPath $FullPath)) { return 'The root does not exist.' }
+    $danger = Test-DangerousRoot -FullPath $FullPath
+    if ($danger) { return "Refusing to walk a $danger." }
     return $null
 }
 
@@ -494,13 +528,26 @@ if ($RestoreRecord) {
 }
 
 if (-not $Path) { throw '-Path 必填（修复模式）' }
-if (-not $Out) { throw '-Out 必填（修复模式）' }
+
+$workingDirectory = Get-CallerWorkingDirectory
+$roots = @($Path | ForEach-Object { Get-NormalizedPath -Value $_ -BaseDirectory $workingDirectory })
+# 默认报告目录挂在第一个根目录下，避免把 -Out 当成必填项。
+$outExplicit = [bool]$Out
+if (-not $outExplicit) { $Out = Join-Path (Join-Path $roots[0] '.scratch') 'dsh-acl-repair' }
+$outDirectory = Get-NormalizedPath -Value $Out -BaseDirectory $workingDirectory
+
+# 默认 -Out 位于根目录内部：根不可用时先不建它，否则路径笔误或本应拒绝的
+# 驱动器根会被凭空造出目录，还会让不存在的根变成空树被“修”一遍。
+if (-not $DryRun -and ($outExplicit -or -not (Get-RootRefusal -FullPath $roots[0]))) {
+    Initialize-OutputDirectory -Directory $outDirectory
+    Open-ReportFile -Directory $outDirectory
+}
 
 $meSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-if (-not $DryRun) { Open-ReportFile -Directory $Out }
 
 Write-Report invocation repair '' started 'Walk the requested trees, then repair missing WRITE_DAC/WRITE_OWNER, missing Low labels and package allow ACEs.' @{
-    paths = @($Path); out = $Out; exclude = @($Exclude); dryRun = [bool]$DryRun; callerSid = $meSid; callerIntegrity = $callerIntegrity
+    paths = @($roots); out = $outDirectory; exclude = @($Exclude); dryRun = [bool]$DryRun
+    callerSid = $meSid; callerIntegrity = $callerIntegrity; workingDirectory = $workingDirectory
 }
 
 $repaired = 0
@@ -509,16 +556,10 @@ $failed = 0
 $scanned = 0
 $totalTruncated = $false
 
-foreach ($root in $Path) {
-    $full = Get-NormalizedPath $root
-    if (-not (Test-Path -LiteralPath $full)) {
-        Write-Report decision repair $full refused 'The root does not exist.' @{}
-        $refused++
-        continue
-    }
-    $danger = Test-DangerousRoot -FullPath $full
-    if ($danger) {
-        Write-Report decision repair $full refused "Refusing to walk a $danger." @{}
+foreach ($full in $roots) {
+    $rootRefusal = Get-RootRefusal -FullPath $full
+    if ($rootRefusal) {
+        Write-Report decision repair $full refused $rootRefusal @{}
         $refused++
         continue
     }
@@ -530,7 +571,7 @@ foreach ($root in $Path) {
     }
     foreach ($directory in $tree.Directories) {
         $scanned++
-        $one = Repair-OneDirectory -FullPath $directory -MeSid $meSid -OutDirectory $Out -DryRun:$DryRun
+        $one = Repair-OneDirectory -FullPath $directory -MeSid $meSid -OutDirectory $outDirectory -DryRun:$DryRun
         if ($one.Error) { $failed++ }
         elseif ($one.Changes.Count -gt 0) { $repaired++ }
         elseif ($one.Refused) { $refused++ }
