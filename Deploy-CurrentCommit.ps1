@@ -7,6 +7,8 @@ $ErrorActionPreference = "Stop"
 # 目标脚本路径（本地应用程序数据目录）
 $targetDir = Join-Path $env:LOCALAPPDATA "Scripts"
 
+. "$PSScriptRoot\lib\Update-GitWorktreeEol.ps1"
+
 # 检查未提交文件
 $uncommitted = git status --porcelain | Where-Object { $_ -notmatch "^.. Deploy-CurrentCommit\.ps1$" } # 忽略自身方便测试
 if ($uncommitted) {
@@ -44,6 +46,15 @@ else {
         }
         Write-Host "🔄 更新工作树到当前HEAD ($($previousHead.Substring(0,7)) -> $shortHead)"
     }
+}
+
+# 按 .gitattributes 声明的 eol 重写 .cmd/.bat 的行尾。
+# git 在比较内容前会先规范化行尾，所以 LF 和 CRLF 在 git 眼中是同一份内容：
+# git status 不报告差异，git checkout 也不会重写它认为没变的文件。
+# 但 cmd.exe 只认 CRLF，LF 行尾的 .cmd/.bat 会解析失败，因此必须显式重写。
+$rewritten = @(Update-GitWorktreeEol -WorktreePath $targetDir -Pathspec '*.cmd', '*.bat')
+if ($rewritten.Count -gt 0) {
+    Write-Host "📄 已按 .gitattributes 重写 $($rewritten.Count) 个 .cmd/.bat 的行尾"
 }
 #endregion
 
