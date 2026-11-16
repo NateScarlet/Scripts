@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "zstandard>=0.23",
+# ]
+# ///
 """按字面子串搜索 ~/.dsh/sessions 中某个工作区的会话，并高亮命中上下文。
 
 会话归档是 zstd 压缩的 JSONL；本脚本只读取目标工作区对应的会话目录，
@@ -17,11 +23,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterator, TextIO
 
-try:
-    import zstandard as zstd
-except ImportError:
-    # 快速失败：依赖缺失时给出可执行的反馈，而不是降级到无法保证正确性的路径。
-    raise SystemExit("缺少依赖 zstandard，请先安装：python -m pip install zstandard")
+import zstandard as zstd
 
 DEFAULT_SESSIONS_ROOT = Path.home() / ".dsh" / "sessions"
 HIGHLIGHT = "\x1b[1;33m"

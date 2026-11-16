@@ -89,6 +89,14 @@ function Start-WaitIdle {
 
 Set-Alias "wait-idle" Start-WaitIdle
 
+function Start-SearchDshSessions {
+    uv run --no-project $ScriptsRoot/specialized/search_dsh_sessions.py $args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $LASTEXITCODE"
+    }
+}
+
+Set-Alias "search-dsh-sessions" Start-SearchDshSessions
 
 
 function Start-ComfyRename {
