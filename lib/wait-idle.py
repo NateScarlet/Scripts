@@ -12,10 +12,18 @@ wait-idle.py - 等待系统空闲的等待脚本
   # 详细输出模式
   python wait-idle.py --verbose && echo system-idle
 
+  # 包裹模式：运行指定程序，只在它活跃时阻止休眠
+  python wait-idle.py 60 -- <command> [args...]
+
+包裹模式下，-- 之后的参数原样作为子进程命令。位置参数为 stdio 闲置窗口
+（秒，默认 60）：子进程在该窗口内产生过输出、或子进程树 CPU 超过 --child-cpu
+阈值时阻止休眠，否则释放抑制；子进程退出脚本即退出，退出码原样透传。
+
 退出代码:
   0 - 成功达到目标空闲时间
-  1 - 等待过程中出现错误
+  1 - 等待过程中出现错误或用户中断
   2 - 参数错误
+  包裹模式下为子进程的退出码
 """
 
 # pyright: standard
@@ -25,13 +33,25 @@ import time
 import logging
 import argparse
 import ctypes
+import os
+import signal
+import subprocess
+import threading
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
-from typing import Iterator, Optional, Callable
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import BinaryIO, Iterator, Optional, Callable, Protocol, Sequence
 
 from tqdm import tqdm
 
 _LOGGER = logging.getLogger(__name__)
+
+# 收到中断后留给子进程自行退出的宽限期，超时才强制结束
+INTERRUPT_GRACE_SECS = 5.0
+
+# 子进程退出后等待输出转发线程排空的时间；孙进程持有管道时不无限等待
+FORWARD_DRAIN_SECS = 0.2
 
 # Windows API 相关导入
 try:
@@ -681,10 +701,30 @@ def precise_ticker(interval_ns: int, immediate: bool) -> Iterator[int]:
             next_time += interval_ns
 
 
-def main():
-    # 设置参数解析
+class CLIArgumentError(Exception):
+    """命令行参数错误。"""
+
+
+@dataclass(frozen=True)
+class CLIConfig:
+    """解析后的命令行配置。"""
+
+    wrap: bool
+    command: tuple[str, ...]
+    duration_secs: float
+    window_secs: float
+    child_cpu_threshold: Optional[float]
+    cpu_threshold: float
+    gpu_threshold: float
+    vram_threshold: Optional[float]
+    interval_secs: float
+    ignore_user_input: bool
+    verbose: bool
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="等待系统空闲持续指定时间",
+        description="等待系统空闲持续指定时间；使用 -- 包裹子进程时按子进程活跃度抑制休眠",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -692,8 +732,8 @@ def main():
         "duration_secs",
         nargs="?",
         type=float,
-        default=600,
-        help="需要持续空闲的时间（秒）",
+        default=None,
+        help="空闲等待时长（秒）；包裹模式下为 stdio 闲置窗口（默认 60）",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="启用详细输出模式")
     parser.add_argument(
@@ -707,38 +747,278 @@ def main():
     parser.add_argument("--gpu", type=float, default=50, help="GPU阈值")
     parser.add_argument("--vram", type=float, default=None, help="显存占用阈值(MB)")
     parser.add_argument("--interval-secs", type=float, default=1.0, help="检测间隔(秒)")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--child-cpu",
+        type=float,
+        default=None,
+        help="子进程树 CPU 占用阈值(百分比)，默认关闭",
+    )
+    return parser
 
-    # 配置日志系统
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=log_level, format=log_format, stream=sys.stderr)
 
-    # 校验参数
-    target_duration_ns = int(args.duration_secs * 1e9)
-    cpu_threshold = args.cpu
-    gpu_threshold = args.gpu
-    vram_threshold = args.vram
-    ignore_user_input = args.ignore_user_input
-    interval_ns = int(args.interval_secs * 1e9)
+def parse_cli(argv: Optional[Sequence[str]] = None) -> CLIConfig:
+    """解析命令行；-- 之后的参数原样作为子进程命令。"""
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if "--" in raw:
+        separator = raw.index("--")
+        head = raw[:separator]
+        command = tuple(raw[separator + 1 :])
+        if not command:
+            raise CLIArgumentError("-- 之后必须指定要运行的命令")
+        wrap = True
+    else:
+        head = raw
+        command = ()
+        wrap = False
+
+    args = build_parser().parse_args(head)
+    if wrap:
+        window_secs = 60.0 if args.duration_secs is None else args.duration_secs
+        duration_secs = 600.0
+    else:
+        duration_secs = 600.0 if args.duration_secs is None else args.duration_secs
+        window_secs = 60.0
+
+    # 参数错误在可信边界统一拦截，退出码约定为 2
+    if duration_secs < 0 or window_secs <= 0:
+        raise CLIArgumentError("等待时间不能为负数，stdio 闲置窗口必须大于 0")
+    if not (0 <= args.cpu <= 100):
+        raise CLIArgumentError("CPU 阈值应该为 0-100")
+    if not (0 <= args.gpu <= 100):
+        raise CLIArgumentError("GPU 阈值应该为 0-100")
+    if args.vram is not None and args.vram < 0:
+        raise CLIArgumentError("VRAM 阈值不能为负数")
+    if not (int(args.interval_secs * 1e9) > 0):
+        raise CLIArgumentError("检测间隔应该大于 0")
+    if args.child_cpu is not None and not (0 <= args.child_cpu <= 100):
+        raise CLIArgumentError("子进程 CPU 阈值应该为 0-100")
+
+    return CLIConfig(
+        wrap=wrap,
+        command=command,
+        duration_secs=duration_secs,
+        window_secs=window_secs,
+        child_cpu_threshold=args.child_cpu,
+        cpu_threshold=args.cpu,
+        gpu_threshold=args.gpu,
+        vram_threshold=args.vram,
+        interval_secs=args.interval_secs,
+        ignore_user_input=args.ignore_user_input,
+        verbose=args.verbose,
+    )
+
+
+class ClockLike(Protocol):
+    def now_ns(self) -> int: ...
+
+    def sleep(self, seconds: float) -> None: ...
+
+
+class SleepInhibitorLike(Protocol):
+    def set_active(self, active: bool) -> None: ...
+
+
+class ChildHandleLike(Protocol):
+    def poll(self) -> Optional[int]: ...
+
+    def wait(self, timeout: Optional[float] = None) -> int: ...
+
+    def send_interrupt(self) -> None: ...
+
+    def kill(self) -> None: ...
+
+
+@dataclass
+class WrapDeps:
+    """包裹模式的可注入依赖。"""
+
+    clock: ClockLike
+    inhibitor: SleepInhibitorLike
+    spawn: Callable[..., ChildHandleLike]
+    sample_child_cpu: Optional[Callable[[], Optional[float]]]
+    stdout: BinaryIO
+    stderr: BinaryIO
+
+
+class PopenChildHandle:
+    """subprocess.Popen 的包装，统一暴露包裹模式需要的进程操作。"""
+
+    FORWARD_CHUNK_SIZE = 4096
+
+    def __init__(self, popen: subprocess.Popen):
+        self._popen = popen
+        self._forwarders: list[threading.Thread] = []
+
+    def start_forwarders(self, on_output, stdout, stderr) -> None:
+        sources = ((self._popen.stdout, stdout), (self._popen.stderr, stderr))
+        for source, target in sources:
+            if source is None:
+                continue
+            thread = threading.Thread(
+                target=self._forward,
+                args=(source, target, on_output),
+                daemon=True,
+            )
+            thread.start()
+            self._forwarders.append(thread)
+
+    @classmethod
+    def _forward(cls, source, target, on_output) -> None:
+        """按原始字节实时转发，不解码、不加前缀、不改换行。"""
+        # read(n) 会等到读满 n 字节或 EOF 才返回，小量输出要等到子进程退出才可见；
+        # read1(n) 只要有数据就返回，保证转发实时。
+        read_chunk = getattr(source, "read1", source.read)
+        try:
+            while True:
+                chunk = read_chunk(cls.FORWARD_CHUNK_SIZE)
+                if not chunk:
+                    break
+                target.write(chunk)
+                target.flush()
+                on_output()
+        finally:
+            source.close()
+
+    @property
+    def pid(self) -> int:
+        return self._popen.pid
+
+    def poll(self) -> Optional[int]:
+        return self._popen.poll()
+
+    def wait(self, timeout: Optional[float] = None) -> int:
+        code = self._popen.wait(timeout=timeout)
+        # 孙进程可能继承管道导致转发线程读不到 EOF，限时排空后立即返回
+        for thread in self._forwarders:
+            thread.join(timeout=FORWARD_DRAIN_SECS)
+        return code
+
+    def send_interrupt(self) -> None:
+        if sys.platform == "win32":
+            self._popen.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            self._popen.send_signal(signal.SIGINT)
+
+    def kill(self) -> None:
+        # 必须结束整棵进程树，只杀根进程会留下持有管道的孙进程
+        if sys.platform == "win32":
+            result = subprocess.run(
+                ["taskkill", "/PID", str(self.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=INTERRUPT_GRACE_SECS,
+            )
+            if result.returncode != 0:
+                self._popen.kill()
+        else:
+            try:
+                os.killpg(os.getpgid(self.pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                self._popen.kill()
+
+
+def spawn_child(command, *, on_output, stdout, stderr) -> PopenChildHandle:
+    """启动子进程并按原始字节转发 stdout/stderr，stdin 直接继承。"""
+    kwargs = {}
+    if sys.platform == "win32":
+        # 独立进程组，才能单独向子进程发送中断而不影响脚本自身
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    popen = subprocess.Popen(
+        list(command),
+        stdin=None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        **kwargs,
+    )
+    handle = PopenChildHandle(popen)
+    handle.start_forwarders(on_output, stdout, stderr)
+    return handle
+
+
+class ActivityTracker:
+    """根据启动阶段与 stdio 输出事件判断子进程是否活跃。"""
+
+    def __init__(self, clock, window_ns: int):
+        self._clock = clock
+        self._window_ns = window_ns
+        self._started_ns = clock.now_ns()
+        self._last_output_ns: Optional[int] = None
+
+    def note_output(self) -> None:
+        self._last_output_ns = self._clock.now_ns()
+
+    def is_active(
+        self,
+        now_ns: int,
+        *,
+        cpu_usage: Optional[float] = None,
+        cpu_threshold: Optional[float] = None,
+    ) -> bool:
+        # 启动后的第一个窗口内始终视为活跃，避免启动瞬间允许休眠
+        if now_ns - self._started_ns < self._window_ns:
+            return True
+        if (
+            self._last_output_ns is not None
+            and now_ns - self._last_output_ns < self._window_ns
+        ):
+            return True
+        if (
+            cpu_threshold is not None
+            and cpu_usage is not None
+            and cpu_usage > cpu_threshold
+        ):
+            return True
+        return False
+
+
+def run_wrapped(config: CLIConfig, deps: WrapDeps) -> int:
+    """包裹模式：按子进程活跃度按需切换休眠抑制，子进程退出即退出。"""
+    tracker = ActivityTracker(deps.clock, int(config.window_secs * 1e9))
+    child = deps.spawn(
+        config.command,
+        on_output=tracker.note_output,
+        stdout=deps.stdout,
+        stderr=deps.stderr,
+    )
+    deps.inhibitor.set_active(True)
     try:
-        if target_duration_ns < 0:
-            raise ValueError("等待时间不能为负数")
+        while child.poll() is None:
+            # CPU 判定未启用时完全不采样
+            cpu_usage = (
+                deps.sample_child_cpu()
+                if config.child_cpu_threshold is not None
+                and deps.sample_child_cpu is not None
+                else None
+            )
+            active = tracker.is_active(
+                deps.clock.now_ns(),
+                cpu_usage=cpu_usage,
+                cpu_threshold=config.child_cpu_threshold,
+            )
+            deps.inhibitor.set_active(active)
+            deps.clock.sleep(config.interval_secs)
+        return int(child.wait())
+    except KeyboardInterrupt:
+        # 先中断子进程，等它自行退出；超时才强制结束，避免留下孤儿进程
+        child.send_interrupt()
+        try:
+            child.wait(INTERRUPT_GRACE_SECS)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+        return 1
+    finally:
+        deps.inhibitor.set_active(False)
 
-        if not (0 <= cpu_threshold <= 100):
-            raise ValueError("CPU 阈值应该为 0-100")
 
-        if not (0 <= gpu_threshold <= 100):
-            raise ValueError("GPU 阈值应该为 0-100")
-
-        if vram_threshold is not None and vram_threshold < 0:
-            raise ValueError("VRAM 阈值不能为负数")
-
-        if not (interval_ns > 0):
-            raise ValueError("检测间隔应该大于 0")
-    except Exception as e:
-        _LOGGER.error("参数错误: %s", e)
-        sys.exit(2)
+def run_wait(config: CLIConfig) -> int:
+    """非包裹模式：持续抑制休眠，并按空闲判定在达到时长后退出。"""
+    target_duration_ns = int(config.duration_secs * 1e9)
+    cpu_threshold = config.cpu_threshold
+    gpu_threshold = config.gpu_threshold
+    vram_threshold = config.vram_threshold
+    ignore_user_input = config.ignore_user_input
+    interval_ns = int(config.interval_secs * 1e9)
 
     # 初始化等待
     threshold_msg = f"📊监控阈值: CPU ≤ {cpu_threshold}%, GPU ≤ {gpu_threshold}%"
@@ -844,13 +1124,184 @@ def main():
         else:
             _LOGGER.info(f"🎉达到目标空闲时间 {target_duration_ns/1e9} 秒，退出等待")
         _LOGGER.info(f"⏱️ 总等待时间: {(last_tick - start_at)/1e9:.1f} 秒")
-        sys.exit(0)
+        return 0
     except KeyboardInterrupt:
         _LOGGER.info("用户中断等待")
-        sys.exit(1)
+        return 1
     except Exception as e:
         _LOGGER.exception(f"等待过程中发生错误: {str(e)}")
-        sys.exit(1)
+        return 1
+
+
+class SystemClock:
+    """生产环境使用的单调时钟。"""
+
+    def now_ns(self) -> int:
+        return time.monotonic_ns()
+
+    def sleep(self, seconds: float) -> None:
+        time.sleep(seconds)
+
+
+class SleepInhibitor:
+    """按需切换休眠抑制，仅在状态变化时调用系统 API。"""
+
+    def __init__(self, set_state: Optional[Callable[[bool], None]] = None):
+        self._set_state = (
+            set_state if set_state is not None else self._set_thread_execution_state
+        )
+        self._active = False
+
+    @staticmethod
+    def _set_thread_execution_state(active: bool) -> None:
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        flags = ES_CONTINUOUS | ES_SYSTEM_REQUIRED if active else ES_CONTINUOUS
+        ctypes.windll.kernel32.SetThreadExecutionState(flags)
+
+    def set_active(self, active: bool) -> None:
+        if active == self._active:
+            return
+        self._set_state(active)
+        self._active = active
+
+
+class ProcessTreeCPUSampler:
+    """用 PDH 统计子进程树的 CPU 占用百分比，不引入 psutil。"""
+
+    def __init__(self, root_pid: Optional[int] = None):
+        assert pythoncom is not None and win32pdh is not None
+        self._root_pid = root_pid
+        pythoncom.CoInitialize()
+        self._com_initialized = True
+        self._query = win32pdh.OpenQuery()
+        self._cpu = win32pdh.AddCounter(
+            self._query, r"\Process(*)\% Processor Time"
+        )
+        self._pid = win32pdh.AddCounter(self._query, r"\Process(*)\ID Process")
+        self._ppid = win32pdh.AddCounter(
+            self._query, r"\Process(*)\Creating Process ID"
+        )
+        win32pdh.CollectQueryData(self._query)
+
+    def set_root_pid(self, root_pid: int) -> None:
+        self._root_pid = root_pid
+
+    @staticmethod
+    def _to_int_map(items: dict) -> dict[str, int]:
+        return {name: int(value) for name, value in items.items() if value is not None}
+
+    def sample(self) -> Optional[float]:
+        assert win32pdh is not None
+        if self._root_pid is None:
+            return None
+        try:
+            win32pdh.CollectQueryData(self._query)
+            cpus = win32pdh.GetFormattedCounterArray(
+                self._cpu, win32pdh.PDH_FMT_DOUBLE
+            )
+            pids = win32pdh.GetFormattedCounterArray(
+                self._pid, win32pdh.PDH_FMT_LARGE
+            )
+            ppids = win32pdh.GetFormattedCounterArray(
+                self._ppid, win32pdh.PDH_FMT_LARGE
+            )
+        except win32pdh.error:
+            return None
+
+        pid_by_instance = self._to_int_map(pids)
+        ppid_by_instance = self._to_int_map(ppids)
+
+        tree_pids = {self._root_pid}
+        # 逐轮扩展进程树；层级有限，最多迭代 8 轮即可稳定
+        for _ in range(8):
+            added = False
+            for name, pid in pid_by_instance.items():
+                if pid in tree_pids:
+                    continue
+                if ppid_by_instance.get(name) in tree_pids:
+                    tree_pids.add(pid)
+                    added = True
+            if not added:
+                break
+
+        total = 0.0
+        for name, pid in pid_by_instance.items():
+            if pid in tree_pids:
+                value = cpus.get(name)
+                if isinstance(value, (int, float)):
+                    total += float(value)
+        return total
+
+    def cleanup(self) -> None:
+        assert win32pdh is not None and pythoncom is not None
+        if self._query:
+            win32pdh.CloseQuery(self._query)
+            self._query = None
+        if self._com_initialized:
+            pythoncom.CoUninitialize()
+            self._com_initialized = False
+
+
+@contextmanager
+def default_wrap_deps(config: CLIConfig):
+    """构建生产环境的包裹模式依赖，并在退出时释放系统资源。"""
+    with ExitStack() as stack:
+        sampler = None
+        if config.child_cpu_threshold is not None:
+            if all([win32pdh, pythoncom]):
+                try:
+                    sampler = ProcessTreeCPUSampler()
+                    stack.callback(sampler.cleanup)
+                except Exception as e:
+                    _LOGGER.warning(f"子进程 CPU 监控初始化失败: {e}，将忽略该阈值")
+                    sampler = None
+            else:
+                _LOGGER.warning("子进程 CPU 监控不可用: 需要 pywin32 库，将忽略该阈值")
+
+        def spawn(command, *, on_output, stdout, stderr):
+            handle = spawn_child(
+                command, on_output=on_output, stdout=stdout, stderr=stderr
+            )
+            if sampler is not None:
+                sampler.set_root_pid(handle.pid)
+            return handle
+
+        def sample_child_cpu() -> Optional[float]:
+            return sampler.sample() if sampler is not None else None
+
+        yield WrapDeps(
+            clock=SystemClock(),
+            inhibitor=SleepInhibitor(),
+            spawn=spawn,
+            sample_child_cpu=sample_child_cpu if sampler is not None else None,
+            stdout=sys.stdout.buffer,
+            stderr=sys.stderr.buffer,
+        )
+
+
+def main(
+    argv: Optional[Sequence[str]] = None,
+    *,
+    wrap_deps: Optional[WrapDeps] = None,
+):
+    try:
+        config = parse_cli(argv)
+    except CLIArgumentError as e:
+        _LOGGER.error("参数错误: %s", e)
+        sys.exit(2)
+
+    log_level = logging.DEBUG if config.verbose else logging.INFO
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=log_level, format=log_format, stream=sys.stderr)
+
+    if config.wrap:
+        if wrap_deps is not None:
+            sys.exit(run_wrapped(config, wrap_deps))
+        with default_wrap_deps(config) as deps:
+            sys.exit(run_wrapped(config, deps))
+    else:
+        sys.exit(run_wait(config))
 
 
 if __name__ == "__main__":
