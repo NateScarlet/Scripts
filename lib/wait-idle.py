@@ -17,13 +17,15 @@ wait-idle.py - 等待系统空闲的等待脚本
 
 包裹模式下，-- 之后的参数原样作为子进程命令。位置参数为 stdio 闲置窗口
 （秒，默认 60）：子进程在该窗口内产生过输出、或子进程树 CPU 超过 --child-cpu
-阈值时阻止休眠，否则释放抑制；子进程退出脚本即退出，退出码原样透传。
+阈值时保持活跃并抑制休眠；一旦窗口内既无输出且 CPU 也低于阈值（即闲置），
+脚本会主动结束子进程并返回 0，使 `wait-idle -- cmd && next` 能继续后续命令。
+子进程自行退出时脚本即退出，退出码原样透传。
 
 退出代码:
-  0 - 成功达到目标空闲时间
+  0 - 成功达到目标空闲时间；包裹模式下因闲置主动结束子进程也为 0
   1 - 等待过程中出现错误或用户中断
   2 - 参数错误
-  包裹模式下为子进程的退出码
+  包裹模式下子进程自行退出时为子进程的退出码
 """
 
 # pyright: standard
@@ -724,7 +726,7 @@ class CLIConfig:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="等待系统空闲持续指定时间；使用 -- 包裹子进程时按子进程活跃度抑制休眠",
+        description="等待系统空闲持续指定时间；使用 -- 包裹子进程时按活跃度判定闲置，闲置后主动结束子进程并返回",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -971,8 +973,18 @@ class ActivityTracker:
         return False
 
 
+def _terminate_child(child: ChildHandleLike) -> None:
+    """先请求子进程中断，宽限期内未退出再强制结束整棵进程树。"""
+    child.send_interrupt()
+    try:
+        child.wait(INTERRUPT_GRACE_SECS)
+    except subprocess.TimeoutExpired:
+        child.kill()
+        child.wait()
+
+
 def run_wrapped(config: CLIConfig, deps: WrapDeps) -> int:
-    """包裹模式：按子进程活跃度按需切换休眠抑制，子进程退出即退出。"""
+    """包裹模式：活跃时抑制休眠，闲置后主动结束子进程并返回，让调用方继续后续命令。"""
     tracker = ActivityTracker(deps.clock, int(config.window_secs * 1e9))
     child = deps.spawn(
         config.command,
@@ -995,17 +1007,18 @@ def run_wrapped(config: CLIConfig, deps: WrapDeps) -> int:
                 cpu_usage=cpu_usage,
                 cpu_threshold=config.child_cpu_threshold,
             )
+            if not active:
+                # 闲置窗口内既无输出、CPU 也低于阈值：常驻进程的任务已完成，
+                # 主动结束它并返回成功，使 `wait-idle -- ... && next` 能继续执行。
+                # 结束期间保持抑制，由 finally 统一释放。
+                _LOGGER.info("子进程已闲置，主动结束子进程并返回")
+                _terminate_child(child)
+                return 0
             deps.inhibitor.set_active(active)
             deps.clock.sleep(config.interval_secs)
         return int(child.wait())
     except KeyboardInterrupt:
-        # 先中断子进程，等它自行退出；超时才强制结束，避免留下孤儿进程
-        child.send_interrupt()
-        try:
-            child.wait(INTERRUPT_GRACE_SECS)
-        except subprocess.TimeoutExpired:
-            child.kill()
-            child.wait()
+        _terminate_child(child)
         return 1
     finally:
         deps.inhibitor.set_active(False)

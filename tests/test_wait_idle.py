@@ -256,79 +256,83 @@ def test_child_exit_code_becomes_script_exit_code(child_code):
 # #endregion
 
 
-# #region Slice C: 休眠抑制按需切换
+# #region Slice C: 闲置后主动结束子进程
 
-def test_child_with_no_output_is_active_only_during_startup_window():
+def test_idle_child_is_terminated_and_returns_success():
+    """常驻子进程闲置后应被提前终止，脚本返回 0 以让 && 后续命令得以执行。"""
     clock = FakeClock()
-    child = FakeChild(clock, exit_at_secs=4)
+    child = FakeChild(clock, exit_at_secs=10)
+    child.exit_code = 7  # 自然退出码；若未被提前终止会被透传，从而暴露旧行为
     inhibitor = FakeInhibitor()
     deps = make_fake_deps(clock, inhibitor, child)
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc:
         wait_idle.main(["2", "--interval-secs", "1", "--", "cmd"], wrap_deps=deps)
 
-    assert inhibitor.calls[0] is True
-    assert inhibitor.calls[2] is True
-    assert inhibitor.calls[3] is False
+    assert exc.value.code == 0
+    assert child.interrupt_calls == 1
+    assert child.kill_calls == 0
+    assert child.exited is True
+    assert clock.now_ns() < int(10e9)
     assert inhibitor.calls[-1] is False
 
 
-def test_window_expiry_releases_then_output_reacquires_inhibition():
+def test_output_within_window_delays_idle_termination():
+    """窗口内的输出会刷新活跃时间，推迟闲置终止。"""
     clock = FakeClock()
-    child = FakeChild(clock, exit_at_secs=5)
+    child = FakeChild(clock, exit_at_secs=20)
+    child.exit_code = 7
     inhibitor = FakeInhibitor()
-    clock.schedule(3.5, lambda: emit_output(child))
+    for at in (0.5, 1.5, 2.5):
+        clock.schedule(at, lambda: emit_output(child))
     deps = make_fake_deps(clock, inhibitor, child)
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc:
         wait_idle.main(["2", "--interval-secs", "1", "--", "cmd"], wrap_deps=deps)
 
-    assert inhibitor.calls == [True, True, True, False, False, True, False]
+    assert exc.value.code == 0
+    # 最后一次输出在 2.5s，窗口 2s，因此到 5s 之后才判定闲置
+    assert clock.now_ns() >= int(5e9)
+    assert child.interrupt_calls == 1
 
 
-def test_continuous_output_keeps_inhibition_on():
+def test_cpu_above_threshold_delays_idle_termination():
+    """子进程树 CPU 高于阈值时保持活跃，推迟闲置终止。"""
     clock = FakeClock()
-    child = FakeChild(clock, exit_at_secs=4)
+    child = FakeChild(clock, exit_at_secs=20)
+    inhibitor = FakeInhibitor()
+
+    def sample_cpu():
+        return 80.0 if clock.now_ns() < int(3e9) else 10.0
+
+    deps = make_fake_deps(clock, inhibitor, child, sample_cpu)
+
+    with pytest.raises(SystemExit) as exc:
+        wait_idle.main(
+            ["2", "--child-cpu", "50", "--interval-secs", "1", "--", "cmd"],
+            wrap_deps=deps,
+        )
+
+    assert exc.value.code == 0
+    assert clock.now_ns() >= int(3e9)
+    assert child.interrupt_calls == 1
+
+
+def test_child_exiting_while_active_returns_its_code():
+    """子进程在活跃期间自行退出时，仍原样透传其退出码，不被误判为闲置。"""
+    clock = FakeClock()
+    child = FakeChild(clock, exit_at_secs=3)
+    child.exit_code = 7
     inhibitor = FakeInhibitor()
     for at in (0.5, 1.5, 2.5, 3.5):
         clock.schedule(at, lambda: emit_output(child))
     deps = make_fake_deps(clock, inhibitor, child)
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc:
         wait_idle.main(["2", "--interval-secs", "1", "--", "cmd"], wrap_deps=deps)
 
-    assert all(active is True for active in inhibitor.calls[:-1])
-    assert inhibitor.calls[-1] is False
-
-
-def test_cpu_above_threshold_keeps_inhibition_after_window_expiry():
-    clock = FakeClock()
-    child = FakeChild(clock, exit_at_secs=3)
-    inhibitor = FakeInhibitor()
-    deps = make_fake_deps(clock, inhibitor, child, lambda: 80.0)
-
-    with pytest.raises(SystemExit):
-        wait_idle.main(
-            ["2", "--child-cpu", "50", "--interval-secs", "1", "--", "cmd"],
-            wrap_deps=deps,
-        )
-
-    assert inhibitor.calls[3] is True
-
-
-def test_cpu_below_threshold_releases_inhibition_after_window_expiry():
-    clock = FakeClock()
-    child = FakeChild(clock, exit_at_secs=3)
-    inhibitor = FakeInhibitor()
-    deps = make_fake_deps(clock, inhibitor, child, lambda: 10.0)
-
-    with pytest.raises(SystemExit):
-        wait_idle.main(
-            ["2", "--child-cpu", "50", "--interval-secs", "1", "--", "cmd"],
-            wrap_deps=deps,
-        )
-
-    assert inhibitor.calls[3] is False
+    assert exc.value.code == 7
+    assert child.interrupt_calls == 0
 
 
 def test_cpu_sampler_not_called_when_threshold_disabled():
